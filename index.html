@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4.5</title>
+<title>Cardoryx V1.4.6</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -613,7 +613,14 @@
       <div><div class="label">Quantità</div><input id="editQty" type="number" min="1" inputmode="numeric"></div>
       <div><div class="label">Variante</div>
         <select id="editVariant">
-          <option>Normale</option><option>Holo</option><option>Reverse Holo</option><option>Cosmos Holo</option><option>Speciale / Altro</option><option>Non so</option>
+          <option value="Normal">Normale</option>
+          <option value="Holo">Holo</option>
+          <option value="Reverse Holo">Reverse Holo</option>
+          <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
+          <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+          <option value="Cosmos Holo">Cosmos Holo</option>
+          <option value="Speciale / Altro">Speciale / Altro</option>
+          <option value="Non so">Non so</option>
         </select>
       </div>
       <div><div class="label">Stato</div>
@@ -718,6 +725,8 @@ function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
 function homeMoney(v){return Number(v||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'})}
 function homeUnitValue(c){
+  const exact=verifiedVariantPrice(c,c?.variant||'Normal');
+  if(exact)return Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
   return cardmarketValueForVariant(c?.pricing?.cardmarket,c?.variant||'Normal').value;
 }
 
@@ -2303,6 +2312,46 @@ function detailedBallVariant(card,v){
 }
 
 
+
+// Prezzi Cardmarket verificati manualmente per varianti che Cardmarket pubblica
+// su pagine separate ma che TCGdex non associa ancora in modo affidabile.
+// Chiave: set normalizzato | numero collezione | variante canonica.
+const VERIFIED_VARIANT_PRICES = {
+  'evoluzioni prismatiche|057|Normal': {
+    low:0.02, trend:0.13, avg7:0.11, avg30:0.08,
+    source:'Cardmarket · Evoluzioni Prismatiche',
+    verified:'25/08/2026'
+  },
+  'evoluzioni prismatiche|057|Poké Ball Reverse Holo': {
+    low:0.05, trend:0.42, avg7:0.42, avg30:0.37,
+    source:'Cardmarket · Evoluzioni Prismatiche: Supplementi V1',
+    verified:'25/08/2026'
+  },
+  'evoluzioni prismatiche|057|Master Ball Reverse Holo': {
+    low:1.99, trend:6.61, avg7:6.87, avg30:7.08,
+    source:'Cardmarket · Evoluzioni Prismatiche: Supplementi V2',
+    verified:'25/08/2026'
+  }
+};
+
+function variantPriceKey(card,variant){
+  const setName=normText(card?.set?.name||card?.set||'');
+  const num=String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||'');
+  return `${setName}|${num}|${canonicalVariant(variant||'Normal')}`;
+}
+function verifiedVariantPrice(card,variant){
+  const setName=normText(card?.set?.name||card?.set||'');
+  const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
+  const target=canonicalVariant(variant||'Normal');
+  // normalize registry keys on lookup so accents/casing do not matter
+  const directKey=`${setName}|${num}|${target}`;
+  for(const [k,v] of Object.entries(VERIFIED_VARIANT_PRICES)){
+    const [ks,kn,kv]=k.split('|');
+    if(normText(ks)===setName && String(kn).replace(/^0+/,'')===num && kv===target)return v;
+  }
+  return null;
+}
+
 function cardmarketValueForVariant(cm,variant){
   if(!cm)return {value:0,kind:'none'};
   const n=k=>{const v=Number(cm[k]||0);return Number.isFinite(v)&&v>0?v:0};
@@ -2333,8 +2382,11 @@ function cardmarketValueForVariant(cm,variant){
 }
 
 function scanUnit(c){
+  const variant=document.getElementById('variant')?.value||'Normal';
+  const exact=verifiedVariantPrice(c,variant);
+  if(exact)return Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
   const cm=scanCM(c);
-  return cardmarketValueForVariant(cm,document.getElementById('variant')?.value||'Normal').value;
+  return cardmarketValueForVariant(cm,variant).value;
 }
 
 async function fetchScanPricing(card){
@@ -2398,30 +2450,43 @@ async function renderScanValue(card){
       selectedCard={...selectedCard,pricing:scanPriceCard.pricing,tcgdexId:scanPriceCard.id||selectedCard.tcgdexId};
     }
 
-    const cm=scanCM(scanPriceCard);
     const selVariant=document.getElementById('variant')?.value||'Normal';
-    const info=cardmarketValueForVariant(cm,selVariant);
-    const value=info.value;
+    const exact=verifiedVariantPrice(scanPriceCard||card,selVariant);
+    const cm=scanCM(scanPriceCard);
 
-    valueEl.textContent=value?scanEuro(value):'Valore non disponibile';
+    if(exact){
+      valueEl.textContent=scanEuro(exact.trend||exact.avg7||exact.avg30||exact.low);
+      metaEl.textContent=`${exact.source} · variante verificata · ${exact.verified}`;
+      document.getElementById('scanLowPrice').textContent=scanEuro(exact.low);
+      document.getElementById('scanTrendPrice').textContent=scanEuro(exact.trend);
+      document.getElementById('scanAvg7Price').textContent=scanEuro(exact.avg7);
+      document.getElementById('scanMarketStats').classList.remove('hidden');
+      document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
+      document.getElementById('scanProtectionAdvice').innerHTML=
+        variantBadgeHTML(selVariant)+'<div class="variant-price-warning">✓ Prezzo specifico della variante verificato su Cardmarket.</div>';
+      return;
+    }
+
+    const info=cardmarketValueForVariant(cm,selVariant);
+    valueEl.textContent=info.value?scanEuro(info.value):'Valore non disponibile';
 
     if(!cm){
       metaEl.textContent='Nessun prezzo Cardmarket disponibile per questa carta';
     }else if(isBallReverseVariant(selVariant)){
-      metaEl.textContent=value
-        ? 'Cardmarket · riferimento disponibile; Poké Ball/Master Ball può avere un prezzo specifico diverso'
-        : 'Cardmarket · nessun valore disponibile per questa variante';
+      metaEl.textContent=info.value
+        ? 'Cardmarket · solo riferimento generico: prezzo specifico Poké Ball/Master Ball non ancora verificato'
+        : 'Cardmarket · prezzo specifico della variante non disponibile';
     }else{
       metaEl.textContent='Cardmarket · valore indicativo';
     }
 
     document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
-    document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||value);
+    document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||info.value);
     document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
     document.getElementById('scanMarketStats').classList.toggle('hidden',!cm);
     document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
     document.getElementById('scanProtectionAdvice').innerHTML=isBallReverseVariant(selVariant)
-      ?variantBadgeHTML(selVariant)+'<div class="variant-price-warning">Il valore mostrato è il miglior riferimento Cardmarket disponibile. Poké Ball/Master Ball può avere un prezzo specifico diverso.</div>'
+      ?variantBadgeHTML(selVariant)+'<div class="variant-price-warning">⚠️ Questo non è ancora un prezzo specifico verificato della variante.</div>'
       :'';
   }catch(e){
     console.error('Cardoryx scanner pricing:',e);
@@ -2550,7 +2615,7 @@ function openEditModal(key){
   editingKey=recordKey(c);
   document.getElementById('editTitle').textContent=c.name;
   document.getElementById('editQty').value=Number(c.qty)||1;
-  document.getElementById('editVariant').value=c.variant||'Normale';
+  document.getElementById('editVariant').value=canonicalVariant(c.variant||'Normal');
   document.getElementById('editStatus').value=c.status||'Disponibile';
   document.getElementById('editCondition').value=c.condition||'NM';
   const modal=document.getElementById('editModal');
@@ -2635,6 +2700,8 @@ function clearCatalogFilters(){
 }
 
 function adviceUnitValue(c){
+  const exact=verifiedVariantPrice(c,c?.variant||'Normal');
+  if(exact)return Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
   return cardmarketValueForVariant(c?.pricing?.cardmarket,c?.variant||'Normal').value;
 }
 function renderCardoryxAdvice(c){
