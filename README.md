@@ -1,20 +1,32 @@
-# Cardoryx V1.5.2 — Fix Finitura + Stamp + Prezzi
+# Cardoryx V1.5.3 — Prize Pack Series + Dettagli + Energie
 
-Correzione della V1.5.1.
+Basata sulla V1.5.2.
 
-## Corretto
-- La Finitura non contiene più Play! Pokémon / Pokémon Day: questi rimangono solo in Stamp / Edizione.
-- Salvataggio Modifica carta: Finitura e Stamp vengono persistiti separatamente.
-- Le vecchie carte che avevano lo stamp dentro la variante vengono migrate.
-- Il motore prezzi usa ora la combinazione `set + numero + finitura + stamp`.
-- Una carta con stamp non eredita più automaticamente il prezzo della carta normale.
+## Play! Pokémon
+Aggiunto un campo separato `Prize Pack Series` quando Stamp / Edizione = Play! Pokémon.
 
-## Anita WHT 084 — Play! Pokémon Prize Pack Series Nine
-Prezzi Cardmarket verificati il 25/08/2026:
-- Normal + Play! Pokémon: trend 0,81 €; minimo 0,40 €; media 7 gg 0,85 €.
-- Cosmos Holo + Play! Pokémon: trend 2,36 €; minimo 1,47 €; media 7 gg 2,88 €.
+Valori disponibili:
+- Series 1–9
+- Da identificare
 
-Le carte Allenatore foil della Prize Pack Series Nine usano Cosmos Holofoil.
+Il motore prezzi ora usa:
+`set + numero + finitura + stamp + Prize Pack Series`
+
+Se la serie non è indicata, Cardoryx non assegna un prezzo standard e mostra che la Prize Pack Series va identificata.
+
+### Zoroark-ex di N 098/159
+Inseriti riferimenti Cardmarket verificati per:
+- Holo + Play! Pokémon + Series 7
+- Holo + Play! Pokémon + Series 8
+- Holo + Play! Pokémon + Series 9
+
+## Dettagli carta
+Il pannello Dettagli e i Consigli usano ora lo stesso motore `cardPriceInfo()` del Catalogo/Home.
+
+## Energie
+Corretto il raggruppamento:
+- Energia base → Energie Base
+- altre energie, come Energia Rocciosa → Energie Speciali
 
 ## Backup
-Backup JSON e CSV continuano a includere separatamente Finitura e Stamp / Edizione.
+CSV e backup mantengono anche la Prize Pack Series.
