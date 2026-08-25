@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3</title>
+<title>Cardoryx V3.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -87,7 +87,7 @@ const API='https://api.tcgdex.net/v2/it';
 const OFFICIAL_TYPES=['Erba','Fuoco','Acqua','Lampo','Psico','Lotta','Oscurità','Metallo','Drago','Incolore'];
 const TYPE_MAP={Grass:'Erba',Fire:'Fuoco',Water:'Acqua',Lightning:'Lampo',Psychic:'Psico',Fighting:'Lotta',Darkness:'Oscurità',Metal:'Metallo',Dragon:'Drago',Colorless:'Incolore'};
 const CATEGORIES=['⭐ Protette','🌿 Erba','🔥 Fuoco','💧 Acqua','⚡ Elettro','🔮 Psico','👊 Lotta','🌑 Oscurità','⚙️ Metallo','🐉 Drago','⚪ Incolore','👤 Aiuto','🧰 Strumenti','🏟️ Stadio','🎒 Oggetti Pokémon','⚡ Energie Base','✨ Energie Speciali'];
-let selectedCard=null; let db=JSON.parse(localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1')||'[]'); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
+let selectedCard=null; let candidateMap={}; let db=JSON.parse(localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1')||'[]'); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function persist(){localStorage.setItem('cardoryx_v3',JSON.stringify(db));localStorage.setItem('cardoryx_v2',JSON.stringify(db));localStorage.setItem('cardoryx_v1',JSON.stringify(db));renderAll()}
 function showView(v){['home','scan','catalog','stats'].forEach(x=>document.getElementById(x+'View').classList.toggle('hidden',x!==v));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));if(v==='catalog')renderCatalog();if(v==='stats')renderStats()}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -204,7 +204,10 @@ async function searchCards(opts={}){
     searchMsg.textContent=strong
       ? `Corrispondenza molto probabile trovata. Mostro ${full.length} risultati ordinati.`
       : `${full.length} candidati ordinati per probabilità.`;
+    candidateMap={};
     results.innerHTML=`<div class="candidate-grid">${full.map((c,i)=>{
+      const key='cand_'+i;
+      candidateMap[key]=c;
       const best=i===0&&strong;
       const count=c._setCount?`/${c._setCount}`:'';
       const set=setName(c);
@@ -213,13 +216,18 @@ async function searchCards(opts={}){
         <h3>${esc(c.name)}</h3>
         <div class="small">N° ${esc(c.localId)}${esc(count)}${set?' · '+esc(set):''}</div>
         ${best?'<span class="rank-badge">★ PIÙ PROBABILE</span>':''}
-        <button class="btn" style="width:100%;margin-top:7px" onclick='chooseCard(${JSON.stringify(JSON.stringify(c))})'>È questa</button>
+        <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa</button>
       </div>`
     }).join('')}</div>`;
   }catch(e){
     console.error(e);
     searchMsg.textContent='Errore di collegamento a TCGdex.';
   }
+}
+async function chooseCandidate(key){
+  const c=candidateMap[key];
+  if(!c){console.error('Candidato non trovato',key);return}
+  return chooseCard(c);
 }
 async function chooseCard(s){const brief=JSON.parse(s);confirmCard.classList.remove('hidden');confirmName.textContent=brief.name;confirmImg.src=(brief.image||'')+'/high.webp';confirmInfo.textContent='Carico dettagli…';confirmTags.innerHTML='';try{const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());selectedCard={...brief,...full};const category=inferCategory(full),type=inferType(full),stage=full.stage||'';confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;}catch(e){selectedCard=brief;confirmInfo.textContent=`N° ${brief.localId}`}}
 function inferCategory(c){const cat=String(c.category||'').toLowerCase();if(cat.includes('pokemon')||c.hp||c.stage)return 'Pokémon';if(cat.includes('trainer')||c.trainerType)return 'Allenatore';if(cat.includes('energy')||c.energyType)return 'Energia';return 'Pokémon'}
