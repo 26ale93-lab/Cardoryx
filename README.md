@@ -117,3 +117,13 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Massimo 6 candidati mostrati.
 - Fallback manuale se l'OCR non è affidabile.
 - Cache PWA `cardoryx-v4.5.0`.
+
+
+## V4.6 — Scanner Cascade
+- Ricerca automatica a cascata: Numero/Set → Nome + Set → Nome.
+- Se Numero/Set non trova la carta, Cardoryx passa automaticamente a Nome + Set.
+- Se resta una sola corrispondenza, apre direttamente la conferma.
+- Mostra visivamente quale strategia di ricerca sta usando.
+- Mantiene il ridimensionamento OCR e l'elaborazione leggera della V4.5.
+- Massimo 6 candidati.
+- Cache PWA `cardoryx-v4.6.0`.

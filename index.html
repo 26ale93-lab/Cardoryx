@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.5</title>
+<title>Cardoryx V4.6</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -137,6 +137,13 @@
 .scan-progress>span{display:block;height:100%;width:0;background:#4f46e5;transition:width .2s ease}
 .scan-status-pro{margin-top:7px;font-size:12px;color:#667085;line-height:1.4}
 
+
+.scan-mode-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.scan-mode-chip{border:1px solid #dfe3ea;background:#fff;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800}
+.scan-mode-chip.active{background:#111827;color:#fff;border-color:#111827}
+.scan-found{margin-top:8px;padding:10px 12px;border-radius:13px;background:#ecfdf3;color:#166534;font-size:12px;font-weight:800}
+.scan-fallback{margin-top:8px;padding:10px 12px;border-radius:13px;background:#fff7ed;color:#9a3412;font-size:12px}
+
 </style>
 </head>
 <body>
@@ -174,6 +181,13 @@
       <button class="btn big" id="ocrBtn" onclick="runSmartOCR()" disabled>✨ Riconosci carta</button>
       <div class="scan-progress"><span id="scanProgressBar"></span></div>
       <div id="scanStatusPro" class="scan-status-pro">Pronto. Analizzerò solo nome e numero/set.</div>
+      <div class="scan-mode-row">
+        <span id="modeCode" class="scan-mode-chip active">1 · Numero/Set</span>
+        <span id="modeNameSet" class="scan-mode-chip">2 · Nome + Set</span>
+        <span id="modeName" class="scan-mode-chip">3 · Nome</span>
+      </div>
+      <div id="scanFallbackInfo"></div>
+
 
       <div id="ocrStatus" class="footer-note">Cardoryx legge separatamente nome e numero. Se il nome non è chiaro, usa il numero per mostrare le carte candidate.</div>
     </div>
@@ -420,7 +434,7 @@ cameraInput.addEventListener('change',()=>setQueue(cameraInput.files));
 galleryInput.addEventListener('change',()=>setQueue(galleryInput.files));
 function setQueue(fileList){const files=[...fileList||[]];if(!files.length)return;scanQueue=files;queueIndex=0;renderQueue();loadQueueItem(0)}
 function renderQueue(){if(scanQueue.length<=1){queueWrap.classList.add('hidden');queueWrap.innerHTML='';return}queueWrap.classList.remove('hidden');queueWrap.innerHTML=scanQueue.map((f,i)=>`<img class="${i===queueIndex?'active':''}" src="${URL.createObjectURL(f)}" onclick="loadQueueItem(${i})">`).join('')}
-function loadQueueItem(i){if(i<0||i>=scanQueue.length)return;queueIndex=i;const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.')}
+function loadQueueItem(i){if(i<0||i>=scanQueue.length)return;queueIndex=i;const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -499,6 +513,92 @@ function cleanOCRNameV45(s=''){
     .trim();
 }
 
+
+function setScanMode(mode,msg=''){
+  ['modeCode','modeNameSet','modeName'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  document.getElementById(mode)?.classList.add('active');
+  const info=document.getElementById('scanFallbackInfo');
+  if(info&&msg)info.innerHTML=`<div class="scan-fallback">${msg}</div>`;
+}
+
+async function apiCardsQuery(params){
+  const qs=new URLSearchParams(params);
+  try{
+    const r=await fetch(`${API}/cards?${qs.toString()}`);
+    if(!r.ok)return [];
+    const data=await r.json();
+    return Array.isArray(data)?data:(data.cards||data.data||[]);
+  }catch(e){return []}
+}
+
+async function fastCascadeSearch({name='',num='',total=''}) {
+  const cleanName=String(name||'').trim();
+  const cleanNum=String(num||'').replace(/^0+/,'') || String(num||'');
+  let results=[];
+
+  // 1. Most precise and cheapest route
+  if(cleanNum && total){
+    setScanMode('modeCode',`Cerco prima ${num}/${total}…`);
+    results=await apiCardsQuery({localId:cleanNum});
+    if(results.length){
+      results=results.filter(c=>{
+        const setTotal=String(c.set?.cardCount?.official||c.set?.cardCount?.total||'');
+        return !setTotal || setTotal===String(total);
+      });
+    }
+    if(results.length===1)return {results,route:'Numero/Set'};
+  }
+
+  // 2. Name + set total: this is the fallback that worked in real use
+  if(cleanName && total){
+    setScanMode('modeNameSet',`Numero/set non decisivo. Provo automaticamente nome + set (${total})…`);
+    results=await apiCardsQuery({name:cleanName});
+    if(results.length){
+      const narrowed=results.filter(c=>{
+        const setTotal=String(c.set?.cardCount?.official||c.set?.cardCount?.total||'');
+        return !setTotal || setTotal===String(total);
+      });
+      if(narrowed.length)results=narrowed;
+    }
+    if(results.length)return {results,route:'Nome + Set'};
+  }
+
+  // 3. Name only
+  if(cleanName){
+    setScanMode('modeName',`Provo il nome “${cleanName}”…`);
+    results=await apiCardsQuery({name:cleanName});
+    if(results.length)return {results,route:'Nome'};
+  }
+
+  return {results:[],route:'Nessun risultato'};
+}
+
+async function renderFastCandidates(results,route){
+  const full=(results||[]).slice(0,6);
+  if(!full.length)return false;
+
+  // Reuse Cardoryx candidate rendering.
+  candidates.innerHTML='';
+  candidateMap={};
+  for(const c of full){
+    const brief={
+      id:c.id,name:c.name,localId:c.localId||'',
+      image:c.image||'',set:c.set||{},rarity:c.rarity||'',
+      category:c.category||'',types:c.types||[],stage:c.stage||''
+    };
+    candidateMap[c.id]=brief;
+  }
+  renderCandidates(full.map(c=>candidateMap[c.id]));
+
+  const info=document.getElementById('scanFallbackInfo');
+  if(info)info.innerHTML=`<div class="scan-found">✓ ${route}: ${full.length===1?'1 corrispondenza':'trovate '+full.length+' corrispondenze'}</div>`;
+
+  if(full.length===1){
+    await chooseCard(candidateMap[full[0].id]);
+  }
+  return true;
+}
+
 async function runSmartOCR(){
   const f=scanQueue[queueIndex]; if(!f)return;
   ocrBtn.disabled=true;
@@ -535,11 +635,21 @@ async function runSmartOCR(){
     setScanProgress(78,'Confronto con il database italiano…');
     if(code||name){
       ocrStatus.textContent=`${code?`Codice ${code.num}/${code.total}`:''}${code&&name?' · ':''}${name?`Nome OCR: ${name}`:''}`;
-      await searchCards({smart:true});
+      const cascade=await fastCascadeSearch({
+        name,
+        num:code?.num||numberInput.value,
+        total:code?.total||setTotalInput.value
+      });
+      if(cascade.results.length){
+        await renderFastCandidates(cascade.results,cascade.route);
+      }else{
+        document.getElementById('scanFallbackInfo').innerHTML='<div class="scan-fallback">Ricerca automatica non sufficiente. Mostro la ricerca standard.</div>';
+        await searchCards({smart:true});
+      }
       setScanProgress(100,'Analisi completata.');
     }else{
-      ocrStatus.textContent='Dati non sufficienti. Inserisci numero e totale set manualmente.';
-      setScanProgress(100,'Usa la ricerca manuale.');
+      ocrStatus.textContent='Dati non sufficienti. Inserisci nome e totale set oppure usa la ricerca manuale.';
+      setScanProgress(100,'Usa nome + set per il fallback più preciso.');
     }
 
     img=null;
