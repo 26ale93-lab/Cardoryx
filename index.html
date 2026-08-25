@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V6.3</title>
+<title>Cardoryx V6.5</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -220,24 +220,21 @@
 .mee-image-fallback{width:74px;height:104px;border-radius:8px;background:#f3f4f6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#667085;padding:6px}
 .mee-source-link{font-size:10px;color:#4f46e5;text-decoration:none;font-weight:800}
 
-</style>
+.home-dashboard{display:grid;gap:12px}.home-value-card{padding:18px;border-radius:22px;background:linear-gradient(135deg,#111827,#312e81);color:#fff}.home-value-label{font-size:11px;opacity:.8;font-weight:900}.home-value-number{font-size:34px;font-weight:950;margin-top:5px}.home-value-meta{font-size:11px;opacity:.78;margin-top:6px}.home-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.home-stat{padding:10px 5px;border:1px solid #e4e7ec;border-radius:15px;background:#fff;text-align:center}.home-stat strong{display:block;font-size:18px}.home-stat span{font-size:9px;color:#667085;font-weight:850}.home-actions{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}.home-actions .btn{min-height:48px}.home-section-title{display:flex;align-items:center;justify-content:space-between}.home-rich-card{border:1px solid #e4e7ec;background:#fff;border-radius:18px;padding:10px;display:flex;gap:11px;align-items:center}.home-rich-card img{width:64px;height:89px;object-fit:contain;border-radius:8px}.home-rich-main{min-width:0;flex:1}.home-price{font-size:20px;font-weight:950;margin-top:4px}.home-recent{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}.home-recent-card{min-width:92px;width:92px;border:1px solid #e4e7ec;border-radius:14px;background:#fff;padding:7px}.home-recent-card img{width:76px;height:106px;object-fit:contain}.home-recent-card b{font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.home-recent-card span{font-size:9px;color:#667085}.home-cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.home-cat{border:1px solid #e4e7ec;background:#fff;border-radius:13px;padding:8px 4px;text-align:center;font-size:10px;font-weight:850}.home-cat strong{display:block;font-size:15px}.home-physical{border:1px dashed #d0d5dd;border-radius:15px;padding:10px;background:#fafafa}@media(max-width:430px){.home-stat-grid{grid-template-columns:repeat(2,1fr)}.home-actions{grid-template-columns:1fr 1fr}.home-actions .home-primary{grid-column:1/-1}}</style>
 </head>
 <body>
 <div class="app">
   <header class="top"><div style="display:flex;align-items:center;gap:12px"><img src="cardoryx-logo.png" alt="Cardoryx" style="width:52px;height:52px;border-radius:14px"><div><h1>Cardoryx</h1><p>Scan · Collect · Build · Value</p></div></div></header>
 
-  <section id="homeView">
-    <div class="card hero"><div class="small">CARTE CATALOGATE</div><div class="count" id="totalCount">0</div><div class="small" id="summaryText">0 disponibili · 0 protette · 0 nei mazzi</div></div>
-    <div class="grid">
-      <button class="btn big" onclick="showView('scan')">📷 Scansiona</button>
-      <button class="btn alt big" onclick="showView('catalog')">📚 Catalogo</button>
-    </div>
-    <div class="card">
-      <div class="section-title">Divisione fisica consigliata</div>
-      <div id="categoryPills"></div>
-    </div>
-    
-  </section>
+  <section id="homeView"><div class="home-dashboard">
+<div class="home-value-card"><div class="home-value-label">💰 VALORE COLLEZIONE</div><div id="homeCollectionValue" class="home-value-number">€ 0,00</div><div id="homeCollectionValueMeta" class="home-value-meta">Valore indicativo Cardmarket</div></div>
+<div class="home-stat-grid"><div class="home-stat"><strong id="homeTotalCards">0</strong><span>🃏 CARTE</span></div><div class="home-stat"><strong id="homeTotalSets">0</strong><span>📚 SET</span></div><div class="home-stat"><strong id="homeHoloCards">0</strong><span>✨ HOLO/REV.</span></div><div class="home-stat"><strong id="homeProtectedCards">0</strong><span>🔒 PROTETTE</span></div></div>
+<div class="home-actions"><button class="btn home-primary" onclick="showView('scan')">📷 Scansiona carta</button><button class="btn alt" onclick="showView('catalog')">📚 Catalogo</button><button class="btn alt" onclick="homeSearch()">🔍 Cerca</button></div>
+<div class="home-section-title"><div class="section-title">🏆 Carta più preziosa</div><span class="small">Cardmarket</span></div><div id="homeMostValuable" class="home-rich-card"></div>
+<div class="home-section-title"><div class="section-title">🕘 Ultime aggiunte</div><span class="small">Ultime 10</span></div><div id="homeRecentCards" class="home-recent"></div>
+<div class="home-section-title"><div class="section-title">🗂️ La tua collezione</div><span class="small">Tocca per filtrare</span></div><div id="homeCategoryGrid" class="home-cat-grid"></div>
+<div class="home-physical"><b>📦 Divisione fisica</b><div class="small">Le categorie sopra mostrano subito come è distribuita la collezione.</div></div>
+</div></section>
 
   <section id="scanView" class="hidden">
     <div class="card">
@@ -565,6 +562,7 @@ function showView(v){
     const el=document.getElementById(x+'View'); if(el)el.classList.toggle('hidden',x!==v)
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
+  if(v==='home')renderHomeDashboard();
   if(v==='catalog')renderCatalog();
   if(v==='stats')renderStats();
   if(v==='settings')renderSettings();
@@ -572,14 +570,23 @@ function showView(v){
 }
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
+function homeMoney(v){return Number(v||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'})}
+function homeUnitValue(c){const cm=c?.pricing?.cardmarket;if(!cm)return 0;const v=normText(c.variant||'');if(v.includes('holo')&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0)}
+function homeSearch(){showView('scan');setTimeout(()=>{const e=document.getElementById('nameInput');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.focus()}},200)}
+function homeFilter(cat){showView('catalog');setTimeout(()=>{const s=document.getElementById('typeFilter');if(s){s.value=cat;s.dispatchEvent(new Event('change',{bubbles:true}));renderCatalog()}},120)}
+function renderHomeDashboard(){const q=c=>Math.max(1,Number(c.qty||1));const total=db.reduce((a,c)=>a+q(c),0);const sets=new Set(db.map(c=>String(c.set||'').trim()).filter(Boolean));const holo=db.reduce((a,c)=>a+(/holo|reverse/i.test(c.variant||'')?q(c):0),0);const prot=db.reduce((a,c)=>a+(c.status==='Protetta'?q(c):0),0);const valued=db.filter(c=>homeUnitValue(c)>0);const value=valued.reduce((a,c)=>a+homeUnitValue(c)*q(c),0);const put=(id,v)=>{const e=ui(id);if(e)e.textContent=v};put('homeCollectionValue',homeMoney(value));put('homeCollectionValueMeta',`${valued.length}/${db.length} schede con prezzo Cardmarket`);put('homeTotalCards',total);put('homeTotalSets',sets.size);put('homeHoloCards',holo);put('homeProtectedCards',prot);
+const best=[...valued].sort((a,b)=>homeUnitValue(b)*q(b)-homeUnitValue(a)*q(a))[0],mv=ui('homeMostValuable');if(mv){if(!best)mv.innerHTML='<div class="small">Aggiorna i valori in Categorie per visualizzarla.</div>';else{const img=cardImageSrc(best,'low');mv.innerHTML=`${img?`<img src="${esc(img)}">`:''}<div class="home-rich-main"><b>${esc(best.name)}</b><div class="small">${esc(best.set||'')} · ${esc(best.variant||'')}</div><div class="home-price">${homeMoney(homeUnitValue(best)*q(best))}</div></div>`}}
+const recent=ui('homeRecentCards'),arr=[...db].slice(-10).reverse();if(recent){recent.innerHTML=arr.length?arr.map(c=>{const img=cardImageSrc(c,'low');return `<div class="home-recent-card">${img?`<img src="${esc(img)}">`:''}<b>${esc(c.name)}</b><span>${esc(c.set||'')}</span></div>`}).join(''):'<div class="small">Nessuna carta catalogata.</div>'}
+const counts={};db.forEach(c=>{const k=cardCategory(c);counts[k]=(counts[k]||0)+q(c)});const grid=ui('homeCategoryGrid');if(grid){grid.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([k,v])=>`<button class="home-cat" data-cat="${esc(k)}">${esc(k)}<strong>${v}</strong></button>`).join('');grid.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>homeFilter(b.dataset.cat))}}
 function renderAll(){
-  ui('categoryPills').innerHTML=CATEGORIES.map(x=>`<span class="pill">${x}</span>`).join('');
+  if(ui('categoryPills'))ui('categoryPills').innerHTML=CATEGORIES.map(x=>`<span class="pill">${x}</span>`).join('');
   const total=db.reduce((a,c)=>a+(Number(c.qty)||1),0);
   const avail=db.filter(c=>(c.status||'Disponibile')==='Disponibile').reduce((a,c)=>a+(Number(c.qty)||1),0);
   const prot=db.filter(c=>(c.status||'Disponibile')==='Protetta').reduce((a,c)=>a+(Number(c.qty)||1),0);
   const deck=db.filter(c=>/^Mazzo/.test(c.status||'')).reduce((a,c)=>a+(Number(c.qty)||1),0);
-  ui('totalCount').textContent=total;
-  ui('summaryText').textContent=`${avail} disponibili · ${prot} protette · ${deck} nei mazzi`;
+  if(ui('totalCount'))ui('totalCount').textContent=total;
+  if(ui('summaryText'))ui('summaryText').textContent=`${avail} disponibili · ${prot} protette · ${deck} nei mazzi`;
+  renderHomeDashboard();
   fillTypeFilter();
   renderCatalog();
   renderStats();
