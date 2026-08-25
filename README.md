@@ -1,32 +1,26 @@
-# Cardoryx V1.5.3 — Prize Pack Series + Dettagli + Energie
+# Cardoryx V1.5.4 — Hotfix Home, Salvataggi e Play! Pokémon
 
-Basata sulla V1.5.2.
+## Correzioni
+- Ripristinata `renderHomeDashboard()`: era assente nella V1.5.3 e causava il crash della Home.
+- Il crash della Home interrompeva anche `persist()` durante Modifica carta, per questo il popup poteva non chiudersi.
+- Il salvataggio da Scanner ora scrive realmente nel database:
+  - Finitura
+  - Stamp / Edizione
+  - eventuale Prize Pack Series
+- Il riconoscimento dei duplicati distingue anche Stamp e Prize Pack Series.
+- Salvataggio Modifica carta reso più robusto: chiude il popup prima del rendering.
+- `persist()` salva comunque i dati anche se una sezione dell'interfaccia dovesse avere un errore.
+- Migliorato il riconoscimento delle Energie Speciali.
 
-## Play! Pokémon
-Aggiunto un campo separato `Prize Pack Series` quando Stamp / Edizione = Play! Pokémon.
+## Prize Pack Series
+La serie NON è obbligatoria.
 
-Valori disponibili:
-- Series 1–9
-- Da identificare
+Il logo Play! Pokémon stampato sulla carta non contiene il numero della Prize Pack Series, quindi dalla sola carta spesso non è possibile sapere se è Series 7, 8, 9 ecc.
 
-Il motore prezzi ora usa:
-`set + numero + finitura + stamp + Prize Pack Series`
+Puoi lasciare:
+`Non so / lascia automatico`
 
-Se la serie non è indicata, Cardoryx non assegna un prezzo standard e mostra che la Prize Pack Series va identificata.
+Cardoryx conserva comunque correttamente:
+`Finitura + Play! Pokémon`.
 
-### Zoroark-ex di N 098/159
-Inseriti riferimenti Cardmarket verificati per:
-- Holo + Play! Pokémon + Series 7
-- Holo + Play! Pokémon + Series 8
-- Holo + Play! Pokémon + Series 9
-
-## Dettagli carta
-Il pannello Dettagli e i Consigli usano ora lo stesso motore `cardPriceInfo()` del Catalogo/Home.
-
-## Energie
-Corretto il raggruppamento:
-- Energia base → Energie Base
-- altre energie, come Energia Rocciosa → Energie Speciali
-
-## Backup
-CSV e backup mantengono anche la Prize Pack Series.
+La serie va compilata solo quando è stata identificata con certezza tramite la specifica ristampa/database Cardmarket.

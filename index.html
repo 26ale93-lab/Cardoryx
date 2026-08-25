@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.5.3</title>
+<title>Cardoryx V1.5.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -430,9 +430,9 @@
           <option value="Altro">Altro</option>
         </select>
         <div id="playSeriesWrap" class="hidden">
-          <label>PRIZE PACK SERIES</label>
+          <label>PRIZE PACK SERIES <span class="small">(opzionale)</span></label>
           <select id="playSeries">
-            <option value="">Da identificare</option>
+            <option value="">Non so / lascia automatico</option>
             <option value="1">Series 1</option>
             <option value="2">Series 2</option>
             <option value="3">Series 3</option>
@@ -442,7 +442,7 @@
             <option value="7">Series 7</option>
             <option value="8">Series 8</option>
             <option value="9">Series 9</option>
-          </select>
+          </select><div class="small" style="margin-top:5px">Non è obbligatoria: il logo Play! Pokémon sulla carta non indica da solo il numero della serie.</div>
         </div>
       <div class="label">Stato</div><select id="status"><option value="Disponibile">Disponibile</option><option value="Mazzo 1">Mazzo 1</option><option value="Mazzo 2">Mazzo 2</option><option value="Protetta">Protetta</option><option value="Vendita">Vendita</option></select>
       <div class="label">Condizione</div><select id="condition">
@@ -675,9 +675,9 @@
           <option value="Altro">Altro</option>
         </select>
         <div id="editPlaySeriesWrap" class="hidden">
-          <label>PRIZE PACK SERIES</label>
+          <label>PRIZE PACK SERIES <span class="small">(opzionale)</span></label>
           <select id="editPlaySeries">
-            <option value="">Da identificare</option>
+            <option value="">Non so / lascia automatico</option>
             <option value="1">Series 1</option>
             <option value="2">Series 2</option>
             <option value="3">Series 3</option>
@@ -687,7 +687,7 @@
             <option value="7">Series 7</option>
             <option value="8">Series 8</option>
             <option value="9">Series 9</option>
-          </select>
+          </select><div class="small" style="margin-top:5px">Non è obbligatoria: il logo Play! Pokémon sulla carta non indica da solo il numero della serie.</div>
         </div>
       </div>
       <div><div class="label">Stato</div>
@@ -776,7 +776,7 @@ function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
 function selectedCondition(){return ui('condition')?.value||'NM'}
-function persist(){localStorage.setItem('cardoryx_db',JSON.stringify(db));renderAll();renderSettings()}
+function persist(){localStorage.setItem('cardoryx_db',JSON.stringify(db));try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render:',e)}}
 function showView(v){
   ['home','scan','catalog','stats','decks','settings'].forEach(x=>{
     const el=document.getElementById(x+'View'); if(el)el.classList.toggle('hidden',x!==v)
@@ -1020,6 +1020,54 @@ function deleteCurrentDeck(){
   currentDeckId=null;
   persistDecks();
   closeDeckBuilder();
+}
+
+
+function renderHomeDashboard(){
+  const total=db.reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const sets=new Set(db.map(c=>String(c.set||'').trim()).filter(Boolean)).size;
+  const holo=db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo','Speciale / Altro'].includes(canonicalVariant(c.variant||'Normal'))).reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const prot=db.filter(c=>(c.status||'Disponibile')==='Protetta').reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const value=collectionMarketValue();
+
+  if(ui('homeCollectionValue'))ui('homeCollectionValue').textContent=euro(value);
+  if(ui('homeCollectionValueMeta')){
+    const priced=pricedCopies();
+    ui('homeCollectionValueMeta').textContent=priced<total
+      ?`Valore Cardmarket · ${priced}/${total} carte valorizzate`
+      :'Valore indicativo Cardmarket';
+  }
+  if(ui('homeTotalCards'))ui('homeTotalCards').textContent=total;
+  if(ui('homeTotalSets'))ui('homeTotalSets').textContent=sets;
+  if(ui('homeHoloCards'))ui('homeHoloCards').textContent=holo;
+  if(ui('homeProtectedCards'))ui('homeProtectedCards').textContent=prot;
+
+  const valuable=db.map(c=>({c,u:cardUnitPrice(c)})).filter(x=>x.u!=null).sort((a,b)=>b.u-a.u)[0];
+  const mv=ui('homeMostValuable');
+  if(mv){
+    if(!valuable){
+      mv.innerHTML='<div class="small">Nessuna carta con prezzo disponibile.</div>';
+    }else{
+      const c=valuable.c,img=cardImageSrc(c,'low');
+      mv.innerHTML=`${img?`<img src="${esc(img)}" alt="">`:''}<div><b>${esc(c.name||'')}</b><div class="small">${esc(c.set||'')} · ${esc(c.localId||'')}</div><div class="price-main">${euro(valuable.u)}</div><div class="price-sub">${esc(canonicalVariant(c.variant||'Normal'))}${canonicalStamp(c.stamp||'None')!=='None'?' + '+esc(canonicalStamp(c.stamp||'None')):''}</div></div>`;
+    }
+  }
+
+  const recent=ui('homeRecentCards');
+  if(recent){
+    const cards=[...db].sort((a,b)=>String(b.addedAt||'').localeCompare(String(a.addedAt||''))).slice(0,10);
+    recent.innerHTML=cards.length?cards.map(c=>{
+      const img=cardImageSrc(c,'low');
+      return `<div class="home-recent-card" onclick="openCardDetail('${encodeURIComponent(recordKey(c))}')">${img?`<img src="${esc(img)}" alt="">`:''}<div><b>${esc(c.name||'')}</b><div class="small">${esc(c.set||'')}</div></div></div>`;
+    }).join(''):'<div class="small">Nessuna carta aggiunta.</div>';
+  }
+
+  const cg=ui('homeCategoryGrid');
+  if(cg){
+    const counts={};
+    db.forEach(c=>{const k=cardCategory(c)||'Altro';counts[k]=(counts[k]||0)+(Number(c.qty)||1)});
+    cg.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<button class="home-cat" onclick="filterByCategory('${String(k).replace(/'/g,"\\'")}')"><b>${n}</b><span>${esc(k)}</span></button>`).join('')||'<div class="small">La collezione è vuota.</div>';
+  }
 }
 
 function renderAll(){
@@ -2762,21 +2810,24 @@ function saveSelected(){
     if(trainerType==='Supporter')trainerType='Aiuto';
     if(trainerType==='Stadium')trainerType='Stadio';
     if(trainerType==='Pokémon Tool')trainerType='Oggetto Pokémon';
-    const energyType=String(selectedCard.energyType||'').toLowerCase().includes('special')?'Speciale':'Base';
+    const energyBlob=normText(`${selectedCard.energyType||''} ${selectedCard.category||''} ${selectedCard.name||''}`);
+    const energyType=(energyBlob.includes('special')||energyBlob.includes('speciale')||(inferCategory(selectedCard)==='Energia'&&!energyBlob.includes('energia base')&&!energyBlob.includes('basic energy')))?'Speciale':'Base';
 
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
       name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',
       image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',imageCandidates:selectedCard._imageCandidates||[],officialPage:selectedCard._officialPage||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
-      variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
+      variant:canonicalVariant(document.getElementById('variant')?.value||'Normal'),stamp:canonicalStamp(document.getElementById('stamp')?.value||'None'),playSeries:canonicalStamp(document.getElementById('stamp')?.value||'None')==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('playSeries')?.value||''):'',status:selectedStatus(),condition:selectedCondition(),
       pricing:selectedCard.pricing||null,priceUpdatedAt:selectedCard.pricing?.cardmarket?.updated||'',
       qty:1,addedAt:new Date().toISOString()
     };
 
     const same=db.find(x=>
       x.id===rec.id &&
-      (x.variant||'Normale')===rec.variant &&
+      canonicalVariant(x.variant||'Normal')===rec.variant &&
+      canonicalStamp(x.stamp||'None')===rec.stamp &&
+      normalizedPlaySeries(x.playSeries||'')===rec.playSeries &&
       (x.status||'Disponibile')===rec.status &&
       (x.condition||'NM')===rec.condition
     );
@@ -2852,8 +2903,9 @@ function saveEditModal(){
   c.playSeries=canonicalStamp(c.stamp)==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('editPlaySeries')?.value||''):'';
   c.status=document.getElementById('editStatus').value;
   c.condition=document.getElementById('editCondition').value;
-  persist();
+  localStorage.setItem('cardoryx_db',JSON.stringify(db));
   closeEditModal();
+  try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render after edit:',e)}
 }
 function renderSettings(){
   const r=document.getElementById('settingsRecords'),t=document.getElementById('settingsTotal');
@@ -3044,11 +3096,11 @@ function cardPriceHtml(c){
   const stamp=canonicalStamp(c.stamp||'None');
   const ps=normalizedPlaySeries(c.playSeries||'');
   let combo=stamp==='None'?finish:`${finish} + ${stamp}`;
-  if(stamp==='Play! Pokémon')combo+=ps?` · Series ${ps}`:' · Series da identificare';
+  if(stamp==='Play! Pokémon'&&ps)combo+=` · Series ${ps}`;
 
   if(u==null){
     let why='Cardmarket · nessun prezzo associato';
-    if(stamp==='Play! Pokémon'&&!ps)why=`Cardmarket · ${esc(combo)} · scegli la Prize Pack Series`;
+    if(stamp==='Play! Pokémon'&&!ps)why=`Cardmarket · Play! Pokémon · serie non necessaria per salvare la carta`;
     else if(stamp!=='None')why=`Cardmarket · prezzo specifico ${esc(combo)} non ancora associato`;
     return `<div class="price-main" style="color:#6b7280">Valore non disponibile</div><div class="price-sub">${why}</div>`;
   }
