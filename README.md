@@ -1,29 +1,16 @@
-# Cardoryx V1.4.1 — Value Fix
+# Cardoryx V1.4.2 — Home Fix
 
-Correzione della V1.4.
+Correzione della V1.4.1.
 
-## Scanner
-Lo Scanner mostra il valore della carta senza formulare giudizi sull'acquisto.
+## Corretto
+- Ripristinata la funzione `renderHomeDashboard()` accidentalmente rimossa nella V1.4.1.
+- La Home torna a leggere il database locale già esistente.
+- Ripristinati totale carte, set, Holo/Reverse, protette, valore collezione, carta più preziosa, ultime aggiunte e categorie.
+- Mantenuto il sistema valore della V1.4.1.
+- Mantenute Poké Ball Reverse Holo e Master Ball Reverse Holo.
+- Corretto anche il salvataggio della migrazione delle vecchie denominazioni variante.
+- Aggiornata la cache PWA alla V1.4.2.
 
-Mostra:
-- valore Cardmarket disponibile;
-- prezzo minimo;
-- trend;
-- media 7 giorni;
-- variante selezionata.
-
-Sono stati rimossi:
-- prezzo richiesto;
-- “prezzo interessante”;
-- “prezzo nella media”;
-- “prezzo alto”;
-- consigli automatici sull'acquisto.
-
-## Poké Ball / Master Ball
-Restano disponibili:
-- 🔴 Poké Ball Reverse Holo
-- 🟣 Master Ball Reverse Holo
-
-Per queste varianti Cardoryx mostra il valore Cardmarket disponibile come riferimento invece di azzerare il valore. Quando TCGdex espone un prezzo Reverse Holo specifico viene preferito; altrimenti viene mostrato il valore Cardmarket disponibile della carta.
-
-La dicitura chiarisce che Poké Ball/Master Ball possono avere un valore specifico diverso dal riferimento disponibile.
+## Dati
+La patch non cancella e non reinizializza `cardoryx_db`.
+Le carte già salvate nel browser restano nel database locale.

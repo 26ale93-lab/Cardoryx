@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4.1</title>
+<title>Cardoryx V1.4.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -696,7 +696,7 @@ db.forEach(c=>{
   else if(old==='Reverse Master Ball'||old==='Master Ball Reverse'){c.variant='Master Ball Reverse Holo';variantMigrationChanged=true}
   else if(old==='1ª Edizione'){c.variant='First Edition';variantMigrationChanged=true}
 });
-if(variantMigrationChanged){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}} let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
+if(variantMigrationChanged){try{localStorage.setItem('cardoryx_db',JSON.stringify(db))}catch(e){}} let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
@@ -725,6 +725,62 @@ function homeUnitValue(c){
     return Number(cm['trend-reverse-holo']||cm['avg-reverse-holo']||cm['low-reverse-holo']||cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
   return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
 }
+
+function renderHomeDashboard(){
+  const q=c=>Math.max(1,Number(c.qty||1));
+  const total=db.reduce((a,c)=>a+q(c),0);
+  const sets=new Set(db.map(c=>String(c.set||'').trim()).filter(Boolean));
+  const holo=db.reduce((a,c)=>a+(/holo|reverse/i.test(c.variant||'')?q(c):0),0);
+  const prot=db.reduce((a,c)=>a+(c.status==='Protetta'?q(c):0),0);
+  const valued=db.filter(c=>homeUnitValue(c)>0);
+  const value=valued.reduce((a,c)=>a+homeUnitValue(c)*q(c),0);
+  const put=(id,v)=>{const e=ui(id);if(e)e.textContent=v};
+
+  put('homeCollectionValue',homeMoney(value));
+  put('homeCollectionValueMeta',`${valued.length}/${db.length} schede con prezzo Cardmarket`);
+  put('homeTotalCards',total);
+  put('homeTotalSets',sets.size);
+  put('homeHoloCards',holo);
+  put('homeProtectedCards',prot);
+
+  const best=[...valued].sort((a,b)=>homeUnitValue(b)*q(b)-homeUnitValue(a)*q(a))[0];
+  const mv=ui('homeMostValuable');
+  if(mv){
+    if(!best){
+      mv.innerHTML='<div class="small">Aggiorna i valori in Categorie per visualizzarla.</div>';
+    }else{
+      const img=cardImageSrc(best,'low');
+      mv.innerHTML=`${img?`<img src="${esc(img)}">`:''}<div class="home-rich-main"><b>${esc(best.name)}</b><div class="small">${esc(best.set||'')} · ${esc(best.variant||'')}</div><div class="home-price">${homeMoney(homeUnitValue(best)*q(best))}</div></div>`;
+    }
+  }
+
+  const recent=ui('homeRecentCards');
+  const arr=[...db].slice(-10).reverse();
+  if(recent){
+    recent.innerHTML=arr.length
+      ?arr.map(c=>{
+          const img=cardImageSrc(c,'low');
+          return `<div class="home-recent-card">${img?`<img src="${esc(img)}">`:''}<b>${esc(c.name)}</b><span>${esc(c.set||'')}</span></div>`;
+        }).join('')
+      :'<div class="small">Nessuna carta catalogata.</div>';
+  }
+
+  const counts={};
+  db.forEach(c=>{
+    const k=cardCategory(c);
+    counts[k]=(counts[k]||0)+q(c);
+  });
+  const grid=ui('homeCategoryGrid');
+  if(grid){
+    grid.innerHTML=Object.entries(counts)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,12)
+      .map(([k,v])=>`<button class="home-cat" data-cat="${esc(k)}">${esc(k)}<strong>${v}</strong></button>`)
+      .join('');
+    grid.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>homeFilter(b.dataset.cat));
+  }
+}
+
 function persistDecks(){
   localStorage.setItem(DECK_KEY,JSON.stringify(decks));
   renderDecks();
