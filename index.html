@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.9.1</title>
+<title>Cardoryx V5.0</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -570,60 +570,123 @@ async function queryByAnyLocalId(num){
   return [...merged.values()];
 }
 
+
+async function querySetsByOfficialCount(total){
+  const n=Number(String(total||'').replace(/\D/g,''));
+  if(!n)return [];
+  try{
+    const r=await fetch(`${API}/sets?cardCount.official=${encodeURIComponent(n)}`);
+    if(!r.ok)return [];
+    const data=await r.json();
+    return Array.isArray(data)?data:[];
+  }catch(e){return []}
+}
+
+async function queryByPrintedCode(num,total){
+  const variants=numVariants(num);
+  const found=new Map();
+
+  const sets=await querySetsByOfficialCount(total);
+  for(const s of sets.slice(0,30)){
+    for(const v of variants){
+      try{
+        const r=await fetch(`${API}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(v)}`);
+        if(!r.ok)continue;
+        const card=await r.json();
+        if(card?.id && sameCollectorNumber(card.localId,num) && sameSetTotal(setOfficialCount(card),total)){
+          found.set(card.id,card);
+          break;
+        }
+      }catch(e){}
+    }
+  }
+  if(found.size)return [...found.values()];
+
+  const briefs=await queryByAnyLocalId(num);
+  for(const b of briefs.slice(0,50)){
+    const c=await fetchFullCandidate(b);
+    if(sameCollectorNumber(c.localId,num) && sameSetTotal(setOfficialCount(c),total)){
+      found.set(c.id,c);
+    }
+  }
+  return [...found.values()];
+}
+
+function exactNameMatches(cards,name){
+  const target=normText(name);
+  if(!target)return cards;
+  const exact=cards.filter(c=>normText(c.name||'')===target);
+  if(exact.length)return exact;
+  const embedded=cards.filter(c=>candidateContainedInOCR(name,c.name||''));
+  return embedded.length?embedded:cards;
+}
+
+function sortBySearchIntent(cards,{name='',num='',total=''}) {
+  const targetName=normText(name);
+  return [...cards].sort((a,b)=>{
+    const score=c=>{
+      let s=0;
+      if(targetName && normText(c.name||'')===targetName)s+=10000;
+      else if(targetName)s+=Math.round(similarity(name,c.name||'')*1000);
+      if(total && sameSetTotal(setOfficialCount(c),total))s+=3000;
+      if(num && sameCollectorNumber(c.localId,num))s+=1000;
+      return s;
+    };
+    return score(b)-score(a);
+  });
+}
+
 async function fastCascadeSearch({name='',num='',total=''}) {
   const cleanName=String(name||'').trim();
-  const cleanNum=String(num||'').replace(/^0+/,'') || String(num||'');
+  const cleanNum=String(num||'').trim();
+  const cleanTotal=String(total||'').trim();
   let results=[];
 
-  // V4.7 NAME-FIRST: if a readable name exists, it is always the primary filter.
-  // Number/set only refine and rank cards with that name; they never replace the name search.
   if(cleanName){
-    setScanMode('modeName',`Cerco prima il nome “${cleanName}”…`);
+    setScanMode('modeName',`Cerco “${cleanName}”…`);
     results=await apiCardsQuery({name:cleanName});
 
-    if(results.length && total){
-      setScanMode('modeNameSet',`Nome trovato. Confronto il set (${total})…`);
-      const sameSet=results.filter(c=>String(setOfficialCount(c))===String(Number(total)));
-      if(sameSet.length) results=sameSet;
+    if(results.length){
+      const full=[];
+      for(const c of results.slice(0,40))full.push(await fetchFullCandidate(c));
+      results=exactNameMatches(full,cleanName);
+    }
+
+    if(results.length && cleanTotal){
+      setScanMode('modeNameSet',`Nome trovato. Filtro i set da ${cleanTotal} carte…`);
+      const sameSet=results.filter(c=>sameSetTotal(setOfficialCount(c),cleanTotal));
+      if(sameSet.length)results=sameSet;
     }
 
     if(results.length && cleanNum){
-      const sameNumber=results.filter(c=>{
-        const cnum=String(c.localId||'').replace(/^0+/,'') || String(c.localId||'');
-        return cnum===cleanNum;
-      });
-      if(sameNumber.length) results=[...sameNumber,...results.filter(c=>!sameNumber.includes(c))];
+      const exactNumber=results.filter(c=>sameCollectorNumber(c.localId,cleanNum));
+      if(exactNumber.length)results=exactNumber;
     }
 
-    if(results.length)return {results,route: total?'Nome → Set → Numero':'Nome → Numero'};
+    results=sortBySearchIntent(results,{name:cleanName,num:cleanNum,total:cleanTotal});
+    if(results.length)return {results,route:cleanTotal?'Nome + Totale set + Numero':'Nome + Numero'};
   }
 
-  // Numeric-only fallback: number AND total set are mandatory.
-  // 14 == 014 and 94 == 094, but cards from other set sizes are rejected.
-  if(cleanNum && total){
-    setScanMode('modeCode',`Nome non disponibile. Cerco ${num}/${total}…`);
-    results=await queryByAnyLocalId(num);
+  if(!cleanName && cleanNum && cleanTotal){
+    setScanMode('modeCode',`Cerco esattamente ${cleanNum}/${cleanTotal}…`);
+    results=await queryByPrintedCode(cleanNum,cleanTotal);
+    results=sortBySearchIntent(results,{num:cleanNum,total:cleanTotal});
+    if(results.length)return {results,route:'Numero + Totale set'};
+    return {results:[],route:'Nessuna corrispondenza esatta'};
+  }
 
-    if(results.length){
-      const fullResults=[];
-      for(const c of results.slice(0,40)){
-        fullResults.push(await fetchFullCandidate(c));
-      }
-
-      results=fullResults.filter(c=>{
-        return sameCollectorNumber(c.localId,num) &&
-               sameSetTotal(setOfficialCount(c),total);
-      });
-    }
-
-    if(results.length){
-      return {results,route:'Numero + Totale set'};
-    }
-    return {results:[],route:'Nessun risultato esatto Numero/Set'};
+  if(!cleanName && cleanNum){
+    setScanMode('modeCode',`Cerco il numero ${cleanNum} in tutti i set…`);
+    const briefs=await queryByAnyLocalId(cleanNum);
+    const full=[];
+    for(const c of briefs.slice(0,30))full.push(await fetchFullCandidate(c));
+    results=full.filter(c=>sameCollectorNumber(c.localId,cleanNum));
+    return {results:sortBySearchIntent(results,{num:cleanNum}),route:'Solo numero'};
   }
 
   return {results:[],route:'Nessun risultato'};
 }
+
 async function renderFastCandidates(results,route){
   const full=(results||[]).slice(0,6);
   if(!full.length)return false;
@@ -720,118 +783,70 @@ async function fetchFullCandidate(c){
 }
 
 async function searchCards(opts={}){
-  let name=nameInput.value.trim(),num=numberInput.value.trim(),total=setTotalInput.value.trim();
+  let name=nameInput.value.trim();
+  let num=numberInput.value.trim();
+  let total=setTotalInput.value.trim();
   if(opts.numberOnly)name='';
-  if(!name&&!num){searchMsg.textContent='Inserisci almeno nome o numero.';return}
-  searchMsg.textContent='Cerco e confronto i set…'; results.innerHTML='';
+
+  if(!name&&!num){
+    searchMsg.textContent='Inserisci almeno nome o numero.';
+    return;
+  }
+
+  results.innerHTML='';
+  clearSelection();
+  searchMsg.textContent='Cerco la carta…';
+
   try{
-    let arr=[];
-    // V4.7: NAME-FIRST. If a name is present, never let the collector number broaden the search.
-    if(name){
-      arr=await fetch(`${API}/cards?name=${encodeURIComponent(name)}`).then(r=>r.json());
-      if(!Array.isArray(arr))arr=[];
-    }
-    if(!arr.length&&num && String(name||lastOCR.name||'').trim()){
-      arr=await queryByAnyLocalId(num);
-      if(!Array.isArray(arr))arr=[];
-    }
-    arr=(arr||[]).slice(0,35);
-    let full=await Promise.all(arr.map(fetchFullCandidate));
-    const targetName=name||lastOCR.name||'';
-    const targetTotal=Number(String(total||lastOCR.total||0).replace(/\D/g,''))||0;
-    const targetNum=String(Number(String(num||lastOCR.number||'').replace(/\D/g,'')))||'0';
+    const found=await fastCascadeSearch({name,num,total});
+    let full=(found.results||[]).slice(0,6);
 
-    // STRICT NUMERIC SEARCH:
-    // with empty name, both number and total set must match.
-    if(!String(targetName).trim() && targetNum!=='0' && targetTotal){
-      const strictMatches=[];
-      for(const c of arr.slice(0,50)){
-        const fullC=await fetchFullCandidate(c);
-        if(
-          sameCollectorNumber(fullC.localId,targetNum) &&
-          sameSetTotal(setOfficialCount(fullC),targetTotal)
-        ){
-          strictMatches.push(fullC);
-        }
-      }
-      arr=strictMatches;
-
-      if(!arr.length){
-        results.innerHTML='';
-        searchMsg.textContent=`Nessuna carta trovata con numero ${num} nel set da ${total} carte.`;
-        return;
-      }
-    }
-    full=full.map(c=>{
-      const cnum=String(c.localId||'').replace(/^0+/,'')||'0';
-      const count=setOfficialCount(c);
-      const sim=similarity(targetName,c.name||'');
-      let score=0;
-      // NAME dominates. Set is confirmation. Number is only the final tie-breaker.
-      if(targetName)score+=Math.round(sim*500);
-      if(targetName && normText(c.name||'')===normText(targetName))score+=1000;
-      if(targetName && candidateContainedInOCR(targetName,c.name||''))score+=350;
-      if(targetTotal&&count===targetTotal)score+=220;
-      else if(targetTotal&&count&&Math.abs(count-targetTotal)<=2)score+=25;
-      if(cnum===targetNum)score+=60;
-      return {...c,_score:score,_setCount:count,_sim:sim};
-    }).sort((a,b)=>b._score-a._score);
-    full=full.slice(0,6);
     if(!full.length){
-      searchMsg.textContent='Nessun risultato con numero/set. Prova il nome + totale set: Cardoryx ignorerà il numero se necessario.';
+      searchMsg.textContent=name
+        ? 'Nessuna corrispondenza con questi dati. Prova Nome + Totale set oppure correggi il nome.'
+        : (num&&total
+            ? `Nessuna carta trovata con numero ${num} nel set da ${total} carte.`
+            : 'Nessuna carta trovata con questo numero.');
       return;
     }
-    let top=full[0];
-    const exactSame=full.filter(c=>c._setCount===targetTotal && (String(c.localId||'').replace(/^0+/,'')||'0')===targetNum);
 
-    // Normalize noisy OCR against the official names of cards that share the exact collector code.
-    const officialName=bestOfficialNameFromCandidates(targetName, full);
+    const exact=full.filter(c=>
+      (!name || normText(c.name||'')===normText(name) || candidateContainedInOCR(name,c.name||'')) &&
+      (!num || sameCollectorNumber(c.localId,num)) &&
+      (!total || sameSetTotal(setOfficialCount(c),total))
+    );
+
     let autoCandidate=null;
-    if(officialName){
-      nameInput.value=officialName;
-      lastOCR.name=officialName;
-      full=full.map(c=>{
-        const exactOfficial=normText(c.name||'')===normText(officialName);
-        return {...c,_score:(c._score||0)+(exactOfficial?220:0),_officialMatch:exactOfficial};
-      }).sort((a,b)=>b._score-a._score);
-      top=full[0];
-      const exactOfficialMatches=full.filter(c=>c._officialMatch && (!targetTotal || c._setCount===targetTotal) && (String(c.localId||'').replace(/^0+/,'')||'0')===targetNum);
-      if(exactOfficialMatches.length===1)autoCandidate=exactOfficialMatches[0];
-    }
+    if(exact.length===1)autoCandidate=exact[0];
+    else if(full.length===1)autoCandidate=full[0];
 
-    const strongName=(officialName && normText(top.name||'')===normText(officialName)) || (targetName && top._sim>=0.55);
-    const strong=(exactSame.length===1 && targetTotal) || strongName || top._score>=190;
-    searchMsg.textContent=autoCandidate
-      ? `Riconosciuta: ${autoCandidate.name} · ${num}/${total}. Seleziono automaticamente la carta.`
-      : (strong
-          ? `Corrispondenza molto probabile trovata. Mostro ${full.length} risultati ordinati.`
-          : (exactSame.length>1
-              ? `${exactSame.length} carte condividono ${num}/${total}. Tocca quella corretta: nessuna viene scelta automaticamente.`
-              : `${full.length} candidati ordinati per probabilità.`));
     candidateMap={};
     results.innerHTML=`<div class="candidate-grid">${full.map((c,i)=>{
       const key='cand_'+i;
       candidateMap[key]=c;
-      const best=i===0&&strong;
-      const count=c._setCount?`/${c._setCount}`:'';
-      const set=setName(c);
-      return `<div class="candidate ${best?'best':''}">
+      const count=setOfficialCount(c);
+      const isExact=autoCandidate?.id===c.id;
+      return `<div class="candidate ${isExact?'best':''}">
         <img src="${c.image?c.image+'/low.webp':''}" onerror="this.style.visibility='hidden'">
         <h3>${esc(c.name)}</h3>
-        <div class="small">N° ${esc(c.localId)}${esc(count)}${set?' · '+esc(set):''}</div>
-        ${best?'<span class="rank-badge">★ PIÙ PROBABILE</span>':''}
+        <div class="small">N° ${esc(c.localId)}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
+        ${isExact?'<span class="rank-badge">★ CORRISPONDENZA ESATTA</span>':''}
         <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
-      </div>`
+      </div>`;
     }).join('')}</div>`;
+
     if(autoCandidate){
-      // Let Safari paint the candidates first, then open the exact confirmation card.
+      searchMsg.textContent=`Corrispondenza esatta: ${autoCandidate.name} · ${autoCandidate.localId}/${setOfficialCount(autoCandidate)||'?'}.`;
       setTimeout(()=>chooseCard(autoCandidate),80);
+    }else{
+      searchMsg.textContent=`${full.length} risultati compatibili. Tocca la carta corretta.`;
     }
   }catch(e){
     console.error(e);
-    searchMsg.textContent='Errore di collegamento a TCGdex.';
+    searchMsg.textContent='Errore durante la ricerca. Riprova.';
   }
 }
+
 async function chooseCandidate(key){
   const c=candidateMap[key];
   if(!c){console.error('Candidato non trovato',key);return}

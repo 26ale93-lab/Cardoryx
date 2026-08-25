@@ -149,3 +149,15 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Le carte con stesso numero ma totale set diverso vengono escluse.
 - Nessun allargamento automatico della ricerca numerica se Nome è vuoto.
 - Cache PWA `cardoryx-v4.9.1`.
+
+
+## V5.0 — Motore ricerca deterministico
+- Corretto il bug che impediva la ricerca solo Numero + Totale Set.
+- Nome = identità primaria della carta.
+- Totale Set = filtro reale, non semplice punteggio.
+- Numero = conferma finale.
+- Senza nome, Numero + Totale Set vengono cercati come coppia esatta.
+- Ricerca del codice stampato: individua prima i set con `cardCount.official`, poi cerca la carta dentro il set.
+- Fallback alla ricerca `localId`.
+- Una sola corrispondenza esatta apre direttamente Conferma.
+- Cache PWA `cardoryx-v5.0.0`.
