@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3.8</title>
+<title>Cardoryx V3.9</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -38,6 +38,21 @@
 .settings-stat:last-child{border-bottom:0}
 .btn.red{background:#b42318;color:#fff}
 .btn.red:active{transform:scale(.99)}
+
+
+nav{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:2px!important;padding:8px 6px calc(8px + env(safe-area-inset-bottom))!important}
+nav button,.nav-btn{min-width:0!important;padding:7px 2px!important;font-size:12px!important}
+nav button span,.nav-btn span{display:block;font-size:18px;line-height:1.1}
+nav button small,.nav-btn small{display:block;font-size:10px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.image-modal{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.86);display:none;align-items:center;justify-content:center;padding:18px}
+.image-modal.open{display:flex}
+.image-modal img{max-width:96vw;max-height:88vh;object-fit:contain;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.image-modal-close{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;width:44px;height:44px;border:0;border-radius:50%;background:#fff;color:#111;font-size:28px;font-weight:800}
+.clickable-card-img{cursor:zoom-in}
+.edit-sheet-grid{display:grid;gap:12px}
+.edit-sheet-grid label{display:block;font-size:12px;font-weight:800;text-transform:uppercase;color:#667085;margin-bottom:5px}
+.category-row-click{cursor:pointer}
+.category-row-click:active{background:#f3f5f8}
 
 </style>
 </head>
@@ -126,6 +141,7 @@
     <p class="muted">Prima di modificare o azzerare il catalogo, crea un backup.</p>
 
     <div class="settings-stack">
+      <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV</button>
       <button class="btn alt big" type="button" onclick="exportJSON()">💾 Crea backup JSON</button>
       <label class="btn alt big settings-file-label" for="settingsImportJson">📥 Importa backup JSON</label>
       <input id="settingsImportJson" type="file" accept=".json,application/json" class="hidden">
@@ -156,6 +172,49 @@
   </div>
 </section>
 
+
+<div id="imageModal" class="image-modal" aria-hidden="true">
+  <button class="image-modal-close" type="button" onclick="closeImageModal()">×</button>
+  <img id="imageModalImg" alt="Carta ingrandita">
+</div>
+
+<div id="editCardModal" class="condition-modal" aria-hidden="true">
+  <div class="condition-sheet" role="dialog" aria-modal="true">
+    <div class="condition-sheet-head">
+      <div>
+        <div class="condition-sheet-kicker">MODIFICA CARTA</div>
+        <h3 id="editCardTitle">Carta</h3>
+      </div>
+      <button type="button" class="condition-close" onclick="closeEditCardModal()">×</button>
+    </div>
+    <div class="edit-sheet-grid">
+      <div><label>Quantità</label><input id="editQtyInput" type="number" min="1" inputmode="numeric"></div>
+      <div><label>Variante</label>
+        <select id="editVariantInput">
+          <option>Normale</option><option>Holo</option><option>Reverse Holo</option><option>Cosmos Holo</option>
+        </select>
+      </div>
+      <div><label>Stato</label>
+        <select id="editStatusInput">
+          <option>Disponibile</option><option>Protetta</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Vendita</option>
+        </select>
+      </div>
+      <div><label>Condizione</label>
+        <select id="editConditionInput">
+          <option value="NM">NM — Near Mint</option>
+          <option value="EX">EX — Excellent</option>
+          <option value="GD">GD — Good</option>
+          <option value="PL">PL — Played</option>
+          <option value="PO">PO — Poor</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+      <button class="btn alt big" type="button" onclick="closeEditCardModal()">Annulla</button>
+      <button class="btn green big" type="button" onclick="saveEditCard()">Salva modifiche</button>
+    </div>
+  </div>
+</div>
 <div id="resetModal" class="condition-modal" aria-hidden="true">
   <div class="condition-sheet" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
     <div class="condition-sheet-head">
@@ -180,7 +239,7 @@
 </div>
 
 <nav class="bottom"><div class="tabs"><button class="tab active" data-v="home" onclick="showView('home')">🏠<br>Home</button><button class="tab" data-v="scan" onclick="showView('scan')">📷<br>Scanner</button><button class="tab" data-v="catalog" onclick="showView('catalog')">📚<br>Carte</button><button class="tab" data-v="stats" onclick="showView('stats')">📊<br>Categorie</button></div>
-    <button type="button" class="nav-btn" data-page="settings" onclick="showPage('settings')">
+    <button type="button" class="nav-btn" data-page="settings" onclick="showPage('settings');return false;">
       <span>⚙️</span><small>Impostazioni</small>
     </button>
 </nav>
@@ -515,7 +574,7 @@ function renderCatalog(){
       <div class="row">
         <div class="meta">
           <div style="display:flex;gap:10px;align-items:center">
-            ${c.image?`<img src="${c.image}/low.webp" style="width:54px;border-radius:7px" onerror="this.style.display='none'">`:''}
+            ${c.image?`<img class="clickable-card-img" src="${c.image}/low.webp" style="width:54px;border-radius:7px" onclick="openImageModal('${c.image}/low.webp')" onerror="this.style.display='none'">`:''}
             <div>
               <h3>${esc(c.name||'Carta')}</h3>
               <div class="small">${esc(c.set||'')} · ${esc(c.localId||'')} · ${esc(c.variant||'Normale')} · ${esc(c.condition||'NM')}</div>
@@ -536,19 +595,7 @@ function renderCatalog(){
   }).join('') : '<div class="empty">Nessuna carta.</div>';
 }
 
-function editRecord(key){
-  const id=decodeURIComponent(key);
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
-  if(!c)return;
 
-  const qty=prompt(`Quantità per ${c.name}`,Number(c.qty)||1);
-  if(qty===null)return;
-  const n=parseInt(qty,10);
-  if(!Number.isFinite(n)||n<1)return;
-
-  c.qty=n;
-  persist();
-}
 
 function deleteRecord(key){
   const id=decodeURIComponent(key);
@@ -560,7 +607,17 @@ function deleteRecord(key){
 }
 
 function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
-function renderStats(){const el=document.getElementById('statsList');if(!el)return;const map={};db.forEach(c=>map[cardCategory(c)]=(map[cardCategory(c)]||0)+c.qty);el.innerHTML=CATEGORIES.map(k=>`<div class="result"><div class="meta"><h3>${k}</h3></div><strong>${map[k]||0}</strong></div>`).join('')}
+function renderStats(){
+  const el=ui('statsList');
+  if(!el)return;
+  const cats=CATEGORIES;
+  el.innerHTML=cats.map(cat=>{
+    const n=db.filter(c=>cardCategory(c)===cat).reduce((a,c)=>a+(Number(c.qty)||1),0);
+    return `<div class="stat-row category-row-click" onclick="filterByCategory('${esc(cat)}')">
+      <span>${cat}</span><strong>${n}</strong>
+    </div>`;
+  }).join('');
+}
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportJSON(){download('cardoryx-backup.json',JSON.stringify(db,null,2),'application/json')}
 function exportCSV(){const h=['Nome','Set','Numero','Categoria','Tipo','Evoluzione','Rarita','Variante','Quantita','Stato','Condizione','Posizione'];const rows=db.map(c=>[c.name,c.set,c.localId,c.category,c.type,c.stage,c.rarity,c.variant,c.qty,c.status,c.condition,cardCategory(c)]);const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');download('cardoryx.csv','\ufeff'+csv,'text/csv;charset=utf-8')}

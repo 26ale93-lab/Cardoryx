@@ -65,3 +65,13 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Migrazione automatica dei vecchi salvataggi duplicati: record identici vengono consolidati.
 - Stato archivio visibile in Impostazioni.
 - Cache PWA: `cardoryx-v3.8.0`.
+
+
+## V3.9 — Impostazioni, modifica completa, zoom e categorie cliccabili
+- Corretto pulsante Impostazioni e layout barra inferiore a 5 voci.
+- Backup/Import/Export spostati dentro Impostazioni.
+- Modifica carta ora consente Quantità, Variante, Stato e Condizione.
+- Tap sull'immagine nel Catalogo apre la carta ingrandita.
+- Le righe in Categorie sono cliccabili e aprono il Catalogo filtrato.
+- Reset protetto resta dentro Impostazioni.
+- Cache PWA `cardoryx-v3.9.0`.
