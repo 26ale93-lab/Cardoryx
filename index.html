@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3.3</title>
+<title>Cardoryx V3.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -200,10 +200,14 @@ async function searchCards(opts={}){
       return;
     }
     const top=full[0];
-    const strong=top._score>=145 || (targetTotal && top._setCount===targetTotal && top._score>=120);
+    const exactSame=full.filter(c=>c._setCount===targetTotal && (String(c.localId||'').replace(/^0+/,'')||'0')===targetNum);
+    const strongName=targetName && top._sim>=0.55;
+    const strong=(exactSame.length===1 && targetTotal) || strongName || top._score>=190;
     searchMsg.textContent=strong
       ? `Corrispondenza molto probabile trovata. Mostro ${full.length} risultati ordinati.`
-      : `${full.length} candidati ordinati per probabilità.`;
+      : (exactSame.length>1
+          ? `${exactSame.length} carte condividono ${num}/${total}. Tocca quella corretta: nessuna viene scelta automaticamente.`
+          : `${full.length} candidati ordinati per probabilità.`);
     candidateMap={};
     results.innerHTML=`<div class="candidate-grid">${full.map((c,i)=>{
       const key='cand_'+i;
@@ -229,7 +233,7 @@ async function chooseCandidate(key){
   if(!c){console.error('Candidato non trovato',key);return}
   return chooseCard(c);
 }
-async function chooseCard(s){const brief=JSON.parse(s);confirmCard.classList.remove('hidden');confirmName.textContent=brief.name;confirmImg.src=(brief.image||'')+'/high.webp';confirmInfo.textContent='Carico dettagli…';confirmTags.innerHTML='';try{const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());selectedCard={...brief,...full};const category=inferCategory(full),type=inferType(full),stage=full.stage||'';confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;}catch(e){selectedCard=brief;confirmInfo.textContent=`N° ${brief.localId}`}}
+async function chooseCard(s){const brief=typeof s==='string'?JSON.parse(s):s;confirmCard.classList.remove('hidden');confirmName.textContent=brief.name;confirmImg.src=(brief.image||'')+'/high.webp';confirmInfo.textContent='Carico dettagli…';confirmTags.innerHTML='';try{const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());selectedCard={...brief,...full};const category=inferCategory(full),type=inferType(full),stage=full.stage||'';confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;}catch(e){selectedCard=brief;confirmInfo.textContent=`N° ${brief.localId}`}}
 function inferCategory(c){const cat=String(c.category||'').toLowerCase();if(cat.includes('pokemon')||c.hp||c.stage)return 'Pokémon';if(cat.includes('trainer')||c.trainerType)return 'Allenatore';if(cat.includes('energy')||c.energyType)return 'Energia';return 'Pokémon'}
 function inferType(c){let t=(c.types&&c.types[0])||c.type||'';return TYPE_MAP[t]||t||''}
 function clearSelection(){selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}

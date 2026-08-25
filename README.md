@@ -15,3 +15,11 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Accenti, apostrofi, abilità e testo italiano non possono più rompere il click.
 - La carta selezionata deve corrispondere esattamente al pulsante premuto.
 - Cache PWA aggiornata a `cardoryx-v3.3.0`.
+
+
+## V3.4 — Kilowattrel fix + OCR name cleanup
+- Correzione reale di `chooseCard`: ora accetta direttamente l'oggetto candidato.
+- Il pulsante "È questa" di Kilowattrel usa esattamente lo stesso percorso degli altri candidati.
+- OCR nome più stretto: esclude FASE/PS e numeri laterali.
+- Se più carte condividono lo stesso codice (es. 055/159), Cardoryx non assegna più un falso "PIÙ PROBABILE" senza un nome affidabile.
+- Cache aggiornata a `cardoryx-v3.4.0`.
