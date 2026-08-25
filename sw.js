@@ -1,4 +1,4 @@
-const CACHE='cardoryx-v4.1.0';
+const CACHE='cardoryx-v4.2.0';
 const ASSETS=[
   './',
   './index.html',

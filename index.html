@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.1</title>
+<title>Cardoryx V4.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,6 +68,39 @@
 .qty-control strong{font-size:14px}
 .catalog-empty{padding:34px 16px;text-align:center;color:#6b7280}
 .catalog-empty .emoji{font-size:38px;margin-bottom:8px}
+
+
+.category-hero{margin-bottom:14px;padding:18px;border-radius:22px;background:linear-gradient(135deg,#111827,#263247);color:#fff;box-shadow:0 10px 24px rgba(15,23,42,.12)}
+.category-hero h2{margin:0 0 5px;font-size:25px}
+.category-hero p{margin:0;color:#d1d5db;font-size:13px;line-height:1.4}
+.category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.category-tile{position:relative;overflow:hidden;border:1px solid #e5e7eb;border-radius:20px;background:#fff;padding:15px;min-height:118px;box-shadow:0 5px 18px rgba(15,23,42,.06);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+.category-tile:active{transform:scale(.985)}
+.category-tile:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--cat-accent,#c7d2fe)}
+.category-tile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.category-icon{width:46px;height:46px;border-radius:15px;background:var(--cat-soft,#f3f4f6);display:flex;align-items:center;justify-content:center;font-size:27px}
+.category-count{font-size:24px;font-weight:900;line-height:1}
+.category-name{font-size:16px;font-weight:900;margin-top:12px}
+.category-sub{font-size:11px;color:#6b7280;margin-top:3px}
+.category-empty{opacity:.65}
+.category-tile[data-cat="Protette"]{--cat-accent:#f4c430;--cat-soft:#fff8dc}
+.category-tile[data-cat="Erba"]{--cat-accent:#43a047;--cat-soft:#edf8ee}
+.category-tile[data-cat="Fuoco"]{--cat-accent:#ef5350;--cat-soft:#fff0ef}
+.category-tile[data-cat="Acqua"]{--cat-accent:#42a5f5;--cat-soft:#eef7ff}
+.category-tile[data-cat="Elettro"]{--cat-accent:#f4b400;--cat-soft:#fff8db}
+.category-tile[data-cat="Psico"]{--cat-accent:#8e44ad;--cat-soft:#f7eefb}
+.category-tile[data-cat="Lotta"]{--cat-accent:#c96a2b;--cat-soft:#fff3ea}
+.category-tile[data-cat="Oscurità"]{--cat-accent:#374151;--cat-soft:#eef0f3}
+.category-tile[data-cat="Metallo"]{--cat-accent:#9ca3af;--cat-soft:#f4f5f6}
+.category-tile[data-cat="Drago"]{--cat-accent:#6d5dfc;--cat-soft:#f0efff}
+.category-tile[data-cat="Incolore"]{--cat-accent:#c7c9cc;--cat-soft:#f7f7f8}
+.category-tile[data-cat="Aiuto"]{--cat-accent:#5b7cfa;--cat-soft:#eef2ff}
+.category-tile[data-cat="Strumenti"]{--cat-accent:#d97706;--cat-soft:#fff4e5}
+.category-tile[data-cat="Stadio"]{--cat-accent:#059669;--cat-soft:#eaf9f3}
+.category-tile[data-cat="Oggetti Pokémon"]{--cat-accent:#db2777;--cat-soft:#fdeef6}
+.category-tile[data-cat="Energie Base"]{--cat-accent:#f59e0b;--cat-soft:#fff7e6}
+.category-tile[data-cat="Energie Speciali"]{--cat-accent:#7c3aed;--cat-soft:#f4efff}
+@media (min-width:700px){.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 </style>
 </head>
@@ -141,6 +174,11 @@
   </section>
 
   <section id="statsView" class="hidden">
+    <div class="category-hero">
+      <h2>📊 Categorie</h2>
+      <p>Tocca una categoria per aprire subito il catalogo filtrato. Il numero indica quante carte hai in quella sezione.</p>
+    </div>
+
     <div class="card"><div class="section-title">Categorie</div><div id="statsList"></div></div>
   </section>
 
@@ -680,10 +718,24 @@ function deleteRecord(key){
 
 function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
 function renderStats(){
-  statsList.innerHTML=CATEGORIES.map(cat=>{
+  const iconMap={
+    'Protette':'⭐','Erba':'🌿','Fuoco':'🔥','Acqua':'💧','Elettro':'⚡','Psico':'🔮',
+    'Lotta':'👊','Oscurità':'🌑','Metallo':'⚙️','Drago':'🐉','Incolore':'⚪',
+    'Aiuto':'👤','Strumenti':'🧰','Stadio':'🏟️','Oggetti Pokémon':'🎒',
+    'Energie Base':'⚡','Energie Speciali':'✨'
+  };
+  statsList.innerHTML=`<div class="category-grid">${CATEGORIES.map(cat=>{
     const n=db.filter(c=>cardCategory(c)===cat).reduce((a,c)=>a+(Number(c.qty)||1),0);
-    return `<div class="stat-row clickable" onclick="filterByCategory('${esc(cat)}')"><span>${cat}</span><b>${n}</b></div>`;
-  }).join('');
+    const label=n===1?'1 carta':`${n} carte`;
+    return `<div class="category-tile ${n===0?'category-empty':''}" data-cat="${esc(cat)}" onclick="filterByCategory('${esc(cat)}')">
+      <div class="category-tile-top">
+        <div class="category-icon">${iconMap[cat]||'📁'}</div>
+        <div class="category-count">${n}</div>
+      </div>
+      <div class="category-name">${esc(cat)}</div>
+      <div class="category-sub">${label}</div>
+    </div>`;
+  }).join('')}</div>`;
 }
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportJSON(){download('cardoryx-backup.json',JSON.stringify(db,null,2),'application/json')}

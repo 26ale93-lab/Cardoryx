@@ -77,3 +77,12 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Modifica completa ed Elimina restano disponibili.
 - Riepilogo delle schede e del numero totale di carte visibili.
 - Cache PWA `cardoryx-v4.1.0`.
+
+
+## V4.2 — Categorie redesign
+- Nuova schermata Categorie a schede visive.
+- Ogni categoria mostra icona, nome e conteggio.
+- Colori distinti per tipo/categoria.
+- Tap sulla scheda apre il Catalogo già filtrato.
+- Layout responsive: 2 colonne su iPhone, 3 su schermi più larghi.
+- Cache PWA `cardoryx-v4.2.0`.
