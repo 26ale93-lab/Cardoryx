@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3.9</title>
+<title>Cardoryx V4.0</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,29 +30,24 @@
 .condition-ok{width:100%;margin-top:2px}
 
 
+.bottom .tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important}
+.bottom .tab{min-width:0!important;padding:8px 1px!important;font-size:17px!important;line-height:1.1!important}
+.bottom .tab span{font-size:10px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;margin-top:2px}
 .settings-stack{display:grid;gap:10px}
-.settings-file-label{display:flex;align-items:center;justify-content:center;cursor:pointer}
-.danger-zone{border:1px solid #fecaca;background:#fffafa}
-.danger-kicker{font-size:12px;font-weight:900;letter-spacing:.08em;color:#b42318;margin-bottom:4px}
+.settings-file-label{display:flex!important;align-items:center;justify-content:center;cursor:pointer}
+.danger-zone{border:1px solid #fecaca!important;background:#fffafa!important}
+.danger-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#b42318;margin-bottom:5px}
 .settings-stat{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #eceef2}
 .settings-stat:last-child{border-bottom:0}
-.btn.red{background:#b42318;color:#fff}
-.btn.red:active{transform:scale(.99)}
-
-
-nav{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:2px!important;padding:8px 6px calc(8px + env(safe-area-inset-bottom))!important}
-nav button,.nav-btn{min-width:0!important;padding:7px 2px!important;font-size:12px!important}
-nav button span,.nav-btn span{display:block;font-size:18px;line-height:1.1}
-nav button small,.nav-btn small{display:block;font-size:10px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.image-modal{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.86);display:none;align-items:center;justify-content:center;padding:18px}
+.btn.red{background:#b42318!important;color:#fff!important}
+.image-modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:18px}
 .image-modal.open{display:flex}
-.image-modal img{max-width:96vw;max-height:88vh;object-fit:contain;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-.image-modal-close{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;width:44px;height:44px;border:0;border-radius:50%;background:#fff;color:#111;font-size:28px;font-weight:800}
-.clickable-card-img{cursor:zoom-in}
-.edit-sheet-grid{display:grid;gap:12px}
-.edit-sheet-grid label{display:block;font-size:12px;font-weight:800;text-transform:uppercase;color:#667085;margin-bottom:5px}
-.category-row-click{cursor:pointer}
-.category-row-click:active{background:#f3f5f8}
+.image-modal img{max-width:96vw;max-height:88vh;object-fit:contain;border-radius:16px}
+.image-modal button{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border:0;border-radius:50%;font-size:28px;font-weight:800}
+.edit-grid{display:grid;gap:12px}
+.edit-grid .label{margin-bottom:5px}
+.stat-row.clickable{cursor:pointer}
+.stat-row.clickable:active{background:#f2f4f7}
 
 </style>
 </head>
@@ -70,7 +65,7 @@ nav button small,.nav-btn small{display:block;font-size:10px;line-height:1.15;wh
       <div class="section-title">Divisione fisica consigliata</div>
       <div id="categoryPills"></div>
     </div>
-    <div class="card"><div class="section-title">Backup</div><div class="grid"><button class="btn alt" onclick="exportCSV()">Esporta CSV</button><button class="btn alt" onclick="exportJSON()">Backup JSON</button></div><div class="spacer"></div><label class="btn alt" style="display:block;text-align:center">Importa JSON<input id="importFile" type="file" accept="application/json" hidden></label></div>
+    
   </section>
 
   <section id="scanView" class="hidden">
@@ -128,79 +123,69 @@ nav button small,.nav-btn small{display:block;font-size:10px;line-height:1.15;wh
   <section id="statsView" class="hidden">
     <div class="card"><div class="section-title">Categorie</div><div id="statsList"></div></div>
   </section>
+
+  <section id="settingsView" class="hidden">
+    <div class="card">
+      <div class="section-title">⚙️ Impostazioni</div>
+      <div class="footer-note">Gestione dati e strumenti di Cardoryx.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Backup e trasferimento</div>
+      <div class="settings-stack">
+        <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV</button>
+        <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup JSON</button>
+        <label class="btn alt big settings-file-label">📥 Importa JSON
+          <input id="settingsImportFile" type="file" accept="application/json,.json" hidden>
+        </label>
+      </div>
+    </div>
+
+    <div class="card danger-zone">
+      <div class="danger-kicker">ZONA PROTETTA</div>
+      <div class="section-title">🗑️ Azzera catalogo</div>
+      <div class="footer-note">Elimina tutte le carte salvate su questo dispositivo. Richiede una seconda conferma.</div>
+      <div class="spacer"></div>
+      <button class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Stato archivio</div>
+      <div class="settings-stat"><span>Record</span><strong id="settingsRecords">0</strong></div>
+      <div class="settings-stat"><span>Carte totali</span><strong id="settingsTotal">0</strong></div>
+    </div>
+  </section>
+
 </div>
 
-<section id="page-settings" class="page hidden">
-  <div class="card">
-    <h2>⚙️ Impostazioni</h2>
-    <p class="muted">Gestione sicura dei dati locali di Cardoryx.</p>
-  </div>
-
-  <div class="card">
-    <h3>Gestione dati</h3>
-    <p class="muted">Prima di modificare o azzerare il catalogo, crea un backup.</p>
-
-    <div class="settings-stack">
-      <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV</button>
-      <button class="btn alt big" type="button" onclick="exportJSON()">💾 Crea backup JSON</button>
-      <label class="btn alt big settings-file-label" for="settingsImportJson">📥 Importa backup JSON</label>
-      <input id="settingsImportJson" type="file" accept=".json,application/json" class="hidden">
-    </div>
-  </div>
-
-  <div class="card danger-zone">
-    <div class="danger-kicker">ZONA PROTETTA</div>
-    <h3>🗑️ Azzera catalogo</h3>
-    <p class="muted">Elimina tutte le carte salvate sul dispositivo. Questa operazione non può essere annullata senza un backup.</p>
-    <button id="resetCatalogBtn" class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button>
-  </div>
-
-  <div class="card">
-    <h3>Stato archivio</h3>
-    <div class="settings-stat">
-      <span>Record salvati</span>
-      <strong id="settingsRecords">0</strong>
-    </div>
-    <div class="settings-stat">
-      <span>Carte totali</span>
-      <strong id="settingsTotal">0</strong>
-    </div>
-    <div class="settings-stat">
-      <span>Archivio</span>
-      <strong>Locale su questo iPhone</strong>
-    </div>
-  </div>
-</section>
-
-
 <div id="imageModal" class="image-modal" aria-hidden="true">
-  <button class="image-modal-close" type="button" onclick="closeImageModal()">×</button>
+  <button type="button" onclick="closeImageModal()">×</button>
   <img id="imageModalImg" alt="Carta ingrandita">
 </div>
 
-<div id="editCardModal" class="condition-modal" aria-hidden="true">
-  <div class="condition-sheet" role="dialog" aria-modal="true">
+<div id="editModal" class="condition-modal" aria-hidden="true">
+  <div class="condition-sheet">
     <div class="condition-sheet-head">
       <div>
         <div class="condition-sheet-kicker">MODIFICA CARTA</div>
-        <h3 id="editCardTitle">Carta</h3>
+        <h3 id="editTitle">Carta</h3>
       </div>
-      <button type="button" class="condition-close" onclick="closeEditCardModal()">×</button>
+      <button type="button" class="condition-close" onclick="closeEditModal()">×</button>
     </div>
-    <div class="edit-sheet-grid">
-      <div><label>Quantità</label><input id="editQtyInput" type="number" min="1" inputmode="numeric"></div>
-      <div><label>Variante</label>
-        <select id="editVariantInput">
-          <option>Normale</option><option>Holo</option><option>Reverse Holo</option><option>Cosmos Holo</option>
+    <div class="edit-grid">
+      <div><div class="label">Quantità</div><input id="editQty" type="number" min="1" inputmode="numeric"></div>
+      <div><div class="label">Variante</div>
+        <select id="editVariant">
+          <option>Normale</option><option>Holo</option><option>Reverse Holo</option><option>Cosmos Holo</option><option>Speciale / Altro</option><option>Non so</option>
         </select>
       </div>
-      <div><label>Stato</label>
-        <select id="editStatusInput">
+      <div><div class="label">Stato</div>
+        <select id="editStatus">
           <option>Disponibile</option><option>Protetta</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Vendita</option>
         </select>
       </div>
-      <div><label>Condizione</label>
-        <select id="editConditionInput">
+      <div><div class="label">Condizione</div>
+        <select id="editCondition">
           <option value="NM">NM — Near Mint</option>
           <option value="EX">EX — Excellent</option>
           <option value="GD">GD — Good</option>
@@ -209,66 +194,62 @@ nav button small,.nav-btn small{display:block;font-size:10px;line-height:1.15;wh
         </select>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
-      <button class="btn alt big" type="button" onclick="closeEditCardModal()">Annulla</button>
-      <button class="btn green big" type="button" onclick="saveEditCard()">Salva modifiche</button>
-    </div>
-  </div>
-</div>
-<div id="resetModal" class="condition-modal" aria-hidden="true">
-  <div class="condition-sheet" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
-    <div class="condition-sheet-head">
-      <div>
-        <div class="condition-sheet-kicker">CONFERMA RICHIESTA</div>
-        <h3 id="resetTitle">Azzera tutto il catalogo?</h3>
-      </div>
-      <button type="button" class="condition-close" onclick="closeResetModal()" aria-label="Chiudi">×</button>
-    </div>
-    <p class="condition-intro">
-      Verranno eliminate tutte le carte salvate localmente da Cardoryx su questo dispositivo.
-      Il backup JSON resta l’unico modo per ripristinarle.
-    </p>
-    <div class="condition-tip">
-      Prima di continuare, usa <b>Crea backup JSON</b> se vuoi conservare una copia.
-    </div>
-    <div style="display:grid;gap:10px;margin-top:14px">
-      <button class="btn alt big" type="button" onclick="closeResetModal()">Annulla</button>
-      <button class="btn red big" type="button" onclick="confirmResetCatalog()">Sì, elimina tutto</button>
+    <div class="spacer"></div>
+    <div class="grid">
+      <button class="btn alt" onclick="closeEditModal()">Annulla</button>
+      <button class="btn green" onclick="saveEditModal()">Salva modifiche</button>
     </div>
   </div>
 </div>
 
-<nav class="bottom"><div class="tabs"><button class="tab active" data-v="home" onclick="showView('home')">🏠<br>Home</button><button class="tab" data-v="scan" onclick="showView('scan')">📷<br>Scanner</button><button class="tab" data-v="catalog" onclick="showView('catalog')">📚<br>Carte</button><button class="tab" data-v="stats" onclick="showView('stats')">📊<br>Categorie</button></div>
-    <button type="button" class="nav-btn" data-page="settings" onclick="showPage('settings');return false;">
-      <span>⚙️</span><small>Impostazioni</small>
-    </button>
+<div id="resetModal" class="condition-modal" aria-hidden="true">
+  <div class="condition-sheet">
+    <div class="condition-sheet-head">
+      <div>
+        <div class="condition-sheet-kicker">ATTENZIONE</div>
+        <h3>Azzera catalogo</h3>
+      </div>
+      <button type="button" class="condition-close" onclick="closeResetModal()">×</button>
+    </div>
+    <p class="condition-intro">Vuoi eliminare tutte le carte salvate? Questa operazione non può essere annullata senza un backup JSON.</p>
+    <div class="grid">
+      <button class="btn alt" onclick="closeResetModal()">Annulla</button>
+      <button class="btn red" onclick="confirmResetCatalog()">Sì, elimina tutto</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom">
+  <div class="tabs">
+    <button class="tab active" data-v="home" onclick="showView('home')">🏠<br><span>Home</span></button>
+    <button class="tab" data-v="scan" onclick="showView('scan')">📷<br><span>Scanner</span></button>
+    <button class="tab" data-v="catalog" onclick="showView('catalog')">📚<br><span>Carte</span></button>
+    <button class="tab" data-v="stats" onclick="showView('stats')">📊<br><span>Categorie</span></button>
+    <button class="tab" data-v="settings" onclick="showView('settings')">⚙️<br><span>Impostazioni</span></button>
+  </div>
 </nav>
 <script>
 const API='https://api.tcgdex.net/v2/it';
 const OFFICIAL_TYPES=['Erba','Fuoco','Acqua','Lampo','Psico','Lotta','Oscurità','Metallo','Drago','Incolore'];
 const TYPE_MAP={Grass:'Erba',Fire:'Fuoco',Water:'Acqua',Lightning:'Lampo',Psychic:'Psico',Fighting:'Lotta',Darkness:'Oscurità',Metal:'Metallo',Dragon:'Drago',Colorless:'Incolore'};
 const CATEGORIES=['⭐ Protette','🌿 Erba','🔥 Fuoco','💧 Acqua','⚡ Elettro','🔮 Psico','👊 Lotta','🌑 Oscurità','⚙️ Metallo','🐉 Drago','⚪ Incolore','👤 Aiuto','🧰 Strumenti','🏟️ Stadio','🎒 Oggetti Pokémon','⚡ Energie Base','✨ Energie Speciali'];
-let selectedCard=null; let candidateMap={};
-function loadDB(){
-  try{
-    const canonical=localStorage.getItem('cardoryx_db');
-    if(canonical)return JSON.parse(canonical)||[];
-    const legacy=localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1');
-    return legacy?JSON.parse(legacy)||[]:[];
-  }catch(e){console.error(e);return[]}
-}
+let selectedCard=null; let candidateMap={}; function loadDB(){try{const x=localStorage.getItem('cardoryx_db')||localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1');return x?JSON.parse(x):[]}catch(e){return[]}}
 let db=loadDB(); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
 function selectedCondition(){return ui('condition')?.value||'NM'}
-function persist(){
-  localStorage.setItem('cardoryx_db',JSON.stringify(db));
-  renderAll();
-  renderSettings();
-  renderSettings();
+function persist(){localStorage.setItem('cardoryx_db',JSON.stringify(db));renderAll();renderSettings()}
+function showView(v){
+  ['home','scan','catalog','stats','settings'].forEach(x=>{
+    const el=document.getElementById(x+'View'); if(el)el.classList.toggle('hidden',x!==v)
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
+  if(v==='catalog')renderCatalog();
+  if(v==='stats')renderStats();
+  if(v==='settings')renderSettings();
+  window.scrollTo(0,0);
 }
-function showView(v){['home','scan','catalog','stats'].forEach(x=>document.getElementById(x+'View').classList.toggle('hidden',x!==v));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));if(v==='catalog')renderCatalog();if(v==='stats')renderStats()}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
 function renderAll(){
@@ -478,9 +459,9 @@ function inferType(c){let t=(c.types&&c.types[0])||c.type||'';return TYPE_MAP[t]
 function clearSelection(){selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
 function saveSelected(){
   if(!selectedCard)return;
-  const saveBtn=document.querySelector('#confirmBox .btn.green');
-  if(saveBtn?.disabled)return;
-  if(saveBtn)saveBtn.disabled=true;
+  const btn=document.querySelector('#confirmCard .btn.green');
+  if(btn?.disabled)return;
+  if(btn)btn.disabled=true;
 
   try{
     const category=inferCategory(selectedCard),type=inferType(selectedCard);
@@ -493,20 +474,14 @@ function saveSelected(){
 
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
-      name:selectedCard.name,
-      localId:selectedCard.localId||'',
-      set:selectedCard.set?.name||'',
-      image:selectedCard.image||'',
-      rarity:selectedCard.rarity||'',
-      category,type,stage:selectedCard.stage||'',trainerType,energyType,
-      variant:selectedVariant(),
-      status:selectedStatus(),
-      condition:selectedCondition(),
-      qty:1,
-      addedAt:new Date().toISOString()
+      name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',
+      image:selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
+      stage:selectedCard.stage||'',trainerType,energyType,
+      variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
+      qty:1,addedAt:new Date().toISOString()
     };
 
-    const same=db.find(x =>
+    const same=db.find(x=>
       x.id===rec.id &&
       (x.variant||'Normale')===rec.variant &&
       (x.status||'Disponibile')===rec.status &&
@@ -514,10 +489,16 @@ function saveSelected(){
     );
 
     if(same){
-      // Do not silently create/increment duplicates from repeated taps/tests.
-      saveMsg.textContent=`${rec.name} è già nel catalogo (quantità ${same.qty||1}).`;
-      saveMsg.className='footer-note notice';
-      renderAll();
+      const current=Number(same.qty)||1;
+      if(confirm(`${rec.name} è già presente nel catalogo (×${current}). Vuoi aggiungerne un'altra copia?`)){
+        same.qty=current+1;
+        persist();
+        saveMsg.textContent=`Aggiunta un'altra copia. Quantità: ×${same.qty}`;
+        saveMsg.className='footer-note ok';
+      }else{
+        saveMsg.textContent='Nessuna copia aggiunta.';
+        saveMsg.className='footer-note notice';
+      }
       return;
     }
 
@@ -525,28 +506,56 @@ function saveSelected(){
     persist();
     saveMsg.textContent=`Salvata. Posizione: ${cardCategory(rec)}`;
     saveMsg.className='footer-note ok';
-
-    setTimeout(()=>{
-      clearSelection();
-      nameInput.value='';
-      numberInput.value='';
-      setTotalInput.value='';
-      lastOCR={name:'',number:'',total:''};
-      results.innerHTML='';
-      searchMsg.textContent='';
-      if(!nextQueueItem()){
-        cameraInput.value='';
-        galleryInput.value='';
-        scanQueue=[];
-        queueIndex=-1;
-        queueWrap.classList.add('hidden');
-        previewWrap.classList.add('hidden');
-        ocrStatus.textContent='Carta salvata. Puoi scattare una nuova foto o scegliere dal rullino.';
-      }
-    },650);
-  } finally {
-    setTimeout(()=>{if(saveBtn)saveBtn.disabled=false},750);
+  }finally{
+    setTimeout(()=>{if(btn)btn.disabled=false},500);
   }
+}
+
+
+let editingKey=null;
+function openImageModal(src){
+  if(!src)return;
+  const m=document.getElementById('imageModal'),img=document.getElementById('imageModalImg');
+  img.src=src.includes('/low.webp')?src.replace('/low.webp','/high.webp'):src;
+  m.classList.add('open');m.setAttribute('aria-hidden','false');
+}
+function closeImageModal(){const m=document.getElementById('imageModal');m.classList.remove('open');m.setAttribute('aria-hidden','true')}
+function openEditModal(key){
+  const id=decodeURIComponent(key);
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  if(!c)return;
+  editingKey=id;
+  editTitle.textContent=c.name;
+  editQty.value=Number(c.qty)||1;
+  editVariant.value=c.variant||'Normale';
+  editStatus.value=c.status||'Disponibile';
+  editCondition.value=c.condition||'NM';
+  editModal.classList.add('open');editModal.setAttribute('aria-hidden','false');
+}
+function closeEditModal(){editModal.classList.remove('open');editModal.setAttribute('aria-hidden','true');editingKey=null}
+function saveEditModal(){
+  if(!editingKey)return;
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===editingKey); if(!c)return;
+  c.qty=Math.max(1,parseInt(editQty.value||'1',10)||1);
+  c.variant=editVariant.value;c.status=editStatus.value;c.condition=editCondition.value;
+  persist();closeEditModal();
+}
+function renderSettings(){
+  const r=document.getElementById('settingsRecords'),t=document.getElementById('settingsTotal');
+  if(r)r.textContent=db.length;
+  if(t)t.textContent=db.reduce((a,c)=>a+(Number(c.qty)||1),0);
+}
+function openResetModal(){resetModal.classList.add('open');resetModal.setAttribute('aria-hidden','false')}
+function closeResetModal(){resetModal.classList.remove('open');resetModal.setAttribute('aria-hidden','true')}
+function confirmResetCatalog(){
+  db=[];
+  ['cardoryx_db','cardoryx_v1','cardoryx_v2','cardoryx_v3'].forEach(k=>localStorage.removeItem(k));
+  persist();closeResetModal();showView('home');
+}
+function filterByCategory(cat){
+  showView('catalog');
+  const f=document.getElementById('typeFilter');
+  if(f){f.value=cat;renderCatalog()}
 }
 
 function renderCatalog(){
@@ -574,7 +583,7 @@ function renderCatalog(){
       <div class="row">
         <div class="meta">
           <div style="display:flex;gap:10px;align-items:center">
-            ${c.image?`<img class="clickable-card-img" src="${c.image}/low.webp" style="width:54px;border-radius:7px" onclick="openImageModal('${c.image}/low.webp')" onerror="this.style.display='none'">`:''}
+            ${c.image?`<img src="${c.image}/low.webp" style="width:62px;border-radius:8px;cursor:zoom-in" onclick="openImageModal(\'${c.image}/low.webp\')" onerror="this.style.display=\'none\'">`:''}
             <div>
               <h3>${esc(c.name||'Carta')}</h3>
               <div class="small">${esc(c.set||'')} · ${esc(c.localId||'')} · ${esc(c.variant||'Normale')} · ${esc(c.condition||'NM')}</div>
@@ -587,7 +596,7 @@ function renderCatalog(){
           </div>
         </div>
         <div class="right" style="display:flex;gap:6px;flex-direction:column">
-          <button class="btn alt" onclick="editRecord('${key}')">Modifica</button>
+          <button class="btn alt" onclick="openEditModal('${key}')">Modifica</button>
           <button class="btn red" onclick="deleteRecord('${key}')">Elimina</button>
         </div>
       </div>
@@ -608,21 +617,30 @@ function deleteRecord(key){
 
 function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
 function renderStats(){
-  const el=ui('statsList');
-  if(!el)return;
-  const cats=CATEGORIES;
-  el.innerHTML=cats.map(cat=>{
+  statsList.innerHTML=CATEGORIES.map(cat=>{
     const n=db.filter(c=>cardCategory(c)===cat).reduce((a,c)=>a+(Number(c.qty)||1),0);
-    return `<div class="stat-row category-row-click" onclick="filterByCategory('${esc(cat)}')">
-      <span>${cat}</span><strong>${n}</strong>
-    </div>`;
+    return `<div class="stat-row clickable" onclick="filterByCategory('${esc(cat)}')"><span>${cat}</span><b>${n}</b></div>`;
   }).join('');
 }
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportJSON(){download('cardoryx-backup.json',JSON.stringify(db,null,2),'application/json')}
 function exportCSV(){const h=['Nome','Set','Numero','Categoria','Tipo','Evoluzione','Rarita','Variante','Quantita','Stato','Condizione','Posizione'];const rows=db.map(c=>[c.name,c.set,c.localId,c.category,c.type,c.stage,c.rarity,c.variant,c.qty,c.status,c.condition,cardCategory(c)]);const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');download('cardoryx.csv','\ufeff'+csv,'text/csv;charset=utf-8')}
-importFile.addEventListener('change',async()=>{const f=importFile.files[0];if(!f)return;try{const arr=JSON.parse(await f.text());if(!Array.isArray(arr))throw 0;if(confirm(`Importare ${arr.length} righe? Il catalogo attuale verrà sostituito.`)){db=arr;persist()}}catch(e){alert('Backup non valido')}})
+
+const settingsImportFile=document.getElementById('settingsImportFile');
+if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
+  const f=settingsImportFile.files[0];if(!f)return;
+  try{
+    const arr=JSON.parse(await f.text());
+    if(!Array.isArray(arr))throw 0;
+    if(confirm(`Importare ${arr.length} record? Il catalogo attuale verrà sostituito.`)){
+      db=arr.map(c=>({...c,qty:Math.max(1,Number(c.qty)||1),status:c.status||'Disponibile',variant:c.variant||'Normale',condition:c.condition||'NM'}));
+      persist();
+    }
+  }catch(e){alert('Backup non valido')}
+  settingsImportFile.value='';
+});
+
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
-renderAll();
+renderAll();renderSettings();
 </script>
 </body></html>

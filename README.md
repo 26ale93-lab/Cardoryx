@@ -55,23 +55,14 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Cache PWA: `cardoryx-v3.7.0`.
 
 
-## V3.8 — Impostazioni e reset protetto
-- Nuova sezione `⚙️ Impostazioni`.
-- Backup JSON e import backup disponibili anche da Impostazioni.
-- `Azzera catalogo` spostato in una zona separata e protetta.
-- Reset con doppia conferma: primo tap apre l’avviso, secondo tap esplicito elimina tutto.
-- Il reset cancella anche gli archivi legacy per evitare il ritorno dei record fantasma.
-- Archivio unificato in `cardoryx_db`.
-- Migrazione automatica dei vecchi salvataggi duplicati: record identici vengono consolidati.
-- Stato archivio visibile in Impostazioni.
-- Cache PWA: `cardoryx-v3.8.0`.
-
-
-## V3.9 — Impostazioni, modifica completa, zoom e categorie cliccabili
-- Corretto pulsante Impostazioni e layout barra inferiore a 5 voci.
-- Backup/Import/Export spostati dentro Impostazioni.
-- Modifica carta ora consente Quantità, Variante, Stato e Condizione.
+## V4.0 — Stable UI + Duplicati
+- Ricostruita la barra inferiore a 5 sezioni usando lo stesso sistema `showView` per tutte.
+- Impostazioni ora è una vera schermata nativa dell'app.
+- Backup CSV/JSON e Import spostati esclusivamente in Impostazioni.
+- Reset catalogo protetto da seconda conferma.
+- Duplicato: se stessa carta + variante + stato + condizione esiste già, Cardoryx chiede se aggiungere un'altra copia; confermando aumenta `×1 → ×2`.
+- Modifica carta completa: quantità, variante, stato e condizione.
 - Tap sull'immagine nel Catalogo apre la carta ingrandita.
-- Le righe in Categorie sono cliccabili e aprono il Catalogo filtrato.
-- Reset protetto resta dentro Impostazioni.
-- Cache PWA `cardoryx-v3.9.0`.
+- Tap su una categoria apre il Catalogo già filtrato.
+- Archivio canonico `cardoryx_db`.
+- Cache PWA `cardoryx-v4.0.0`.
