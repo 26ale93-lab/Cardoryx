@@ -86,3 +86,14 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Tap sulla scheda apre il Catalogo già filtrato.
 - Layout responsive: 2 colonne su iPhone, 3 su schermi più larghi.
 - Cache PWA `cardoryx-v4.2.0`.
+
+
+## V4.3 — Catalogo Pro
+- Nuovi filtri: variante e condizione.
+- Ordinamento per nome, recenti, quantità ed espansione.
+- Pulsante Pulisci filtri.
+- Scheda Dettagli carta con immagine, dati e note personali.
+- Le note vengono salvate nel catalogo e sono ricercabili.
+- Statistiche rapide: schede uniche, copie totali, holo/speciali, NM.
+- Mantiene categorie visuali V4.2, duplicati e quantità.
+- Cache PWA `cardoryx-v4.3.0`.

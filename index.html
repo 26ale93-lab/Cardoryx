@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.2</title>
+<title>Cardoryx V4.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -102,6 +102,29 @@
 .category-tile[data-cat="Energie Speciali"]{--cat-accent:#7c3aed;--cat-soft:#f4efff}
 @media (min-width:700px){.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
+
+.catalog-advanced{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.catalog-advanced select{width:100%}
+.catalog-meta-row{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:10px 0 0}
+.catalog-meta-row .small{color:#6b7280}
+.detail-modal{position:fixed;inset:0;z-index:210;background:rgba(8,15,30,.62);display:none;align-items:flex-end;justify-content:center;padding:14px}
+.detail-modal.open{display:flex}
+.detail-sheet{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:26px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+.detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.detail-card{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;margin-top:12px}
+.detail-card img{width:112px;max-height:158px;object-fit:contain;border-radius:12px;background:#f3f4f6}
+.detail-title{font-size:22px;font-weight:900;line-height:1.08;margin-bottom:6px}
+.detail-sub{font-size:13px;color:#6b7280;line-height:1.45}
+.detail-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.detail-section{margin-top:16px;padding-top:14px;border-top:1px solid #eceef2}
+.detail-section h4{margin:0 0 8px;font-size:14px}
+.detail-section textarea{width:100%;min-height:90px;resize:vertical}
+.stats-mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stats-mini{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:14px}
+.stats-mini .n{font-size:26px;font-weight:900}
+.stats-mini .l{font-size:11px;color:#6b7280;margin-top:2px}
+.note-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7c3aed;margin-left:5px;vertical-align:middle}
+
 </style>
 </head>
 <body>
@@ -168,12 +191,48 @@
     <div class="card">
       <div class="section-title">Catalogo</div>
       <input id="catalogSearch" placeholder="Cerca nome, set, numero…" oninput="renderCatalog()">
-      <div class="filters" style="margin-top:8px"><select id="typeFilter" onchange="renderCatalog()"><option value="">Tutti i tipi</option></select><select id="statusFilter" onchange="renderCatalog()"><option value="">Tutti gli stati</option><option>Disponibile</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Protetta</option><option>Vendita</option></select></div>
+      <div class="filters" style="margin-top:8px"><select id="typeFilter" onchange="renderCatalog()"><option value="">Tutti i tipi</option></select><select id="statusFilter" onchange="renderCatalog()"><option value="">Tutti gli stati</option><option>Disponibile</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Protetta</option><option>Vendita</option></select>
+      <div class="catalog-advanced">
+        <select id="variantFilter">
+          <option value="">Tutte le varianti</option>
+          <option>Normale</option>
+          <option>Holo</option>
+          <option>Reverse Holo</option>
+          <option>Cosmos Holo</option>
+          <option>Speciale / Altro</option>
+          <option>Non so</option>
+        </select>
+        <select id="conditionFilter">
+          <option value="">Tutte le condizioni</option>
+          <option value="NM">NM</option>
+          <option value="EX">EX</option>
+          <option value="GD">GD</option>
+          <option value="PL">PL</option>
+          <option value="PO">PO</option>
+        </select>
+      </div>
+      <div class="catalog-advanced">
+        <select id="sortFilter">
+          <option value="name">Ordina: Nome A-Z</option>
+          <option value="recent">Più recenti</option>
+          <option value="qty">Quantità maggiore</option>
+          <option value="set">Espansione</option>
+        </select>
+        <button class="btn alt" type="button" onclick="clearCatalogFilters()">Pulisci filtri</button>
+      </div>
+</div>
       <div id="catalogList"></div>
     </div>
   </section>
 
   <section id="statsView" class="hidden">
+    <div class="stats-mini-grid">
+      <div class="stats-mini"><div class="n" id="statUnique">0</div><div class="l">Schede uniche</div></div>
+      <div class="stats-mini"><div class="n" id="statCopies">0</div><div class="l">Carte totali</div></div>
+      <div class="stats-mini"><div class="n" id="statHolo">0</div><div class="l">Holo / speciali</div></div>
+      <div class="stats-mini"><div class="n" id="statNM">0</div><div class="l">Condizione NM</div></div>
+    </div>
+
     <div class="category-hero">
       <h2>📊 Categorie</h2>
       <p>Tocca una categoria per aprire subito il catalogo filtrato. Il numero indica quante carte hai in quella sezione.</p>
@@ -274,6 +333,20 @@
       <button class="btn alt" onclick="closeResetModal()">Annulla</button>
       <button class="btn red" onclick="confirmResetCatalog()">Sì, elimina tutto</button>
     </div>
+  </div>
+</div>
+
+
+<div id="cardDetailModal" class="detail-modal" aria-hidden="true">
+  <div class="detail-sheet">
+    <div class="detail-head">
+      <div>
+        <div class="condition-sheet-kicker">DETTAGLI CARTA</div>
+        <div id="detailTitle" class="detail-title">Carta</div>
+      </div>
+      <button type="button" class="condition-close" onclick="closeCardDetail()">×</button>
+    </div>
+    <div id="detailContent"></div>
   </div>
 </div>
 
@@ -644,6 +717,76 @@ function changeQty(key,delta){
   persist();
 }
 
+
+let detailKey=null;
+
+function clearCatalogFilters(){
+  ['catalogSearch','typeFilter','statusFilter','variantFilter','conditionFilter'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  const s=document.getElementById('sortFilter'); if(s)s.value='name';
+  renderCatalog();
+}
+
+function openCardDetail(key){
+  const id=decodeURIComponent(key);
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  if(!c)return;
+  detailKey=id;
+  document.getElementById('detailTitle').textContent=c.name||'Carta';
+  const img=c.image?`${c.image}/high.webp`:'';
+  const content=document.getElementById('detailContent');
+  content.innerHTML=`
+    <div class="detail-card">
+      <div>${img?`<img src="${img}" onclick="openImageModal('${img}')" onerror="this.style.display='none'">`:''}</div>
+      <div>
+        <div class="detail-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}</div>
+        <div class="detail-sub">${esc(c.rarity||'Rarità non indicata')}</div>
+        <div class="detail-badges">
+          <span class="collection-badge">${esc(cardCategory(c))}</span>
+          <span class="collection-badge">${esc(c.variant||'Normale')}</span>
+          <span class="collection-badge">${esc(c.condition||'NM')}</span>
+          <span class="collection-badge">${esc(c.status||'Disponibile')}</span>
+          <span class="collection-badge">×${Number(c.qty)||1}</span>
+        </div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>Note personali</h4>
+      <textarea id="detailNotes" placeholder="Es. acquistata al mercatino, da controllare, possibile grading...">${esc(c.notes||'')}</textarea>
+      <button class="btn alt" style="width:100%;margin-top:8px" onclick="saveCardNotes()">Salva note</button>
+    </div>
+    <div class="detail-section">
+      <div class="grid">
+        <button class="btn alt" onclick="closeCardDetail();openEditModal('${key}')">✏️ Modifica</button>
+        <button class="btn red" onclick="closeCardDetail();deleteRecord('${key}')">🗑️ Elimina</button>
+      </div>
+    </div>`;
+  const m=document.getElementById('cardDetailModal');
+  m.classList.add('open');m.setAttribute('aria-hidden','false');
+}
+
+function closeCardDetail(){
+  const m=document.getElementById('cardDetailModal');
+  m.classList.remove('open');m.setAttribute('aria-hidden','true');
+  detailKey=null;
+}
+
+function saveCardNotes(){
+  if(!detailKey)return;
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===detailKey);
+  if(!c)return;
+  c.notes=document.getElementById('detailNotes').value.trim();
+  persist();
+  closeCardDetail();
+}
+
+function catalogUniqueCount(){return db.length}
+function catalogCopyCount(){return db.reduce((a,c)=>a+(Number(c.qty)||1),0)}
+function catalogHoloCount(){return db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Speciale / Altro'].includes(c.variant||'')).reduce((a,c)=>a+(Number(c.qty)||1),0)}
+function catalogNMCount(){return db.filter(c=>(c.condition||'NM')==='NM').reduce((a,c)=>a+(Number(c.qty)||1),0)}
+
 function renderCatalog(){
   const el=document.getElementById('catalogList');
   if(!el)return;
@@ -651,13 +794,23 @@ function renderCatalog(){
   const q=(document.getElementById('catalogSearch')?.value||'').toLowerCase().trim();
   const tf=document.getElementById('typeFilter')?.value||'';
   const sf=document.getElementById('statusFilter')?.value||'';
+  const vf=document.getElementById('variantFilter')?.value||'';
+  const cf=document.getElementById('conditionFilter')?.value||'';
+  const sort=document.getElementById('sortFilter')?.value||'name';
 
-  const items=db.filter(c=>{
-    const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''}`.toLowerCase();
+  let items=db.filter(c=>{
+    const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''} ${c.notes||''}`.toLowerCase();
     return (!q||blob.includes(q)) &&
            (!tf||cardCategory(c)===tf) &&
-           (!sf||(c.status||'Disponibile')===sf);
-  }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
+           (!sf||(c.status||'Disponibile')===sf) &&
+           (!vf||(c.variant||'Normale')===vf) &&
+           (!cf||(c.condition||'NM')===cf);
+  });
+
+  if(sort==='recent')items.sort((a,b)=>String(b.addedAt||'').localeCompare(String(a.addedAt||'')));
+  else if(sort==='qty')items.sort((a,b)=>(Number(b.qty)||1)-(Number(a.qty)||1));
+  else if(sort==='set')items.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''),'it'));
+  else items.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
 
   const visibleTotal=items.reduce((a,c)=>a+(Number(c.qty)||1),0);
 
@@ -688,7 +841,7 @@ function renderCatalog(){
           </div>
         </div>
         <div class="collection-card-main">
-          <h3>${esc(c.name||'Carta')}</h3>
+          <h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
           <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
           <div class="collection-badges">
             <span class="collection-badge">${esc(cardCategory(c))}</span>
@@ -697,8 +850,8 @@ function renderCatalog(){
             <span class="collection-badge">${esc(c.status||'Disponibile')}</span>
           </div>
           <div class="collection-actions">
+            <button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button>
             <button class="btn alt" onclick="openEditModal('${key}')">✏️ Modifica</button>
-            <button class="btn red" onclick="deleteRecord('${key}')">🗑️ Elimina</button>
           </div>
         </div>
       </article>`;
@@ -718,6 +871,11 @@ function deleteRecord(key){
 
 function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
 function renderStats(){
+  const su=document.getElementById('statUnique'), sc=document.getElementById('statCopies'), sh=document.getElementById('statHolo'), sn=document.getElementById('statNM');
+  if(su)su.textContent=catalogUniqueCount();
+  if(sc)sc.textContent=catalogCopyCount();
+  if(sh)sh.textContent=catalogHoloCount();
+  if(sn)sn.textContent=catalogNMCount();
   const iconMap={
     'Protette':'⭐','Erba':'🌿','Fuoco':'🔥','Acqua':'💧','Elettro':'⚡','Psico':'🔮',
     'Lotta':'👊','Oscurità':'🌑','Metallo':'⚙️','Drago':'🐉','Incolore':'⚪',
@@ -753,6 +911,15 @@ if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
     }
   }catch(e){alert('Backup non valido')}
   settingsImportFile.value='';
+});
+
+
+['catalogSearch','typeFilter','statusFilter','variantFilter','conditionFilter','sortFilter'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener(id==='catalogSearch'?'input':'change',renderCatalog);
+});
+document.getElementById('cardDetailModal')?.addEventListener('click',e=>{
+  if(e.target===document.getElementById('cardDetailModal'))closeCardDetail();
 });
 
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
