@@ -269,6 +269,7 @@
 .variant-holo{background:#ecfeff;color:#0e7490;border:1px solid #cffafe}
 .variant-normal{background:#f2f4f7;color:#475467;border:1px solid #e4e7ec}
 .variant-first{background:#fffaeb;color:#92400e;border:1px solid #fedf89}
+.variant-stamp{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}
 .variant-price-warning{margin-top:7px;padding:8px 10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.35}
 
 </style>
@@ -324,6 +325,8 @@
             <option>Holo</option>
             <option>Reverse Holo</option>
             <option>Cosmos Holo</option>
+            <option>Pokémon Day Stamp</option>
+            <option>Play! Pokémon Stamp</option>
             <option>Speciale / Altro</option>
             <option>Non so</option>
           </select>
@@ -407,6 +410,8 @@
 <option value="Reverse Holo">Reverse Holo</option>
 <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
 <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+<option value="Pokémon Day Stamp">🎉 Pokémon Day Stamp</option>
+<option value="Play! Pokémon Stamp">🏆 Play! Pokémon Stamp</option>
 <option value="First Edition">First Edition</option></select>
       <div class="label">Stato</div><select id="status"><option value="Disponibile">Disponibile</option><option value="Mazzo 1">Mazzo 1</option><option value="Mazzo 2">Mazzo 2</option><option value="Protetta">Protetta</option><option value="Vendita">Vendita</option></select>
       <div class="label">Condizione</div><select id="condition">
@@ -439,6 +444,8 @@
           <option>Holo</option>
           <option>Reverse Holo</option>
           <option>Cosmos Holo</option>
+          <option>Pokémon Day Stamp</option>
+          <option>Play! Pokémon Stamp</option>
           <option>Speciale / Altro</option>
           <option>Non so</option>
         </select>
@@ -619,6 +626,8 @@
           <option value="Reverse Holo">Reverse Holo</option>
           <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
           <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+          <option value="Pokémon Day Stamp">🎉 Pokémon Day Stamp</option>
+          <option value="Play! Pokémon Stamp">🏆 Play! Pokémon Stamp</option>
           <option value="Cosmos Holo">Cosmos Holo</option>
           <option value="Speciale / Altro">Speciale / Altro</option>
           <option value="Non so">Non so</option>
@@ -2281,6 +2290,8 @@ function scanCM(c){return c?.pricing?.cardmarket||null}
 
 function canonicalVariant(v){
   const n=normText(v||'');
+  if(n.includes('pokemon day')||n.includes('pokémon day'))return 'Pokémon Day Stamp';
+  if(n.includes('play! pokemon')||n.includes('play pokemon')||n.includes('play! pokémon')||n.includes('player reward'))return 'Play! Pokémon Stamp';
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
   if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
   if(n.includes('first edition')||n.includes('1st edition'))return 'First Edition';
@@ -2298,6 +2309,8 @@ function variantBadgeHTML(v){
   if(x==='Master Ball Reverse Holo')return '<span class="variant-badge variant-masterball">🟣 Master Ball Reverse Holo</span>';
   if(x==='Reverse Holo')return '<span class="variant-badge variant-reverse">Reverse Holo</span>';
   if(x==='Holo')return '<span class="variant-badge variant-holo">Holo</span>';
+  if(x==='Pokémon Day Stamp')return '<span class="variant-badge variant-stamp">🎉 Pokémon Day Stamp</span>';
+  if(x==='Play! Pokémon Stamp')return '<span class="variant-badge variant-stamp">🏆 Play! Pokémon Stamp</span>';
   if(x==='First Edition')return '<span class="variant-badge variant-first">First Edition</span>';
   return '<span class="variant-badge variant-normal">Normal</span>';
 }
@@ -2308,6 +2321,37 @@ function detailedBallVariant(card,v){
   const list=Array.isArray(card?.variants_detailed)?card.variants_detailed:[];
   return list.find(a=>a?.type==='reverse'&&a?.foil===foil)||null;
 }
+function tcgdexVariantDetails(card){
+  if(Array.isArray(card?.variants_detailed))return card.variants_detailed;
+  if(Array.isArray(card?.variants))return card.variants;
+  return [];
+}
+function recommendedVariantFromTCGdex(card){
+  const d=tcgdexVariantDetails(card);
+  const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
+  const pool=it.length?it:d;
+  const hasStamp=(x,name)=>(x?.stamp||[]).some(v=>normText(v)===normText(name));
+  if(pool.some(x=>hasStamp(x,'pokemon-day')))return 'Pokémon Day Stamp';
+  if(pool.some(x=>hasStamp(x,'player-rewards-program')||x?.foil==='player-reward'||x?.foil==='league'))return 'Play! Pokémon Stamp';
+  const types=[...new Set(pool.map(x=>x?.type).filter(Boolean))];
+  if(types.length===1){
+    if(types[0]==='holo')return 'Holo';
+    if(types[0]==='reverse')return 'Reverse Holo';
+    if(types[0]==='normal')return 'Normal';
+  }
+  const v=card?.variants;
+  if(v && !Array.isArray(v)){
+    const available=['normal','holo','reverse'].filter(k=>v[k]===true);
+    if(available.length===1)return available[0]==='normal'?'Normal':available[0]==='holo'?'Holo':'Reverse Holo';
+  }
+  return '';
+}
+function applyDetectedVariant(card){
+  const sel=document.getElementById('variant'); if(!sel)return;
+  const rec=recommendedVariantFromTCGdex(card);
+  if(rec && [...sel.options].some(o=>o.value===rec)){sel.value=rec;}
+}
+
 
 
 
@@ -2514,7 +2558,6 @@ async function chooseCard(s){
     }
     const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());
     selectedCard={...brief,...full};
-    renderScanValue(selectedCard);
     const category=inferCategory(full),type=inferType(full),stage=full.stage||'';
     confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;
     confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;
@@ -2524,6 +2567,8 @@ async function chooseCard(s){
     confirmInfo.textContent=`N° ${brief.localId}`;
   }
   applyQuickDefaultsToConfirm();
+  if(!quickScanEnabled() && !continuousScanEnabled())applyDetectedVariant(selectedCard);
+  renderScanValue(selectedCard);
   setTimeout(()=>{
     confirmCard.scrollIntoView({behavior:'smooth',block:'end'});
   },120);
