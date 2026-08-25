@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4.3</title>
+<title>Cardoryx V1.4.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2336,34 +2336,101 @@ function scanUnit(c){
   const cm=scanCM(c);
   return cardmarketValueForVariant(cm,document.getElementById('variant')?.value||'Normal').value;
 }
-async function renderScanValue(card){
-  const box=document.getElementById('scanValueBox');if(!box)return;box.classList.remove('hidden');
-  scanPriceCard=await fetchScanPricing(card);const cm=scanCM(scanPriceCard),value=scanUnit(scanPriceCard);
-  document.getElementById('scanMarketValue').textContent=value?scanEuro(value):'Valore non disponibile';
-  {
-  const selVariant=document.getElementById('variant')?.value||'Normal';
-  const info=cardmarketValueForVariant(cm,selVariant);
-  document.getElementById('scanMarketMeta').textContent=!cm
-    ? 'Nessun prezzo Cardmarket associato'
-    : (isBallReverseVariant(selVariant)
-       ? (info.value>0
-          ? 'Cardmarket · valore di riferimento disponibile; la variante Poké Ball/Master Ball può avere un prezzo diverso'
-          : 'Cardmarket · nessun valore disponibile per questa carta')
-       : 'Cardmarket · valore indicativo');
-}
-  document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
-  document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||value);
-  document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
-  document.getElementById('scanMarketStats').classList.toggle('hidden',!cm);
-  document.getElementById('scanProtectionBadge').textContent=canonicalVariant(document.getElementById('variant')?.value||'Normal');
-  document.getElementById('scanProtectionAdvice').innerHTML=isBallReverseVariant(document.getElementById('variant')?.value||'')
-?variantBadgeHTML(document.getElementById('variant').value)+'<div class="variant-price-warning">Il valore mostrato è il miglior riferimento Cardmarket disponibile per questa carta. Poké Ball/Master Ball può avere un prezzo specifico diverso.</div>'
-:'';
-  
-  
-  
+
+async function fetchScanPricing(card){
+  if(card?.pricing?.cardmarket)return card;
+
+  const ids=[];
+  const addId=x=>{x=String(x||'').trim();if(x&&!ids.includes(x))ids.push(x)};
+  addId(card?.id);
+  addId(card?.tcgdexId);
+
+  // If the selected result is only a brief record, reconstruct the full TCGdex id
+  // by querying name/number and preferring the same set.
+  if(!ids.length || !String(ids[0]).includes('-')){
+    try{
+      const name=String(card?.name||'').trim();
+      if(name){
+        const briefs=await apiCardsQuery({name});
+        let pool=briefs||[];
+        if(card?.localId){
+          const exact=pool.filter(x=>sameCollectorNumber(x.localId,card.localId));
+          if(exact.length)pool=exact;
+        }
+        if(card?.set?.name){
+          const same=pool.filter(x=>normText(x?.set?.name||'')===normText(card.set.name));
+          if(same.length)pool=same;
+        }
+        pool.slice(0,8).forEach(x=>addId(x.id));
+      }
+    }catch(e){}
+  }
+
+  for(const id of ids){
+    for(const base of [API,'https://api.tcgdex.net/v2/en']){
+      try{
+        const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+        if(!r.ok)continue;
+        const full=await r.json();
+        if(full?.id){
+          // Return the full record even when Cardmarket is absent so the UI can
+          // terminate the loading state correctly.
+          if(full?.pricing?.cardmarket)return {...card,...full};
+        }
+      }catch(e){}
+    }
+  }
+  return card||null;
 }
 
+async function renderScanValue(card){
+  const box=document.getElementById('scanValueBox');if(!box)return;
+  box.classList.remove('hidden');
+  const valueEl=document.getElementById('scanMarketValue');
+  const metaEl=document.getElementById('scanMarketMeta');
+  valueEl.textContent='—';
+  metaEl.textContent='Cerco Cardmarket…';
+  document.getElementById('scanMarketStats').classList.add('hidden');
+
+  try{
+    scanPriceCard=await fetchScanPricing(card);
+    if(scanPriceCard?.pricing && selectedCard){
+      selectedCard={...selectedCard,pricing:scanPriceCard.pricing,tcgdexId:scanPriceCard.id||selectedCard.tcgdexId};
+    }
+
+    const cm=scanCM(scanPriceCard);
+    const selVariant=document.getElementById('variant')?.value||'Normal';
+    const info=cardmarketValueForVariant(cm,selVariant);
+    const value=info.value;
+
+    valueEl.textContent=value?scanEuro(value):'Valore non disponibile';
+
+    if(!cm){
+      metaEl.textContent='Nessun prezzo Cardmarket disponibile per questa carta';
+    }else if(isBallReverseVariant(selVariant)){
+      metaEl.textContent=value
+        ? 'Cardmarket · riferimento disponibile; Poké Ball/Master Ball può avere un prezzo specifico diverso'
+        : 'Cardmarket · nessun valore disponibile per questa variante';
+    }else{
+      metaEl.textContent='Cardmarket · valore indicativo';
+    }
+
+    document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
+    document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||value);
+    document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
+    document.getElementById('scanMarketStats').classList.toggle('hidden',!cm);
+    document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
+    document.getElementById('scanProtectionAdvice').innerHTML=isBallReverseVariant(selVariant)
+      ?variantBadgeHTML(selVariant)+'<div class="variant-price-warning">Il valore mostrato è il miglior riferimento Cardmarket disponibile. Poké Ball/Master Ball può avere un prezzo specifico diverso.</div>'
+      :'';
+  }catch(e){
+    console.error('Cardoryx scanner pricing:',e);
+    scanPriceCard=card||null;
+    valueEl.textContent='Valore non disponibile';
+    metaEl.textContent='Impossibile recuperare Cardmarket. Puoi comunque salvare la carta.';
+    document.getElementById('scanMarketStats').classList.add('hidden');
+  }
+}
 
 async function chooseCard(s){
   const brief=typeof s==='string'?JSON.parse(s):s;
@@ -2894,6 +2961,11 @@ document.getElementById('scanAskingPrice')?.addEventListener('input',()=>{if(doc
 
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 renderAll();renderSettings();
+
+document.getElementById('variant')?.addEventListener('change',()=>{
+  if(scanPriceCard||selectedCard)renderScanValue(scanPriceCard||selectedCard);
+});
+
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
