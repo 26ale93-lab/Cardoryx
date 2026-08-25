@@ -1,14 +1,15 @@
 {
   "name": "Cardoryx",
   "short_name": "Cardoryx",
-  "description": "Card collection scanner, organizer, value tracker and deck builder",
+  "description": "Scan · Collect · Build · Value",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#111827",
+  "background_color": "#f4f5f7",
+  "theme_color": "#101827",
   "icons": [
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"icon-512.png","sizes":"512x512","type":"image/png"}
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png"}
   ]
 }

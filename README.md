@@ -16,3 +16,9 @@ Kilowattrel di Kissara — 055/159.
 
 ## Aggiornamento GitHub Pages
 Sostituisci tutti i file nella root del repository; GitHub Pages si aggiorna automaticamente.
+
+
+## V3.1 Hotfix
+- Corretto il pulsante "È questa" sul candidato evidenziato come PIÙ PROBABILE.
+- Nessuna modifica al riconoscimento 055/159 o al ranking.
+- Cache PWA aggiornata per iPhone.
