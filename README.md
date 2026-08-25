@@ -97,3 +97,11 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Statistiche rapide: schede uniche, copie totali, holo/speciali, NM.
 - Mantiene categorie visuali V4.2, duplicati e quantità.
 - Cache PWA `cardoryx-v4.3.0`.
+
+
+## V4.4 — Note persistenti + scorrimento automatico
+- Corrette le note personali: ora vengono salvate direttamente nel database locale e restano associate alla specifica scheda/variante.
+- Chiave record stabile basata su carta + variante + stato + condizione, usata anche da Modifica, Quantità ed Elimina.
+- Dopo `È questa` Cardoryx scorre automaticamente alla sezione Conferma con variante, stato, condizione e Salva.
+- Il pulsante candidato mostra `È questa ↓` per rendere evidente lo spostamento.
+- Cache PWA `cardoryx-v4.4.0`.

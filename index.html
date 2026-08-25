@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.3</title>
+<title>Cardoryx V4.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -567,7 +567,7 @@ async function searchCards(opts={}){
         <h3>${esc(c.name)}</h3>
         <div class="small">N° ${esc(c.localId)}${esc(count)}${set?' · '+esc(set):''}</div>
         ${best?'<span class="rank-badge">★ PIÙ PROBABILE</span>':''}
-        <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa</button>
+        <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
       </div>`
     }).join('')}</div>`;
     if(autoCandidate){
@@ -584,7 +584,27 @@ async function chooseCandidate(key){
   if(!c){console.error('Candidato non trovato',key);return}
   return chooseCard(c);
 }
-async function chooseCard(s){const brief=typeof s==='string'?JSON.parse(s):s;confirmCard.classList.remove('hidden');confirmName.textContent=brief.name;confirmImg.src=(brief.image||'')+'/high.webp';confirmInfo.textContent='Carico dettagli…';confirmTags.innerHTML='';try{const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());selectedCard={...brief,...full};const category=inferCategory(full),type=inferType(full),stage=full.stage||'';confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;}catch(e){selectedCard=brief;confirmInfo.textContent=`N° ${brief.localId}`}}
+async function chooseCard(s){
+  const brief=typeof s==='string'?JSON.parse(s):s;
+  confirmCard.classList.remove('hidden');
+  confirmName.textContent=brief.name;
+  confirmImg.src=(brief.image||'')+'/high.webp';
+  confirmInfo.textContent='Carico dettagli…';
+  confirmTags.innerHTML='';
+  try{
+    const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());
+    selectedCard={...brief,...full};
+    const category=inferCategory(full),type=inferType(full),stage=full.stage||'';
+    confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;
+    confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;
+  }catch(e){
+    selectedCard=brief;
+    confirmInfo.textContent=`N° ${brief.localId}`;
+  }
+  setTimeout(()=>{
+    confirmCard.scrollIntoView({behavior:'smooth',block:'end'});
+  },120);
+}
 function inferCategory(c){const cat=String(c.category||'').toLowerCase();if(cat.includes('pokemon')||c.hp||c.stage)return 'Pokémon';if(cat.includes('trainer')||c.trainerType)return 'Allenatore';if(cat.includes('energy')||c.energyType)return 'Energia';return 'Pokémon'}
 function inferType(c){let t=(c.types&&c.types[0])||c.type||'';return TYPE_MAP[t]||t||''}
 function clearSelection(){selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
@@ -652,10 +672,9 @@ function openImageModal(src){
 }
 function closeImageModal(){const m=document.getElementById('imageModal');m.classList.remove('open');m.setAttribute('aria-hidden','true')}
 function openEditModal(key){
-  const id=decodeURIComponent(key);
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  const c=findRecordByKey(key);
   if(!c)return;
-  editingKey=id;
+  editingKey=recordKey(c);
   document.getElementById('editTitle').textContent=c.name;
   document.getElementById('editQty').value=Number(c.qty)||1;
   document.getElementById('editVariant').value=c.variant||'Normale';
@@ -671,7 +690,7 @@ function closeEditModal(){
 }
 function saveEditModal(){
   if(!editingKey)return;
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===editingKey);
+  const c=db.find(x=>recordKey(x)===editingKey);
   if(!c)return;
   const qty=parseInt(document.getElementById('editQty').value,10);
   if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
@@ -702,8 +721,7 @@ function filterByCategory(cat){
 
 
 function changeQty(key,delta){
-  const id=decodeURIComponent(key);
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  const c=findRecordByKey(key);
   if(!c)return;
   const next=(Number(c.qty)||1)+delta;
   if(next<1){
@@ -720,6 +738,20 @@ function changeQty(key,delta){
 
 let detailKey=null;
 
+function recordKey(c){
+  return [
+    c.id||`${c.name||''}-${c.localId||''}`,
+    c.variant||'Normale',
+    c.status||'Disponibile',
+    c.condition||'NM'
+  ].join('|||');
+}
+function findRecordByKey(key){
+  const decoded=decodeURIComponent(key);
+  return db.find(c=>recordKey(c)===decoded);
+}
+
+
 function clearCatalogFilters(){
   ['catalogSearch','typeFilter','statusFilter','variantFilter','conditionFilter'].forEach(id=>{
     const el=document.getElementById(id);
@@ -730,10 +762,9 @@ function clearCatalogFilters(){
 }
 
 function openCardDetail(key){
-  const id=decodeURIComponent(key);
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  const c=findRecordByKey(key);
   if(!c)return;
-  detailKey=id;
+  detailKey=recordKey(c);
   document.getElementById('detailTitle').textContent=c.name||'Carta';
   const img=c.image?`${c.image}/high.webp`:'';
   const content=document.getElementById('detailContent');
@@ -775,11 +806,19 @@ function closeCardDetail(){
 
 function saveCardNotes(){
   if(!detailKey)return;
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===detailKey);
+  const c=db.find(x=>recordKey(x)===detailKey);
   if(!c)return;
-  c.notes=document.getElementById('detailNotes').value.trim();
-  persist();
-  closeCardDetail();
+  const noteEl=document.getElementById('detailNotes');
+  c.notes=(noteEl?.value||'').trim();
+  localStorage.setItem('cardoryx_db',JSON.stringify(db));
+  renderAll();
+  renderSettings();
+  const btn=[...document.querySelectorAll('#detailContent button')].find(b=>b.textContent.includes('Salva note'));
+  if(btn){
+    const old=btn.textContent;
+    btn.textContent='✓ Nota salvata';
+    setTimeout(()=>{btn.textContent=old},1200);
+  }
 }
 
 function catalogUniqueCount(){return db.length}
@@ -829,7 +868,7 @@ function renderCatalog(){
     </div>
     <div class="catalog-grid">
     ${items.map(c=>{
-      const key=encodeURIComponent(c.id||`${c.name}-${c.localId}`);
+      const key=encodeURIComponent(recordKey(c));
       const img=c.image?`${c.image}/low.webp`:'';
       return `<article class="collection-card">
         <div>
@@ -861,8 +900,7 @@ function renderCatalog(){
 
 
 function deleteRecord(key){
-  const id=decodeURIComponent(key);
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  const c=findRecordByKey(key);
   if(!c)return;
   if(!confirm(`Eliminare ${c.name} dal catalogo?`))return;
   db=db.filter(x=>x!==c);
