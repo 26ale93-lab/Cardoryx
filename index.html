@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4</title>
+<title>Cardoryx V1.4.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -419,10 +419,8 @@
       <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
       
 <div id="scanValueBox" class="scan-value-box hidden">
-  <div class="scan-value-head"><div><b>💰 Valore & consiglio acquisto</b><div id="scanMarketValue" class="scan-value-main">—</div><div id="scanMarketMeta" class="scan-value-sub">Cerco Cardmarket…</div></div><span id="scanProtectionBadge" class="pill">Valutazione</span></div>
+  <div class="scan-value-head"><div><b>💰 Valore carta</b><div id="scanMarketValue" class="scan-value-main">—</div><div id="scanMarketMeta" class="scan-value-sub">Cerco Cardmarket…</div></div><span id="scanProtectionBadge" class="pill">Valutazione</span></div>
   <div id="scanMarketStats" class="scan-market-grid hidden"><div class="scan-market-stat"><strong id="scanLowPrice">—</strong><span>MINIMO</span></div><div class="scan-market-stat"><strong id="scanTrendPrice">—</strong><span>TREND</span></div><div class="scan-market-stat"><strong id="scanAvg7Price">—</strong><span>MEDIA 7 GG</span></div></div>
-  <div class="scan-buy-grid"><input id="scanAskingPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prezzo richiesto €"><button class="btn alt" onclick="evaluateScanPurchase()">Valuta</button></div>
-  <div id="scanBuyAdvice" class="buy-advice info">Inserisci il prezzo richiesto per confrontarlo col mercato.</div>
   <div id="scanProtectionAdvice" class="small" style="margin-top:8px"></div>
 </div>
 <div id="saveMsg" class="footer-note"></div>
@@ -720,13 +718,11 @@ function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
 function homeMoney(v){return Number(v||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'})}
 function homeUnitValue(c){
-  if(isBallReverseVariant(c?.variant||'')){
-    const p=detailedBallVariant(c,c.variant)?.pricing?.cardmarket;
-    return p?Number(p.trend||p.avg7||p.avg30||p.avg||p.low||0):0;
-  }
   const cm=c?.pricing?.cardmarket;if(!cm)return 0;
-  const v=normText(c.variant||'');
-  if(v.includes('holo')&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
+  const v=canonicalVariant(c.variant||'Normal');
+  if(v==='Holo'&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
+  if(v==='Reverse Holo'||v==='Poké Ball Reverse Holo'||v==='Master Ball Reverse Holo')
+    return Number(cm['trend-reverse-holo']||cm['avg-reverse-holo']||cm['low-reverse-holo']||cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
   return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
 }
 function persistDecks(){
@@ -2257,42 +2253,35 @@ function detailedBallVariant(card,v){
 
 function scanUnit(c){
   const cm=scanCM(c);if(!cm)return 0;
-  const v=document.getElementById('variant')?.value||'Normal';
-  if(isBallReverseVariant(v)){
-    const dv=detailedBallVariant(c,v),p=dv?.pricing?.cardmarket;
-    return p?Number(p.trend||p.avg7||p.avg30||p.avg||p.low||0):0;
+  const v=canonicalVariant(document.getElementById('variant')?.value||'Normal');
+  if(v==='Holo' && Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
+  if((v==='Reverse Holo'||v==='Poké Ball Reverse Holo'||v==='Master Ball Reverse Holo')){
+    return Number(cm['trend-reverse-holo']||cm['avg-reverse-holo']||cm['low-reverse-holo']||cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
   }
-  if(canonicalVariant(v)==='Holo'&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
   return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
 }
 async function renderScanValue(card){
   const box=document.getElementById('scanValueBox');if(!box)return;box.classList.remove('hidden');
   scanPriceCard=await fetchScanPricing(card);const cm=scanCM(scanPriceCard),value=scanUnit(scanPriceCard);
   document.getElementById('scanMarketValue').textContent=value?scanEuro(value):'Valore non disponibile';
-  document.getElementById('scanMarketMeta').textContent=isBallReverseVariant(document.getElementById('variant')?.value||'')
-?'Variante speciale: uso solo un prezzo specifico della variante, se disponibile.'
-:(cm?'Cardmarket · valore indicativo':'Nessun prezzo Cardmarket associato');
+  document.getElementById('scanMarketMeta').textContent=cm
+? (isBallReverseVariant(document.getElementById('variant')?.value||'')
+   ? 'Cardmarket · valore disponibile usato come riferimento per questa variante'
+   : 'Cardmarket · valore indicativo')
+: 'Nessun prezzo Cardmarket associato';
   document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
   document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||value);
   document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
   document.getElementById('scanMarketStats').classList.toggle('hidden',!cm);
-  document.getElementById('scanProtectionBadge').textContent=value>=10?'Prioritaria':value>=3?'Da proteggere':'Standard';
+  document.getElementById('scanProtectionBadge').textContent=canonicalVariant(document.getElementById('variant')?.value||'Normal');
   document.getElementById('scanProtectionAdvice').innerHTML=isBallReverseVariant(document.getElementById('variant')?.value||'')
-?variantBadgeHTML(document.getElementById('variant').value)+'<div class="variant-price-warning">⚠️ Non uso automaticamente il prezzo della Reverse Holo standard. Se manca un prezzo specifico, il valore resta non disponibile.</div>'
-:(value>=10?'🔒 Sleeve + top loader/raccoglitore consigliati.':value>=3?'🔒 Sleeve e raccoglitore consigliati.':'✅ Protezione standard sufficiente.');
-  document.getElementById('scanAskingPrice').value='';
-  document.getElementById('scanBuyAdvice').className='buy-advice info';
-  document.getElementById('scanBuyAdvice').textContent='Inserisci il prezzo richiesto per confrontarlo col mercato.';
+?variantBadgeHTML(document.getElementById('variant').value)+'<div class="variant-price-warning">Valore Cardmarket mostrato come riferimento disponibile. La variante Poké Ball/Master Ball può avere un prezzo specifico diverso.</div>'
+:'';
+  
+  
+  
 }
-function evaluateScanPurchase(){
-  const asking=Number(document.getElementById('scanAskingPrice')?.value||0),value=scanUnit(scanPriceCard),out=document.getElementById('scanBuyAdvice');
-  if(!asking){out.className='buy-advice info';out.textContent='Inserisci il prezzo richiesto.';return}
-  if(!value){out.className='buy-advice info';out.textContent='Non ho un valore Cardmarket affidabile per il confronto.';return}
-  const diff=(asking-value)/value;
-  if(diff<=-.20){out.className='buy-advice good';out.innerHTML=`<b>✅ Prezzo interessante</b><br>${scanEuro(asking)} contro circa ${scanEuro(value)} di mercato (${Math.abs(diff*100).toFixed(0)}% sotto).`}
-  else if(diff<=.10){out.className='buy-advice fair';out.innerHTML=`<b>🟡 Prezzo nella media</b><br>${scanEuro(asking)} contro circa ${scanEuro(value)} di mercato.`}
-  else{out.className='buy-advice bad';out.innerHTML=`<b>⚠️ Prezzo alto</b><br>${scanEuro(asking)} contro circa ${scanEuro(value)} di mercato (${(diff*100).toFixed(0)}% sopra).`}
-}
+
 
 async function chooseCard(s){
   const brief=typeof s==='string'?JSON.parse(s):s;
@@ -2497,12 +2486,11 @@ function clearCatalogFilters(){
 }
 
 function adviceUnitValue(c){
-  if(isBallReverseVariant(c?.variant||'')){
-    const p=detailedBallVariant(c,c.variant)?.pricing?.cardmarket;
-    return p?Number(p.trend||p.avg7||p.avg30||p.avg||p.low||0):0;
-  }
-  if(typeof cardUnitPrice==='function'){const v=cardUnitPrice(c);if(Number.isFinite(Number(v)))return Number(v)}
   const cm=c?.pricing?.cardmarket;if(!cm)return 0;
+  const v=canonicalVariant(c.variant||'Normal');
+  if(v==='Holo'&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
+  if(v==='Reverse Holo'||v==='Poké Ball Reverse Holo'||v==='Master Ball Reverse Holo')
+    return Number(cm['trend-reverse-holo']||cm['avg-reverse-holo']||cm['low-reverse-holo']||cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
   return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
 }
 function renderCardoryxAdvice(c){
