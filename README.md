@@ -1,37 +1,14 @@
-# Cardoryx V1.2 — Deck Builder
+# Cardoryx V1.3 — Scan Value & Purchase Advisor
 
-Basata sulla V1.1.
+Dopo il riconoscimento di una carta, lo Scanner mostra:
+- valore Cardmarket;
+- minimo, trend e media 7 giorni;
+- consiglio di protezione;
+- livello Standard / Da proteggere / Prioritaria.
 
-## Nuovo modulo Mazzi
+Inserendo il prezzo richiesto Cardoryx confronta il prezzo con il riferimento Cardmarket:
+- interessante: ~20% o più sotto;
+- nella media: circa da -20% a +10%;
+- alto: oltre ~10% sopra.
 
-- Creazione di più mazzi.
-- Costruzione usando solo carte presenti nel Catalogo.
-- Quantità realmente possedute e copie già allocate in altri mazzi.
-- Conteggio automatico 0/60.
-- Totali Pokémon / Allenatori / Energie.
-- Ricerca e filtro della propria collezione.
-- Aggiunta/rimozione rapida con + e −.
-- Immagini e zoom delle carte.
-- Rinomina ed eliminazione del mazzo.
-
-## Controlli regole base
-
-Cardoryx segnala:
-- il mazzo deve avere esattamente 60 carte;
-- almeno 1 Pokémon Base;
-- massimo 4 carte con lo stesso nome;
-- le Energie Base sono escluse dal limite delle 4 copie.
-
-Le limitazioni speciali stampate su singole carte non sono ancora validate automaticamente.
-
-## Suggerimenti principianti
-
-La sezione Suggerimenti analizza:
-- numero di tipi Pokémon;
-- quantità di Energie;
-- Pokémon Base;
-- carte Allenatore.
-
-I suggerimenti sono indicativi e non sono regole obbligatorie.
-
-I mazzi sono salvati localmente in `cardoryx_decks_v1`.
+Il confronto è indicativo e non sostituisce la verifica di condizione, autenticità, lingua e variante.

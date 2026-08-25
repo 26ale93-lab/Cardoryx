@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.2</title>
+<title>Cardoryx V1.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -249,6 +249,18 @@
 .deck-warning-list{margin:7px 0 0;padding-left:18px;font-size:11px;line-height:1.45}
 @media(max-width:430px){.deck-search-row{grid-template-columns:1fr}.bottom .tab{padding-left:0!important;padding-right:0!important}}
 
+
+.scan-value-box{margin-top:12px;border:1px solid #dbe4ff;border-radius:18px;background:#f8faff;padding:13px}
+.scan-value-head{display:flex;justify-content:space-between;gap:10px}
+.scan-value-main{font-size:27px;font-weight:950;margin-top:4px}
+.scan-value-sub{font-size:11px;color:#667085;margin-top:3px}
+.scan-buy-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+.buy-advice{margin-top:10px;padding:10px 12px;border-radius:14px;font-size:12px;line-height:1.4}
+.buy-advice.good{background:#ecfdf3;color:#166534}.buy-advice.fair{background:#fffaeb;color:#92400e}.buy-advice.bad{background:#fef2f2;color:#b42318}.buy-advice.info{background:#f2f4f7;color:#475467}
+.scan-market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.scan-market-stat{padding:9px 6px;border:1px solid #e4e7ec;border-radius:13px;background:#fff;text-align:center}
+.scan-market-stat strong{display:block;font-size:13px}.scan-market-stat span{font-size:9px;color:#667085}
+
 </style>
 </head>
 <body>
@@ -390,7 +402,15 @@
       <option value="PO">PO — Poor</option>
     </select>
       <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
-      <div id="saveMsg" class="footer-note"></div>
+      
+<div id="scanValueBox" class="scan-value-box hidden">
+  <div class="scan-value-head"><div><b>💰 Valore & consiglio acquisto</b><div id="scanMarketValue" class="scan-value-main">—</div><div id="scanMarketMeta" class="scan-value-sub">Cerco Cardmarket…</div></div><span id="scanProtectionBadge" class="pill">Valutazione</span></div>
+  <div id="scanMarketStats" class="scan-market-grid hidden"><div class="scan-market-stat"><strong id="scanLowPrice">—</strong><span>MINIMO</span></div><div class="scan-market-stat"><strong id="scanTrendPrice">—</strong><span>TREND</span></div><div class="scan-market-stat"><strong id="scanAvg7Price">—</strong><span>MEDIA 7 GG</span></div></div>
+  <div class="scan-buy-grid"><input id="scanAskingPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prezzo richiesto €"><button class="btn alt" onclick="evaluateScanPurchase()">Valuta</button></div>
+  <div id="scanBuyAdvice" class="buy-advice info">Inserisci il prezzo richiesto per confrontarlo col mercato.</div>
+  <div id="scanProtectionAdvice" class="small" style="margin-top:8px"></div>
+</div>
+<div id="saveMsg" class="footer-note"></div>
     </div>
   </section>
 
@@ -2183,6 +2203,44 @@ async function chooseCandidate(key){
   if(!c){console.error('Candidato non trovato',key);return}
   return chooseCard(c);
 }
+
+let scanPriceCard=null;
+function scanEuro(v){const n=Number(v||0);return n>0?n.toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
+function scanCM(c){return c?.pricing?.cardmarket||null}
+function scanUnit(c){const cm=scanCM(c);if(!cm)return 0;const v=normText(document.getElementById('variant')?.value||'');if((v.includes('holo')||v.includes('reverse'))&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0)}
+async function fetchScanPricing(card){
+  if(!card?.id||String(card.id).startsWith('mee-local-'))return card;
+  if(card?.pricing?.cardmarket)return card;
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
+    try{const r=await fetch(`${base}/cards/${encodeURIComponent(card.id)}`);if(!r.ok)continue;const f=await r.json();if(f?.id){card={...card,...f};if(f?.pricing?.cardmarket)break}}catch(e){}
+  }
+  return card;
+}
+async function renderScanValue(card){
+  const box=document.getElementById('scanValueBox');if(!box)return;box.classList.remove('hidden');
+  scanPriceCard=await fetchScanPricing(card);const cm=scanCM(scanPriceCard),value=scanUnit(scanPriceCard);
+  document.getElementById('scanMarketValue').textContent=value?scanEuro(value):'Valore non disponibile';
+  document.getElementById('scanMarketMeta').textContent=cm?'Cardmarket · valore indicativo':'Nessun prezzo Cardmarket associato';
+  document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
+  document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||value);
+  document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
+  document.getElementById('scanMarketStats').classList.toggle('hidden',!cm);
+  document.getElementById('scanProtectionBadge').textContent=value>=10?'Prioritaria':value>=3?'Da proteggere':'Standard';
+  document.getElementById('scanProtectionAdvice').textContent=value>=10?'🔒 Sleeve + top loader/raccoglitore consigliati.':value>=3?'🔒 Sleeve e raccoglitore consigliati.':'✅ Protezione standard sufficiente.';
+  document.getElementById('scanAskingPrice').value='';
+  document.getElementById('scanBuyAdvice').className='buy-advice info';
+  document.getElementById('scanBuyAdvice').textContent='Inserisci il prezzo richiesto per confrontarlo col mercato.';
+}
+function evaluateScanPurchase(){
+  const asking=Number(document.getElementById('scanAskingPrice')?.value||0),value=scanUnit(scanPriceCard),out=document.getElementById('scanBuyAdvice');
+  if(!asking){out.className='buy-advice info';out.textContent='Inserisci il prezzo richiesto.';return}
+  if(!value){out.className='buy-advice info';out.textContent='Non ho un valore Cardmarket affidabile per il confronto.';return}
+  const diff=(asking-value)/value;
+  if(diff<=-.20){out.className='buy-advice good';out.innerHTML=`<b>✅ Prezzo interessante</b><br>${scanEuro(asking)} contro circa ${scanEuro(value)} di mercato (${Math.abs(diff*100).toFixed(0)}% sotto).`}
+  else if(diff<=.10){out.className='buy-advice fair';out.innerHTML=`<b>🟡 Prezzo nella media</b><br>${scanEuro(asking)} contro circa ${scanEuro(value)} di mercato.`}
+  else{out.className='buy-advice bad';out.innerHTML=`<b>⚠️ Prezzo alto</b><br>${scanEuro(asking)} contro circa ${scanEuro(value)} di mercato (${(diff*100).toFixed(0)}% sopra).`}
+}
+
 async function chooseCard(s){
   const brief=typeof s==='string'?JSON.parse(s):s;
   confirmCard.classList.remove('hidden');
@@ -2202,11 +2260,13 @@ async function chooseCard(s){
     }
     const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());
     selectedCard={...brief,...full};
+    renderScanValue(selectedCard);
     const category=inferCategory(full),type=inferType(full),stage=full.stage||'';
     confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;
     confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;
   }catch(e){
     selectedCard=brief;
+    renderScanValue(selectedCard);
     confirmInfo.textContent=`N° ${brief.localId}`;
   }
   applyQuickDefaultsToConfirm();
@@ -2216,7 +2276,9 @@ async function chooseCard(s){
 }
 function inferCategory(c){const cat=String(c.category||'').toLowerCase();if(cat.includes('pokemon')||c.hp||c.stage)return 'Pokémon';if(cat.includes('trainer')||c.trainerType)return 'Allenatore';if(cat.includes('energy')||c.energyType)return 'Energia';return 'Pokémon'}
 function inferType(c){let t=(c.types&&c.types[0])||c.type||'';return TYPE_MAP[t]||t||''}
-function clearSelection(){selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
+function clearSelection(){
+  scanPriceCard=null;
+  document.getElementById('scanValueBox')?.classList.add('hidden');selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
 function saveSelected(){
   if(!selectedCard)return;
   const btn=document.querySelector('#confirmCard .btn.green');
@@ -2703,6 +2765,10 @@ loadQuickPrefs();
 
 document.getElementById('deckCardSearch')?.addEventListener('input',renderDeckLibrary);
 document.getElementById('deckCategoryFilter')?.addEventListener('change',renderDeckLibrary);
+
+
+document.getElementById('variant')?.addEventListener('change',()=>{if(scanPriceCard)renderScanValue(scanPriceCard)});
+document.getElementById('scanAskingPrice')?.addEventListener('input',()=>{if(document.getElementById('scanAskingPrice')?.value)evaluateScanPurchase()});
 
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 renderAll();renderSettings();
