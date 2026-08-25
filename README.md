@@ -1,4 +1,4 @@
-# Cardoryx V1.4.6 — Verified Variant Prices
+# Cardoryx V1.4.7 — Unified Price Engine
 
 Basata sulla V1.4.5 / Scanner Price Fix.
 
@@ -30,3 +30,10 @@ Corretto anche il vero menu Variante nella finestra Modifica:
 
 ## Nota
 Il registro è volutamente prudente: nuovi prezzi specifici possono essere aggiunti solo dopo verifica della corrispondente pagina Cardmarket, evitando di attribuire valori errati a Master Ball/Poké Ball.
+
+
+## V1.4.7 — Unified Price Engine
+- Unificato il calcolo prezzi tra Home, Catalogo, Scanner, Dettagli e totale collezione.
+- Le varianti con prezzo Cardmarket verificato usano lo stesso valore in ogni schermata.
+- Okidogi 057 Master Ball Reverse Holo: trend verificato 6,61 € in tutte le viste.
+- Il fallback TCGdex/Cardmarket resta attivo solo quando non esiste un prezzo variante verificato.

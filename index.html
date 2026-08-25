@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4.6</title>
+<title>Cardoryx V1.4.7</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -724,11 +724,8 @@ function showView(v){
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
 function homeMoney(v){return Number(v||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'})}
-function homeUnitValue(c){
-  const exact=verifiedVariantPrice(c,c?.variant||'Normal');
-  if(exact)return Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
-  return cardmarketValueForVariant(c?.pricing?.cardmarket,c?.variant||'Normal').value;
-}
+function homeUnitValue(c){return cardUnitPrice(c)||0}
+
 
 function renderHomeDashboard(){
   const q=c=>Math.max(1,Number(c.qty||1));
@@ -2782,19 +2779,29 @@ function saveCardNotes(){
 }
 
 function euro(v){return Number.isFinite(Number(v))?Number(v).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
-function cardUnitPrice(c){
-  const cm=c?.pricing?.cardmarket;if(!cm)return null;
-  const v=String(c.variant||'Normale').toLowerCase();
-  let n=null;
-  if(v.includes('holo') && !v.includes('reverse')) n=cm['trend-holo'] ?? cm['avg-holo'] ?? null;
-  else n=cm.trend ?? cm.avg ?? null;
-  n=Number(n);return Number.isFinite(n)&&n>=0?n:null;
+function cardPriceInfo(c){
+  const variant=canonicalVariant(c?.variant||'Normal');
+  const exact=verifiedVariantPrice(c,variant);
+  if(exact){
+    const value=Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
+    return {value:Number.isFinite(value)&&value>0?value:null, exact:true, source:exact.source||'Cardmarket', updated:exact.verified||''};
+  }
+  const info=cardmarketValueForVariant(c?.pricing?.cardmarket,variant);
+  const value=Number(info?.value||0);
+  return {value:Number.isFinite(value)&&value>0?value:null, exact:false, source:'Cardmarket', updated:c?.priceUpdatedAt||'', kind:info?.kind||'none'};
 }
+function cardUnitPrice(c){return cardPriceInfo(c).value}
 function cardPriceHtml(c){
-  const u=cardUnitPrice(c),q=Number(c.qty)||1;
+  const info=cardPriceInfo(c),u=info.value,q=Number(c.qty)||1;
   if(u==null)return `<div class="price-main" style="color:#6b7280">Valore non disponibile</div><div class="price-sub">Cardmarket · nessun prezzo associato</div>`;
   const total=u*q;
-  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">Trend Cardmarket · ${esc(c.variant||'Normale')}${c.priceUpdatedAt?' · agg. '+new Date(c.priceUpdatedAt).toLocaleDateString('it-IT'):''}</div>`;
+  let upd='';
+  if(info.updated){
+    const d=new Date(info.updated);
+    upd=Number.isNaN(d.getTime())?String(info.updated):d.toLocaleDateString('it-IT');
+  }
+  const label=info.exact?'Cardmarket · variante verificata':'Trend Cardmarket';
+  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">${label} · ${esc(c.variant||'Normal')}${upd?' · agg. '+esc(upd):''}</div>`;
 }
 function collectionMarketValue(){return db.reduce((sum,c)=>{const u=cardUnitPrice(c);return sum+(u==null?0:u*(Number(c.qty)||1))},0)}
 function pricedCopies(){return db.reduce((n,c)=>n+(cardUnitPrice(c)==null?0:(Number(c.qty)||1)),0)}
