@@ -140,3 +140,12 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Se numero/set non trova nulla, il messaggio suggerisce Nome + Set.
 - Mantiene il ranking Name-first della V4.7.
 - Cache PWA `cardoryx-v4.8.0`.
+
+
+## V4.9 — Strict Numero + Totale Set
+- Con Nome vuoto, Numero e Totale Set sono entrambi filtri obbligatori.
+- `14/94` equivale a `014/094`.
+- Una carta `014/162`, `014/226`, ecc. non può più comparire cercando `14/94`.
+- Cardoryx recupera i dettagli completi dei candidati prima di controllare la dimensione del set.
+- Se non esiste una corrispondenza esatta, restituisce zero risultati invece di ignorare il totale set.
+- Cache PWA `cardoryx-v4.9.0`.

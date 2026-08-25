@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.8</title>
+<title>Cardoryx V4.9</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -442,7 +442,18 @@ function cropImage(img,x,y,w,h,scale=2){const c=document.createElement('canvas')
 function enhanceForOCR(canvas,threshold=176){const out=document.createElement('canvas');out.width=canvas.width;out.height=canvas.height;const ctx=out.getContext('2d');ctx.drawImage(canvas,0,0);const im=ctx.getImageData(0,0,out.width,out.height),d=im.data;for(let i=0;i<d.length;i+=4){const g=.299*d[i]+.587*d[i+1]+.114*d[i+2];const v=g>threshold?255:0;d[i]=d[i+1]=d[i+2]=v}ctx.putImageData(im,0,0);return out}
 function normText(s=''){return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')}
 function similarity(a,b){a=normText(a);b=normText(b);if(!a||!b)return 0;if(a===b)return 1;if(a.includes(b)||b.includes(a))return Math.min(a.length,b.length)/Math.max(a.length,b.length);const m=a.length,n=b.length;const dp=Array(n+1).fill(0).map((_,j)=>j);for(let i=1;i<=m;i++){let prev=dp[0];dp[0]=i;for(let j=1;j<=n;j++){const tmp=dp[j];dp[j]=Math.min(dp[j]+1,dp[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=tmp}}return 1-dp[n]/Math.max(m,n)}
-function setOfficialCount(c){const s=c?.set||{};const cc=s.cardCount||{};return Number(cc.official||cc.total||s.cardCountOfficial||s.totalCards||0)||0}
+function setOfficialCount(c){
+  const s=c?.set||{};
+  const cc=s.cardCount||{};
+  return Number(
+    cc.official ??
+    cc.total ??
+    s.cardCountOfficial ??
+    s.totalCards ??
+    s.total ??
+    0
+  )||0
+};const cc=s.cardCount||{};return Number(cc.official||cc.total||s.cardCountOfficial||s.totalCards||0)||0}
 function setName(c){return c?.set?.name||c?.setName||''}
 
 function meaningfulOCRName(s=''){
@@ -587,25 +598,22 @@ async function fastCascadeSearch({name='',num='',total=''}) {
     if(results.length)return {results,route: total?'Nome → Set → Numero':'Nome → Numero'};
   }
 
-  // Numeric-only fallback: 14 and 014 are equivalent; 94 and 094 are equivalent.
+  // Numeric-only fallback: BOTH number and total set are mandatory.
   if(cleanNum && total){
-    setScanMode('modeCode',`Nome non disponibile. Provo ${num}/${total} in tutte le forme equivalenti…`);
+    setScanMode('modeCode',`Nome non disponibile. Cerco esattamente ${num}/${total}…`);
     results=await queryByAnyLocalId(num);
 
     if(results.length){
-      // Fetch full details before filtering because set card count may not be present in brief results.
       const fullResults=[];
-      for(const c of results.slice(0,30))fullResults.push(await fetchFullCandidate(c));
-      results=fullResults;
-
-      const exactSet=results.filter(c=>sameSetTotal(setOfficialCount(c),total));
-      if(exactSet.length)results=exactSet;
-
-      const exactNum=results.filter(c=>sameCollectorNumber(c.localId,num));
-      if(exactNum.length)results=exactNum;
+      for(const c of results.slice(0,40))fullResults.push(await fetchFullCandidate(c));
+      results=fullResults.filter(c=>
+        sameCollectorNumber(c.localId,num) &&
+        sameSetTotal(setOfficialCount(c),total)
+      );
     }
 
-    if(results.length)return {results,route:'Numero/Set normalizzato'};
+    if(results.length)return {results,route:'Numero + Totale set'};
+    return {results:[],route:'Nessun risultato esatto Numero/Set'};
   }
 
   return {results:[],route:'Nessun risultato'};
@@ -717,7 +725,7 @@ async function searchCards(opts={}){
       arr=await fetch(`${API}/cards?name=${encodeURIComponent(name)}`).then(r=>r.json());
       if(!Array.isArray(arr))arr=[];
     }
-    if(!arr.length&&num){
+    if(!arr.length&&num && String(name||lastOCR.name||'').trim()){
       arr=await queryByAnyLocalId(num);
       if(!Array.isArray(arr))arr=[];
     }
@@ -726,6 +734,26 @@ async function searchCards(opts={}){
     const targetName=name||lastOCR.name||'';
     const targetTotal=Number(String(total||lastOCR.total||0).replace(/\D/g,''))||0;
     const targetNum=String(Number(String(num||lastOCR.number||'').replace(/\D/g,'')))||'0';
+
+    // STRICT MODE: with empty name, number + total set are both mandatory.
+    if(!String(targetName).trim() && targetNum!=='0' && targetTotal){
+      const strictMatches=[];
+      for(const c of arr.slice(0,50)){
+        const fullC=await fetchFullCandidate(c);
+        if(
+          sameCollectorNumber(fullC.localId,targetNum) &&
+          sameSetTotal(setOfficialCount(fullC),targetTotal)
+        ){
+          strictMatches.push(fullC);
+        }
+      }
+      arr=strictMatches;
+      if(!arr.length){
+        results.innerHTML='';
+        searchMsg.textContent=`Nessuna carta trovata con numero ${num} nel set da ${total} carte.`;
+        return;
+      }
+    }
     full=full.map(c=>{
       const cnum=String(c.localId||'').replace(/^0+/,'')||'0';
       const count=setOfficialCount(c);
