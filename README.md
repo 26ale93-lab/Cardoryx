@@ -179,3 +179,12 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Prova automaticamente l'immagine `high.webp`, con fallback alla versione già caricata.
 - Chiusura con X o tocco fuori dall'immagine.
 - Cache PWA `cardoryx-v5.2.0`.
+
+
+## V5.3 — Zoom Catalogo
+- Zoom attivo anche sulle carte già salvate nel Catalogo.
+- Zoom attivo anche nella scheda Dettagli della carta posseduta.
+- Tocco sull'immagine: apre a schermo grande.
+- Tocco in qualsiasi area esterna alla carta: chiude.
+- Tocco direttamente sulla carta ingrandita: resta aperta.
+- Cache PWA `cardoryx-v5.3.0`.

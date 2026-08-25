@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.2</title>
+<title>Cardoryx V5.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -823,20 +823,28 @@ function openCardZoom(src){
   const box=document.getElementById('imageLightbox');
   const img=document.getElementById('imageLightboxImg');
   if(!box||!img)return;
-  // Prefer high resolution when TCGdex image base URL is available.
   let high=String(src).replace(/\/low\.webp(?:\?.*)?$/,'/high.webp');
   img.src=high;
   img.onerror=()=>{img.onerror=null;img.src=src;};
   box.classList.add('open');
   document.body.style.overflow='hidden';
 }
-function closeCardZoom(e){
+function closeCardZoom(){
   const box=document.getElementById('imageLightbox');
-  if(e && e.target && e.target.id==='imageLightboxImg')return;
   if(box)box.classList.remove('open');
   document.body.style.overflow='';
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCardZoom();});
+
+document.addEventListener('click',function(e){
+  const img=e.target.closest && e.target.closest('.collection-card-img, .detail-card img');
+  if(img && !img.closest('#imageLightbox')){
+    e.preventDefault();
+    e.stopPropagation();
+    openCardZoom(img.src);
+  }
+});
+
 
 document.addEventListener('click',function(e){
   const img=e.target.closest && e.target.closest('.candidate img, #confirmCard img, .selected-card img');
@@ -1240,7 +1248,7 @@ function openCardDetail(key){
   const content=document.getElementById('detailContent');
   content.innerHTML=`
     <div class="detail-card">
-      <div>${img?`<img src="${img}" onclick="openImageModal('${img}')" onerror="this.style.display='none'">`:''}</div>
+      <div>${img?`<img class="card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.display='none'" title="Tocca per ingrandire">`:''}</div>
       <div>
         <div class="detail-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}</div>
         <div class="detail-sub">${esc(c.rarity||'Rarità non indicata')}</div>
@@ -1342,7 +1350,7 @@ function renderCatalog(){
       const img=c.image?`${c.image}/low.webp`:'';
       return `<article class="collection-card">
         <div>
-          ${img?`<img class="collection-card-img" src="${img}" onclick="openImageModal('${img}')" onerror="this.style.visibility='hidden'">`:'<div class="collection-card-img"></div>'}
+          ${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
           <div class="qty-control">
             <button type="button" onclick="changeQty('${key}',-1)">−</button>
             <strong>×${Number(c.qty)||1}</strong>
@@ -1434,10 +1442,10 @@ if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catc
 renderAll();renderSettings();
 </script>
 
-<div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom(event)">
-  <button class="image-lightbox-close" type="button" aria-label="Chiudi" onclick="closeCardZoom(event)">×</button>
-  <img id="imageLightboxImg" alt="Carta ingrandita">
-  <div class="image-lightbox-hint">Tocca fuori dalla carta per chiudere</div>
+<div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
+  <button class="image-lightbox-close" type="button" aria-label="Chiudi" onclick="event.stopPropagation();closeCardZoom()">×</button>
+  <img id="imageLightboxImg" alt="Carta ingrandita" onclick="event.stopPropagation()">
+  <div class="image-lightbox-hint" onclick="event.stopPropagation()">Tocca fuori dalla carta per chiudere</div>
 </div>
 
 </body></html>
