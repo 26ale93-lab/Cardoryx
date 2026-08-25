@@ -219,3 +219,25 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Se numero + totale set identificano una sola carta, il nome ufficiale viene usato direttamente.
 - Scanner continuo invariato.
 - Cache PWA `cardoryx-v5.6.0`.
+
+
+## V5.7 — Scanner Code-First
+- Scanner continuo e OCR ora partono da Numero + Totale Set.
+- Se Numero/Set identificano una sola carta, il nome OCR viene saltato completamente.
+- Se Numero/Set producono più candidati, Cardoryx legge solo una fascia molto stretta del nome.
+- Il nome OCR viene confrontato soltanto con i nomi ufficiali dei candidati Numero/Set.
+- Se il nome non è leggibile, Cardoryx mostra comunque i candidati Numero/Set invece di dare errore.
+- Se Numero/Set non restituiscono match, fallback automatico Nome + Totale Set ignorando il numero.
+- Se Numero/Set non sono leggibili, solo allora viene usato il Nome come ricerca primaria.
+- Migliorata la gestione di carte Allenatore/Oggetto riducendo la fascia OCR del nome.
+- Cache PWA `cardoryx-v5.7.0`.
+
+
+## V5.8 — Energie Base
+- Riconoscimento automatico delle carte Energia Base prima del normale flusso OCR.
+- OCR dedicato alla fascia inferiore per codici stampati come `MEE IT 001`.
+- Il codice espansione + numero ha priorità per identificare la stampa esatta.
+- Fallback sul testo/tipo dell'Energia quando il codice non è sufficiente.
+- Compatibile con Scanner rapido e Scanner continuo.
+- Se il database non contiene la stampa esatta, Cardoryx mantiene il riconoscimento Energia Base e chiede verifica manuale invece di confonderla con una carta Pokémon.
+- Cache PWA `cardoryx-v5.8.0`.

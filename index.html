@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.6</title>
+<title>Cardoryx V5.8</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -200,6 +200,9 @@
 .continuous-status{font-size:12px;color:#3730a3;margin-top:7px;font-weight:700}
 #continuousCameraInput{display:none}
 
+
+.scan-route-ok{margin-top:8px;padding:10px 12px;border-radius:13px;background:#ecfdf3;color:#166534;font-size:12px;font-weight:800}
+.scan-route-warn{margin-top:8px;padding:10px 12px;border-radius:13px;background:#fff7ed;color:#9a3412;font-size:12px}
 </style>
 </head>
 <body>
@@ -297,7 +300,7 @@
       </div>
 
       <div class="scan-progress"><span id="scanProgressBar"></span></div>
-      <div id="scanStatusPro" class="scan-status-pro">Pronto. Nome OCR assistito + numero/set.</div>
+      <div id="scanStatusPro" class="scan-status-pro">Pronto. Prima Numero/Set, poi il nome solo se serve.</div>
       <div class="scan-mode-row">
         <span id="modeCode" class="scan-mode-chip active">1 · Numero/Set</span>
         <span id="modeNameSet" class="scan-mode-chip">2 · Nome + Set</span>
@@ -997,81 +1000,374 @@ async function nameCandidatesFromCollectorCode(num,total){
   }catch(e){return []}
 }
 
+
+function setScannerRoute(msg,type='ok'){
+  const info=document.getElementById('scanFallbackInfo');
+  if(!info)return;
+  info.innerHTML=`<div class="${type==='ok'?'scan-route-ok':'scan-route-warn'}">${msg}</div>`;
+}
+
+function narrowNameOCRText(s=''){
+  let x=cleanOCRNameV45(s);
+  // Remove common category/header words that often sit near the real name.
+  x=x.replace(/\b(oggetto pokemon|oggetto pokémon|allenatore|trainer|fase\s*\d+|base)\b/gi,' ');
+  x=x.replace(/\s+/g,' ').trim();
+  return x;
+}
+
+async function readNameOnlyWhenNeeded(img){
+  // Much narrower strip: starts below category/header and ends before artwork.
+  const crop1=cropImage(img,.12,.055,.72,.075,2.2);
+  const crop2=enhanceForOCR(cropImage(img,.12,.055,.72,.075,2.2),170);
+
+  const r1=await Tesseract.recognize(crop1,'ita+eng',{tessedit_pageseg_mode:'7'});
+  const r2=await Tesseract.recognize(crop2,'ita+eng',{tessedit_pageseg_mode:'7'});
+
+  const names=[
+    narrowNameOCRText(r1.data.text||''),
+    narrowNameOCRText(r2.data.text||'')
+  ].filter(Boolean).filter(meaningfulOCRName);
+
+  if(!names.length)return '';
+  names.sort((a,b)=>nameQualityScore(b)-nameQualityScore(a));
+  return names[0];
+}
+
+function bestOfficialCandidateFromOCR(rawName,cards=[]){
+  if(!rawName||!cards.length)return null;
+  const scored=cards.map(c=>{
+    const exact=normText(c.name||'')===normText(rawName);
+    const embedded=candidateContainedInOCR(rawName,c.name||'');
+    const sim=similarity(rawName,c.name||'');
+    return {c,score:(exact?5:0)+(embedded?3:0)+sim};
+  }).sort((a,b)=>b.score-a.score);
+  return scored[0]?.score>=0.58?scored[0].c:null;
+}
+
+
+function normalizeEnergyOCR(s=''){
+  return normText(s)
+    .replace(/\benergia\s+base\b/g,'energia base')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function detectBasicEnergyTypeFromText(s=''){
+  const x=normalizeEnergyOCR(s);
+  const map=[
+    ['erba',['erba','grass']],
+    ['fuoco',['fuoco','fire']],
+    ['acqua',['acqua','water']],
+    ['elettro',['elettro','lightning','electric']],
+    ['psico',['psico','psychic']],
+    ['lotta',['lotta','fighting']],
+    ['oscurità',['oscurita','darkness','dark']],
+    ['metallo',['metallo','metal']],
+  ];
+  for(const [type,words] of map){
+    if(words.some(w=>x.includes(w)))return type;
+  }
+  return '';
+}
+
+function extractEnergyPrintedCode(s=''){
+  const raw=(s||'').toUpperCase().replace(/[|]/g,'I');
+  // Examples: MEE IT 001, MEEIT001, MEE 001.
+  let m=raw.match(/\b([A-Z]{2,5})\s*(?:IT)?\s*[- ]?\s*(\d{1,3})\b/);
+  if(!m)return null;
+  return {set:m[1],num:String(parseInt(m[2],10)).padStart(3,'0')};
+}
+
+async function readBasicEnergyIdentity(img){
+  // Header: detects "Energia base" and sometimes the type word.
+  const header=cropImage(img,.08,.02,.84,.20,2.0);
+  // Footer: printed expansion/card code, e.g. MEE IT 001.
+  const footer=cropImage(img,.08,.78,.84,.18,2.5);
+
+  const [h1,h2,f1,f2]=await Promise.all([
+    Tesseract.recognize(header,'ita+eng',{tessedit_pageseg_mode:'6'}),
+    Tesseract.recognize(enhanceForOCR(header,170),'ita+eng',{tessedit_pageseg_mode:'6'}),
+    Tesseract.recognize(footer,'eng',{tessedit_pageseg_mode:'6'}),
+    Tesseract.recognize(enhanceForOCR(footer,175),'eng',{tessedit_pageseg_mode:'6'})
+  ]);
+
+  const headerText=[h1.data.text||'',h2.data.text||''].join(' ');
+  const footerText=[f1.data.text||'',f2.data.text||''].join(' ');
+  const isBasic=/energia\s*base/i.test(headerText);
+  const code=extractEnergyPrintedCode(footerText);
+  const type=detectBasicEnergyTypeFromText(headerText+' '+footerText);
+  return {isBasic,code,type,headerText,footerText};
+}
+
+async function findBasicEnergyCandidates(identity){
+  let cards=[];
+
+  // Best route: expansion code + collector number.
+  if(identity?.code?.set && identity?.code?.num){
+    const setCode=identity.code.set.toLowerCase();
+    const n=String(parseInt(identity.code.num,10));
+    const queries=[
+      `${setCode}-${n}`,
+      `${setCode}${n}`,
+      n
+    ];
+    for(const q of queries){
+      try{
+        const r=await apiCardsQuery({q});
+        if(r?.length)cards.push(...r);
+      }catch(e){}
+    }
+  }
+
+  // Fallback: official name.
+  if(!cards.length){
+    try{
+      const r=await apiCardsQuery({name:'Energia base'});
+      if(r?.length)cards.push(...r);
+    }catch(e){}
+  }
+
+  // De-duplicate.
+  const seen=new Set();
+  cards=cards.filter(c=>{
+    const k=c.id||`${c.name}|${c.number}|${c.set?.id||''}`;
+    if(seen.has(k))return false;
+    seen.add(k); return true;
+  });
+
+  // Score by printed set code, number and type/name.
+  const scored=cards.map(c=>{
+    let score=0;
+    const cid=normText(c.id||'');
+    const setid=normText(c.set?.id||'');
+    const name=normText(c.name||'');
+    const num=String(parseInt(c.number||'0',10));
+
+    if(identity?.code?.set){
+      const s=normText(identity.code.set);
+      if(cid.includes(s)||setid.includes(s))score+=5;
+    }
+    if(identity?.code?.num && num===String(parseInt(identity.code.num,10)))score+=7;
+    if(name.includes('energia')||name.includes('energy'))score+=2;
+
+    if(identity?.type){
+      const t=normText(identity.type);
+      if(name.includes(t))score+=4;
+      const types=(c.types||[]).map(normText).join(' ');
+      if(types.includes(t))score+=3;
+    }
+    return {c,score};
+  }).sort((a,b)=>b.score-a.score);
+
+  return scored.filter(x=>x.score>0).map(x=>x.c);
+}
+
 async function runSmartOCR(){
-  const f=scanQueue[queueIndex]; if(!f)return;
+  const f=scanQueue[queueIndex];
+  if(!f)return;
+
   ocrBtn.disabled=true;
   setScanProgress(5,'Preparo la foto…');
-  ocrStatus.textContent='Analisi OCR in corso…';
+  ocrStatus.textContent='Analisi in corso…';
+  setScannerRoute('Leggo prima Numero/Set.','ok');
 
   try{
     await loadTesseract();
     const img=await downscaleImageForOCR(f,1100,1600);
 
-    // 1) Collector code first: generally more reliable than the name.
+    // V5.8 — Basic Energy special route.
+    setScanProgress(12,'Controllo se è un’Energia Base…');
+    const energy=await readBasicEnergyIdentity(img);
+
+    if(energy.isBasic){
+      const label=[
+        'Energia Base',
+        energy.type ? energy.type.charAt(0).toUpperCase()+energy.type.slice(1) : '',
+        energy.code ? `${energy.code.set} IT ${energy.code.num}` : ''
+      ].filter(Boolean).join(' · ');
+
+      ocrStatus.textContent=`Rilevata: ${label}`;
+      setScannerRoute(`⚡ Modalità Energia Base: ${label}.`);
+      setScanProgress(48,'Cerco l’Energia Base…');
+
+      const energyCards=await findBasicEnergyCandidates(energy);
+
+      if(energyCards.length){
+        const top=energyCards[0];
+        lastOCR.name=top.name||'Energia Base';
+        lastOCR.number=energy.code?.num||top.number||'';
+        nameInput.value=top.name||'Energia Base';
+        if(energy.code?.num) numberInput.value=energy.code.num;
+
+        setScannerRoute(`✓ Energia Base identificata${energy.code?` da ${energy.code.set} IT ${energy.code.num}`:''}.`);
+        setScanProgress(100,'Energia identificata.');
+
+        // If confidence is strong, show the best result first; retain alternatives when useful.
+        await renderFastCandidates(energyCards.slice(0,4),'Energia Base · codice/tipo');
+        return;
+      }
+
+      // We know it is an energy even if the external database does not contain that exact printing.
+      lastOCR.name=energy.type ? `Energia Base ${energy.type}` : 'Energia Base';
+      nameInput.value=lastOCR.name;
+      if(energy.code?.num) numberInput.value=energy.code.num;
+
+      setScannerRoute(
+        energy.code
+          ? `Energia Base riconosciuta (${energy.code.set} IT ${energy.code.num}), ma questa stampa non è stata trovata automaticamente nel database.`
+          : 'Energia Base riconosciuta. Il codice inferiore non è abbastanza leggibile.',
+        'warn'
+      );
+      setScanProgress(100,'Energia riconosciuta: verifica manualmente.');
+      return;
+    }
+
+    // STEP 1 — collector code first.
     const codeCrop=cropImage(img,.02,.81,.96,.18,2.15);
-    setScanProgress(26,'Leggo numero e totale set…');
-    const codeRes=await Tesseract.recognize(codeCrop,'eng',{tessedit_pageseg_mode:'6'});
+    setScanProgress(24,'Leggo numero e totale set…');
+
+    const codeRes=await Tesseract.recognize(codeCrop,'eng',{
+      tessedit_pageseg_mode:'6'
+    });
     const code=extractCollectorCode(codeRes.data.text||'');
+
+    let pool=[];
 
     if(code){
       numberInput.value=code.num;
       setTotalInput.value=code.total;
       lastOCR.number=code.num;
       lastOCR.total=code.total;
+
+      ocrStatus.textContent=`Codice letto: ${code.num}/${code.total}`;
+      setScanProgress(46,`Cerco ${code.num}/${code.total}…`);
+      setScanMode('modeCode',`Cerco ${code.num}/${code.total}…`);
+
+      // Query exact number + printed set total.
+      pool=await queryByPrintedCode(code.num,code.total);
+
+      // Exact collector code identifies one card: skip name OCR entirely.
+      if(pool.length===1){
+        const card=pool[0];
+        lastOCR.name=card.name||'';
+        nameInput.value=card.name||'';
+
+        setScannerRoute(`✓ ${code.num}/${code.total} identifica una sola carta: ${card.name}. Salto l'OCR del nome.`);
+        setScanProgress(100,'Carta identificata.');
+
+        await renderFastCandidates([card],'Numero + Totale set');
+        return;
+      }
+
+      // Multiple matches: now OCR the name only to choose among a small pool.
+      if(pool.length>1){
+        setScannerRoute(`${pool.length} carte compatibili con ${code.num}/${code.total}. Leggo solo il nome per scegliere.`);
+        setScanProgress(62,'Più candidati: leggo soltanto il nome…');
+
+        const rawName=await readNameOnlyWhenNeeded(img);
+        const official=bestOfficialCandidateFromOCR(rawName,pool);
+
+        if(rawName){
+          ocrStatus.textContent=`Codice: ${code.num}/${code.total} · Nome OCR: ${rawName}`;
+        }else{
+          ocrStatus.textContent=`Codice: ${code.num}/${code.total} · Nome non leggibile`;
+        }
+
+        if(official){
+          lastOCR.name=official.name||'';
+          nameInput.value=official.name||'';
+
+          setScannerRoute(`✓ Nome corretto dal database: ${official.name}.`);
+          setScanProgress(100,'Carta identificata.');
+          await renderFastCandidates([official],'Numero/Set + Nome');
+          return;
+        }
+
+        // If OCR name cannot disambiguate, still show code candidates.
+        lastOCR.name=rawName||'';
+        nameInput.value=rawName||'';
+        setScannerRoute('Nome non abbastanza affidabile: mostro comunque i candidati trovati da Numero/Set.','warn');
+        setScanProgress(100,'Scegli tra i candidati.');
+        await renderFastCandidates(pool.slice(0,6),'Numero + Totale set');
+        return;
+      }
+
+      // Code was read but database found nothing exact: use name as fallback.
+      setScannerRoute(`Nessuna corrispondenza esatta per ${code.num}/${code.total}. Provo il nome.`,`warn`);
+      setScanProgress(62,'Codice senza match: leggo il nome…');
+
+      const rawName=await readNameOnlyWhenNeeded(img);
+      lastOCR.name=rawName||'';
+      nameInput.value=rawName||'';
+
+      if(rawName){
+        ocrStatus.textContent=`Codice: ${code.num}/${code.total} · Nome OCR: ${rawName}`;
+        const found=await fastCascadeSearch({
+          name:rawName,
+          num:code.num,
+          total:code.total
+        });
+
+        if(found.results?.length){
+          setScanProgress(100,'Ricerca completata.');
+          await renderFastCandidates(found.results.slice(0,6),found.route);
+          return;
+        }
+
+        // Important fallback: name + set, ignoring the number.
+        setScanMode('modeNameSet',`Provo nome + set ignorando il numero…`);
+        const byName=await apiCardsQuery({name:rawName});
+        if(byName.length){
+          const full=[];
+          for(const c of byName.slice(0,30))full.push(await fetchFullCandidate(c));
+          const bySet=full.filter(c=>sameSetTotal(setOfficialCount(c),code.total));
+          const usable=bySet.length?bySet:full;
+
+          if(usable.length){
+            setScannerRoute('Numero non utile: uso Nome + Totale set.','warn');
+            setScanProgress(100,'Ricerca completata.');
+            await renderFastCandidates(usable.slice(0,6),'Nome + Totale set');
+            return;
+          }
+        }
+      }
+
+      // Never fail just because the name OCR failed.
+      ocrStatus.textContent=`Codice letto: ${code.num}/${code.total}. Nessun match automatico.`;
+      setScannerRoute('Il codice è stato letto, ma non basta per identificare la carta. Puoi correggere il nome manualmente.','warn');
+      setScanProgress(100,'Ricerca manuale disponibile.');
+      return;
     }
 
-    // 2) Two small name passes: normal + thresholded.
-    setScanProgress(48,'Leggo il nome in due passaggi…');
-    const nameNormal=cropImage(img,.11,.015,.76,.115,2.05);
-    const nameBW=enhanceForOCR(cropImage(img,.11,.015,.76,.115,2.05),174);
+    // STEP 2 — collector code itself was not readable: then and only then use the name.
+    setScannerRoute('Numero/Set non leggibile. Passo all’OCR del nome.','warn');
+    setScanProgress(52,'Numero/Set non leggibile: leggo il nome…');
 
-    const r1=await Tesseract.recognize(nameNormal,'ita+eng',{tessedit_pageseg_mode:'7'});
-    const r2=await Tesseract.recognize(nameBW,'ita+eng',{tessedit_pageseg_mode:'7'});
-
-    let rawName=chooseBestOCRName([r1.data.text||'',r2.data.text||'']);
-
-    // 3) If code identifies a small official pool, normalize noisy OCR
-    //    against official card names instead of trusting OCR literally.
-    setScanProgress(70,'Confronto il nome con il database ufficiale…');
-    if(code){
-      const pool=await nameCandidatesFromCollectorCode(code.num,code.total);
-      const official=officialNameFromCardPool(rawName,pool);
-      if(official)rawName=official;
-      else if(pool.length===1)rawName=pool[0].name||rawName;
-    }
-
-    lastOCR.name=rawName;
+    const rawName=await readNameOnlyWhenNeeded(img);
+    lastOCR.name=rawName||'';
     nameInput.value=rawName||'';
 
-    const parts=[];
-    if(rawName)parts.push(`Nome: ${rawName}`);
-    if(code)parts.push(`Codice: ${code.num}/${code.total}`);
-    ocrStatus.textContent=parts.length?parts.join(' · '):'OCR non sufficiente.';
-
-    setScanProgress(84,'Cerco la carta…');
-
-    if(rawName || code){
-      const found=await fastCascadeSearch({
-        name:rawName,
-        num:code?.num||numberInput.value,
-        total:code?.total||setTotalInput.value
-      });
+    if(rawName){
+      ocrStatus.textContent=`Nome OCR: ${rawName}`;
+      setScanMode('modeName',`Cerco “${rawName}”…`);
+      const found=await fastCascadeSearch({name:rawName,num:'',total:''});
 
       if(found.results?.length){
-        await renderFastCandidates(found.results,found.route);
-        setScanProgress(100,'Carta cercata.');
-      }else{
-        await searchCards({smart:true});
         setScanProgress(100,'Ricerca completata.');
+        await renderFastCandidates(found.results.slice(0,6),found.route);
+        return;
       }
-    }else{
-      setScanProgress(100,'Inserisci nome oppure numero/set manualmente.');
     }
+
+    ocrStatus.textContent='Non sono riuscito a leggere dati sufficienti.';
+    setScannerRoute('Usa la ricerca manuale: la foto resta disponibile.','warn');
+    setScanProgress(100,'Ricerca manuale disponibile.');
 
   }catch(e){
     console.error(e);
-    ocrStatus.textContent='OCR non riuscito. Puoi usare la ricerca manuale senza perdere la foto.';
-    setScanProgress(100,'OCR interrotto.');
+    ocrStatus.textContent='Riconoscimento interrotto. La foto resta disponibile.';
+    setScannerRoute('Puoi continuare con Numero/Set o Nome manualmente.','warn');
+    setScanProgress(100,'Ricerca manuale disponibile.');
   }finally{
     ocrBtn.disabled=false;
     setTimeout(()=>setScanProgress(0,'Pronto per una nuova carta.'),1800);
@@ -1730,7 +2026,7 @@ if(continuousInput){
     scanQueue=[file];
     queueIndex=0;
     loadQueueItem(0);
-    updateContinuousUI('Foto acquisita. Avvio OCR assistito del nome…');
+    updateContinuousUI('Foto acquisita. Leggo automaticamente Numero/Set…');
     setTimeout(()=>runSmartOCR(),180);
   });
 }
