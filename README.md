@@ -1,16 +1,18 @@
-# Cardoryx V2
+# Cardoryx V3 — Smart Recognition
 
 Mobile-first Pokémon TCG catalog prototype for iPhone.
 
-## V2 changes
-- separate Camera and Photo Library buttons
-- multi-photo selection from iPhone library
-- scan queue for fast sequential cataloging
-- OCR on targeted card zones (name/top + number/bottom)
-- number-first candidate search on Italian TCGdex
-- visual candidate grid for quick confirmation
-- automatic move to next queued photo after saving
-- V1 catalog preserved through localStorage migration
+## V3
+- OCR su più ritagli mirati
+- lettura del codice completo, es. 055/159
+- nuovo campo "Totale set"
+- ranking candidati con numero + totale set + somiglianza del nome
+- recupero dettagli TCGdex prima del ranking
+- evidenziazione della carta più probabile
+- mantiene fotocamera, rullino, multi-foto e catalogo V2
 
-## GitHub Pages update
-Upload/replace the files in the repository root. GitHub Pages will redeploy automatically.
+## Test consigliato
+Kilowattrel di Kissara — 055/159.
+
+## Aggiornamento GitHub Pages
+Sostituisci tutti i file nella root del repository; GitHub Pages si aggiorna automaticamente.
