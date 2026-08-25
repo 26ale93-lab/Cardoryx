@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.5.1</title>
+<title>Cardoryx V1.5.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -407,15 +407,16 @@
     <div id="confirmCard" class="card hidden">
       <div class="section-title">3. Conferma</div>
       <div class="result"><img id="confirmImg"><div class="meta"><h3 id="confirmName"></h3><div id="confirmInfo" class="small"></div><div id="confirmTags"></div></div></div>
-      <div class="label">Finitura</div><select id="variant"><option value="Normal">Normal</option>
+      <div class="label">Finitura</div><select id="variant">
+<option value="Normal">Normale</option>
 <option value="Holo">Holo</option>
 <option value="Reverse Holo">Reverse Holo</option>
+<option value="Cosmos Holo">Cosmos Holo</option>
 <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
 <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
-<option value="Pokémon Day Stamp">🎉 Pokémon Day Stamp</option>
-<option value="Play! Pokémon Stamp">🏆 Play! Pokémon Stamp</option>
-<option value="Play! Pokémon Prize Pack">🏆 Play! Pokémon Prize Pack</option>
-<option value="First Edition">First Edition</option></select>
+<option value="Speciale / Altro">Speciale / Altro</option>
+<option value="Non so">Non so</option>
+</select>
         <label>STAMP / EDIZIONE</label>
         <select id="stamp">
           <option value="None">Nessuno</option>
@@ -637,18 +638,15 @@
       <div><div class="label">Quantità</div><input id="editQty" type="number" min="1" inputmode="numeric"></div>
       <div><div class="label">Finitura</div>
         <select id="editVariant">
-          <option value="Normal">Normale</option>
-          <option value="Holo">Holo</option>
-          <option value="Reverse Holo">Reverse Holo</option>
-          <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
-          <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
-          <option value="Pokémon Day Stamp">🎉 Pokémon Day Stamp</option>
-          <option value="Play! Pokémon Stamp">🏆 Play! Pokémon Stamp</option>
-<option value="Play! Pokémon Prize Pack">🏆 Play! Pokémon Prize Pack</option>
-          <option value="Cosmos Holo">Cosmos Holo</option>
-          <option value="Speciale / Altro">Speciale / Altro</option>
-          <option value="Non so">Non so</option>
-        </select>
+<option value="Normal">Normale</option>
+<option value="Holo">Holo</option>
+<option value="Reverse Holo">Reverse Holo</option>
+<option value="Cosmos Holo">Cosmos Holo</option>
+<option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
+<option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+<option value="Speciale / Altro">Speciale / Altro</option>
+<option value="Non so">Non so</option>
+</select>
         <label>STAMP / EDIZIONE</label>
         <select id="editStamp">
           <option value="None">Nessuno</option>
@@ -2339,31 +2337,37 @@ function stampBadgeHTML(v){
 function migrateFinishStamp(c){
   if(!c)return c;
   const old=String(c.variant||'');
+  const hasStamp=canonicalStamp(c.stamp||'None')!=='None';
+
   if((/play|prize pack/i).test(old)){
     c.stamp='Play! Pokémon';
     if(/reverse/i.test(old))c.variant='Reverse Holo';
+    else if(/cosmos/i.test(old))c.variant='Cosmos Holo';
     else if(/holo/i.test(old))c.variant='Holo';
     else c.variant='Normal';
   }else if(/pokemon day/i.test(old)){
     c.stamp='Pokémon Day';
     if(/reverse/i.test(old))c.variant='Reverse Holo';
-    else if(/holo|cosmos/i.test(old))c.variant=/cosmos/i.test(old)?'Cosmos Holo':'Holo';
+    else if(/cosmos/i.test(old))c.variant='Cosmos Holo';
+    else if(/holo/i.test(old))c.variant='Holo';
     else c.variant='Normal';
+  }else{
+    c.variant=canonicalVariant(old||'Normal');
   }
+
   c.stamp=canonicalStamp(c.stamp||'None');
   return c;
 }
 
 function canonicalVariant(v){
   const n=normText(v||'');
-  if(n.includes('pokemon day')||n.includes('pokémon day'))return 'Pokémon Day Stamp';
-  if(n.includes('prize pack'))return 'Play! Pokémon Prize Pack';
-  if(n.includes('play! pokemon')||n.includes('play pokemon')||n.includes('play! pokémon')||n.includes('player reward'))return 'Play! Pokémon Stamp';
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
   if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
-  if(n.includes('first edition')||n.includes('1st edition'))return 'First Edition';
+  if(n.includes('cosmos'))return 'Cosmos Holo';
   if(n.includes('reverse'))return 'Reverse Holo';
   if(n.includes('holo'))return 'Holo';
+  if(n.includes('speciale')||n.includes('special / other'))return 'Speciale / Altro';
+  if(n.includes('non so')||n.includes('unknown'))return 'Non so';
   return 'Normal';
 }
 function isBallReverseVariant(v){
@@ -2443,6 +2447,36 @@ function applyDetectedVariant(card){
 // Prezzi Cardmarket verificati manualmente per varianti che Cardmarket pubblica
 // su pagine separate ma che TCGdex non associa ancora in modo affidabile.
 // Chiave: set normalizzato | numero collezione | variante canonica.
+const VERIFIED_STAMP_PRICES = {
+  // Anita / Hilda WHT 084 — Play! Pokémon Prize Pack Series Nine.
+  // Versione standard stamped.
+  'fuoco bianco|084|Normal|Play! Pokémon': {
+    low:0.40, trend:0.81, avg7:0.85, avg30:1.06,
+    source:'Cardmarket · Play! Pokémon Prize Pack Series Nine · Versione 1',
+    verified:'25/08/2026'
+  },
+  // La versione foil delle carte Allenatore PPS9 usa Cosmos Holofoil.
+  'fuoco bianco|084|Cosmos Holo|Play! Pokémon': {
+    low:1.47, trend:2.36, avg7:2.88, avg30:3.23,
+    source:'Cardmarket · Play! Pokémon Prize Pack Series Nine · Versione 2',
+    verified:'25/08/2026'
+  }
+};
+
+function verifiedStampPrice(card,variant,stamp){
+  const setName=normText(card?.set?.name||card?.set||'');
+  const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
+  const finish=canonicalVariant(variant||'Normal');
+  const st=canonicalStamp(stamp||'None');
+  for(const [k,v] of Object.entries(VERIFIED_STAMP_PRICES)){
+    const [ks,kn,kf,kst]=k.split('|');
+    if(normText(ks)===setName &&
+       String(kn).replace(/^0+/,'')===num &&
+       kf===finish && kst===st)return v;
+  }
+  return null;
+}
+
 const VERIFIED_VARIANT_PRICES = {
   'evoluzioni prismatiche|057|Normal': {
     low:0.02, trend:0.13, avg7:0.11, avg30:0.08,
@@ -2513,7 +2547,11 @@ function cardmarketValueForVariant(cm,variant){
 }
 
 function scanUnit(c){
-  const variant=document.getElementById('variant')?.value||'Normal';
+  const variant=document.getElementById('variant')?.value||c?.variant||'Normal';
+  const stamp=document.getElementById('stamp')?.value||c?.stamp||'None';
+  const sp=verifiedStampPrice(c,variant,stamp);
+  if(sp)return Number(sp.trend||sp.avg7||sp.avg30||sp.low||0);
+  if(canonicalStamp(stamp)!=='None')return 0;
   const exact=verifiedVariantPrice(c,variant);
   if(exact)return Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
   const cm=scanCM(c);
@@ -2672,6 +2710,10 @@ function clearSelection(){
   scanPriceCard=null;
   document.getElementById('scanValueBox')?.classList.add('hidden');selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
 function saveSelected(){
+  if(selectedCard){
+    selectedCard.variant=canonicalVariant(document.getElementById('variant')?.value||selectedCard.variant||'Normal');
+    selectedCard.stamp=canonicalStamp(document.getElementById('stamp')?.value||selectedCard.stamp||'None');
+  }
   if(!selectedCard)return;
   const btn=document.querySelector('#confirmCard .btn.green');
   if(btn?.disabled)return;
@@ -2769,7 +2811,8 @@ function saveEditModal(){
   const qty=parseInt(document.getElementById('editQty').value,10);
   if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
   c.qty=qty;
-  c.variant=canonicalVariant(document.getElementById('editVariant').value);c.stamp=canonicalStamp(document.getElementById('editStamp')?.value||'None');
+  c.variant=canonicalVariant(document.getElementById('editVariant').value);
+  c.stamp=canonicalStamp(document.getElementById('editStamp')?.value||'None');
   c.status=document.getElementById('editStatus').value;
   c.condition=document.getElementById('editCondition').value;
   persist();
@@ -2920,27 +2963,49 @@ function saveCardNotes(){
 function euro(v){return Number.isFinite(Number(v))?Number(v).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
 function cardPriceInfo(c){
   const variant=canonicalVariant(c?.variant||'Normal');
+  const stamp=canonicalStamp(c?.stamp||'None');
+
+  const stamped=verifiedStampPrice(c,variant,stamp);
+  if(stamped){
+    const value=Number(stamped.trend||stamped.avg7||stamped.avg30||stamped.low||0);
+    return {value:Number.isFinite(value)&&value>0?value:null, exact:true, source:stamped.source||'Cardmarket', updated:stamped.verified||'', stamp};
+  }
+
+  // A stamped card must not silently inherit the ordinary card's price.
+  if(stamp!=='None'){
+    return {value:null, exact:false, source:`Cardmarket · ${stamp}`, updated:c?.priceUpdatedAt||'', kind:'stamp-unverified', stamp};
+  }
+
   const exact=verifiedVariantPrice(c,variant);
   if(exact){
     const value=Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);
-    return {value:Number.isFinite(value)&&value>0?value:null, exact:true, source:exact.source||'Cardmarket', updated:exact.verified||''};
+    return {value:Number.isFinite(value)&&value>0?value:null, exact:true, source:exact.source||'Cardmarket', updated:exact.verified||'', stamp};
   }
+
   const info=cardmarketValueForVariant(c?.pricing?.cardmarket,variant);
   const value=Number(info?.value||0);
-  return {value:Number.isFinite(value)&&value>0?value:null, exact:false, source:'Cardmarket', updated:c?.priceUpdatedAt||'', kind:info?.kind||'none'};
+  return {value:Number.isFinite(value)&&value>0?value:null, exact:false, source:'Cardmarket', updated:c?.priceUpdatedAt||'', kind:info?.kind||'none', stamp};
 }
 function cardUnitPrice(c){return cardPriceInfo(c).value}
 function cardPriceHtml(c){
   const info=cardPriceInfo(c),u=info.value,q=Number(c.qty)||1;
-  if(u==null)return `<div class="price-main" style="color:#6b7280">Valore non disponibile</div><div class="price-sub">Cardmarket · nessun prezzo associato</div>`;
+  const finish=canonicalVariant(c.variant||'Normal');
+  const stamp=canonicalStamp(c.stamp||'None');
+  const combo=stamp==='None'?finish:`${finish} + ${stamp}`;
+  if(u==null){
+    const why=stamp!=='None'
+      ?`Cardmarket · prezzo specifico ${esc(combo)} non ancora associato`
+      :'Cardmarket · nessun prezzo associato';
+    return `<div class="price-main" style="color:#6b7280">Valore non disponibile</div><div class="price-sub">${why}</div>`;
+  }
   const total=u*q;
   let upd='';
   if(info.updated){
     const d=new Date(info.updated);
     upd=Number.isNaN(d.getTime())?String(info.updated):d.toLocaleDateString('it-IT');
   }
-  const label=info.exact?'Cardmarket · variante verificata':'Trend Cardmarket';
-  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">${label} · ${esc(c.variant||'Normal')}${upd?' · agg. '+esc(upd):''}</div>`;
+  const label=info.exact?'Cardmarket · versione verificata':'Trend Cardmarket';
+  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">${label} · ${esc(combo)}${upd?' · agg. '+esc(upd):''}</div>`;
 }
 function collectionMarketValue(){return db.reduce((sum,c)=>{const u=cardUnitPrice(c);return sum+(u==null?0:u*(Number(c.qty)||1))},0)}
 function pricedCopies(){return db.reduce((n,c)=>n+(cardUnitPrice(c)==null?0:(Number(c.qty)||1)),0)}

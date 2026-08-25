@@ -1,30 +1,20 @@
-# Cardoryx V1.5.1 — Finitura + Stamp
+# Cardoryx V1.5.2 — Fix Finitura + Stamp + Prezzi
 
-Cardoryx separa ora due caratteristiche indipendenti della carta.
+Correzione della V1.5.1.
 
-## Finitura
-- Normal
-- Holo
-- Reverse Holo
-- Cosmos Holo
-- Poké Ball Reverse Holo
-- Master Ball Reverse Holo
-- altre finiture già supportate
+## Corretto
+- La Finitura non contiene più Play! Pokémon / Pokémon Day: questi rimangono solo in Stamp / Edizione.
+- Salvataggio Modifica carta: Finitura e Stamp vengono persistiti separatamente.
+- Le vecchie carte che avevano lo stamp dentro la variante vengono migrate.
+- Il motore prezzi usa ora la combinazione `set + numero + finitura + stamp`.
+- Una carta con stamp non eredita più automaticamente il prezzo della carta normale.
 
-## Stamp / Edizione
-- Nessuno
-- Play! Pokémon
-- Pokémon Day
-- Pokémon Center
-- Pre-release
-- Staff
-- Set Stamp
-- GameStop
-- Altro
+## Anita WHT 084 — Play! Pokémon Prize Pack Series Nine
+Prezzi Cardmarket verificati il 25/08/2026:
+- Normal + Play! Pokémon: trend 0,81 €; minimo 0,40 €; media 7 gg 0,85 €.
+- Cosmos Holo + Play! Pokémon: trend 2,36 €; minimo 1,47 €; media 7 gg 2,88 €.
 
-Una carta può quindi essere, per esempio, `Holo + Play! Pokémon` oppure `Reverse Holo + Play! Pokémon`.
+Le carte Allenatore foil della Prize Pack Series Nine usano Cosmos Holofoil.
 
-## Compatibilità
-Le vecchie carte salvate come Play! Pokémon / Pokémon Day nella variante vengono migrate verso i due campi separati quando possibile.
-Backup JSON e CSV includono il nuovo campo Stamp / Edizione.
-Il database locale non viene cancellato.
+## Backup
+Backup JSON e CSV continuano a includere separatamente Finitura e Stamp / Edizione.
