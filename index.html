@@ -319,8 +319,14 @@
         <div><div class="label">Numero</div><input id="numberInput" inputmode="numeric" placeholder="es. 055"></div>
         <div><div class="label">Totale set</div><input id="setTotalInput" inputmode="numeric" placeholder="es. 159"></div>
       </div>
-      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V4.7 Name-First: Cardoryx cerca <strong>prima il nome</strong>, poi usa set e numero solo per confermare e ordinare. Se il numero OCR è sbagliato, non può più scavalcare il nome.</div>
+      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V6.0 · Name-First: Cardoryx cerca <strong>prima il nome</strong>, poi usa set e numero solo per confermare e ordinare. Se il numero OCR è sbagliato, non può più scavalcare il nome.</div>
       <div id="searchMsg" class="footer-note"></div>
+      <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
+      <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
+        <div style="font-weight:800;margin-bottom:4px">Energie Base MEE</div>
+        <div class="small" style="margin-bottom:10px">Se la scansione non riconosce il codice, scegli direttamente l’Energia. Cardoryx salverà il codice MEE corretto.</div>
+        <div id="meeEnergyGrid" class="grid"></div>
+      </div>
       <div id="results"></div>
     </div>
 
@@ -1172,6 +1178,25 @@ async function findBasicEnergyCandidates(identity){
   return scored.filter(x=>x.score>0).map(x=>x.c);
 }
 
+function toggleManualEnergy(){
+  const p=document.getElementById('manualEnergyPanel');
+  p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden'))renderMeeEnergyGrid();
+}
+function meeEnergyEmoji(t){return ({Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️'})[t]||'⚡'}
+function renderMeeEnergyGrid(){
+  const g=document.getElementById('meeEnergyGrid'); if(!g)return;
+  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<button class="btn alt" type="button" style="min-height:78px;padding:10px" onclick="selectMeeEnergy('${num}')"><div style="font-size:24px">${meeEnergyEmoji(e.type)}</div><div>${e.type}</div><div class="small">MEE IT ${num}</div></button>`).join('');
+}
+async function selectMeeEnergy(num){
+  num=String(num).padStart(3,'0');
+  const c=makeMeeBasicEnergy({code:{set:'MEE',num}}); if(!c)return;
+  // If a photo is already loaded, keep it as the visual reference for this owned card.
+  if(typeof currentImageData!=='undefined' && currentImageData)c.image=currentImageData;
+  nameInput.value=c.name; numberInput.value=num; setTotalInput.value='8';
+  searchMsg.textContent=`Selezionata ${c.name} · MEE IT ${num}.`;
+  await chooseCard(c);
+}
 async function runSmartOCR(){
   const f=scanQueue[queueIndex];
   if(!f)return;
@@ -1541,6 +1566,17 @@ async function searchCards(opts={}){
   searchMsg.textContent='Cerco…';
 
   try{
+    // V6.0 manual MEE lookup: accepts MEE, MEE 001, MEE IT 001 or an Energy type/name.
+    const rawManual=[name,num,total].filter(Boolean).join(' ');
+    const mm=rawManual.toUpperCase().match(/\bMEE(?:\s*IT)?\s*0*(\d{1,3})\b/);
+    if(mm){
+      const n=String(parseInt(mm[1],10)).padStart(3,'0');
+      if(MEE_BASIC_ENERGIES[n]){ await selectMeeEnergy(n); return; }
+    }
+    if(/^MEE$/i.test(name)||/^MEE$/i.test(num)){
+      document.getElementById('manualEnergyPanel').classList.remove('hidden'); renderMeeEnergyGrid();
+      searchMsg.textContent='Set MEE: scegli una delle 8 Energie Base.'; return;
+    }
     // SOLO TOTALE SET -> show matching sets first
     if(!name&&!num&&total){
       const sets=await searchSetsByTotal(total);
@@ -1639,10 +1675,19 @@ async function chooseCard(s){
   const brief=typeof s==='string'?JSON.parse(s):s;
   confirmCard.classList.remove('hidden');
   confirmName.textContent=brief.name;
-  confirmImg.src=(brief.image||'')+'/high.webp';
+  confirmImg.src=brief.image ? (String(brief.image).startsWith('data:') ? brief.image : brief.image+'/high.webp') : ''; confirmImg.style.display=brief.image?'block':'none';
   confirmInfo.textContent='Carico dettagli…';
   confirmTags.innerHTML='';
   try{
+    if(brief._cardoryxLocal){
+      selectedCard=brief;
+      const category=inferCategory(brief),type=inferType(brief);
+      confirmInfo.textContent=`${brief.set?.name||'Energie base MEE'} · ${brief._printedCode||brief.localId}`;
+      confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}<span class="pill">MEE</span>`;
+      applyQuickDefaultsToConfirm();
+      setTimeout(()=>confirmCard.scrollIntoView({behavior:'smooth',block:'end'}),120);
+      return;
+    }
     const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());
     selectedCard={...brief,...full};
     const category=inferCategory(full),type=inferType(full),stage=full.stage||'';
@@ -1679,7 +1724,7 @@ function saveSelected(){
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
       name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',
       image:selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
-      stage:selectedCard.stage||'',trainerType,energyType,
+      stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
       qty:1,addedAt:new Date().toISOString()
     };
