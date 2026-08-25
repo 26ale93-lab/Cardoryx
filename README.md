@@ -23,3 +23,22 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - OCR nome più stretto: esclude FASE/PS e numeri laterali.
 - Se più carte condividono lo stesso codice (es. 055/159), Cardoryx non assegna più un falso "PIÙ PROBABILE" senza un nome affidabile.
 - Cache aggiornata a `cardoryx-v3.4.0`.
+
+
+## V3.5 — Smart Name Normalization
+- Il nome OCR non deve più essere perfetto.
+- Esempio: `7 Kilowattrel di Kissara ra 204` viene confrontato con i candidati `055/159`.
+- Se il nome ufficiale `Kilowattrel di Kissara` è contenuto nel testo OCR, Cardoryx lo normalizza automaticamente.
+- Se numero/totale + nome ufficiale identificano una sola carta, Cardoryx la apre direttamente in Conferma.
+- OCR palesemente inutili vengono ignorati invece di sporcare il campo Nome.
+- Rimane sempre disponibile la selezione manuale dei candidati.
+- Cache PWA: `cardoryx-v3.5.0`.
+
+
+## V3.6 — Guida condizioni
+- Condizioni semplificate: NM, EX, GD, PL, PO.
+- Pulsante `?` accanto a Condizione.
+- Guida rapida integrata nell'app con descrizione di ogni stato.
+- Suggerimento per le carte appena aperte e ben conservate.
+- Mantiene tutte le correzioni V3.5 sul riconoscimento OCR e sulla selezione intelligente.
+- Cache PWA: `cardoryx-v3.6.0`.

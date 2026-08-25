@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3.4</title>
+<title>Cardoryx V3.6</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,6 +12,23 @@
 <meta name="apple-mobile-web-app-title" content="Cardoryx">
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}*{box-sizing:border-box}body{margin:0}.app{max-width:620px;margin:0 auto;padding:env(safe-area-inset-top) 14px calc(88px + env(safe-area-inset-bottom))}.top{padding:18px 4px 8px}.top h1{font-size:26px;margin:0}.top p{margin:6px 0 0;color:#6b7280}.card{background:white;border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 3px 14px #0000000d}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:14px;padding:14px;font-weight:700;font-size:15px;background:#111827;color:white}.btn.alt{background:#e5e7eb;color:#111827}.btn.green{background:#166534}.btn.red{background:#991b1b}.btn:disabled{opacity:.45}.big{padding:20px;font-size:18px;width:100%}input,select{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;font-size:16px;background:white}.label{font-size:12px;font-weight:700;color:#6b7280;margin:10px 0 6px;text-transform:uppercase}.result{display:flex;gap:12px;align-items:center;border-top:1px solid #eee;padding:10px 0}.result img{width:72px;border-radius:8px;background:#eee}.result .meta{flex:1}.result h3{margin:0 0 4px;font-size:16px}.small{font-size:12px;color:#6b7280}.pill{display:inline-block;background:#eef2ff;color:#3730a3;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;margin:2px}.hidden{display:none!important}.bottom{position:fixed;left:0;right:0;bottom:0;background:#ffffffee;backdrop-filter:blur(12px);border-top:1px solid #e5e7eb;padding:8px max(10px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center}.tabs{max-width:620px;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.tab{border:0;background:transparent;padding:8px 4px;font-size:11px;color:#6b7280}.tab.active{color:#111827;font-weight:800}.hero{background:linear-gradient(135deg,#111827,#374151);color:white}.hero .small{color:#d1d5db}.count{font-size:34px;font-weight:800}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.thumb{width:100%;max-height:300px;object-fit:contain;border-radius:12px;background:#111}.section-title{font-size:18px;font-weight:800;margin:6px 0}.notice{padding:10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:13px}.ok{background:#ecfdf5;color:#166534}.danger{background:#fef2f2;color:#991b1b}.catalog-item{border-top:1px solid #eee;padding:10px 0}.catalog-item:first-child{border-top:0}.catalog-item h3{margin:0 0 4px}.right{text-align:right}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.empty{color:#6b7280;text-align:center;padding:20px}.camera-wrap{position:relative}.scan-badge{position:absolute;top:10px;right:10px;background:#111827dd;color:white;padding:6px 10px;border-radius:999px;font-size:12px}.footer-note{font-size:11px;color:#9ca3af;padding:6px 2px}.spacer{height:6px}.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.file-btn{display:block;text-align:center;cursor:pointer}.queue{display:flex;gap:8px;overflow:auto;padding:6px 0}.queue img{width:58px;height:78px;object-fit:cover;border-radius:8px;border:2px solid transparent}.queue img.active{border-color:#111827}.candidate-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.candidate{border:1px solid #e5e7eb;border-radius:14px;padding:8px;background:#fff}.candidate img{width:100%;border-radius:9px;background:#eee}.candidate h3{font-size:14px;margin:6px 0 2px}.candidate .small{font-size:11px}.candidate.best{border:2px solid #2563eb;box-shadow:0 0 0 3px #dbeafe}.rank-badge{display:inline-block;margin-top:5px;padding:3px 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:800}.scan-note{background:#eef2ff;color:#3730a3;padding:10px;border-radius:12px;font-size:12px}
+
+.condition-help{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-left:6px;border:0;border-radius:50%;background:#e8edff;color:#3347a5;font-weight:900;font-size:15px;vertical-align:middle;padding:0;cursor:pointer}
+.condition-modal{position:fixed;inset:0;z-index:120;background:rgba(8,15,30,.48);display:none;align-items:flex-end;justify-content:center;padding:16px}
+.condition-modal.open{display:flex}
+.condition-sheet{width:min(620px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:26px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.condition-sheet-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.condition-sheet-kicker{font-size:12px;font-weight:900;letter-spacing:.08em;color:#667085}
+.condition-sheet h3{font-size:25px;margin:4px 0 0}
+.condition-close{border:0;background:#eef1f5;width:38px;height:38px;border-radius:50%;font-size:27px;line-height:1;cursor:pointer}
+.condition-intro{color:#667085;line-height:1.45;margin:14px 0}
+.condition-guide{display:grid;gap:10px}
+.condition-guide>div{padding:13px 14px;border:1px solid #e2e5ea;border-radius:15px;background:#fafbfc}
+.condition-guide b{display:block;font-size:15px;margin-bottom:3px}
+.condition-guide span{display:block;color:#667085;font-size:14px;line-height:1.35}
+.condition-tip{margin:14px 0;padding:13px 14px;border-radius:15px;background:#eef2ff;color:#3347a5;font-size:14px;line-height:1.4}
+.condition-ok{width:100%;margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -52,7 +69,7 @@
         <div><div class="label">Numero</div><input id="numberInput" inputmode="numeric" placeholder="es. 055"></div>
         <div><div class="label">Totale set</div><input id="setTotalInput" inputmode="numeric" placeholder="es. 159"></div>
       </div>
-      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V3 Smart: il dato più importante è <strong>055/159</strong>. Cardoryx usa numero + totale del set per eliminare quasi tutti i falsi risultati; il nome serve come conferma.</div>
+      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V3.5 Smart: Cardoryx usa <strong>055/159</strong> per restringere il set, poi confronta anche un nome OCR imperfetto con i nomi ufficiali. Se trova una sola corrispondenza sicura, normalizza il nome e seleziona automaticamente la carta.</div>
       <div id="searchMsg" class="footer-note"></div>
       <div id="results"></div>
     </div>
@@ -62,7 +79,13 @@
       <div class="result"><img id="confirmImg"><div class="meta"><h3 id="confirmName"></h3><div id="confirmInfo" class="small"></div><div id="confirmTags"></div></div></div>
       <div class="label">Variante</div><select id="variant"><option>Normale</option><option>Holo</option><option>Reverse Holo</option><option>Cosmos Holo</option><option>Speciale / Altro</option><option>Non so</option></select>
       <div class="label">Stato</div><select id="status"><option value="Disponibile">Disponibile</option><option value="Mazzo 1">Mazzo 1</option><option value="Mazzo 2">Mazzo 2</option><option value="Protetta">Protetta</option><option value="Vendita">Vendita</option></select>
-      <div class="label">Condizione</div><select id="condition"><option>NM</option><option>EX / LP</option><option>GD / MP</option><option>PL</option><option>Non valutata</option></select>
+      <div class="label">Condizione</div><select id="condition">
+      <option value="NM">NM — Near Mint</option>
+      <option value="EX">EX — Excellent</option>
+      <option value="GD">GD — Good</option>
+      <option value="PL">PL — Played</option>
+      <option value="PO">PO — Poor</option>
+    </select>
       <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
       <div id="saveMsg" class="footer-note"></div>
     </div>
@@ -108,6 +131,32 @@ function normText(s=''){return String(s).toLowerCase().normalize('NFD').replace(
 function similarity(a,b){a=normText(a);b=normText(b);if(!a||!b)return 0;if(a===b)return 1;if(a.includes(b)||b.includes(a))return Math.min(a.length,b.length)/Math.max(a.length,b.length);const m=a.length,n=b.length;const dp=Array(n+1).fill(0).map((_,j)=>j);for(let i=1;i<=m;i++){let prev=dp[0];dp[0]=i;for(let j=1;j<=n;j++){const tmp=dp[j];dp[j]=Math.min(dp[j]+1,dp[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=tmp}}return 1-dp[n]/Math.max(m,n)}
 function setOfficialCount(c){const s=c?.set||{};const cc=s.cardCount||{};return Number(cc.official||cc.total||s.cardCountOfficial||s.totalCards||0)||0}
 function setName(c){return c?.set?.name||c?.setName||''}
+
+function meaningfulOCRName(s=''){
+  const n=normText(s);
+  if(n.length<5)return false;
+  const letters=(String(s).match(/[A-Za-zÀ-ÿ]/g)||[]).length;
+  return letters>=4;
+}
+function candidateContainedInOCR(ocr,candidate){
+  const a=normText(ocr),b=normText(candidate);
+  return !!(a&&b&&b.length>=4&&a.includes(b));
+}
+function bestOfficialNameFromCandidates(raw,cands=[]){
+  if(!meaningfulOCRName(raw))return null;
+  const scored=cands.map(c=>{
+    const contained=candidateContainedInOCR(raw,c.name||'');
+    const sim=similarity(raw,c.name||'');
+    return {c,contained,sim,score:(contained?2:0)+sim};
+  }).sort((a,b)=>b.score-a.score);
+  if(!scored.length)return null;
+  const top=scored[0];
+  // Very reliable if the official candidate name is literally embedded in noisy OCR.
+  if(top.contained)return top.c.name;
+  // Otherwise accept only a clearly strong fuzzy match.
+  if(top.sim>=0.72 && (!scored[1] || top.sim-scored[1].sim>=0.12))return top.c.name;
+  return null;
+}
 function cleanNameCandidate(text){const lines=text.split(/\n/).map(x=>x.replace(/[^A-Za-zÀ-ÿ0-9'’\- .]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);const banned=/^(BASE|FASE\s*[12]?|PS\s*\d+|ALLENATORE|ENERGIA|POKEMON|POKÉMON)$/i;let best=lines.filter(x=>x.length>=3&&x.length<=32&&!banned.test(x)&&!/^\d+$/.test(x)).sort((a,b)=>{const sa=(/[A-Za-zÀ-ÿ]{4,}/.test(a)?5:0)-(/PS|FASE|BASE/i.test(a)?4:0);const sb=(/[A-Za-zÀ-ÿ]{4,}/.test(b)?5:0)-(/PS|FASE|BASE/i.test(b)?4:0);return sb-sa})[0]||'';return best.replace(/\bPS\s*\d+.*/i,'').replace(/^FASE\s*\d*\s*/i,'').replace(/^BASE\s*/i,'').trim()}
 async function runSmartOCR(){
   const f=scanQueue[queueIndex]; if(!f)return;
@@ -135,8 +184,9 @@ async function runSmartOCR(){
       const nums=(bottomText.match(/\b\d{2,3}\b/g)||[]);
       if(nums.length){num=nums[0].padStart(3,'0');if(nums.length>1)total=nums[1];}
     }
+    if(!meaningfulOCRName(name))name='';
     lastOCR={name,number:num,total};
-    if(name)nameInput.value=name;
+    if(name)nameInput.value=name; else nameInput.value='';
     if(num)numberInput.value=num;
     if(total)setTotalInput.value=total;
     const bits=[];
@@ -199,15 +249,33 @@ async function searchCards(opts={}){
       searchMsg.textContent='Nessun risultato. Controlla numero e totale set.';
       return;
     }
-    const top=full[0];
+    let top=full[0];
     const exactSame=full.filter(c=>c._setCount===targetTotal && (String(c.localId||'').replace(/^0+/,'')||'0')===targetNum);
-    const strongName=targetName && top._sim>=0.55;
+
+    // Normalize noisy OCR against the official names of cards that share the exact collector code.
+    const officialName=bestOfficialNameFromCandidates(targetName, exactSame.length?exactSame:full);
+    let autoCandidate=null;
+    if(officialName){
+      nameInput.value=officialName;
+      lastOCR.name=officialName;
+      full=full.map(c=>{
+        const exactOfficial=normText(c.name||'')===normText(officialName);
+        return {...c,_score:(c._score||0)+(exactOfficial?220:0),_officialMatch:exactOfficial};
+      }).sort((a,b)=>b._score-a._score);
+      top=full[0];
+      const exactOfficialMatches=full.filter(c=>c._officialMatch && (!targetTotal || c._setCount===targetTotal) && (String(c.localId||'').replace(/^0+/,'')||'0')===targetNum);
+      if(exactOfficialMatches.length===1)autoCandidate=exactOfficialMatches[0];
+    }
+
+    const strongName=(officialName && normText(top.name||'')===normText(officialName)) || (targetName && top._sim>=0.55);
     const strong=(exactSame.length===1 && targetTotal) || strongName || top._score>=190;
-    searchMsg.textContent=strong
-      ? `Corrispondenza molto probabile trovata. Mostro ${full.length} risultati ordinati.`
-      : (exactSame.length>1
-          ? `${exactSame.length} carte condividono ${num}/${total}. Tocca quella corretta: nessuna viene scelta automaticamente.`
-          : `${full.length} candidati ordinati per probabilità.`);
+    searchMsg.textContent=autoCandidate
+      ? `Riconosciuta: ${autoCandidate.name} · ${num}/${total}. Seleziono automaticamente la carta.`
+      : (strong
+          ? `Corrispondenza molto probabile trovata. Mostro ${full.length} risultati ordinati.`
+          : (exactSame.length>1
+              ? `${exactSame.length} carte condividono ${num}/${total}. Tocca quella corretta: nessuna viene scelta automaticamente.`
+              : `${full.length} candidati ordinati per probabilità.`));
     candidateMap={};
     results.innerHTML=`<div class="candidate-grid">${full.map((c,i)=>{
       const key='cand_'+i;
@@ -223,6 +291,10 @@ async function searchCards(opts={}){
         <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa</button>
       </div>`
     }).join('')}</div>`;
+    if(autoCandidate){
+      // Let Safari paint the candidates first, then open the exact confirmation card.
+      setTimeout(()=>chooseCard(autoCandidate),80);
+    }
   }catch(e){
     console.error(e);
     searchMsg.textContent='Errore di collegamento a TCGdex.';
