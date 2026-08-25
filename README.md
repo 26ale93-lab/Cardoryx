@@ -161,3 +161,13 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Fallback alla ricerca `localId`.
 - Una sola corrispondenza esatta apre direttamente Conferma.
 - Cache PWA `cardoryx-v5.0.0`.
+
+
+## V5.1 — Ricerca libera + Browser set
+- Solo Numero: mostra tutte le carte con quel numero nei diversi set.
+- Solo Totale Set: mostra i set compatibili.
+- Ogni set ha il pulsante `Vedi set completo`.
+- Il set completo viene caricato a blocchi di 12 carte con `Carica altre`.
+- Numero + Totale Set mantiene la ricerca precisa V5.0.
+- Nome resta prioritario quando presente.
+- Cache PWA `cardoryx-v5.1.0`.

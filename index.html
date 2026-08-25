@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.0</title>
+<title>Cardoryx V5.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -143,6 +143,18 @@
 .scan-mode-chip.active{background:#111827;color:#fff;border-color:#111827}
 .scan-found{margin-top:8px;padding:10px 12px;border-radius:13px;background:#ecfdf3;color:#166534;font-size:12px;font-weight:800}
 .scan-fallback{margin-top:8px;padding:10px 12px;border-radius:13px;background:#fff7ed;color:#9a3412;font-size:12px}
+
+
+.set-results{display:grid;gap:10px;margin-top:12px}
+.set-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:12px}
+.set-card-main{min-width:0}
+.set-card-title{font-weight:900;font-size:16px}
+.set-card-sub{font-size:12px;color:#6b7280;margin-top:3px}
+.load-more-wrap{text-align:center;margin:14px 0 4px}
+.load-more-wrap .btn{min-width:180px}
+.search-mode-note{margin-top:10px;padding:10px 12px;border-radius:14px;background:#f8fafc;border:1px solid #e5e7eb;color:#475467;font-size:12px;line-height:1.4}
+.set-view-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 12px}
+.set-view-head h3{margin:0;font-size:20px}
 
 </style>
 </head>
@@ -782,22 +794,160 @@ async function fetchFullCandidate(c){
   catch(e){return c}
 }
 
+
+let browseSetState={set:null,cards:[],shown:0,pageSize:12};
+
+async function fetchAllSets(){
+  try{
+    const r=await fetch(`${API}/sets`);
+    if(!r.ok)return [];
+    const data=await r.json();
+    return Array.isArray(data)?data:[];
+  }catch(e){return []}
+}
+
+function setTotalValue(s){
+  const cc=(s?.cardCount&&typeof s.cardCount==='object')?s.cardCount:{};
+  return Number(cc.official ?? cc.total ?? s?.totalCards ?? s?.total ?? 0)||0;
+}
+
+async function searchSetsByTotal(total){
+  const wanted=Number(String(total||'').replace(/\D/g,''));
+  if(!wanted)return [];
+  let sets=await querySetsByOfficialCount(wanted);
+  if(!sets.length){
+    sets=(await fetchAllSets()).filter(s=>setTotalValue(s)===wanted);
+  }
+  return sets;
+}
+
+function renderSetChoices(sets,total){
+  results.innerHTML=`<div class="set-results">${sets.map(s=>`
+    <div class="set-card">
+      <div class="set-card-main">
+        <div class="set-card-title">${esc(s.name||s.id)}</div>
+        <div class="set-card-sub">${esc(s.id||'')} · ${setTotalValue(s)||total} carte</div>
+      </div>
+      <button class="btn alt" onclick="openFullSet('${encodeURIComponent(s.id)}')">Vedi set completo</button>
+    </div>
+  `).join('')}</div>`;
+  searchMsg.textContent=`${sets.length} set trovati con totale ${total}.`;
+}
+
+async function openFullSet(encodedSetId){
+  const setId=decodeURIComponent(encodedSetId);
+  searchMsg.textContent='Carico il set…';
+  results.innerHTML='';
+  try{
+    const r=await fetch(`${API}/sets/${encodeURIComponent(setId)}`);
+    if(!r.ok)throw 0;
+    const set=await r.json();
+    let cards=Array.isArray(set.cards)?set.cards:[];
+    if(!cards.length){
+      const r2=await fetch(`${API}/cards?set.id=${encodeURIComponent(setId)}`);
+      if(r2.ok){
+        const d=await r2.json();
+        cards=Array.isArray(d)?d:[];
+      }
+    }
+    browseSetState={set,cards,shown:0,pageSize:12};
+    renderFullSetChunk();
+  }catch(e){
+    searchMsg.textContent='Non riesco a caricare questo set.';
+  }
+}
+
+function renderFullSetChunk(){
+  const st=browseSetState;
+  if(!st.set)return;
+  st.shown=Math.min(st.cards.length,st.shown+st.pageSize);
+  const visible=st.cards.slice(0,st.shown);
+
+  candidateMap={};
+  const cardsHtml=visible.map((c,i)=>{
+    const key=`set_${i}`;
+    candidateMap[key]=c;
+    return `<div class="candidate">
+      <img src="${c.image?c.image+'/low.webp':''}" onerror="this.style.visibility='hidden'">
+      <h3>${esc(c.name||'Carta')}</h3>
+      <div class="small">N° ${esc(c.localId||'—')}</div>
+      <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
+    </div>`;
+  }).join('');
+
+  results.innerHTML=`
+    <div class="set-view-head">
+      <div>
+        <h3>${esc(st.set.name||st.set.id)}</h3>
+        <div class="small">${setTotalValue(st.set)||st.cards.length} carte nel set</div>
+      </div>
+      <button class="btn alt" onclick="searchCards()">← Torna</button>
+    </div>
+    <div class="candidate-grid">${cardsHtml}</div>
+    ${st.shown<st.cards.length?`
+      <div class="load-more-wrap">
+        <button class="btn alt" onclick="renderFullSetChunk()">Carica altre (${st.cards.length-st.shown})</button>
+      </div>`:''}
+  `;
+  searchMsg.textContent=`Mostrate ${st.shown} di ${st.cards.length} carte.`;
+}
+
 async function searchCards(opts={}){
   let name=nameInput.value.trim();
   let num=numberInput.value.trim();
   let total=setTotalInput.value.trim();
   if(opts.numberOnly)name='';
 
-  if(!name&&!num){
-    searchMsg.textContent='Inserisci almeno nome o numero.';
+  if(!name&&!num&&!total){
+    searchMsg.textContent='Inserisci almeno nome, numero oppure totale set.';
     return;
   }
 
   results.innerHTML='';
   clearSelection();
-  searchMsg.textContent='Cerco la carta…';
+  searchMsg.textContent='Cerco…';
 
   try{
+    // SOLO TOTALE SET -> show matching sets first
+    if(!name&&!num&&total){
+      const sets=await searchSetsByTotal(total);
+      if(!sets.length){
+        searchMsg.textContent=`Nessun set trovato con totale ${total}.`;
+        return;
+      }
+      renderSetChoices(sets,total);
+      return;
+    }
+
+    // SOLO NUMERO -> all cards with that number across sets
+    if(!name&&num&&!total){
+      let cards=await queryByAnyLocalId(num);
+      if(!cards.length){
+        searchMsg.textContent=`Nessuna carta trovata con numero ${num}.`;
+        return;
+      }
+      const full=[];
+      for(const c of cards.slice(0,60))full.push(await fetchFullCandidate(c));
+      cards=full.filter(c=>sameCollectorNumber(c.localId,num));
+      cards=sortBySearchIntent(cards,{num}).slice(0,24);
+
+      candidateMap={};
+      results.innerHTML=`<div class="candidate-grid">${cards.map((c,i)=>{
+        const key='cand_'+i;
+        candidateMap[key]=c;
+        const count=setOfficialCount(c);
+        return `<div class="candidate">
+          <img src="${c.image?c.image+'/low.webp':''}" onerror="this.style.visibility='hidden'">
+          <h3>${esc(c.name)}</h3>
+          <div class="small">N° ${esc(c.localId)}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
+          <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
+        </div>`;
+      }).join('')}</div>`;
+      searchMsg.textContent=`${cards.length} carte con numero ${num}.`;
+      return;
+    }
+
+    // Standard V5.0 engine
     const found=await fastCascadeSearch({name,num,total});
     let full=(found.results||[]).slice(0,6);
 
@@ -806,7 +956,7 @@ async function searchCards(opts={}){
         ? 'Nessuna corrispondenza con questi dati. Prova Nome + Totale set oppure correggi il nome.'
         : (num&&total
             ? `Nessuna carta trovata con numero ${num} nel set da ${total} carte.`
-            : 'Nessuna carta trovata con questo numero.');
+            : 'Nessun risultato.');
       return;
     }
 
