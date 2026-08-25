@@ -208,3 +208,14 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Pulsante `Ferma` per terminare la sessione.
 - La riapertura della fotocamera avviene dopo il salvataggio; su iOS il comportamento finale dipende dalle regole di Safari/PWA per l'apertura del selettore fotocamera.
 - Cache PWA `cardoryx-v5.5.0`.
+
+
+## V5.6 — OCR nome assistito
+- Il nome viene letto con due passaggi OCR su una zona stretta.
+- Un passaggio usa l'immagine normale, uno usa una versione ad alto contrasto.
+- Cardoryx sceglie automaticamente la lettura OCR più pulita.
+- Se numero + totale set producono un piccolo gruppo di candidati, il nome OCR viene confrontato con i nomi ufficiali.
+- Un OCR rumoroso viene normalizzato al nome ufficiale quando il match è abbastanza forte.
+- Se numero + totale set identificano una sola carta, il nome ufficiale viene usato direttamente.
+- Scanner continuo invariato.
+- Cache PWA `cardoryx-v5.6.0`.

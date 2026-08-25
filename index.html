@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.5</title>
+<title>Cardoryx V5.6</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -297,7 +297,7 @@
       </div>
 
       <div class="scan-progress"><span id="scanProgressBar"></span></div>
-      <div id="scanStatusPro" class="scan-status-pro">Pronto. Analizzerò solo nome e numero/set.</div>
+      <div id="scanStatusPro" class="scan-status-pro">Pronto. Nome OCR assistito + numero/set.</div>
       <div class="scan-mode-row">
         <span id="modeCode" class="scan-mode-chip active">1 · Numero/Set</span>
         <span id="modeNameSet" class="scan-mode-chip">2 · Nome + Set</span>
@@ -954,19 +954,62 @@ function goNextRapidCard(){
   return false;
 }
 
+
+function nameQualityScore(s=''){
+  const raw=String(s).trim();
+  const letters=(raw.match(/[A-Za-zÀ-ÿ]/g)||[]).length;
+  const words=raw.split(/\s+/).filter(Boolean).length;
+  const noise=(raw.match(/[^A-Za-zÀ-ÿ0-9'’\- ]/g)||[]).length;
+  return letters*2 + Math.min(words,5)*4 - noise*3;
+}
+
+function chooseBestOCRName(candidates=[]){
+  const cleaned=candidates
+    .map(cleanOCRNameV45)
+    .filter(Boolean)
+    .filter(meaningfulOCRName)
+    .sort((a,b)=>nameQualityScore(b)-nameQualityScore(a));
+  return cleaned[0]||'';
+}
+
+function officialNameFromCardPool(rawName,cards=[]){
+  if(!rawName||!cards.length)return '';
+  const pool=cards.map(c=>({
+    c,
+    exact: normText(c.name||'')===normText(rawName),
+    embedded: candidateContainedInOCR(rawName,c.name||''),
+    sim: similarity(rawName,c.name||'')
+  })).sort((a,b)=>{
+    const sa=(a.exact?3:0)+(a.embedded?2:0)+a.sim;
+    const sb=(b.exact?3:0)+(b.embedded?2:0)+b.sim;
+    return sb-sa;
+  });
+  if(!pool.length)return '';
+  const top=pool[0];
+  if(top.exact || top.embedded || top.sim>=0.58)return top.c.name||'';
+  return '';
+}
+
+async function nameCandidatesFromCollectorCode(num,total){
+  if(!num||!total)return [];
+  try{
+    return await queryByPrintedCode(num,total);
+  }catch(e){return []}
+}
+
 async function runSmartOCR(){
   const f=scanQueue[queueIndex]; if(!f)return;
   ocrBtn.disabled=true;
-  setScanProgress(5,'Preparo una copia leggera della foto…');
+  setScanProgress(5,'Preparo la foto…');
   ocrStatus.textContent='Analisi OCR in corso…';
+
   try{
     await loadTesseract();
-    setScanProgress(15,'Ottimizzo la foto per iPhone…');
-    let img=await downscaleImageForOCR(f,1100,1600);
+    const img=await downscaleImageForOCR(f,1100,1600);
 
-    // Process one crop at a time to keep Safari memory low.
-    const codeCrop=cropImage(img,.02,.81,.96,.18,2.1);
-    setScanProgress(35,'Leggo il numero della carta…');
+    // 1) Collector code first: generally more reliable than the name.
+    const codeCrop=cropImage(img,.02,.81,.96,.18,2.15);
+    setScanProgress(26,'Leggo numero e totale set…');
     const codeRes=await Tesseract.recognize(codeCrop,'eng',{tessedit_pageseg_mode:'6'});
     const code=extractCollectorCode(codeRes.data.text||'');
 
@@ -975,46 +1018,63 @@ async function runSmartOCR(){
       setTotalInput.value=code.total;
       lastOCR.number=code.num;
       lastOCR.total=code.total;
-      setScanProgress(58,`Trovato ${code.num}/${code.total}. Leggo il nome…`);
-    }else{
-      setScanProgress(52,'Numero non certo. Provo il nome…');
     }
 
-    const nameCrop=cropImage(img,.13,.018,.72,.105,2.0);
-    const nameRes=await Tesseract.recognize(nameCrop,'ita+eng',{tessedit_pageseg_mode:'7'});
-    let name=cleanOCRNameV45(nameRes.data.text||'');
-    if(!meaningfulOCRName(name))name='';
-    lastOCR.name=name;
-    nameInput.value=name;
+    // 2) Two small name passes: normal + thresholded.
+    setScanProgress(48,'Leggo il nome in due passaggi…');
+    const nameNormal=cropImage(img,.11,.015,.76,.115,2.05);
+    const nameBW=enhanceForOCR(cropImage(img,.11,.015,.76,.115,2.05),174);
 
-    setScanProgress(78,'Confronto con il database italiano…');
-    if(code||name){
-      ocrStatus.textContent=`${code?`Codice ${code.num}/${code.total}`:''}${code&&name?' · ':''}${name?`Nome OCR: ${name}`:''}`;
-      const cascade=await fastCascadeSearch({
-        name,
+    const r1=await Tesseract.recognize(nameNormal,'ita+eng',{tessedit_pageseg_mode:'7'});
+    const r2=await Tesseract.recognize(nameBW,'ita+eng',{tessedit_pageseg_mode:'7'});
+
+    let rawName=chooseBestOCRName([r1.data.text||'',r2.data.text||'']);
+
+    // 3) If code identifies a small official pool, normalize noisy OCR
+    //    against official card names instead of trusting OCR literally.
+    setScanProgress(70,'Confronto il nome con il database ufficiale…');
+    if(code){
+      const pool=await nameCandidatesFromCollectorCode(code.num,code.total);
+      const official=officialNameFromCardPool(rawName,pool);
+      if(official)rawName=official;
+      else if(pool.length===1)rawName=pool[0].name||rawName;
+    }
+
+    lastOCR.name=rawName;
+    nameInput.value=rawName||'';
+
+    const parts=[];
+    if(rawName)parts.push(`Nome: ${rawName}`);
+    if(code)parts.push(`Codice: ${code.num}/${code.total}`);
+    ocrStatus.textContent=parts.length?parts.join(' · '):'OCR non sufficiente.';
+
+    setScanProgress(84,'Cerco la carta…');
+
+    if(rawName || code){
+      const found=await fastCascadeSearch({
+        name:rawName,
         num:code?.num||numberInput.value,
         total:code?.total||setTotalInput.value
       });
-      if(cascade.results.length){
-        await renderFastCandidates(cascade.results,cascade.route);
+
+      if(found.results?.length){
+        await renderFastCandidates(found.results,found.route);
+        setScanProgress(100,'Carta cercata.');
       }else{
-        document.getElementById('scanFallbackInfo').innerHTML='<div class="scan-fallback">Ricerca automatica non sufficiente. Mostro la ricerca standard.</div>';
         await searchCards({smart:true});
+        setScanProgress(100,'Ricerca completata.');
       }
-      setScanProgress(100,'Analisi completata.');
     }else{
-      ocrStatus.textContent='Dati non sufficienti. Inserisci nome e totale set oppure usa la ricerca manuale.';
-      setScanProgress(100,'Usa nome + set per il fallback più preciso.');
+      setScanProgress(100,'Inserisci nome oppure numero/set manualmente.');
     }
 
-    img=null;
   }catch(e){
     console.error(e);
-    ocrStatus.textContent='OCR non riuscito. La foto resta disponibile: usa numero e totale set manualmente.';
-    setScanProgress(100,'OCR interrotto senza perdere la foto.');
+    ocrStatus.textContent='OCR non riuscito. Puoi usare la ricerca manuale senza perdere la foto.';
+    setScanProgress(100,'OCR interrotto.');
   }finally{
     ocrBtn.disabled=false;
-    setTimeout(()=>setScanProgress(0,'Pronto per una nuova analisi.'),1800);
+    setTimeout(()=>setScanProgress(0,'Pronto per una nuova carta.'),1800);
   }
 }
 
@@ -1670,7 +1730,7 @@ if(continuousInput){
     scanQueue=[file];
     queueIndex=0;
     loadQueueItem(0);
-    updateContinuousUI('Foto acquisita. Avvio riconoscimento…');
+    updateContinuousUI('Foto acquisita. Avvio OCR assistito del nome…');
     setTimeout(()=>runSmartOCR(),180);
   });
 }
