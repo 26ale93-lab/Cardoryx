@@ -188,3 +188,13 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Tocco in qualsiasi area esterna alla carta: chiude.
 - Tocco direttamente sulla carta ingrandita: resta aperta.
 - Cache PWA `cardoryx-v5.3.0`.
+
+
+## V5.4 — Scansione Rapida
+- Nuovo interruttore `Scansione rapida`.
+- Predefiniti persistenti per Variante, Condizione e Stato.
+- Dopo Salva passa automaticamente alla foto successiva della coda.
+- Se la modalità rapida è attiva, avvia automaticamente l'OCR sulla carta successiva.
+- Indicatore della coda e del numero di carte rimanenti.
+- Gestione duplicati invariata: chiede prima di aumentare la quantità.
+- Cache PWA `cardoryx-v5.4.0`.

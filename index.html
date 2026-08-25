@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.3</title>
+<title>Cardoryx V5.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -178,6 +178,22 @@
   background:rgba(0,0,0,.35);padding:8px 12px;border-radius:999px;
 }
 
+
+.quick-scan-card{margin-top:12px;padding:13px;border:1px solid #dbe4ff;border-radius:16px;background:#f7f9ff}
+.quick-scan-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quick-scan-title{font-weight:900;font-size:14px}
+.quick-scan-sub{font-size:11px;color:#667085;margin-top:2px}
+.switch{position:relative;width:48px;height:28px;display:inline-block}
+.switch input{display:none}
+.switch span{position:absolute;inset:0;background:#d0d5dd;border-radius:999px;transition:.2s}
+.switch span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.switch input:checked+span{background:#4f46e5}
+.switch input:checked+span:before{transform:translateX(20px)}
+.quick-defaults{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.quick-defaults select{width:100%;font-size:12px}
+.quick-status{margin-top:8px;font-size:11px;color:#475467}
+.queue-mini{margin-top:8px;padding:8px 10px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800}
+
 </style>
 </head>
 <body>
@@ -213,6 +229,48 @@
 </div><span class="scan-badge">ITALIANO</span></div>
       <div class="spacer"></div>
       <button class="btn big" id="ocrBtn" onclick="runSmartOCR()" disabled>✨ Riconosci carta</button>
+      <div class="quick-scan-card">
+        <div class="quick-scan-head">
+          <div>
+            <div class="quick-scan-title">⚡ Scansione rapida</div>
+            <div class="quick-scan-sub">Dopo il salvataggio passa subito alla carta successiva.</div>
+          </div>
+          <label class="switch">
+            <input id="quickScanToggle" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div class="quick-defaults">
+          <select id="quickVariant">
+            <option>Normale</option>
+            <option>Holo</option>
+            <option>Reverse Holo</option>
+            <option>Cosmos Holo</option>
+            <option>Speciale / Altro</option>
+            <option>Non so</option>
+          </select>
+          <select id="quickCondition">
+            <option value="NM">NM</option>
+            <option value="EX">EX</option>
+            <option value="GD">GD</option>
+            <option value="PL">PL</option>
+            <option value="PO">PO</option>
+          </select>
+        </div>
+        <div class="quick-defaults">
+          <select id="quickStatus">
+            <option>Disponibile</option>
+            <option>Protetta</option>
+            <option>Vendita</option>
+            <option>Mazzo 1</option>
+            <option>Mazzo 2</option>
+          </select>
+          <button class="btn alt" type="button" onclick="applyQuickDefaults()">Usa come predefiniti</button>
+        </div>
+        <div id="quickScanStatus" class="quick-status">Modalità normale.</div>
+        <div id="quickQueueInfo" class="queue-mini hidden"></div>
+      </div>
+
       <div class="scan-progress"><span id="scanProgressBar"></span></div>
       <div id="scanStatusPro" class="scan-status-pro">Pronto. Analizzerò solo nome e numero/set.</div>
       <div class="scan-mode-row">
@@ -468,7 +526,7 @@ cameraInput.addEventListener('change',()=>setQueue(cameraInput.files));
 galleryInput.addEventListener('change',()=>setQueue(galleryInput.files));
 function setQueue(fileList){const files=[...fileList||[]];if(!files.length)return;scanQueue=files;queueIndex=0;renderQueue();loadQueueItem(0)}
 function renderQueue(){if(scanQueue.length<=1){queueWrap.classList.add('hidden');queueWrap.innerHTML='';return}queueWrap.classList.remove('hidden');queueWrap.innerHTML=scanQueue.map((f,i)=>`<img class="${i===queueIndex?'active':''}" src="${URL.createObjectURL(f)}" onclick="loadQueueItem(${i})">`).join('')}
-function loadQueueItem(i){if(i<0||i>=scanQueue.length)return;queueIndex=i;const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
+function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -745,6 +803,81 @@ async function renderFastCandidates(results,route){
     await chooseCard(candidateMap[full[0].id]);
   }
   return true;
+}
+
+
+function quickScanEnabled(){
+  return !!document.getElementById('quickScanToggle')?.checked;
+}
+function saveQuickPrefs(){
+  const prefs={
+    enabled:quickScanEnabled(),
+    variant:document.getElementById('quickVariant')?.value||'Normale',
+    condition:document.getElementById('quickCondition')?.value||'NM',
+    status:document.getElementById('quickStatus')?.value||'Disponibile'
+  };
+  localStorage.setItem('cardoryx_quickscan',JSON.stringify(prefs));
+}
+function loadQuickPrefs(){
+  let p={enabled:false,variant:'Normale',condition:'NM',status:'Disponibile'};
+  try{p={...p,...JSON.parse(localStorage.getItem('cardoryx_quickscan')||'{}')}}catch(e){}
+  const t=document.getElementById('quickScanToggle');
+  const v=document.getElementById('quickVariant');
+  const c=document.getElementById('quickCondition');
+  const s=document.getElementById('quickStatus');
+  if(t)t.checked=!!p.enabled;
+  if(v)v.value=p.variant;
+  if(c)c.value=p.condition;
+  if(s)s.value=p.status;
+  updateQuickScanUI();
+}
+function updateQuickScanUI(){
+  const st=document.getElementById('quickScanStatus');
+  if(st)st.textContent=quickScanEnabled()
+    ? 'Attiva: usa i valori predefiniti e passa alla carta successiva dopo Salva.'
+    : 'Modalità normale.';
+  updateQuickQueueInfo();
+}
+function updateQuickQueueInfo(){
+  const q=document.getElementById('quickQueueInfo');
+  if(!q)return;
+  if(scanQueue?.length>1){
+    q.classList.remove('hidden');
+    q.textContent=`Coda: ${Math.max(0,queueIndex+1)} / ${scanQueue.length} · restano ${Math.max(0,scanQueue.length-queueIndex-1)}`;
+  }else{
+    q.classList.add('hidden');
+  }
+}
+function applyQuickDefaults(){
+  const v=document.getElementById('variant');
+  const c=document.getElementById('condition');
+  const s=document.getElementById('status');
+  if(v)v.value=document.getElementById('quickVariant')?.value||'Normale';
+  if(c)c.value=document.getElementById('quickCondition')?.value||'NM';
+  if(s)s.value=document.getElementById('quickStatus')?.value||'Disponibile';
+  saveQuickPrefs();
+  const st=document.getElementById('quickScanStatus');
+  if(st)st.textContent='Predefiniti applicati.';
+}
+function applyQuickDefaultsToConfirm(){
+  if(!quickScanEnabled())return;
+  const v=document.getElementById('variant');
+  const c=document.getElementById('condition');
+  const s=document.getElementById('status');
+  if(v)v.value=document.getElementById('quickVariant')?.value||'Normale';
+  if(c)c.value=document.getElementById('quickCondition')?.value||'NM';
+  if(s)s.value=document.getElementById('quickStatus')?.value||'Disponibile';
+}
+function goNextRapidCard(){
+  if(typeof nextQueueItem==='function' && nextQueueItem()){
+    updateQuickQueueInfo();
+    setTimeout(()=>{
+      if(quickScanEnabled())runSmartOCR();
+    },180);
+    return true;
+  }
+  updateQuickQueueInfo();
+  return false;
 }
 
 async function runSmartOCR(){
@@ -1079,6 +1212,7 @@ async function chooseCard(s){
     selectedCard=brief;
     confirmInfo.textContent=`N° ${brief.localId}`;
   }
+  applyQuickDefaultsToConfirm();
   setTimeout(()=>{
     confirmCard.scrollIntoView({behavior:'smooth',block:'end'});
   },120);
@@ -1123,6 +1257,9 @@ function saveSelected(){
         same.qty=current+1;
         persist();
         saveMsg.textContent=`Aggiunta un'altra copia. Quantità: ×${same.qty}`;
+        if(quickScanEnabled()){
+          setTimeout(()=>{clearSelection();goNextRapidCard();},280);
+        }
         saveMsg.className='footer-note ok';
       }else{
         saveMsg.textContent='Nessuna copia aggiunta.';
@@ -1134,6 +1271,9 @@ function saveSelected(){
     db.push(rec);
     persist();
     saveMsg.textContent=`Salvata. Posizione: ${cardCategory(rec)}`;
+    if(quickScanEnabled()){
+      setTimeout(()=>{clearSelection();goNextRapidCard();},280);
+    }
     saveMsg.className='footer-note ok';
   }finally{
     setTimeout(()=>{if(btn)btn.disabled=false},500);
@@ -1437,6 +1577,13 @@ if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
 document.getElementById('cardDetailModal')?.addEventListener('click',e=>{
   if(e.target===document.getElementById('cardDetailModal'))closeCardDetail();
 });
+
+
+['quickScanToggle','quickVariant','quickCondition','quickStatus'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('change',()=>{saveQuickPrefs();updateQuickScanUI()});
+});
+loadQuickPrefs();
 
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 renderAll();renderSettings();
