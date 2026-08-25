@@ -1,21 +1,23 @@
-# Cardoryx V1.4.4 — Scanner Price Fix
+# Cardoryx V1.4.5 — Edit Variants
 
-Correzione mirata del valore nello Scanner.
+Patch basata sulla V1.4.4.
 
-## Causa individuata
-La V1.4.3 chiamava `fetchScanPricing()` ma la funzione non era presente nel file.
-Per questo il riquadro rimaneva su “Cerco Cardmarket…” per Normal, Holo e Master Ball.
+## Modifica
+Il menu Variante nella finestra “Modifica carta” è stato allineato allo Scanner:
 
-## Correzioni
-- aggiunta `fetchScanPricing()`;
-- recupero del record completo TCGdex prima della valutazione;
-- tentativo API italiana e fallback API inglese;
-- mantenimento dei dati `pricing.cardmarket` nel record selezionato;
-- cambio variante = ricalcolo immediato del valore;
-- lo stato “Cerco Cardmarket…” termina sempre;
-- se Cardmarket non ha dati viene mostrato “Valore non disponibile” invece di restare bloccato;
-- Home V1.4.2/V1.4.3 mantenuta;
-- database locale non cancellato.
+- Normale
+- Holo
+- Reverse Holo
+- 🔴 Poké Ball Reverse Holo
+- 🟣 Master Ball Reverse Holo
+- Cosmos Holo
+- Speciale / Altro
+- Non so
 
-## Varianti
-Poké Ball Reverse Holo e Master Ball Reverse Holo continuano a usare il miglior riferimento Cardmarket disponibile quando non esiste un prezzo specifico della variante.
+La variante salvata viene normalizzata con la stessa logica usata dal resto dell'app.
+
+## Sicurezza della patch
+- Scanner V1.4.4 mantenuto.
+- Home mantenuta.
+- Database locale e schema non cancellati/modificati.
+- Cache PWA aggiornata a V1.4.5.

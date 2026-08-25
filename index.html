@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4.4</title>
+<title>Cardoryx V1.4.5</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2568,7 +2568,7 @@ function saveEditModal(){
   const qty=parseInt(document.getElementById('editQty').value,10);
   if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
   c.qty=qty;
-  c.variant=document.getElementById('editVariant').value;
+  c.variant=canonicalVariant(document.getElementById('editVariant').value);
   c.status=document.getElementById('editStatus').value;
   c.condition=document.getElementById('editCondition').value;
   persist();
