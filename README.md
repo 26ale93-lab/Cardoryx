@@ -105,3 +105,15 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Dopo `È questa` Cardoryx scorre automaticamente alla sezione Conferma con variante, stato, condizione e Salva.
 - Il pulsante candidato mostra `È questa ↓` per rendere evidente lo spostamento.
 - Cache PWA `cardoryx-v4.4.0`.
+
+
+## V4.5 — Scanner Pro
+- Foto ridimensionata automaticamente prima dell'OCR per ridurre memoria su iPhone.
+- OCR su due sole aree: nome e numero/set.
+- Le due zone vengono processate una alla volta, non in parallelo.
+- Lettura più tollerante di codici come 055/159.
+- Barra di avanzamento e messaggi di stato.
+- Guida visiva sulla foto per nome e numero/set.
+- Massimo 6 candidati mostrati.
+- Fallback manuale se l'OCR non è affidabile.
+- Cache PWA `cardoryx-v4.5.0`.
