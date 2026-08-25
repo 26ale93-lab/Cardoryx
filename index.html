@@ -199,7 +199,7 @@
         <div><div class="label">Numero</div><input id="numberInput" inputmode="numeric" placeholder="es. 055"></div>
         <div><div class="label">Totale set</div><input id="setTotalInput" inputmode="numeric" placeholder="es. 159"></div>
       </div>
-      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V3.5 Smart: Cardoryx usa <strong>055/159</strong> per restringere il set, poi confronta anche un nome OCR imperfetto con i nomi ufficiali. Se trova una sola corrispondenza sicura, normalizza il nome e seleziona automaticamente la carta.</div>
+      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V4.7 Name-First: Cardoryx cerca <strong>prima il nome</strong>, poi usa set e numero solo per confermare e ordinare. Se il numero OCR è sbagliato, non può più scavalcare il nome.</div>
       <div id="searchMsg" class="footer-note"></div>
       <div id="results"></div>
     </div>
@@ -536,43 +536,42 @@ async function fastCascadeSearch({name='',num='',total=''}) {
   const cleanNum=String(num||'').replace(/^0+/,'') || String(num||'');
   let results=[];
 
-  // 1. Most precise and cheapest route
+  // V4.7 NAME-FIRST: if a readable name exists, it is always the primary filter.
+  // Number/set only refine and rank cards with that name; they never replace the name search.
+  if(cleanName){
+    setScanMode('modeName',`Cerco prima il nome “${cleanName}”…`);
+    results=await apiCardsQuery({name:cleanName});
+
+    if(results.length && total){
+      setScanMode('modeNameSet',`Nome trovato. Confronto il set (${total})…`);
+      const sameSet=results.filter(c=>String(setOfficialCount(c))===String(Number(total)));
+      if(sameSet.length) results=sameSet;
+    }
+
+    if(results.length && cleanNum){
+      const sameNumber=results.filter(c=>{
+        const cnum=String(c.localId||'').replace(/^0+/,'') || String(c.localId||'');
+        return cnum===cleanNum;
+      });
+      if(sameNumber.length) results=[...sameNumber,...results.filter(c=>!sameNumber.includes(c))];
+    }
+
+    if(results.length)return {results,route: total?'Nome → Set → Numero':'Nome → Numero'};
+  }
+
+  // Only when the OCR did not obtain a usable name do we fall back to collector code.
   if(cleanNum && total){
-    setScanMode('modeCode',`Cerco prima ${num}/${total}…`);
+    setScanMode('modeCode',`Nome non disponibile. Provo ${num}/${total}…`);
     results=await apiCardsQuery({localId:cleanNum});
     if(results.length){
-      results=results.filter(c=>{
-        const setTotal=String(c.set?.cardCount?.official||c.set?.cardCount?.total||'');
-        return !setTotal || setTotal===String(total);
-      });
+      const sameSet=results.filter(c=>String(setOfficialCount(c))===String(Number(total)));
+      if(sameSet.length)results=sameSet;
     }
-    if(results.length===1)return {results,route:'Numero/Set'};
-  }
-
-  // 2. Name + set total: this is the fallback that worked in real use
-  if(cleanName && total){
-    setScanMode('modeNameSet',`Numero/set non decisivo. Provo automaticamente nome + set (${total})…`);
-    results=await apiCardsQuery({name:cleanName});
-    if(results.length){
-      const narrowed=results.filter(c=>{
-        const setTotal=String(c.set?.cardCount?.official||c.set?.cardCount?.total||'');
-        return !setTotal || setTotal===String(total);
-      });
-      if(narrowed.length)results=narrowed;
-    }
-    if(results.length)return {results,route:'Nome + Set'};
-  }
-
-  // 3. Name only
-  if(cleanName){
-    setScanMode('modeName',`Provo il nome “${cleanName}”…`);
-    results=await apiCardsQuery({name:cleanName});
-    if(results.length)return {results,route:'Nome'};
+    if(results.length)return {results,route:'Numero/Set (fallback)'};
   }
 
   return {results:[],route:'Nessun risultato'};
 }
-
 async function renderFastCandidates(results,route){
   const full=(results||[]).slice(0,6);
   if(!full.length)return false;
@@ -675,12 +674,13 @@ async function searchCards(opts={}){
   searchMsg.textContent='Cerco e confronto i set…'; results.innerHTML='';
   try{
     let arr=[];
-    if(num){
-      arr=await fetch(`${API}/cards?localId=${encodeURIComponent(num)}`).then(r=>r.json());
+    // V4.7: NAME-FIRST. If a name is present, never let the collector number broaden the search.
+    if(name){
+      arr=await fetch(`${API}/cards?name=${encodeURIComponent(name)}`).then(r=>r.json());
       if(!Array.isArray(arr))arr=[];
     }
-    if(!arr.length&&name){
-      arr=await fetch(`${API}/cards?name=${encodeURIComponent(name)}`).then(r=>r.json());
+    if(!arr.length&&num){
+      arr=await fetch(`${API}/cards?localId=${encodeURIComponent(num)}`).then(r=>r.json());
       if(!Array.isArray(arr))arr=[];
     }
     arr=(arr||[]).slice(0,35);
@@ -693,17 +693,15 @@ async function searchCards(opts={}){
       const count=setOfficialCount(c);
       const sim=similarity(targetName,c.name||'');
       let score=0;
-      if(cnum===targetNum)score+=35;
-      if(targetTotal&&count===targetTotal)score+=120;
-      else if(targetTotal&&count&&Math.abs(count-targetTotal)<=2)score+=20;
-      if(targetName)score+=Math.round(sim*70);
-      if(normText(c.name||'')===normText(targetName))score+=40;
+      // NAME dominates. Set is confirmation. Number is only the final tie-breaker.
+      if(targetName)score+=Math.round(sim*500);
+      if(targetName && normText(c.name||'')===normText(targetName))score+=1000;
+      if(targetName && candidateContainedInOCR(targetName,c.name||''))score+=350;
+      if(targetTotal&&count===targetTotal)score+=220;
+      else if(targetTotal&&count&&Math.abs(count-targetTotal)<=2)score+=25;
+      if(cnum===targetNum)score+=60;
       return {...c,_score:score,_setCount:count,_sim:sim};
     }).sort((a,b)=>b._score-a._score);
-    if(targetTotal){
-      const exact=full.filter(c=>c._setCount===targetTotal);
-      if(exact.length) full=[...exact,...full.filter(c=>c._setCount!==targetTotal)];
-    }
     full=full.slice(0,6);
     if(!full.length){
       searchMsg.textContent='Nessun risultato. Controlla numero e totale set.';
@@ -713,7 +711,7 @@ async function searchCards(opts={}){
     const exactSame=full.filter(c=>c._setCount===targetTotal && (String(c.localId||'').replace(/^0+/,'')||'0')===targetNum);
 
     // Normalize noisy OCR against the official names of cards that share the exact collector code.
-    const officialName=bestOfficialNameFromCandidates(targetName, exactSame.length?exactSame:full);
+    const officialName=bestOfficialNameFromCandidates(targetName, full);
     let autoCandidate=null;
     if(officialName){
       nameInput.value=officialName;

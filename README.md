@@ -127,3 +127,6 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Mantiene il ridimensionamento OCR e l'elaborazione leggera della V4.5.
 - Massimo 6 candidati.
 - Cache PWA `cardoryx-v4.6.0`.
+
+
+V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collector code is fallback only when no usable name is available.
