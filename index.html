@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.3</title>
+<title>Cardoryx V1.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -261,6 +261,16 @@
 .scan-market-stat{padding:9px 6px;border:1px solid #e4e7ec;border-radius:13px;background:#fff;text-align:center}
 .scan-market-stat strong{display:block;font-size:13px}.scan-market-stat span{font-size:9px;color:#667085}
 
+
+.variant-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}
+.variant-pokeball{background:#fee2e2;color:#b42318;border:1px solid #fecaca}
+.variant-masterball{background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff}
+.variant-reverse{background:#eef2ff;color:#4338ca;border:1px solid #e0e7ff}
+.variant-holo{background:#ecfeff;color:#0e7490;border:1px solid #cffafe}
+.variant-normal{background:#f2f4f7;color:#475467;border:1px solid #e4e7ec}
+.variant-first{background:#fffaeb;color:#92400e;border:1px solid #fedf89}
+.variant-price-warning{margin-top:7px;padding:8px 10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.35}
+
 </style>
 </head>
 <body>
@@ -392,7 +402,12 @@
     <div id="confirmCard" class="card hidden">
       <div class="section-title">3. Conferma</div>
       <div class="result"><img id="confirmImg"><div class="meta"><h3 id="confirmName"></h3><div id="confirmInfo" class="small"></div><div id="confirmTags"></div></div></div>
-      <div class="label">Variante</div><select id="variant"><option>Normale</option><option>Holo</option><option>Reverse Holo</option><option>Cosmos Holo</option><option>Speciale / Altro</option><option>Non so</option></select>
+      <div class="label">Variante</div><select id="variant"><option value="Normal">Normal</option>
+<option value="Holo">Holo</option>
+<option value="Reverse Holo">Reverse Holo</option>
+<option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
+<option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+<option value="First Edition">First Edition</option></select>
       <div class="label">Stato</div><select id="status"><option value="Disponibile">Disponibile</option><option value="Mazzo 1">Mazzo 1</option><option value="Mazzo 2">Mazzo 2</option><option value="Protetta">Protetta</option><option value="Vendita">Vendita</option></select>
       <div class="label">Condizione</div><select id="condition">
       <option value="NM">NM — Near Mint</option>
@@ -673,7 +688,17 @@ const OFFICIAL_TYPES=['Erba','Fuoco','Acqua','Lampo','Psico','Lotta','Oscurità'
 const TYPE_MAP={Grass:'Erba',Fire:'Fuoco',Water:'Acqua',Lightning:'Lampo',Psychic:'Psico',Fighting:'Lotta',Darkness:'Oscurità',Metal:'Metallo',Dragon:'Drago',Colorless:'Incolore'};
 const CATEGORIES=['⭐ Protette','🌿 Erba','🔥 Fuoco','💧 Acqua','⚡ Elettro','🔮 Psico','👊 Lotta','🌑 Oscurità','⚙️ Metallo','🐉 Drago','⚪ Incolore','👤 Aiuto','🧰 Strumenti','🏟️ Stadio','🎒 Oggetti Pokémon','⚡ Energie Base','✨ Energie Speciali'];
 let selectedCard=null; let candidateMap={}; function loadDB(){try{const x=localStorage.getItem('cardoryx_db')||localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1');return x?JSON.parse(x):[]}catch(e){return[]}}
-let db=loadDB(); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
+let db=loadDB();
+let variantMigrationChanged=false;
+db.forEach(c=>{
+  const old=c.variant;
+  if(old==='Normale'){c.variant='Normal';variantMigrationChanged=true}
+  else if(old==='Reverse'){c.variant='Reverse Holo';variantMigrationChanged=true}
+  else if(old==='Reverse Poké Ball'||old==='Poké Ball Reverse'){c.variant='Poké Ball Reverse Holo';variantMigrationChanged=true}
+  else if(old==='Reverse Master Ball'||old==='Master Ball Reverse'){c.variant='Master Ball Reverse Holo';variantMigrationChanged=true}
+  else if(old==='1ª Edizione'){c.variant='First Edition';variantMigrationChanged=true}
+});
+if(variantMigrationChanged){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}} let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
@@ -694,23 +719,15 @@ function showView(v){
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
 function homeMoney(v){return Number(v||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'})}
-function homeUnitValue(c){const cm=c?.pricing?.cardmarket;if(!cm)return 0;const v=normText(c.variant||'');if(v.includes('holo')&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0)}
-function homeSearch(){showView('scan');setTimeout(()=>{const e=document.getElementById('nameInput');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.focus()}},200)}
-function homeFilter(cat){showView('catalog');setTimeout(()=>{const s=document.getElementById('typeFilter');if(s){s.value=cat;s.dispatchEvent(new Event('change',{bubbles:true}));renderCatalog()}},120)}
-function renderHomeDashboard(){const q=c=>Math.max(1,Number(c.qty||1));const total=db.reduce((a,c)=>a+q(c),0);const sets=new Set(db.map(c=>String(c.set||'').trim()).filter(Boolean));const holo=db.reduce((a,c)=>a+(/holo|reverse/i.test(c.variant||'')?q(c):0),0);const prot=db.reduce((a,c)=>a+(c.status==='Protetta'?q(c):0),0);const valued=db.filter(c=>homeUnitValue(c)>0);const value=valued.reduce((a,c)=>a+homeUnitValue(c)*q(c),0);const put=(id,v)=>{const e=ui(id);if(e)e.textContent=v};put('homeCollectionValue',homeMoney(value));put('homeCollectionValueMeta',`${valued.length}/${db.length} schede con prezzo Cardmarket`);put('homeTotalCards',total);put('homeTotalSets',sets.size);put('homeHoloCards',holo);put('homeProtectedCards',prot);
-const best=[...valued].sort((a,b)=>homeUnitValue(b)*q(b)-homeUnitValue(a)*q(a))[0],mv=ui('homeMostValuable');if(mv){if(!best)mv.innerHTML='<div class="small">Aggiorna i valori in Categorie per visualizzarla.</div>';else{const img=cardImageSrc(best,'low');mv.innerHTML=`${img?`<img src="${esc(img)}">`:''}<div class="home-rich-main"><b>${esc(best.name)}</b><div class="small">${esc(best.set||'')} · ${esc(best.variant||'')}</div><div class="home-price">${homeMoney(homeUnitValue(best)*q(best))}</div></div>`}}
-const recent=ui('homeRecentCards'),arr=[...db].slice(-10).reverse();if(recent){recent.innerHTML=arr.length?arr.map(c=>{const img=cardImageSrc(c,'low');return `<div class="home-recent-card">${img?`<img src="${esc(img)}">`:''}<b>${esc(c.name)}</b><span>${esc(c.set||'')}</span></div>`}).join(''):'<div class="small">Nessuna carta catalogata.</div>'}
-const counts={};db.forEach(c=>{const k=cardCategory(c);counts[k]=(counts[k]||0)+q(c)});const grid=ui('homeCategoryGrid');if(grid){grid.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([k,v])=>`<button class="home-cat" data-cat="${esc(k)}">${esc(k)}<strong>${v}</strong></button>`).join('');grid.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>homeFilter(b.dataset.cat))}}
-
-const DECK_KEY='cardoryx_decks_v1';
-let decks=loadDecks();
-let currentDeckId=null;
-
-function loadDecks(){
-  try{
-    const x=JSON.parse(localStorage.getItem(DECK_KEY)||'[]');
-    return Array.isArray(x)?x:[];
-  }catch(e){return []}
+function homeUnitValue(c){
+  if(isBallReverseVariant(c?.variant||'')){
+    const p=detailedBallVariant(c,c.variant)?.pricing?.cardmarket;
+    return p?Number(p.trend||p.avg7||p.avg30||p.avg||p.low||0):0;
+  }
+  const cm=c?.pricing?.cardmarket;if(!cm)return 0;
+  const v=normText(c.variant||'');
+  if(v.includes('holo')&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
+  return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
 }
 function persistDecks(){
   localStorage.setItem(DECK_KEY,JSON.stringify(decks));
@@ -2207,26 +2224,62 @@ async function chooseCandidate(key){
 let scanPriceCard=null;
 function scanEuro(v){const n=Number(v||0);return n>0?n.toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
 function scanCM(c){return c?.pricing?.cardmarket||null}
-function scanUnit(c){const cm=scanCM(c);if(!cm)return 0;const v=normText(document.getElementById('variant')?.value||'');if((v.includes('holo')||v.includes('reverse'))&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0)}
-async function fetchScanPricing(card){
-  if(!card?.id||String(card.id).startsWith('mee-local-'))return card;
-  if(card?.pricing?.cardmarket)return card;
-  for(const base of [API,'https://api.tcgdex.net/v2/en']){
-    try{const r=await fetch(`${base}/cards/${encodeURIComponent(card.id)}`);if(!r.ok)continue;const f=await r.json();if(f?.id){card={...card,...f};if(f?.pricing?.cardmarket)break}}catch(e){}
+
+function canonicalVariant(v){
+  const n=normText(v||'');
+  if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
+  if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
+  if(n.includes('first edition')||n.includes('1st edition'))return 'First Edition';
+  if(n.includes('reverse'))return 'Reverse Holo';
+  if(n.includes('holo'))return 'Holo';
+  return 'Normal';
+}
+function isBallReverseVariant(v){
+  const x=canonicalVariant(v);
+  return x==='Poké Ball Reverse Holo'||x==='Master Ball Reverse Holo';
+}
+function variantBadgeHTML(v){
+  const x=canonicalVariant(v);
+  if(x==='Poké Ball Reverse Holo')return '<span class="variant-badge variant-pokeball">🔴 Poké Ball Reverse Holo</span>';
+  if(x==='Master Ball Reverse Holo')return '<span class="variant-badge variant-masterball">🟣 Master Ball Reverse Holo</span>';
+  if(x==='Reverse Holo')return '<span class="variant-badge variant-reverse">Reverse Holo</span>';
+  if(x==='Holo')return '<span class="variant-badge variant-holo">Holo</span>';
+  if(x==='First Edition')return '<span class="variant-badge variant-first">First Edition</span>';
+  return '<span class="variant-badge variant-normal">Normal</span>';
+}
+function detailedBallVariant(card,v){
+  const x=canonicalVariant(v);
+  const foil=x==='Poké Ball Reverse Holo'?'pokeball':x==='Master Ball Reverse Holo'?'masterball':'';
+  if(!foil)return null;
+  const list=Array.isArray(card?.variants_detailed)?card.variants_detailed:[];
+  return list.find(a=>a?.type==='reverse'&&a?.foil===foil)||null;
+}
+
+function scanUnit(c){
+  const cm=scanCM(c);if(!cm)return 0;
+  const v=document.getElementById('variant')?.value||'Normal';
+  if(isBallReverseVariant(v)){
+    const dv=detailedBallVariant(c,v),p=dv?.pricing?.cardmarket;
+    return p?Number(p.trend||p.avg7||p.avg30||p.avg||p.low||0):0;
   }
-  return card;
+  if(canonicalVariant(v)==='Holo'&&Number(cm['trend-holo']||0)>0)return Number(cm['trend-holo']);
+  return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);
 }
 async function renderScanValue(card){
   const box=document.getElementById('scanValueBox');if(!box)return;box.classList.remove('hidden');
   scanPriceCard=await fetchScanPricing(card);const cm=scanCM(scanPriceCard),value=scanUnit(scanPriceCard);
   document.getElementById('scanMarketValue').textContent=value?scanEuro(value):'Valore non disponibile';
-  document.getElementById('scanMarketMeta').textContent=cm?'Cardmarket · valore indicativo':'Nessun prezzo Cardmarket associato';
+  document.getElementById('scanMarketMeta').textContent=isBallReverseVariant(document.getElementById('variant')?.value||'')
+?'Variante speciale: uso solo un prezzo specifico della variante, se disponibile.'
+:(cm?'Cardmarket · valore indicativo':'Nessun prezzo Cardmarket associato');
   document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
   document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||value);
   document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
   document.getElementById('scanMarketStats').classList.toggle('hidden',!cm);
   document.getElementById('scanProtectionBadge').textContent=value>=10?'Prioritaria':value>=3?'Da proteggere':'Standard';
-  document.getElementById('scanProtectionAdvice').textContent=value>=10?'🔒 Sleeve + top loader/raccoglitore consigliati.':value>=3?'🔒 Sleeve e raccoglitore consigliati.':'✅ Protezione standard sufficiente.';
+  document.getElementById('scanProtectionAdvice').innerHTML=isBallReverseVariant(document.getElementById('variant')?.value||'')
+?variantBadgeHTML(document.getElementById('variant').value)+'<div class="variant-price-warning">⚠️ Non uso automaticamente il prezzo della Reverse Holo standard. Se manca un prezzo specifico, il valore resta non disponibile.</div>'
+:(value>=10?'🔒 Sleeve + top loader/raccoglitore consigliati.':value>=3?'🔒 Sleeve e raccoglitore consigliati.':'✅ Protezione standard sufficiente.');
   document.getElementById('scanAskingPrice').value='';
   document.getElementById('scanBuyAdvice').className='buy-advice info';
   document.getElementById('scanBuyAdvice').textContent='Inserisci il prezzo richiesto per confrontarlo col mercato.';
@@ -2444,6 +2497,10 @@ function clearCatalogFilters(){
 }
 
 function adviceUnitValue(c){
+  if(isBallReverseVariant(c?.variant||'')){
+    const p=detailedBallVariant(c,c.variant)?.pricing?.cardmarket;
+    return p?Number(p.trend||p.avg7||p.avg30||p.avg||p.low||0):0;
+  }
   if(typeof cardUnitPrice==='function'){const v=cardUnitPrice(c);if(Number.isFinite(Number(v)))return Number(v)}
   const cm=c?.pricing?.cardmarket;if(!cm)return 0;
   return Number(cm.trend||cm.avg7||cm.avg30||cm.avg||cm.low||0);

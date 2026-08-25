@@ -1,14 +1,22 @@
-# Cardoryx V1.3 — Scan Value & Purchase Advisor
+# Cardoryx V1.4 — Poké Ball / Master Ball
 
-Dopo il riconoscimento di una carta, lo Scanner mostra:
-- valore Cardmarket;
-- minimo, trend e media 7 giorni;
-- consiglio di protezione;
-- livello Standard / Da proteggere / Prioritaria.
+Basata sulla V1.3.
 
-Inserendo il prezzo richiesto Cardoryx confronta il prezzo con il riferimento Cardmarket:
-- interessante: ~20% o più sotto;
-- nella media: circa da -20% a +10%;
-- alto: oltre ~10% sopra.
+## Varianti
+- Normal
+- Holo
+- Reverse Holo
+- 🔴 Poké Ball Reverse Holo
+- 🟣 Master Ball Reverse Holo
+- First Edition
 
-Il confronto è indicativo e non sostituisce la verifica di condizione, autenticità, lingua e variante.
+## Novità
+- Poké Ball e Master Ball vengono salvate come varianti distinte.
+- Badge rosso per Poké Ball Reverse Holo.
+- Badge viola per Master Ball Reverse Holo.
+- Migrazione automatica delle vecchie diciture Cardoryx.
+- Scanner e valutazione acquisto riconoscono le nuove varianti.
+- Il prezzo generico della Reverse Holo NON viene assegnato automaticamente alle varianti Poké Ball/Master Ball.
+
+## TCGdex
+Il modello avanzato `variants_detailed` prevede varianti reverse con foil specifici, inclusi `pokeball` e `masterball`. Se non è disponibile un prezzo marketplace specifico per la variante, Cardoryx mostra valore non disponibile per evitare stime errate.
