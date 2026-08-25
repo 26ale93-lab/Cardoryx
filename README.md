@@ -250,3 +250,14 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Supporto alle immagini dirette JPG/PNG/WebP oltre alle immagini TCGdex.
 - Zoom compatibile anche con le Energie MEE.
 - Cache PWA `cardoryx-v6.1.0`.
+
+
+## V6.2 — Foto carta, ritaglio e raddrizzamento
+- Aggiunto pulsante `Ritaglia / raddrizza` sotto la foto acquisita.
+- Editor in proporzione carta con Zoom, Rotazione, spostamento orizzontale e verticale.
+- `Adatta automaticamente` ripristina una base centrata.
+- `Usa questa foto` salva la versione ritagliata come immagine principale della carta nel Catalogo.
+- L'immagine di riferimento originale resta memorizzata nel record come `originalImage`.
+- `Originale` permette di annullare il ritaglio prima del salvataggio.
+- Per le Energie MEE, la foto personale ritagliata ha priorità sull'immagine di riferimento, così non si rimane senza immagine quando una sorgente esterna non carica.
+- Cache PWA `cardoryx-v6.2.0`.

@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V6.1</title>
+<title>Cardoryx V6.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -203,6 +203,18 @@
 
 .scan-route-ok{margin-top:8px;padding:10px 12px;border-radius:13px;background:#ecfdf3;color:#166534;font-size:12px;font-weight:800}
 .scan-route-warn{margin-top:8px;padding:10px 12px;border-radius:13px;background:#fff7ed;color:#9a3412;font-size:12px}
+
+.photo-crop-modal{position:fixed;inset:0;z-index:100000;background:rgba(7,10,18,.96);display:none;flex-direction:column;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
+.photo-crop-modal.open{display:flex}
+.crop-head{display:flex;justify-content:space-between;align-items:center;color:#fff;gap:10px;margin-bottom:10px}
+.crop-head b{font-size:17px}
+.crop-stage{flex:1;min-height:280px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#cropCanvas{max-width:100%;max-height:100%;border-radius:14px;background:#111;box-shadow:0 15px 45px rgba(0,0,0,.4)}
+.crop-controls{background:#fff;border-radius:16px;padding:12px;margin-top:10px}
+.crop-control{display:grid;grid-template-columns:80px 1fr 46px;align-items:center;gap:8px;margin:7px 0;font-size:12px;font-weight:800}
+.crop-control input{width:100%}
+.crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+
 </style>
 </head>
 <body>
@@ -236,6 +248,10 @@
     <div class="scan-guide-label bottom">NUMERO / SET</div>
   </div>
 </div><span class="scan-badge">ITALIANO</span></div>
+      <div id="photoEditActions" class="hidden" style="margin-top:9px;display:flex;gap:8px">
+        <button class="btn alt" type="button" onclick="openCardCropper()">✂️ Ritaglia / raddrizza</button>
+        <button class="btn alt" type="button" onclick="resetEditedPhoto()">↩️ Originale</button>
+      </div>
       <div class="spacer"></div>
       <button class="btn big" id="ocrBtn" onclick="runSmartOCR()" disabled>✨ Riconosci carta</button>
       <div class="quick-scan-card">
@@ -560,7 +576,74 @@ cameraInput.addEventListener('change',()=>setQueue(cameraInput.files));
 galleryInput.addEventListener('change',()=>setQueue(galleryInput.files));
 function setQueue(fileList){const files=[...fileList||[]];if(!files.length)return;scanQueue=files;queueIndex=0;renderQueue();loadQueueItem(0)}
 function renderQueue(){if(scanQueue.length<=1){queueWrap.classList.add('hidden');queueWrap.innerHTML='';return}queueWrap.classList.remove('hidden');queueWrap.innerHTML=scanQueue.map((f,i)=>`<img class="${i===queueIndex?'active':''}" src="${URL.createObjectURL(f)}" onclick="loadQueueItem(${i})">`).join('')}
-function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
+
+let editedCardPhoto='';
+let cropSourceImage=null;
+
+function currentPhotoSrc(){
+  return editedCardPhoto || preview?.src || '';
+}
+function resetEditedPhoto(){
+  editedCardPhoto='';
+  if(queueIndex>=0 && scanQueue[queueIndex]){
+    preview.src=URL.createObjectURL(scanQueue[queueIndex]);
+  }
+}
+function openCardCropper(){
+  const src=preview?.src;
+  if(!src)return;
+  const img=new Image();
+  img.onload=()=>{
+    cropSourceImage=img;
+    autoFitCrop();
+    document.getElementById('photoCropModal').classList.add('open');
+  };
+  img.src=src;
+}
+function closeCardCropper(){
+  document.getElementById('photoCropModal')?.classList.remove('open');
+}
+function autoFitCrop(){
+  const z=document.getElementById('cropZoom'),r=document.getElementById('cropRotate'),x=document.getElementById('cropX'),y=document.getElementById('cropY');
+  if(z)z.value=110;if(r)r.value=0;if(x)x.value=0;if(y)y.value=0;
+  renderCardCrop();
+}
+function renderCardCrop(){
+  if(!cropSourceImage)return;
+  const c=document.getElementById('cropCanvas'),ctx=c.getContext('2d');
+  const zoom=Number(document.getElementById('cropZoom').value)/100;
+  const rot=Number(document.getElementById('cropRotate').value)*Math.PI/180;
+  const ox=Number(document.getElementById('cropX').value)/100*c.width*.45;
+  const oy=Number(document.getElementById('cropY').value)/100*c.height*.45;
+  document.getElementById('cropZoomOut').value=Math.round(zoom*100)+'%';
+  document.getElementById('cropRotateOut').value=(rot*180/Math.PI).toFixed(1)+'°';
+  document.getElementById('cropXOut').value=document.getElementById('cropX').value;
+  document.getElementById('cropYOut').value=document.getElementById('cropY').value;
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height);
+  const iw=cropSourceImage.naturalWidth||cropSourceImage.width, ih=cropSourceImage.naturalHeight||cropSourceImage.height;
+  const base=Math.max(c.width/iw,c.height/ih);
+  ctx.save();
+  ctx.translate(c.width/2+ox,c.height/2+oy);
+  ctx.rotate(rot);
+  ctx.scale(base*zoom,base*zoom);
+  ctx.drawImage(cropSourceImage,-iw/2,-ih/2);
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=5;ctx.strokeRect(3,3,c.width-6,c.height-6);
+}
+function applyCardCrop(){
+  const c=document.getElementById('cropCanvas');
+  editedCardPhoto=c.toDataURL('image/jpeg',0.88);
+  preview.src=editedCardPhoto;
+  closeCardCropper();
+  const st=document.getElementById('ocrStatus');
+  if(st)st.textContent='Foto ritagliata e raddrizzata. Verrà usata nel Catalogo.';
+}
+['cropZoom','cropRotate','cropX','cropY'].forEach(id=>{
+  document.addEventListener('input',e=>{if(e.target?.id===id)renderCardCrop()});
+});
+
+function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -1207,7 +1290,7 @@ async function selectMeeEnergy(num){
   const c=makeMeeBasicEnergy({code:{set:'MEE',num}}); if(!c)return;
   // MEE uses a persistent reference image so it remains visible after reopening the app.
   nameInput.value=c.name; numberInput.value=num; setTotalInput.value='8';
-  searchMsg.textContent=`Selezionata ${c.name} · MEE IT ${num}.`;
+  searchMsg.textContent=`Selezionata ${c.name} · MEE IT ${num}. Se hai fotografato la carta, puoi usare “Ritaglia / raddrizza” prima di salvarla.`;
   await chooseCard(c);
 }
 async function runSmartOCR(){
@@ -1736,7 +1819,7 @@ function saveSelected(){
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
       name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',
-      image:selectedCard._imageUrl||selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
+      image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
       qty:1,addedAt:new Date().toISOString()
@@ -2121,6 +2204,23 @@ renderAll();renderSettings();
   <button class="image-lightbox-close" type="button" aria-label="Chiudi" onclick="event.stopPropagation();closeCardZoom()">×</button>
   <img id="imageLightboxImg" alt="Carta ingrandita" onclick="event.stopPropagation()">
   <div class="image-lightbox-hint" onclick="event.stopPropagation()">Tocca fuori dalla carta per chiudere</div>
+</div>
+
+
+<div id="photoCropModal" class="photo-crop-modal">
+  <div class="crop-head"><b>Ritaglia e raddrizza la carta</b><button class="btn alt" type="button" onclick="closeCardCropper()">✕</button></div>
+  <div class="crop-stage"><canvas id="cropCanvas" width="630" height="880"></canvas></div>
+  <div class="crop-controls">
+    <div class="small">Il riquadro finale mantiene la proporzione di una carta Pokémon. Regola zoom, rotazione e posizione.</div>
+    <div class="crop-control"><span>Zoom</span><input id="cropZoom" type="range" min="100" max="240" value="110"><output id="cropZoomOut">110%</output></div>
+    <div class="crop-control"><span>Rotazione</span><input id="cropRotate" type="range" min="-15" max="15" step="0.2" value="0"><output id="cropRotateOut">0°</output></div>
+    <div class="crop-control"><span>Orizz.</span><input id="cropX" type="range" min="-100" max="100" value="0"><output id="cropXOut">0</output></div>
+    <div class="crop-control"><span>Vert.</span><input id="cropY" type="range" min="-100" max="100" value="0"><output id="cropYOut">0</output></div>
+    <div class="crop-actions">
+      <button class="btn alt" type="button" onclick="autoFitCrop()">Adatta automaticamente</button>
+      <button class="btn green" type="button" onclick="applyCardCrop()">✓ Usa questa foto</button>
+    </div>
+  </div>
 </div>
 
 </body></html>
