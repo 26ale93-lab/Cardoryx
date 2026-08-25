@@ -53,3 +53,15 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Aggiunti Modifica quantità ed Elimina nel Catalogo.
 - Migrazione una tantum: se il catalogo pre-V3.7 contiene un solo record gonfiato dai test, viene riportato a quantità 1.
 - Cache PWA: `cardoryx-v3.7.0`.
+
+
+## V3.8 — Impostazioni e reset protetto
+- Nuova sezione `⚙️ Impostazioni`.
+- Backup JSON e import backup disponibili anche da Impostazioni.
+- `Azzera catalogo` spostato in una zona separata e protetta.
+- Reset con doppia conferma: primo tap apre l’avviso, secondo tap esplicito elimina tutto.
+- Il reset cancella anche gli archivi legacy per evitare il ritorno dei record fantasma.
+- Archivio unificato in `cardoryx_db`.
+- Migrazione automatica dei vecchi salvataggi duplicati: record identici vengono consolidati.
+- Stato archivio visibile in Impostazioni.
+- Cache PWA: `cardoryx-v3.8.0`.

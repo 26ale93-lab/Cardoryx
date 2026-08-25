@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3.7</title>
+<title>Cardoryx V3.8</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,6 +28,16 @@
 .condition-guide span{display:block;color:#667085;font-size:14px;line-height:1.35}
 .condition-tip{margin:14px 0;padding:13px 14px;border-radius:15px;background:#eef2ff;color:#3347a5;font-size:14px;line-height:1.4}
 .condition-ok{width:100%;margin-top:2px}
+
+
+.settings-stack{display:grid;gap:10px}
+.settings-file-label{display:flex;align-items:center;justify-content:center;cursor:pointer}
+.danger-zone{border:1px solid #fecaca;background:#fffafa}
+.danger-kicker{font-size:12px;font-weight:900;letter-spacing:.08em;color:#b42318;margin-bottom:4px}
+.settings-stat{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #eceef2}
+.settings-stat:last-child{border-bottom:0}
+.btn.red{background:#b42318;color:#fff}
+.btn.red:active{transform:scale(.99)}
 
 </style>
 </head>
@@ -104,18 +114,101 @@
     <div class="card"><div class="section-title">Categorie</div><div id="statsList"></div></div>
   </section>
 </div>
-<nav class="bottom"><div class="tabs"><button class="tab active" data-v="home" onclick="showView('home')">🏠<br>Home</button><button class="tab" data-v="scan" onclick="showView('scan')">📷<br>Scanner</button><button class="tab" data-v="catalog" onclick="showView('catalog')">📚<br>Carte</button><button class="tab" data-v="stats" onclick="showView('stats')">📊<br>Categorie</button></div></nav>
+
+<section id="page-settings" class="page hidden">
+  <div class="card">
+    <h2>⚙️ Impostazioni</h2>
+    <p class="muted">Gestione sicura dei dati locali di Cardoryx.</p>
+  </div>
+
+  <div class="card">
+    <h3>Gestione dati</h3>
+    <p class="muted">Prima di modificare o azzerare il catalogo, crea un backup.</p>
+
+    <div class="settings-stack">
+      <button class="btn alt big" type="button" onclick="exportJSON()">💾 Crea backup JSON</button>
+      <label class="btn alt big settings-file-label" for="settingsImportJson">📥 Importa backup JSON</label>
+      <input id="settingsImportJson" type="file" accept=".json,application/json" class="hidden">
+    </div>
+  </div>
+
+  <div class="card danger-zone">
+    <div class="danger-kicker">ZONA PROTETTA</div>
+    <h3>🗑️ Azzera catalogo</h3>
+    <p class="muted">Elimina tutte le carte salvate sul dispositivo. Questa operazione non può essere annullata senza un backup.</p>
+    <button id="resetCatalogBtn" class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button>
+  </div>
+
+  <div class="card">
+    <h3>Stato archivio</h3>
+    <div class="settings-stat">
+      <span>Record salvati</span>
+      <strong id="settingsRecords">0</strong>
+    </div>
+    <div class="settings-stat">
+      <span>Carte totali</span>
+      <strong id="settingsTotal">0</strong>
+    </div>
+    <div class="settings-stat">
+      <span>Archivio</span>
+      <strong>Locale su questo iPhone</strong>
+    </div>
+  </div>
+</section>
+
+<div id="resetModal" class="condition-modal" aria-hidden="true">
+  <div class="condition-sheet" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <div class="condition-sheet-head">
+      <div>
+        <div class="condition-sheet-kicker">CONFERMA RICHIESTA</div>
+        <h3 id="resetTitle">Azzera tutto il catalogo?</h3>
+      </div>
+      <button type="button" class="condition-close" onclick="closeResetModal()" aria-label="Chiudi">×</button>
+    </div>
+    <p class="condition-intro">
+      Verranno eliminate tutte le carte salvate localmente da Cardoryx su questo dispositivo.
+      Il backup JSON resta l’unico modo per ripristinarle.
+    </p>
+    <div class="condition-tip">
+      Prima di continuare, usa <b>Crea backup JSON</b> se vuoi conservare una copia.
+    </div>
+    <div style="display:grid;gap:10px;margin-top:14px">
+      <button class="btn alt big" type="button" onclick="closeResetModal()">Annulla</button>
+      <button class="btn red big" type="button" onclick="confirmResetCatalog()">Sì, elimina tutto</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom"><div class="tabs"><button class="tab active" data-v="home" onclick="showView('home')">🏠<br>Home</button><button class="tab" data-v="scan" onclick="showView('scan')">📷<br>Scanner</button><button class="tab" data-v="catalog" onclick="showView('catalog')">📚<br>Carte</button><button class="tab" data-v="stats" onclick="showView('stats')">📊<br>Categorie</button></div>
+    <button type="button" class="nav-btn" data-page="settings" onclick="showPage('settings')">
+      <span>⚙️</span><small>Impostazioni</small>
+    </button>
+</nav>
 <script>
 const API='https://api.tcgdex.net/v2/it';
 const OFFICIAL_TYPES=['Erba','Fuoco','Acqua','Lampo','Psico','Lotta','Oscurità','Metallo','Drago','Incolore'];
 const TYPE_MAP={Grass:'Erba',Fire:'Fuoco',Water:'Acqua',Lightning:'Lampo',Psychic:'Psico',Fighting:'Lotta',Darkness:'Oscurità',Metal:'Metallo',Dragon:'Drago',Colorless:'Incolore'};
 const CATEGORIES=['⭐ Protette','🌿 Erba','🔥 Fuoco','💧 Acqua','⚡ Elettro','🔮 Psico','👊 Lotta','🌑 Oscurità','⚙️ Metallo','🐉 Drago','⚪ Incolore','👤 Aiuto','🧰 Strumenti','🏟️ Stadio','🎒 Oggetti Pokémon','⚡ Energie Base','✨ Energie Speciali'];
-let selectedCard=null; let candidateMap={}; let db=JSON.parse(localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1')||'[]'); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
+let selectedCard=null; let candidateMap={};
+function loadDB(){
+  try{
+    const canonical=localStorage.getItem('cardoryx_db');
+    if(canonical)return JSON.parse(canonical)||[];
+    const legacy=localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1');
+    return legacy?JSON.parse(legacy)||[]:[];
+  }catch(e){console.error(e);return[]}
+}
+let db=loadDB(); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
 function selectedCondition(){return ui('condition')?.value||'NM'}
-function persist(){localStorage.setItem('cardoryx_v3',JSON.stringify(db));localStorage.setItem('cardoryx_v2',JSON.stringify(db));localStorage.setItem('cardoryx_v1',JSON.stringify(db));renderAll()}
+function persist(){
+  localStorage.setItem('cardoryx_db',JSON.stringify(db));
+  renderAll();
+  renderSettings();
+  renderSettings();
+}
 function showView(v){['home','scan','catalog','stats'].forEach(x=>document.getElementById(x+'View').classList.toggle('hidden',x!==v));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));if(v==='catalog')renderCatalog();if(v==='stats')renderStats()}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
