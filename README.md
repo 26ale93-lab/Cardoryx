@@ -42,3 +42,14 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Suggerimento per le carte appena aperte e ben conservate.
 - Mantiene tutte le correzioni V3.5 sul riconoscimento OCR e sulla selezione intelligente.
 - Cache PWA: `cardoryx-v3.6.0`.
+
+
+## V3.7 — Catalog + Save Fix
+- Corretto conflitto Safari con `window.status`: lo stato viene letto dal select `#status`.
+- Corretto Catalogo vuoto.
+- Corretto conteggio Disponibili / Protette / Mazzi.
+- Salva si disattiva subito per impedire doppi tap.
+- Se la stessa carta/variante/stato/condizione esiste già, non aumenta più automaticamente la quantità.
+- Aggiunti Modifica quantità ed Elimina nel Catalogo.
+- Migrazione una tantum: se il catalogo pre-V3.7 contiene un solo record gonfiato dai test, viene riportato a quantità 1.
+- Cache PWA: `cardoryx-v3.7.0`.

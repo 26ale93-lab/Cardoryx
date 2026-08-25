@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V3.6</title>
+<title>Cardoryx V3.7</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -111,11 +111,26 @@ const OFFICIAL_TYPES=['Erba','Fuoco','Acqua','Lampo','Psico','Lotta','Oscurità'
 const TYPE_MAP={Grass:'Erba',Fire:'Fuoco',Water:'Acqua',Lightning:'Lampo',Psychic:'Psico',Fighting:'Lotta',Darkness:'Oscurità',Metal:'Metallo',Dragon:'Drago',Colorless:'Incolore'};
 const CATEGORIES=['⭐ Protette','🌿 Erba','🔥 Fuoco','💧 Acqua','⚡ Elettro','🔮 Psico','👊 Lotta','🌑 Oscurità','⚙️ Metallo','🐉 Drago','⚪ Incolore','👤 Aiuto','🧰 Strumenti','🏟️ Stadio','🎒 Oggetti Pokémon','⚡ Energie Base','✨ Energie Speciali'];
 let selectedCard=null; let candidateMap={}; let db=JSON.parse(localStorage.getItem('cardoryx_v3')||localStorage.getItem('cardoryx_v2')||localStorage.getItem('cardoryx_v1')||'[]'); let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
+function ui(id){return document.getElementById(id)}
+function selectedVariant(){return ui('variant')?.value||'Normale'}
+function selectedStatus(){return ui('status')?.value||'Disponibile'}
+function selectedCondition(){return ui('condition')?.value||'NM'}
 function persist(){localStorage.setItem('cardoryx_v3',JSON.stringify(db));localStorage.setItem('cardoryx_v2',JSON.stringify(db));localStorage.setItem('cardoryx_v1',JSON.stringify(db));renderAll()}
 function showView(v){['home','scan','catalog','stats'].forEach(x=>document.getElementById(x+'View').classList.toggle('hidden',x!==v));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));if(v==='catalog')renderCatalog();if(v==='stats')renderStats()}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function cardCategory(c){if(c.status==='Protetta')return '⭐ Protette';if(c.category==='Pokémon'){const t=c.type||'Incolore';const em={Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Elettro:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️',Drago:'🐉',Incolore:'⚪'}[t]||'⚪';return `${em} ${t==='Lampo'?'Elettro':t}`}if(c.category==='Allenatore'){if(c.trainerType==='Aiuto')return '👤 Aiuto';if(c.trainerType==='Stadio')return '🏟️ Stadio';if(c.trainerType==='Oggetto Pokémon')return '🎒 Oggetti Pokémon';return '🧰 Strumenti'}if(c.category==='Energia'){return c.energyType==='Speciale'?'✨ Energie Speciali':'⚡ Energie Base'}return 'Altro'}
-function renderAll(){document.getElementById('categoryPills').innerHTML=CATEGORIES.map(x=>`<span class="pill">${x}</span>`).join('');const total=db.reduce((a,c)=>a+c.qty,0),avail=db.filter(c=>c.status==='Disponibile').reduce((a,c)=>a+c.qty,0),prot=db.filter(c=>c.status==='Protetta').reduce((a,c)=>a+c.qty,0),deck=db.filter(c=>/^Mazzo/.test(c.status)).reduce((a,c)=>a+c.qty,0);totalCount.textContent=total;summaryText.textContent=`${avail} disponibili · ${prot} protette · ${deck} nei mazzi`;fillTypeFilter();renderCatalog();renderStats()}
+function renderAll(){
+  ui('categoryPills').innerHTML=CATEGORIES.map(x=>`<span class="pill">${x}</span>`).join('');
+  const total=db.reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const avail=db.filter(c=>(c.status||'Disponibile')==='Disponibile').reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const prot=db.filter(c=>(c.status||'Disponibile')==='Protetta').reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const deck=db.filter(c=>/^Mazzo/.test(c.status||'')).reduce((a,c)=>a+(Number(c.qty)||1),0);
+  ui('totalCount').textContent=total;
+  ui('summaryText').textContent=`${avail} disponibili · ${prot} protette · ${deck} nei mazzi`;
+  fillTypeFilter();
+  renderCatalog();
+  renderStats();
+}
 function fillTypeFilter(){const s=document.getElementById('typeFilter');if(!s)return;const cur=s.value;s.innerHTML='<option value="">Tutti i tipi</option>'+CATEGORIES.map(x=>`<option>${x}</option>`).join('');s.value=cur}
 cameraInput.addEventListener('change',()=>setQueue(cameraInput.files));
 galleryInput.addEventListener('change',()=>setQueue(galleryInput.files));
@@ -309,8 +324,148 @@ async function chooseCard(s){const brief=typeof s==='string'?JSON.parse(s):s;con
 function inferCategory(c){const cat=String(c.category||'').toLowerCase();if(cat.includes('pokemon')||c.hp||c.stage)return 'Pokémon';if(cat.includes('trainer')||c.trainerType)return 'Allenatore';if(cat.includes('energy')||c.energyType)return 'Energia';return 'Pokémon'}
 function inferType(c){let t=(c.types&&c.types[0])||c.type||'';return TYPE_MAP[t]||t||''}
 function clearSelection(){selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
-function saveSelected(){if(!selectedCard)return;const category=inferCategory(selectedCard),type=inferType(selectedCard);let trainerType=selectedCard.trainerType||'';if(trainerType==='Item')trainerType='Strumento';if(trainerType==='Supporter')trainerType='Aiuto';if(trainerType==='Stadium')trainerType='Stadio';if(trainerType==='Pokémon Tool')trainerType='Oggetto Pokémon';let energyType=String(selectedCard.energyType||'').toLowerCase().includes('special')?'Speciale':'Base';const rec={id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',image:selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,stage:selectedCard.stage||'',trainerType,energyType,variant:variant.value,status:status.value,condition:condition.value,qty:1,addedAt:new Date().toISOString()};const key=[rec.id,rec.variant,rec.status,rec.condition].join('|');const hit=db.find(x=>[x.id,x.variant,x.status,x.condition].join('|')===key);if(hit)hit.qty++;else db.push(rec);persist();saveMsg.textContent=`Salvata. Posizione: ${cardCategory(rec)}${hit?' · quantità '+hit.qty:''}`;saveMsg.className='footer-note ok';setTimeout(()=>{clearSelection();nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';if(!nextQueueItem()){cameraInput.value='';galleryInput.value='';scanQueue=[];queueIndex=-1;queueWrap.classList.add('hidden');previewWrap.classList.add('hidden');ocrStatus.textContent='Carta salvata. Puoi scattare una nuova foto o scegliere dal rullino.'}},650)}
-function renderCatalog(){const el=document.getElementById('catalogList');if(!el)return;const q=(catalogSearch?.value||'').toLowerCase(),tf=typeFilter?.value||'',sf=statusFilter?.value||'';const items=db.filter(c=>{const blob=`${c.name} ${c.set} ${c.localId} ${c.rarity} ${c.variant}`.toLowerCase();return(!q||blob.includes(q))&&(!tf||cardCategory(c)===tf)&&(!sf||c.status===sf)}).sort((a,b)=>a.name.localeCompare(b.name,'it'));el.innerHTML=items.length?items.map((c,i)=>`<div class="catalog-item"><div class="row"><div><h3>${esc(c.name)} ×${c.qty}</h3><div class="small">${esc(c.set)} · ${esc(c.localId)} · ${esc(c.variant)}</div><div><span class="pill">${esc(cardCategory(c))}</span><span class="pill">${esc(c.status)}</span></div></div><div class="right"><button class="btn alt" onclick="editQty('${c.id.replace(/'/g,"\\'")}','${c.variant.replace(/'/g,"\\'")}','${c.status.replace(/'/g,"\\'")}')">±</button></div></div></div>`).join(''):'<div class="empty">Nessuna carta.</div>'}
+function saveSelected(){
+  if(!selectedCard)return;
+  const saveBtn=document.querySelector('#confirmBox .btn.green');
+  if(saveBtn?.disabled)return;
+  if(saveBtn)saveBtn.disabled=true;
+
+  try{
+    const category=inferCategory(selectedCard),type=inferType(selectedCard);
+    let trainerType=selectedCard.trainerType||'';
+    if(trainerType==='Item')trainerType='Strumento';
+    if(trainerType==='Supporter')trainerType='Aiuto';
+    if(trainerType==='Stadium')trainerType='Stadio';
+    if(trainerType==='Pokémon Tool')trainerType='Oggetto Pokémon';
+    const energyType=String(selectedCard.energyType||'').toLowerCase().includes('special')?'Speciale':'Base';
+
+    const rec={
+      id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
+      name:selectedCard.name,
+      localId:selectedCard.localId||'',
+      set:selectedCard.set?.name||'',
+      image:selectedCard.image||'',
+      rarity:selectedCard.rarity||'',
+      category,type,stage:selectedCard.stage||'',trainerType,energyType,
+      variant:selectedVariant(),
+      status:selectedStatus(),
+      condition:selectedCondition(),
+      qty:1,
+      addedAt:new Date().toISOString()
+    };
+
+    const same=db.find(x =>
+      x.id===rec.id &&
+      (x.variant||'Normale')===rec.variant &&
+      (x.status||'Disponibile')===rec.status &&
+      (x.condition||'NM')===rec.condition
+    );
+
+    if(same){
+      // Do not silently create/increment duplicates from repeated taps/tests.
+      saveMsg.textContent=`${rec.name} è già nel catalogo (quantità ${same.qty||1}).`;
+      saveMsg.className='footer-note notice';
+      renderAll();
+      return;
+    }
+
+    db.push(rec);
+    persist();
+    saveMsg.textContent=`Salvata. Posizione: ${cardCategory(rec)}`;
+    saveMsg.className='footer-note ok';
+
+    setTimeout(()=>{
+      clearSelection();
+      nameInput.value='';
+      numberInput.value='';
+      setTotalInput.value='';
+      lastOCR={name:'',number:'',total:''};
+      results.innerHTML='';
+      searchMsg.textContent='';
+      if(!nextQueueItem()){
+        cameraInput.value='';
+        galleryInput.value='';
+        scanQueue=[];
+        queueIndex=-1;
+        queueWrap.classList.add('hidden');
+        previewWrap.classList.add('hidden');
+        ocrStatus.textContent='Carta salvata. Puoi scattare una nuova foto o scegliere dal rullino.';
+      }
+    },650);
+  } finally {
+    setTimeout(()=>{if(saveBtn)saveBtn.disabled=false},750);
+  }
+}
+
+function renderCatalog(){
+  const el=ui('catalogList');
+  if(!el)return;
+
+  const searchEl=ui('catalogSearch');
+  const typeEl=ui('typeFilter');
+  const statusEl=ui('statusFilter');
+
+  const q=(searchEl?.value||'').toLowerCase().trim();
+  const tf=typeEl?.value||'';
+  const sf=statusEl?.value||'';
+
+  const items=db.filter(c=>{
+    const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''}`.toLowerCase();
+    return (!q||blob.includes(q)) &&
+           (!tf||cardCategory(c)===tf) &&
+           (!sf||(c.status||'Disponibile')===sf);
+  }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
+
+  el.innerHTML=items.length ? items.map((c,i)=>{
+    const key=encodeURIComponent(c.id||`${c.name}-${c.localId}`);
+    return `<div class="catalog-item">
+      <div class="row">
+        <div class="meta">
+          <div style="display:flex;gap:10px;align-items:center">
+            ${c.image?`<img src="${c.image}/low.webp" style="width:54px;border-radius:7px" onerror="this.style.display='none'">`:''}
+            <div>
+              <h3>${esc(c.name||'Carta')}</h3>
+              <div class="small">${esc(c.set||'')} · ${esc(c.localId||'')} · ${esc(c.variant||'Normale')} · ${esc(c.condition||'NM')}</div>
+              <div>
+                <span class="pill">${esc(cardCategory(c))}</span>
+                <span class="pill">${esc(c.status||'Disponibile')}</span>
+                <span class="pill">×${Number(c.qty)||1}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="right" style="display:flex;gap:6px;flex-direction:column">
+          <button class="btn alt" onclick="editRecord('${key}')">Modifica</button>
+          <button class="btn red" onclick="deleteRecord('${key}')">Elimina</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Nessuna carta.</div>';
+}
+
+function editRecord(key){
+  const id=decodeURIComponent(key);
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  if(!c)return;
+
+  const qty=prompt(`Quantità per ${c.name}`,Number(c.qty)||1);
+  if(qty===null)return;
+  const n=parseInt(qty,10);
+  if(!Number.isFinite(n)||n<1)return;
+
+  c.qty=n;
+  persist();
+}
+
+function deleteRecord(key){
+  const id=decodeURIComponent(key);
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  if(!c)return;
+  if(!confirm(`Eliminare ${c.name} dal catalogo?`))return;
+  db=db.filter(x=>x!==c);
+  persist();
+}
+
 function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
 function renderStats(){const el=document.getElementById('statsList');if(!el)return;const map={};db.forEach(c=>map[cardCategory(c)]=(map[cardCategory(c)]||0)+c.qty);el.innerHTML=CATEGORIES.map(k=>`<div class="result"><div class="meta"><h3>${k}</h3></div><strong>${map[k]||0}</strong></div>`).join('')}
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
