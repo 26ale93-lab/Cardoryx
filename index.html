@@ -111,31 +111,29 @@ function setName(c){return c?.set?.name||c?.setName||''}
 function cleanNameCandidate(text){const lines=text.split(/\n/).map(x=>x.replace(/[^A-Za-zÀ-ÿ0-9'’\- .]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);const banned=/^(BASE|FASE\s*[12]?|PS\s*\d+|ALLENATORE|ENERGIA|POKEMON|POKÉMON)$/i;let best=lines.filter(x=>x.length>=3&&x.length<=32&&!banned.test(x)&&!/^\d+$/.test(x)).sort((a,b)=>{const sa=(/[A-Za-zÀ-ÿ]{4,}/.test(a)?5:0)-(/PS|FASE|BASE/i.test(a)?4:0);const sb=(/[A-Za-zÀ-ÿ]{4,}/.test(b)?5:0)-(/PS|FASE|BASE/i.test(b)?4:0);return sb-sa})[0]||'';return best.replace(/\bPS\s*\d+.*/i,'').replace(/^FASE\s*\d*\s*/i,'').replace(/^BASE\s*/i,'').trim()}
 async function runSmartOCR(){
   const f=scanQueue[queueIndex]; if(!f)return;
-  ocrBtn.disabled=true; ocrStatus.textContent='Analizzo separatamente intestazione e codice 055/159…';
+  ocrBtn.disabled=true; ocrStatus.textContent='Ottimizzo la foto per iPhone e leggo nome + codice…';
+  let img=null, top=null, bottom=null;
   try{
     await loadTesseract();
-    const img=await imageFromFile(f);
-    const topA=cropImage(img,.08,.025,.84,.115,3.0);
-    const topB=enhanceForOCR(cropImage(img,.05,.015,.90,.145,3.2),170);
-    const bottomA=cropImage(img,.02,.82,.96,.17,3.6);
-    const bottomB=enhanceForOCR(cropImage(img,.02,.80,.96,.19,3.8),178);
-    const [ta,tb,ba,bb]=await Promise.all([
-      Tesseract.recognize(topA,'ita+eng',{tessedit_pageseg_mode:'7'}),
-      Tesseract.recognize(topB,'ita+eng',{tessedit_pageseg_mode:'7'}),
-      Tesseract.recognize(bottomA,'eng',{tessedit_pageseg_mode:'6'}),
-      Tesseract.recognize(bottomB,'eng',{tessedit_pageseg_mode:'6'})
-    ]);
-    const topTexts=[ta.data.text||'',tb.data.text||''];
-    const bottomText=(ba.data.text||'')+'\n'+(bb.data.text||'');
-    const names=topTexts.map(cleanNameCandidate).filter(Boolean);
-    let name=names.sort((a,b)=>b.length-a.length)[0]||'';
+    img=await imageFromFile(f);
+    // iPhone-safe: two small crops, processed sequentially. No full-resolution OCR and no Promise.all.
+    top=cropImage(img,.08,.025,.84,.12,1.45);
+    let tr=await Tesseract.recognize(top,'ita+eng',{tessedit_pageseg_mode:'7'});
+    const topText=tr?.data?.text||'';
+    tr=null; top.width=1; top.height=1; top=null;
+
+    bottom=cropImage(img,.05,.88,.52,.105,2.0);
+    let br=await Tesseract.recognize(bottom,'eng',{tessedit_pageseg_mode:'6'});
+    const bottomText=br?.data?.text||'';
+    br=null; bottom.width=1; bottom.height=1; bottom=null;
+
+    let name=cleanNameCandidate(topText);
     let m=bottomText.match(/\b(\d{1,3})\s*[\/|]\s*(\d{2,3})\b/);
-    if(!m)m=(topTexts.join(' ')+' '+bottomText).match(/\b(\d{1,3})\s*[\/|]\s*(\d{2,3})\b/);
     let num='',total='';
     if(m){num=m[1].padStart(3,'0');total=m[2];}
     else{
       const nums=(bottomText.match(/\b\d{2,3}\b/g)||[]);
-      if(nums.length){num=nums[0].padStart(3,'0'); if(nums.length>1)total=nums[1];}
+      if(nums.length){num=nums[0].padStart(3,'0');if(nums.length>1)total=nums[1];}
     }
     lastOCR={name,number:num,total};
     if(name)nameInput.value=name;
@@ -143,14 +141,16 @@ async function runSmartOCR(){
     if(total)setTotalInput.value=total;
     const bits=[];
     if(name)bits.push('nome candidato: '+name);
-    if(num&&total)bits.push(`codice: ${num}/${total}`);
-    else if(num)bits.push('numero: '+num);
-    ocrStatus.textContent=(bits.length?bits.join(' · ')+'. ':'')+(num?'Cerco e ordino i candidati più probabili…':'Controlla i dati e premi Cerca candidati.');
+    if(num&&total)bits.push(`codice: ${num}/${total}`); else if(num)bits.push('numero: '+num);
+    ocrStatus.textContent=(bits.length?bits.join(' · ')+'. ':'')+(num?'Cerco i candidati più probabili…':'Controlla i dati e premi Cerca candidati.');
     if(num) await searchCards({smart:true});
   }catch(e){
     console.error(e);
-    ocrStatus.textContent='Riconoscimento non riuscito. Puoi inserire manualmente numero e totale set (es. 055 / 159).';
-  }finally{ocrBtn.disabled=false}
+    ocrStatus.textContent='OCR interrotto senza chiudere Cardoryx. Inserisci 055 / 159 oppure riprova con la foto.';
+  }finally{
+    try{if(top){top.width=1;top.height=1}if(bottom){bottom.width=1;bottom.height=1}}catch(_){}
+    img=null; ocrBtn.disabled=false;
+  }
 }
 
 async function fetchFullCandidate(c){
