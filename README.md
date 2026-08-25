@@ -1,16 +1,16 @@
-# Cardoryx V1.4.2 — Home Fix
+# Cardoryx V1.4.3 — Price Fallback
 
-Correzione della V1.4.1.
+Basata sulla V1.4.2 con Home funzionante.
 
-## Corretto
-- Ripristinata la funzione `renderHomeDashboard()` accidentalmente rimossa nella V1.4.1.
-- La Home torna a leggere il database locale già esistente.
-- Ripristinati totale carte, set, Holo/Reverse, protette, valore collezione, carta più preziosa, ultime aggiunte e categorie.
-- Mantenuto il sistema valore della V1.4.1.
-- Mantenute Poké Ball Reverse Holo e Master Ball Reverse Holo.
-- Corretto anche il salvataggio della migrazione delle vecchie denominazioni variante.
-- Aggiornata la cache PWA alla V1.4.2.
+## Correzione valore nello Scanner
+- Mantiene il valore Cardmarket come dato informativo, senza consigli di acquisto.
+- Per Holo preferisce i campi Cardmarket Holo.
+- Per Reverse Holo / Poké Ball Reverse Holo / Master Ball Reverse Holo:
+  1. usa un eventuale prezzo Reverse specifico se presente;
+  2. altrimenti usa il prezzo foil/holo Cardmarket disponibile;
+  3. altrimenti usa trend/media/prezzo Cardmarket standard come riferimento.
+- Se non esiste alcun dato Cardmarket, mostra chiaramente che il prezzo non è disponibile.
+- Non modifica né cancella il database locale.
+- Home V1.4.2 mantenuta.
 
-## Dati
-La patch non cancella e non reinizializza `cardoryx_db`.
-Le carte già salvate nel browser restano nel database locale.
+Nota: il riferimento di fallback non viene presentato come prezzo esatto della variante Poké Ball/Master Ball.
