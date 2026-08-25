@@ -130,3 +130,13 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 
 
 V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collector code is fallback only when no usable name is available.
+
+
+## V4.8 — Ricerca numerica normalizzata
+- `14`, `014` e altre forme con zeri iniziali sono trattate come lo stesso numero.
+- `94` e `094` sono trattati come lo stesso totale set.
+- La ricerca solo numero/set prova automaticamente tutte le varianti del `localId`.
+- Prima di filtrare per totale set, Cardoryx recupera i dettagli completi dei candidati.
+- Se numero/set non trova nulla, il messaggio suggerisce Nome + Set.
+- Mantiene il ranking Name-first della V4.7.
+- Cache PWA `cardoryx-v4.8.0`.

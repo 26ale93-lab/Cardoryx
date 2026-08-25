@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.6</title>
+<title>Cardoryx V4.8</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -531,6 +531,34 @@ async function apiCardsQuery(params){
   }catch(e){return []}
 }
 
+
+function numVariants(v=''){
+  const raw=String(v).trim().replace(/\D/g,'');
+  if(!raw)return [];
+  const n=String(Number(raw));
+  return [...new Set([raw,n,n.padStart(2,'0'),n.padStart(3,'0')])];
+}
+function sameCollectorNumber(a,b){
+  const av=String(a||'').replace(/\D/g,'').replace(/^0+/,'')||'0';
+  const bv=String(b||'').replace(/\D/g,'').replace(/^0+/,'')||'0';
+  return av===bv;
+}
+function sameSetTotal(a,b){
+  const av=Number(String(a||'').replace(/\D/g,''));
+  const bv=Number(String(b||'').replace(/\D/g,''));
+  return !!av && !!bv && av===bv;
+}
+async function queryByAnyLocalId(num){
+  const variants=numVariants(num);
+  const merged=new Map();
+  for(const v of variants){
+    const arr=await apiCardsQuery({localId:v});
+    for(const c of arr||[])merged.set(c.id,c);
+    if(merged.size>=20)break;
+  }
+  return [...merged.values()];
+}
+
 async function fastCascadeSearch({name='',num='',total=''}) {
   const cleanName=String(name||'').trim();
   const cleanNum=String(num||'').replace(/^0+/,'') || String(num||'');
@@ -559,15 +587,25 @@ async function fastCascadeSearch({name='',num='',total=''}) {
     if(results.length)return {results,route: total?'Nome → Set → Numero':'Nome → Numero'};
   }
 
-  // Only when the OCR did not obtain a usable name do we fall back to collector code.
+  // Numeric-only fallback: 14 and 014 are equivalent; 94 and 094 are equivalent.
   if(cleanNum && total){
-    setScanMode('modeCode',`Nome non disponibile. Provo ${num}/${total}…`);
-    results=await apiCardsQuery({localId:cleanNum});
+    setScanMode('modeCode',`Nome non disponibile. Provo ${num}/${total} in tutte le forme equivalenti…`);
+    results=await queryByAnyLocalId(num);
+
     if(results.length){
-      const sameSet=results.filter(c=>String(setOfficialCount(c))===String(Number(total)));
-      if(sameSet.length)results=sameSet;
+      // Fetch full details before filtering because set card count may not be present in brief results.
+      const fullResults=[];
+      for(const c of results.slice(0,30))fullResults.push(await fetchFullCandidate(c));
+      results=fullResults;
+
+      const exactSet=results.filter(c=>sameSetTotal(setOfficialCount(c),total));
+      if(exactSet.length)results=exactSet;
+
+      const exactNum=results.filter(c=>sameCollectorNumber(c.localId,num));
+      if(exactNum.length)results=exactNum;
     }
-    if(results.length)return {results,route:'Numero/Set (fallback)'};
+
+    if(results.length)return {results,route:'Numero/Set normalizzato'};
   }
 
   return {results:[],route:'Nessun risultato'};
@@ -680,14 +718,14 @@ async function searchCards(opts={}){
       if(!Array.isArray(arr))arr=[];
     }
     if(!arr.length&&num){
-      arr=await fetch(`${API}/cards?localId=${encodeURIComponent(num)}`).then(r=>r.json());
+      arr=await queryByAnyLocalId(num);
       if(!Array.isArray(arr))arr=[];
     }
     arr=(arr||[]).slice(0,35);
     let full=await Promise.all(arr.map(fetchFullCandidate));
     const targetName=name||lastOCR.name||'';
-    const targetTotal=Number(total||lastOCR.total||0)||0;
-    const targetNum=String(num||lastOCR.number||'').replace(/^0+/,'')||'0';
+    const targetTotal=Number(String(total||lastOCR.total||0).replace(/\D/g,''))||0;
+    const targetNum=String(Number(String(num||lastOCR.number||'').replace(/\D/g,'')))||'0';
     full=full.map(c=>{
       const cnum=String(c.localId||'').replace(/^0+/,'')||'0';
       const count=setOfficialCount(c);
@@ -704,7 +742,7 @@ async function searchCards(opts={}){
     }).sort((a,b)=>b._score-a._score);
     full=full.slice(0,6);
     if(!full.length){
-      searchMsg.textContent='Nessun risultato. Controlla numero e totale set.';
+      searchMsg.textContent='Nessun risultato con numero/set. Prova il nome + totale set: Cardoryx ignorerà il numero se necessario.';
       return;
     }
     let top=full[0];
