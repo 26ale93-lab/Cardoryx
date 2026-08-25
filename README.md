@@ -241,3 +241,12 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Compatibile con Scanner rapido e Scanner continuo.
 - Se il database non contiene la stampa esatta, Cardoryx mantiene il riconoscimento Energia Base e chiede verifica manuale invece di confonderla con una carta Pokémon.
 - Cache PWA `cardoryx-v5.8.0`.
+
+
+## V6.1 — Immagini Energie MEE
+- Le 8 Energie Base MEE manuali ora hanno un'immagine associata.
+- Le miniature compaiono direttamente nel selettore Energia Base.
+- L'immagine viene mantenuta anche dopo il salvataggio nel Catalogo.
+- Supporto alle immagini dirette JPG/PNG/WebP oltre alle immagini TCGdex.
+- Zoom compatibile anche con le Energie MEE.
+- Cache PWA `cardoryx-v6.1.0`.

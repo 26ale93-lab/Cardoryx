@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.8</title>
+<title>Cardoryx V6.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1106,15 +1106,27 @@ async function readBasicEnergyIdentity(img){
 }
 
 const MEE_BASIC_ENERGIES={
-  '001':{type:'Erba',name:'Energia base Erba'},
-  '002':{type:'Fuoco',name:'Energia base Fuoco'},
-  '003':{type:'Acqua',name:'Energia base Acqua'},
-  '004':{type:'Lampo',name:'Energia base Lampo'},
-  '005':{type:'Psico',name:'Energia base Psico'},
-  '006':{type:'Lotta',name:'Energia base Lotta'},
-  '007':{type:'Oscurità',name:'Energia base Oscurità'},
-  '008':{type:'Metallo',name:'Energia base Metallo'}
+  '001':{type:'Erba',name:'Energia base Erba',file:'BasicGrassEnergyMEEEnergy1.jpg'},
+  '002':{type:'Fuoco',name:'Energia base Fuoco',file:'BasicFireEnergyMEEEnergy2.jpg'},
+  '003':{type:'Acqua',name:'Energia base Acqua',file:'BasicWaterEnergyMEEEnergy3.jpg'},
+  '004':{type:'Lampo',name:'Energia base Lampo',file:'BasicLightningEnergyMEEEnergy4.jpg'},
+  '005':{type:'Psico',name:'Energia base Psico',file:'BasicPsychicEnergyMEEEnergy5.jpg'},
+  '006':{type:'Lotta',name:'Energia base Lotta',file:'BasicFightingEnergyMEEEnergy6.jpg'},
+  '007':{type:'Oscurità',name:'Energia base Oscurità',file:'BasicDarknessEnergyMEEEnergy7.jpg'},
+  '008':{type:'Metallo',name:'Energia base Metallo',file:'BasicMetalEnergyMEEEnergy8.jpg'}
 };
+function meeImageUrl(num){
+  const e=MEE_BASIC_ENERGIES[String(num).padStart(3,'0')];
+  return e?.file ? `https://archives.bulbagarden.net/wiki/Special:Redirect/file/${encodeURIComponent(e.file)}` : '';
+}
+function cardImageSrc(c,quality='low'){
+  if(!c)return '';
+  if(c._imageUrl)return c._imageUrl;
+  const img=String(c.image||'');
+  if(!img)return '';
+  if(img.startsWith('data:')||img.startsWith('blob:')||/\.(?:jpg|jpeg|png|webp)(?:\?|$)/i.test(img))return img;
+  return `${img}/${quality}.webp`;
+}
 
 function makeMeeBasicEnergy(identity){
   if(normText(identity?.code?.set)!=='mee')return null;
@@ -1133,6 +1145,8 @@ function makeMeeBasicEnergy(identity){
     rarity:'',
     set:{id:'mee',name:'Energie base MEE',cardCount:{total:8,official:8}},
     _cardoryxLocal:true,
+    _imageUrl:meeImageUrl(num),
+    image:meeImageUrl(num),
     _printedCode:`MEE IT ${num}`
   };
 }
@@ -1186,13 +1200,12 @@ function toggleManualEnergy(){
 function meeEnergyEmoji(t){return ({Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️'})[t]||'⚡'}
 function renderMeeEnergyGrid(){
   const g=document.getElementById('meeEnergyGrid'); if(!g)return;
-  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<button class="btn alt" type="button" style="min-height:78px;padding:10px" onclick="selectMeeEnergy('${num}')"><div style="font-size:24px">${meeEnergyEmoji(e.type)}</div><div>${e.type}</div><div class="small">MEE IT ${num}</div></button>`).join('');
+  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<button class="btn alt" type="button" style="min-height:150px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center" onclick="selectMeeEnergy('${num}')"><img src="${meeImageUrl(num)}" style="width:74px;height:104px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'"><div><b>${meeEnergyEmoji(e.type)} ${e.type}</b></div><div class="small">MEE IT ${num}</div></button>`).join('');
 }
 async function selectMeeEnergy(num){
   num=String(num).padStart(3,'0');
   const c=makeMeeBasicEnergy({code:{set:'MEE',num}}); if(!c)return;
-  // If a photo is already loaded, keep it as the visual reference for this owned card.
-  if(typeof currentImageData!=='undefined' && currentImageData)c.image=currentImageData;
+  // MEE uses a persistent reference image so it remains visible after reopening the app.
   nameInput.value=c.name; numberInput.value=num; setTotalInput.value='8';
   searchMsg.textContent=`Selezionata ${c.name} · MEE IT ${num}.`;
   await chooseCard(c);
@@ -1526,7 +1539,7 @@ function renderFullSetChunk(){
     const key=`set_${i}`;
     candidateMap[key]=c;
     return `<div class="candidate">
-      <img class="card-zoomable" src="${c.image?c.image+'/low.webp':''}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
+      <img class="card-zoomable" src="${cardImageSrc(c,'low')}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
       <h3>${esc(c.name||'Carta')}</h3>
       <div class="small">N° ${esc(c.localId||'—')}</div>
       <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
@@ -1606,7 +1619,7 @@ async function searchCards(opts={}){
         candidateMap[key]=c;
         const count=setOfficialCount(c);
         return `<div class="candidate">
-          <img class="card-zoomable" src="${c.image?c.image+'/low.webp':''}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
+          <img class="card-zoomable" src="${cardImageSrc(c,'low')}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
           <h3>${esc(c.name)}</h3>
           <div class="small">N° ${esc(c.localId)}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
           <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
@@ -1646,7 +1659,7 @@ async function searchCards(opts={}){
       const count=setOfficialCount(c);
       const isExact=autoCandidate?.id===c.id;
       return `<div class="candidate ${isExact?'best':''}">
-        <img class="card-zoomable" src="${c.image?c.image+'/low.webp':''}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
+        <img class="card-zoomable" src="${cardImageSrc(c,'low')}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
         <h3>${esc(c.name)}</h3>
         <div class="small">N° ${esc(c.localId)}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
         ${isExact?'<span class="rank-badge">★ CORRISPONDENZA ESATTA</span>':''}
@@ -1675,7 +1688,7 @@ async function chooseCard(s){
   const brief=typeof s==='string'?JSON.parse(s):s;
   confirmCard.classList.remove('hidden');
   confirmName.textContent=brief.name;
-  confirmImg.src=brief.image ? (String(brief.image).startsWith('data:') ? brief.image : brief.image+'/high.webp') : ''; confirmImg.style.display=brief.image?'block':'none';
+  const initialImg=cardImageSrc(brief,'high'); confirmImg.src=initialImg; confirmImg.style.display=initialImg?'block':'none';
   confirmInfo.textContent='Carico dettagli…';
   confirmTags.innerHTML='';
   try{
@@ -1723,7 +1736,7 @@ function saveSelected(){
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
       name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',
-      image:selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
+      image:selectedCard._imageUrl||selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
       qty:1,addedAt:new Date().toISOString()
@@ -1976,7 +1989,7 @@ function renderCatalog(){
     <div class="catalog-grid">
     ${items.map(c=>{
       const key=encodeURIComponent(recordKey(c));
-      const img=c.image?`${c.image}/low.webp`:'';
+      const img=cardImageSrc(c,'low');
       return `<article class="collection-card">
         <div>
           ${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
