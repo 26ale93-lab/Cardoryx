@@ -198,3 +198,13 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Indicatore della coda e del numero di carte rimanenti.
 - Gestione duplicati invariata: chiede prima di aumentare la quantità.
 - Cache PWA `cardoryx-v5.4.0`.
+
+
+## V5.5 — Scanner continuo
+- Nuova modalità `Scanner continuo` pensata per catalogare fisicamente una carta alla volta.
+- Flusso: Scatta carta → OCR → scegli/conferma → Salva → riapertura fotocamera → carta successiva.
+- Usa gli stessi predefiniti di Variante, Condizione e Stato della scansione rapida.
+- Il salvataggio di un duplicato mantiene la richiesta di conferma.
+- Pulsante `Ferma` per terminare la sessione.
+- La riapertura della fotocamera avviene dopo il salvataggio; su iOS il comportamento finale dipende dalle regole di Safari/PWA per l'apertura del selettore fotocamera.
+- Cache PWA `cardoryx-v5.5.0`.

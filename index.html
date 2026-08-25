@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.4</title>
+<title>Cardoryx V5.5</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -194,6 +194,12 @@
 .quick-status{margin-top:8px;font-size:11px;color:#475467}
 .queue-mini{margin-top:8px;padding:8px 10px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800}
 
+
+.continuous-scan-card{margin-top:10px;padding:13px;border:1px solid #c7d2fe;border-radius:16px;background:#eef2ff}
+.continuous-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.continuous-status{font-size:12px;color:#3730a3;margin-top:7px;font-weight:700}
+#continuousCameraInput{display:none}
+
 </style>
 </head>
 <body>
@@ -269,6 +275,25 @@
         </div>
         <div id="quickScanStatus" class="quick-status">Modalità normale.</div>
         <div id="quickQueueInfo" class="queue-mini hidden"></div>
+        <div class="continuous-scan-card">
+          <div class="quick-scan-head">
+            <div>
+              <div class="quick-scan-title">📷 Scanner continuo</div>
+              <div class="quick-scan-sub">Scatta → riconosci → salva → fotocamera pronta di nuovo.</div>
+            </div>
+            <label class="switch">
+              <input id="continuousScanToggle" type="checkbox">
+              <span></span>
+            </label>
+          </div>
+          <input id="continuousCameraInput" type="file" accept="image/*" capture="environment">
+          <div class="continuous-actions">
+            <button id="continuousStartBtn" class="btn" type="button" onclick="startContinuousCamera()">📷 Scatta carta</button>
+            <button class="btn alt" type="button" onclick="stopContinuousScan()">Ferma</button>
+          </div>
+          <div id="continuousStatus" class="continuous-status">Disattivato.</div>
+        </div>
+
       </div>
 
       <div class="scan-progress"><span id="scanProgressBar"></span></div>
@@ -806,12 +831,58 @@ async function renderFastCandidates(results,route){
 }
 
 
+
+let continuousSession=false;
+
+function continuousScanEnabled(){
+  return !!document.getElementById('continuousScanToggle')?.checked;
+}
+function updateContinuousUI(msg=''){
+  const st=document.getElementById('continuousStatus');
+  if(!st)return;
+  if(msg){st.textContent=msg;return}
+  st.textContent=continuousScanEnabled()
+    ? (continuousSession?'Attivo · pronto per la prossima carta.':'Attivo · premi “Scatta carta”.')
+    : 'Disattivato.';
+}
+function startContinuousCamera(){
+  const toggle=document.getElementById('continuousScanToggle');
+  if(toggle)toggle.checked=true;
+  continuousSession=true;
+  saveQuickPrefs();
+  updateContinuousUI('Apro la fotocamera…');
+  const input=document.getElementById('continuousCameraInput');
+  if(input){
+    input.value='';
+    input.click();
+  }
+}
+function stopContinuousScan(){
+  continuousSession=false;
+  const toggle=document.getElementById('continuousScanToggle');
+  if(toggle)toggle.checked=false;
+  saveQuickPrefs();
+  updateContinuousUI('Disattivato.');
+}
+function reopenContinuousCamera(){
+  if(!continuousScanEnabled()||!continuousSession)return;
+  updateContinuousUI('Carta salvata. Pronto per la prossima…');
+  setTimeout(()=>{
+    const input=document.getElementById('continuousCameraInput');
+    if(input){
+      input.value='';
+      input.click();
+    }
+  },450);
+}
+
 function quickScanEnabled(){
   return !!document.getElementById('quickScanToggle')?.checked;
 }
 function saveQuickPrefs(){
   const prefs={
     enabled:quickScanEnabled(),
+    continuous:continuousScanEnabled(),
     variant:document.getElementById('quickVariant')?.value||'Normale',
     condition:document.getElementById('quickCondition')?.value||'NM',
     status:document.getElementById('quickStatus')?.value||'Disponibile'
@@ -819,17 +890,20 @@ function saveQuickPrefs(){
   localStorage.setItem('cardoryx_quickscan',JSON.stringify(prefs));
 }
 function loadQuickPrefs(){
-  let p={enabled:false,variant:'Normale',condition:'NM',status:'Disponibile'};
+  let p={enabled:false,continuous:false,variant:'Normale',condition:'NM',status:'Disponibile'};
   try{p={...p,...JSON.parse(localStorage.getItem('cardoryx_quickscan')||'{}')}}catch(e){}
   const t=document.getElementById('quickScanToggle');
   const v=document.getElementById('quickVariant');
   const c=document.getElementById('quickCondition');
   const s=document.getElementById('quickStatus');
   if(t)t.checked=!!p.enabled;
+  const ct=document.getElementById('continuousScanToggle');
+  if(ct)ct.checked=!!p.continuous;
   if(v)v.value=p.variant;
   if(c)c.value=p.condition;
   if(s)s.value=p.status;
   updateQuickScanUI();
+  updateContinuousUI();
 }
 function updateQuickScanUI(){
   const st=document.getElementById('quickScanStatus');
@@ -860,7 +934,7 @@ function applyQuickDefaults(){
   if(st)st.textContent='Predefiniti applicati.';
 }
 function applyQuickDefaultsToConfirm(){
-  if(!quickScanEnabled())return;
+  if(!quickScanEnabled() && !continuousScanEnabled())return;
   const v=document.getElementById('variant');
   const c=document.getElementById('condition');
   const s=document.getElementById('status');
@@ -1257,7 +1331,9 @@ function saveSelected(){
         same.qty=current+1;
         persist();
         saveMsg.textContent=`Aggiunta un'altra copia. Quantità: ×${same.qty}`;
-        if(quickScanEnabled()){
+        if(continuousScanEnabled() && continuousSession){
+          setTimeout(()=>{clearSelection();reopenContinuousCamera();},280);
+        }else if(quickScanEnabled()){
           setTimeout(()=>{clearSelection();goNextRapidCard();},280);
         }
         saveMsg.className='footer-note ok';
@@ -1271,7 +1347,9 @@ function saveSelected(){
     db.push(rec);
     persist();
     saveMsg.textContent=`Salvata. Posizione: ${cardCategory(rec)}`;
-    if(quickScanEnabled()){
+    if(continuousScanEnabled() && continuousSession){
+      setTimeout(()=>{clearSelection();reopenContinuousCamera();},280);
+    }else if(quickScanEnabled()){
       setTimeout(()=>{clearSelection();goNextRapidCard();},280);
     }
     saveMsg.className='footer-note ok';
@@ -1578,6 +1656,32 @@ document.getElementById('cardDetailModal')?.addEventListener('click',e=>{
   if(e.target===document.getElementById('cardDetailModal'))closeCardDetail();
 });
 
+
+
+const continuousInput=document.getElementById('continuousCameraInput');
+if(continuousInput){
+  continuousInput.addEventListener('change',async e=>{
+    const file=e.target.files?.[0];
+    if(!file){
+      updateContinuousUI('Nessuna foto acquisita.');
+      return;
+    }
+    continuousSession=true;
+    scanQueue=[file];
+    queueIndex=0;
+    loadQueueItem(0);
+    updateContinuousUI('Foto acquisita. Avvio riconoscimento…');
+    setTimeout(()=>runSmartOCR(),180);
+  });
+}
+const continuousToggle=document.getElementById('continuousScanToggle');
+if(continuousToggle){
+  continuousToggle.addEventListener('change',()=>{
+    if(!continuousToggle.checked)continuousSession=false;
+    saveQuickPrefs();
+    updateContinuousUI();
+  });
+}
 
 ['quickScanToggle','quickVariant','quickCondition','quickStatus'].forEach(id=>{
   const el=document.getElementById(id);
