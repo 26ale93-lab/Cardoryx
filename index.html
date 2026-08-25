@@ -2118,21 +2118,52 @@ function cardPriceHtml(c){
 }
 function collectionMarketValue(){return db.reduce((sum,c)=>{const u=cardUnitPrice(c);return sum+(u==null?0:u*(Number(c.qty)||1))},0)}
 function pricedCopies(){return db.reduce((n,c)=>n+(cardUnitPrice(c)==null?0:(Number(c.qty)||1)),0)}
+async function fetchFullCardForPrice(id){
+  if(!id)return null;
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
+    try{
+      const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`);
+      if(!r.ok)continue;
+      const full=await r.json();
+      if(full?.id && full?.pricing?.cardmarket)return full;
+    }catch(e){}
+  }
+  return null;
+}
+function priceSetMatches(saved,candidate){
+  const a=normText(saved?.set||''),b=normText(candidate?.set?.name||'');
+  return !a||!b||a===b||a.includes(b)||b.includes(a);
+}
+async function resolveTcgdexIdForRecord(c){
+  if(c?.tcgdexId)return c.tcgdexId;
+  if(c?.id && !String(c.id).startsWith('mee-local-')){
+    try{const r=await fetch(`${API}/cards/${encodeURIComponent(c.id)}`);if(r.ok){const f=await r.json();if(f?.id){c.tcgdexId=f.id;return f.id}}}catch(e){}
+  }
+  const name=String(c?.name||'').trim();if(!name)return null;
+  let briefs=await apiCardsQuery({name});if(!briefs.length)return null;
+  let pool=briefs;
+  if(c.localId){const exact=pool.filter(x=>sameCollectorNumber(x.localId,c.localId));if(exact.length)pool=exact}
+  const fulls=[];
+  for(const br of pool.slice(0,35)){try{const f=await fetchFullCandidate(br);if(f?.id)fulls.push(f)}catch(e){}}
+  if(!fulls.length)return null;
+  const ranked=fulls.map(f=>{let score=0;if(normText(f.name||'')===normText(name))score+=100;if(c.localId&&sameCollectorNumber(f.localId,c.localId))score+=80;if(priceSetMatches(c,f))score+=120;return {f,score}}).sort((x,y)=>y.score-x.score);
+  const best=ranked[0]?.f;if(!best?.id)return null;
+  c.id=best.id;c.tcgdexId=best.id;if(!c.set&&best.set?.name)c.set=best.set.name;return best.id;
+}
 async function refreshPriceForRecord(c){
-  if(!c?.id || String(c.id).startsWith('mee-local-'))return false;
-  try{
-    const r=await fetch(`${API}/cards/${encodeURIComponent(c.id)}`);if(!r.ok)return false;
-    const full=await r.json();
-    if(full?.pricing){c.pricing=full.pricing;c.priceUpdatedAt=full.pricing?.cardmarket?.updated||new Date().toISOString();return true}
-  }catch(e){}
-  return false;
+  if(String(c?.id||'').startsWith('mee-local-'))return false;
+  const id=await resolveTcgdexIdForRecord(c);if(!id)return false;
+  const full=await fetchFullCardForPrice(id);
+  if(!full?.pricing?.cardmarket){c.pricing=null;c.priceUpdatedAt='';return false}
+  c.pricing=full.pricing;c.priceUpdatedAt=full.pricing.cardmarket.updated||new Date().toISOString();c.tcgdexId=full.id;c.id=full.id;return true;
 }
 async function refreshAllPrices(){
-  const st=document.getElementById('priceRefreshStatus');let ok=0,done=0;
-  if(st)st.textContent='Aggiornamento prezzi…';
-  for(const c of db){done++;if(await refreshPriceForRecord(c))ok++;if(st)st.textContent=`Aggiornamento ${done}/${db.length}…`}
-  persist();renderCatalog();renderStats();if(st)st.textContent=`Aggiornati ${ok} record su ${db.length}.`;
+  const st=document.getElementById('priceRefreshStatus');let ok=0,done=0,noPrice=0;
+  if(st)st.textContent='Associo le carte a TCGdex e aggiorno Cardmarket…';
+  for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} · prezzi trovati ${ok}…`}
+  persist();renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
 }
+
 function catalogUniqueCount(){return db.length}
 function catalogCopyCount(){return db.reduce((a,c)=>a+(Number(c.qty)||1),0)}
 function catalogHoloCount(){return db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Speciale / Altro'].includes(c.variant||'')).reduce((a,c)=>a+(Number(c.qty)||1),0)}
