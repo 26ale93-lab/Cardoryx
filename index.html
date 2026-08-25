@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.4.7</title>
+<title>Cardoryx V1.4.8</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -570,9 +570,10 @@
     <div class="card">
       <div class="section-title">Backup e trasferimento</div>
       <div class="settings-stack">
-        <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV</button>
-        <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup JSON</button>
-        <label class="btn alt big settings-file-label">📥 Importa JSON
+        <div class="condition-intro" style="margin-bottom:10px"><b>Backup completo:</b> carte, quantità, varianti, condizioni, note, ID/immagini, prezzi e valori, mazzi e preferenze Scanner. Il CSV include anche valore unitario e totale.</div>
+        <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV completo</button>
+        <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup completo JSON</button>
+        <label class="btn alt big settings-file-label">📥 Ripristina backup JSON
           <input id="settingsImportFile" type="file" accept="application/json,.json" hidden>
         </label>
       </div>
@@ -2966,20 +2967,76 @@ function renderStats(){
   }).join('')}</div>`;
 }
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function exportJSON(){download('cardoryx-backup.json',JSON.stringify(db,null,2),'application/json')}
-function exportCSV(){const h=['Nome','Set','Numero','Categoria','Tipo','Evoluzione','Rarita','Variante','Quantita','Stato','Condizione','Posizione'];const rows=db.map(c=>[c.name,c.set,c.localId,c.category,c.type,c.stage,c.rarity,c.variant,c.qty,c.status,c.condition,cardCategory(c)]);const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');download('cardoryx.csv','\ufeff'+csv,'text/csv;charset=utf-8')}
+function backupCardSnapshot(c){
+  const info=cardPriceInfo(c);
+  const unit=info.value;
+  const qty=Math.max(1,Number(c.qty)||1);
+  return {...c,backupValue:{unitValue:unit,totalValue:unit==null?null:unit*qty,currency:'EUR',source:info.source||'Cardmarket',exactVariant:!!info.exact,updated:info.updated||'',variant:canonicalVariant(c.variant||'Normal')}};
+}
+function buildFullBackup(){
+  let quickscan={};
+  try{quickscan=JSON.parse(localStorage.getItem('cardoryx_quickscan')||'{}')}catch(e){}
+  return {
+    format:'cardoryx-full-backup',
+    version:'1.4.8',
+    exportedAt:new Date().toISOString(),
+    collection:{uniqueRecords:db.length,totalCards:catalogCopyCount(),pricedCards:pricedCopies(),totalMarketValue:collectionMarketValue(),currency:'EUR'},
+    cards:db.map(backupCardSnapshot),
+    decks:Array.isArray(decks)?decks:[],
+    preferences:{quickscan}
+  };
+}
+function exportJSON(){
+  const stamp=new Date().toISOString().slice(0,10);
+  download(`cardoryx-backup-completo-${stamp}.json`,JSON.stringify(buildFullBackup(),null,2),'application/json');
+}
+function exportCSV(){
+  const h=['Nome','Set','Numero','ID TCGdex','Categoria','Tipo','Evoluzione','Rarita','Variante','Quantita','Stato','Condizione','Posizione','Note','Valore unitario EUR','Valore totale EUR','Fonte valore','Variante verificata','Aggiornamento valore','Cardmarket trend','Cardmarket minimo','Cardmarket media 7gg','Cardmarket media 30gg','Immagine'];
+  const rows=db.map(c=>{
+    const info=cardPriceInfo(c),unit=info.value,qty=Math.max(1,Number(c.qty)||1),cm=c?.pricing?.cardmarket||{};
+    return [c.name,c.set,c.localId,c.tcgdexId||c.id||'',c.category,c.type,c.stage,c.rarity,canonicalVariant(c.variant||'Normal'),qty,c.status,c.condition,cardCategory(c),c.notes||'',unit==null?'':unit,unit==null?'':unit*qty,info.source||'Cardmarket',info.exact?'SI':'NO',info.updated||c.priceUpdatedAt||'',cm.trend||'',cm.low||'',cm.avg7||'',cm.avg30||'',cardImageSrc(c,'high')||cardImageSrc(c,'low')||''];
+  });
+  const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');
+  download('cardoryx-esportazione-completa.csv','\ufeff'+csv,'text/csv;charset=utf-8');
+}
 
 const settingsImportFile=document.getElementById('settingsImportFile');
 if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
   const f=settingsImportFile.files[0];if(!f)return;
   try{
-    const arr=JSON.parse(await f.text());
-    if(!Array.isArray(arr))throw 0;
-    if(confirm(`Importare ${arr.length} record? Il catalogo attuale verrà sostituito.`)){
-      db=arr.map(c=>({...c,qty:Math.max(1,Number(c.qty)||1),status:c.status||'Disponibile',variant:c.variant||'Normale',condition:c.condition||'NM'}));
-      persist();
-    }
-  }catch(e){alert('Backup non valido')}
+    const data=JSON.parse(await f.text());
+    if(Array.isArray(data)){
+      if(confirm(`Importare ${data.length} record dal vecchio backup? Il catalogo attuale verrà sostituito.`)){
+        db=data.map(c=>({...c,qty:Math.max(1,Number(c.qty)||1),status:c.status||'Disponibile',variant:canonicalVariant(c.variant||'Normal'),condition:c.condition||'NM'}));
+        persist();
+        alert('Backup precedente importato correttamente.');
+      }
+    }else if(data?.format==='cardoryx-full-backup' && Array.isArray(data.cards)){
+      const deckCount=Array.isArray(data.decks)?data.decks.length:0;
+      const valueText=data.collection?.totalMarketValue!=null?euro(data.collection.totalMarketValue):'—';
+      if(confirm(`Ripristinare il backup completo?\n\n${data.cards.length} schede\n${data.collection?.totalCards??'—'} carte totali\n${deckCount} mazzi\nValore salvato: ${valueText}\n\nCatalogo e mazzi attuali verranno sostituiti.`)){
+        db=data.cards.map(c=>{
+          const restored={...c};
+          delete restored.backupValue;
+          restored.qty=Math.max(1,Number(restored.qty)||1);
+          restored.status=restored.status||'Disponibile';
+          restored.variant=canonicalVariant(restored.variant||'Normal');
+          restored.condition=restored.condition||'NM';
+          return restored;
+        });
+        decks=Array.isArray(data.decks)?data.decks:[];
+        localStorage.setItem(DECK_KEY,JSON.stringify(decks));
+        const quick=data?.preferences?.quickscan;
+        if(quick&&typeof quick==='object')localStorage.setItem('cardoryx_quickscan',JSON.stringify(quick));
+        localStorage.setItem('cardoryx_db',JSON.stringify(db));
+        renderAll();renderSettings();renderDecks();
+        alert(`Backup completo ripristinato: ${db.length} schede e ${decks.length} mazzi.`);
+      }
+    }else throw new Error('Formato backup non riconosciuto');
+  }catch(e){
+    console.error('Import backup:',e);
+    alert('Backup non valido o formato non riconosciuto.');
+  }
   settingsImportFile.value='';
 });
 
