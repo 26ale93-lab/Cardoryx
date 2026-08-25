@@ -261,3 +261,13 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - `Originale` permette di annullare il ritaglio prima del salvataggio.
 - Per le Energie MEE, la foto personale ritagliata ha priorità sull'immagine di riferimento, così non si rimane senza immagine quando una sorgente esterna non carica.
 - Cache PWA `cardoryx-v6.2.0`.
+
+
+## V6.3 — Immagini MEE da Pokémon.com
+- Rimosso Bulbagarden come sorgente principale per le immagini MEE.
+- Ogni Energia MEE 001–008 è collegata alla relativa pagina ufficiale dell'archivio Pokémon italiano.
+- Cardoryx prova in sequenza i percorsi CDN ufficiali Pokémon per l'immagine italiana.
+- Se un endpoint ufficiale non risponde, prova automaticamente i percorsi ufficiali alternativi.
+- Se nessuna immagine remota viene caricata, resta disponibile la foto personale con Ritaglia/Raddrizza della V6.2.
+- Il record salvato conserva `officialPage`, `imageCandidates` e l'eventuale foto personale.
+- Cache PWA `cardoryx-v6.3.0`.

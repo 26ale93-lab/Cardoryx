@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V6.2</title>
+<title>Cardoryx V6.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -215,6 +215,10 @@
 .crop-control input{width:100%}
 .crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 
+
+.mee-image-fallback{width:74px;height:104px;border-radius:8px;background:#f3f4f6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#667085;padding:6px}
+.mee-source-link{font-size:10px;color:#4f46e5;text-decoration:none;font-weight:800}
+
 </style>
 </head>
 <body>
@@ -340,7 +344,7 @@
       <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
       <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
         <div style="font-weight:800;margin-bottom:4px">Energie Base MEE</div>
-        <div class="small" style="margin-bottom:10px">Se la scansione non riconosce il codice, scegli direttamente l’Energia. Cardoryx salverà il codice MEE corretto.</div>
+        <div class="small" style="margin-bottom:10px">Se la scansione non riconosce il codice, scegli direttamente l’Energia. Cardoryx prova prima le immagini ufficiali Pokémon; la tua foto ritagliata resta il fallback più affidabile.</div>
         <div id="meeEnergyGrid" class="grid"></div>
       </div>
       <div id="results"></div>
@@ -1189,23 +1193,84 @@ async function readBasicEnergyIdentity(img){
 }
 
 const MEE_BASIC_ENERGIES={
-  '001':{type:'Erba',name:'Energia base Erba',file:'BasicGrassEnergyMEEEnergy1.jpg'},
-  '002':{type:'Fuoco',name:'Energia base Fuoco',file:'BasicFireEnergyMEEEnergy2.jpg'},
-  '003':{type:'Acqua',name:'Energia base Acqua',file:'BasicWaterEnergyMEEEnergy3.jpg'},
-  '004':{type:'Lampo',name:'Energia base Lampo',file:'BasicLightningEnergyMEEEnergy4.jpg'},
-  '005':{type:'Psico',name:'Energia base Psico',file:'BasicPsychicEnergyMEEEnergy5.jpg'},
-  '006':{type:'Lotta',name:'Energia base Lotta',file:'BasicFightingEnergyMEEEnergy6.jpg'},
-  '007':{type:'Oscurità',name:'Energia base Oscurità',file:'BasicDarknessEnergyMEEEnergy7.jpg'},
-  '008':{type:'Metallo',name:'Energia base Metallo',file:'BasicMetalEnergyMEEEnergy8.jpg'}
+  '001':{type:'Erba',name:'Energia base Erba'},
+  '002':{type:'Fuoco',name:'Energia base Fuoco'},
+  '003':{type:'Acqua',name:'Energia base Acqua'},
+  '004':{type:'Lampo',name:'Energia base Lampo'},
+  '005':{type:'Psico',name:'Energia base Psico'},
+  '006':{type:'Lotta',name:'Energia base Lotta'},
+  '007':{type:'Oscurità',name:'Energia base Oscurità'},
+  '008':{type:'Metallo',name:'Energia base Metallo'}
 };
-function meeImageUrl(num){
-  const e=MEE_BASIC_ENERGIES[String(num).padStart(3,'0')];
-  return e?.file ? `https://archives.bulbagarden.net/wiki/Special:Redirect/file/${encodeURIComponent(e.file)}` : '';
+
+function meeOfficialPage(num){
+  const n=String(parseInt(String(num),10));
+  return `https://www.pokemon.com/it/gcc/archivio-carte/series/mee/${n}/`;
 }
+
+function meeOfficialImageCandidates(num){
+  const n=String(parseInt(String(num),10));
+  // Pokémon's current and legacy official card-image asset paths.
+  return [
+    `https://www.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/MEE/MEE_IT_${n}.png`,
+    `https://assets.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/MEE/MEE_IT_${n}.png`,
+    `https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/MEE/MEE_IT_${n}.png`
+  ];
+}
+
+function meeImageUrl(num){
+  return meeOfficialImageCandidates(num)[0];
+}
+
+function setMeeImageFallback(img,num,index=0){
+  if(!img)return;
+  const list=meeOfficialImageCandidates(num);
+  const next=index+1;
+  if(next<list.length){
+    img.onerror=()=>setMeeImageFallback(img,num,next);
+    img.src=list[next];
+    return;
+  }
+  // Last fallback: keep the UI usable. A user's cropped photo can replace this
+  // as the catalog image when available.
+  img.onerror=null;
+  img.style.display='none';
+  const holder=img.parentElement;
+  if(holder && !holder.querySelector('.mee-image-fallback')){
+    const d=document.createElement('div');
+    d.className='mee-image-fallback';
+    d.innerHTML='<div style="font-size:28px">⚡</div><div style="font-size:10px;font-weight:800">Immagine ufficiale non caricata</div>';
+    holder.appendChild(d);
+  }
+}
+
+
+function meeNumberFromCard(c){
+  if(!c)return '';
+  if(String(c.id||'').startsWith('mee-'))return String(c.localId||c.number||'').padStart(3,'0');
+  if(String(c.set?.id||c.set||'').toLowerCase()==='mee')return String(c.localId||c.number||'').padStart(3,'0');
+  return '';
+}
+function cardImgOnError(img,c){
+  const n=meeNumberFromCard(c);
+  if(n){
+    const idx=Number(img.dataset.meeFallbackIndex||0);
+    const list=meeOfficialImageCandidates(n);
+    const next=idx+1;
+    if(next<list.length){
+      img.dataset.meeFallbackIndex=String(next);
+      img.src=list[next];
+      return;
+    }
+  }
+  img.style.visibility='hidden';
+}
+
 function cardImageSrc(c,quality='low'){
   if(!c)return '';
   if(c._imageUrl)return c._imageUrl;
   const img=String(c.image||'');
+  if(!img && Array.isArray(c.imageCandidates) && c.imageCandidates.length)return c.imageCandidates[0];
   if(!img)return '';
   if(img.startsWith('data:')||img.startsWith('blob:')||/\.(?:jpg|jpeg|png|webp)(?:\?|$)/i.test(img))return img;
   return `${img}/${quality}.webp`;
@@ -1229,6 +1294,8 @@ function makeMeeBasicEnergy(identity){
     set:{id:'mee',name:'Energie base MEE',cardCount:{total:8,official:8}},
     _cardoryxLocal:true,
     _imageUrl:meeImageUrl(num),
+    _imageCandidates:meeOfficialImageCandidates(num),
+    _officialPage:meeOfficialPage(num),
     image:meeImageUrl(num),
     _printedCode:`MEE IT ${num}`
   };
@@ -1283,7 +1350,7 @@ function toggleManualEnergy(){
 function meeEnergyEmoji(t){return ({Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️'})[t]||'⚡'}
 function renderMeeEnergyGrid(){
   const g=document.getElementById('meeEnergyGrid'); if(!g)return;
-  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<button class="btn alt" type="button" style="min-height:150px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center" onclick="selectMeeEnergy('${num}')"><img src="${meeImageUrl(num)}" style="width:74px;height:104px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'"><div><b>${meeEnergyEmoji(e.type)} ${e.type}</b></div><div class="small">MEE IT ${num}</div></button>`).join('');
+  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<div class="btn alt" style="min-height:170px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:flex-start"><div style="min-height:104px;display:flex;align-items:center;justify-content:center"><img src="${meeImageUrl(num)}" style="width:74px;height:104px;object-fit:contain;border-radius:8px" onerror="setMeeImageFallback(this,'${num}',0)" onclick="event.stopPropagation();openCardZoom(this.src)"></div><button type="button" style="border:0;background:transparent;font:inherit;padding:0;cursor:pointer" onclick="selectMeeEnergy('${num}')"><div><b>${meeEnergyEmoji(e.type)} ${e.type}</b></div><div class="small">MEE IT ${num}</div></button><a class="mee-source-link" href="${meeOfficialPage(num)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Fonte Pokémon ↗</a></div>`).join('');
 }
 async function selectMeeEnergy(num){
   num=String(num).padStart(3,'0');
@@ -1819,7 +1886,7 @@ function saveSelected(){
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
       name:selectedCard.name,localId:selectedCard.localId||'',set:selectedCard.set?.name||'',
-      image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',rarity:selectedCard.rarity||'',category,type,
+      image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',imageCandidates:selectedCard._imageCandidates||[],officialPage:selectedCard._officialPage||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
       qty:1,addedAt:new Date().toISOString()
@@ -1976,7 +2043,7 @@ function openCardDetail(key){
       <div>${img?`<img class="card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.display='none'" title="Tocca per ingrandire">`:''}</div>
       <div>
         <div class="detail-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}</div>
-        <div class="detail-sub">${esc(c.rarity||'Rarità non indicata')}</div>
+        <div class="detail-sub">${esc(c.rarity||'Rarità non indicata')}</div>${c.officialPage?`<div style="margin-top:6px"><a class="mee-source-link" href="${esc(c.officialPage)}" target="_blank" rel="noopener">Apri nell’archivio Pokémon ↗</a></div>`:''}
         <div class="detail-badges">
           <span class="collection-badge">${esc(cardCategory(c))}</span>
           <span class="collection-badge">${esc(c.variant||'Normale')}</span>
