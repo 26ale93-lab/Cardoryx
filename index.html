@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V4.0</title>
+<title>Cardoryx V4.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -48,6 +48,26 @@
 .edit-grid .label{margin-bottom:5px}
 .stat-row.clickable{cursor:pointer}
 .stat-row.clickable:active{background:#f2f4f7}
+
+
+.catalog-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 4px}
+.catalog-summary{font-size:12px;color:#6b7280}
+.catalog-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+.collection-card{display:grid;grid-template-columns:96px minmax(0,1fr);gap:13px;background:linear-gradient(180deg,#fff,#fbfcff);border:1px solid #e5e7eb;border-radius:20px;padding:12px;box-shadow:0 5px 18px rgba(15,23,42,.06);position:relative;overflow:hidden}
+.collection-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#dbeafe}
+.collection-card-img{width:96px;height:134px;object-fit:contain;border-radius:11px;background:#f3f4f6;cursor:zoom-in}
+.collection-card-main{min-width:0}
+.collection-card h3{font-size:18px;line-height:1.1;margin:2px 0 5px}
+.collection-sub{font-size:12px;color:#6b7280;line-height:1.4;margin-bottom:8px}
+.collection-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.collection-badge{padding:5px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800}
+.collection-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.collection-actions .btn{padding:10px 6px;font-size:12px;border-radius:11px}
+.qty-control{display:flex;align-items:center;justify-content:space-between;background:#f3f4f6;border-radius:12px;padding:5px;margin-top:8px}
+.qty-control button{width:34px;height:34px;border:0;border-radius:9px;background:white;font-size:20px;font-weight:800;color:#111827}
+.qty-control strong{font-size:14px}
+.catalog-empty{padding:34px 16px;text-align:center;color:#6b7280}
+.catalog-empty .emoji{font-size:38px;margin-bottom:8px}
 
 </style>
 </head>
@@ -525,20 +545,31 @@ function openEditModal(key){
   const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
   if(!c)return;
   editingKey=id;
-  editTitle.textContent=c.name;
-  editQty.value=Number(c.qty)||1;
-  editVariant.value=c.variant||'Normale';
-  editStatus.value=c.status||'Disponibile';
-  editCondition.value=c.condition||'NM';
-  editModal.classList.add('open');editModal.setAttribute('aria-hidden','false');
+  document.getElementById('editTitle').textContent=c.name;
+  document.getElementById('editQty').value=Number(c.qty)||1;
+  document.getElementById('editVariant').value=c.variant||'Normale';
+  document.getElementById('editStatus').value=c.status||'Disponibile';
+  document.getElementById('editCondition').value=c.condition||'NM';
+  const modal=document.getElementById('editModal');
+  modal.classList.add('open');modal.setAttribute('aria-hidden','false');
 }
-function closeEditModal(){editModal.classList.remove('open');editModal.setAttribute('aria-hidden','true');editingKey=null}
+function closeEditModal(){
+  const modal=document.getElementById('editModal');
+  if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
+  editingKey=null;
+}
 function saveEditModal(){
   if(!editingKey)return;
-  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===editingKey); if(!c)return;
-  c.qty=Math.max(1,parseInt(editQty.value||'1',10)||1);
-  c.variant=editVariant.value;c.status=editStatus.value;c.condition=editCondition.value;
-  persist();closeEditModal();
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===editingKey);
+  if(!c)return;
+  const qty=parseInt(document.getElementById('editQty').value,10);
+  if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
+  c.qty=qty;
+  c.variant=document.getElementById('editVariant').value;
+  c.status=document.getElementById('editStatus').value;
+  c.condition=document.getElementById('editCondition').value;
+  persist();
+  closeEditModal();
 }
 function renderSettings(){
   const r=document.getElementById('settingsRecords'),t=document.getElementById('settingsTotal');
@@ -558,17 +589,30 @@ function filterByCategory(cat){
   if(f){f.value=cat;renderCatalog()}
 }
 
+
+function changeQty(key,delta){
+  const id=decodeURIComponent(key);
+  const c=db.find(x=>(x.id||`${x.name}-${x.localId}`)===id);
+  if(!c)return;
+  const next=(Number(c.qty)||1)+delta;
+  if(next<1){
+    if(confirm(`Rimuovere ${c.name} dal catalogo?`)){
+      db=db.filter(x=>x!==c);
+      persist();
+    }
+    return;
+  }
+  c.qty=next;
+  persist();
+}
+
 function renderCatalog(){
-  const el=ui('catalogList');
+  const el=document.getElementById('catalogList');
   if(!el)return;
 
-  const searchEl=ui('catalogSearch');
-  const typeEl=ui('typeFilter');
-  const statusEl=ui('statusFilter');
-
-  const q=(searchEl?.value||'').toLowerCase().trim();
-  const tf=typeEl?.value||'';
-  const sf=statusEl?.value||'';
+  const q=(document.getElementById('catalogSearch')?.value||'').toLowerCase().trim();
+  const tf=document.getElementById('typeFilter')?.value||'';
+  const sf=document.getElementById('statusFilter')?.value||'';
 
   const items=db.filter(c=>{
     const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''}`.toLowerCase();
@@ -577,33 +621,52 @@ function renderCatalog(){
            (!sf||(c.status||'Disponibile')===sf);
   }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
 
-  el.innerHTML=items.length ? items.map((c,i)=>{
-    const key=encodeURIComponent(c.id||`${c.name}-${c.localId}`);
-    return `<div class="catalog-item">
-      <div class="row">
-        <div class="meta">
-          <div style="display:flex;gap:10px;align-items:center">
-            ${c.image?`<img src="${c.image}/low.webp" style="width:62px;border-radius:8px;cursor:zoom-in" onclick="openImageModal(\'${c.image}/low.webp\')" onerror="this.style.display=\'none\'">`:''}
-            <div>
-              <h3>${esc(c.name||'Carta')}</h3>
-              <div class="small">${esc(c.set||'')} · ${esc(c.localId||'')} · ${esc(c.variant||'Normale')} · ${esc(c.condition||'NM')}</div>
-              <div>
-                <span class="pill">${esc(cardCategory(c))}</span>
-                <span class="pill">${esc(c.status||'Disponibile')}</span>
-                <span class="pill">×${Number(c.qty)||1}</span>
-              </div>
-            </div>
+  const visibleTotal=items.reduce((a,c)=>a+(Number(c.qty)||1),0);
+
+  if(!items.length){
+    el.innerHTML=`<div class="catalog-empty">
+      <div class="emoji">📚</div>
+      <b>Nessuna carta trovata</b>
+      <div class="small" style="margin-top:5px">Modifica i filtri oppure aggiungi una carta dallo Scanner.</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=`<div class="catalog-toolbar">
+      <div class="catalog-summary">${items.length} schede · ${visibleTotal} carte</div>
+      <div class="small">${tf?`Filtro: ${esc(tf)}`:'Tutta la collezione'}</div>
+    </div>
+    <div class="catalog-grid">
+    ${items.map(c=>{
+      const key=encodeURIComponent(c.id||`${c.name}-${c.localId}`);
+      const img=c.image?`${c.image}/low.webp`:'';
+      return `<article class="collection-card">
+        <div>
+          ${img?`<img class="collection-card-img" src="${img}" onclick="openImageModal('${img}')" onerror="this.style.visibility='hidden'">`:'<div class="collection-card-img"></div>'}
+          <div class="qty-control">
+            <button type="button" onclick="changeQty('${key}',-1)">−</button>
+            <strong>×${Number(c.qty)||1}</strong>
+            <button type="button" onclick="changeQty('${key}',1)">+</button>
           </div>
         </div>
-        <div class="right" style="display:flex;gap:6px;flex-direction:column">
-          <button class="btn alt" onclick="openEditModal('${key}')">Modifica</button>
-          <button class="btn red" onclick="deleteRecord('${key}')">Elimina</button>
+        <div class="collection-card-main">
+          <h3>${esc(c.name||'Carta')}</h3>
+          <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
+          <div class="collection-badges">
+            <span class="collection-badge">${esc(cardCategory(c))}</span>
+            <span class="collection-badge">${esc(c.variant||'Normale')}</span>
+            <span class="collection-badge">${esc(c.condition||'NM')}</span>
+            <span class="collection-badge">${esc(c.status||'Disponibile')}</span>
+          </div>
+          <div class="collection-actions">
+            <button class="btn alt" onclick="openEditModal('${key}')">✏️ Modifica</button>
+            <button class="btn red" onclick="deleteRecord('${key}')">🗑️ Elimina</button>
+          </div>
         </div>
-      </div>
+      </article>`;
+    }).join('')}
     </div>`;
-  }).join('') : '<div class="empty">Nessuna carta.</div>';
 }
-
 
 
 function deleteRecord(key){

@@ -66,3 +66,14 @@ Hotfix OCR ottimizzato per iPhone/Safari.
 - Tap su una categoria apre il Catalogo già filtrato.
 - Archivio canonico `cardoryx_db`.
 - Cache PWA `cardoryx-v4.0.0`.
+
+
+## V4.1 — Catalogo ridisegnato + fix quantità
+- Corretto il bug che impediva di salvare una nuova quantità dalla finestra Modifica.
+- Catalogo ridisegnato con schede più pulite e leggibili.
+- Immagine più grande e cliccabile per lo zoom.
+- Badge per tipo, variante, condizione e stato.
+- Quantità modificabile direttamente con `−` e `+`.
+- Modifica completa ed Elimina restano disponibili.
+- Riepilogo delle schede e del numero totale di carte visibili.
+- Cache PWA `cardoryx-v4.1.0`.
