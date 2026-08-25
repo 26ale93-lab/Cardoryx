@@ -1099,27 +1099,57 @@ async function readBasicEnergyIdentity(img){
   return {isBasic,code,type,headerText,footerText};
 }
 
-async function findBasicEnergyCandidates(identity){
-  let cards=[];
+const MEE_BASIC_ENERGIES={
+  '001':{type:'Erba',name:'Energia base Erba'},
+  '002':{type:'Fuoco',name:'Energia base Fuoco'},
+  '003':{type:'Acqua',name:'Energia base Acqua'},
+  '004':{type:'Lampo',name:'Energia base Lampo'},
+  '005':{type:'Psico',name:'Energia base Psico'},
+  '006':{type:'Lotta',name:'Energia base Lotta'},
+  '007':{type:'Oscurità',name:'Energia base Oscurità'},
+  '008':{type:'Metallo',name:'Energia base Metallo'}
+};
 
-  // Best route: expansion code + collector number.
+function makeMeeBasicEnergy(identity){
+  if(normText(identity?.code?.set)!=='mee')return null;
+  const num=String(identity?.code?.num||'').padStart(3,'0');
+  const e=MEE_BASIC_ENERGIES[num];
+  if(!e)return null;
+  return {
+    id:`mee-${num}`,
+    localId:num,
+    number:num,
+    name:e.name,
+    category:'Energy',
+    energyType:'Basic',
+    types:[e.type],
+    type:e.type,
+    rarity:'',
+    set:{id:'mee',name:'Energie base MEE',cardCount:{total:8,official:8}},
+    _cardoryxLocal:true,
+    _printedCode:`MEE IT ${num}`
+  };
+}
+
+async function findBasicEnergyCandidates(identity){
+  // V5.9: MEE is deterministic. Never let a generic API result replace it.
+  const mee=makeMeeBasicEnergy(identity);
+  if(mee)return [mee];
+
+  let cards=[];
   if(identity?.code?.set && identity?.code?.num){
     const setCode=identity.code.set.toLowerCase();
     const n=String(parseInt(identity.code.num,10));
-    const queries=[
-      `${setCode}-${n}`,
-      `${setCode}${n}`,
-      n
-    ];
-    for(const q of queries){
+    const directIds=[`${setCode}-${n}`,`${setCode}-${identity.code.num}`];
+    for(const id of directIds){
       try{
-        const r=await apiCardsQuery({q});
-        if(r?.length)cards.push(...r);
+        const r=await fetch(`${API}/cards/${encodeURIComponent(id)}`);
+        if(r.ok){const c=await r.json(); if(c&&!c.error)cards.push(c)}
       }catch(e){}
     }
   }
 
-  // Fallback: official name.
+  // Only use generic Energy search if exact printed code could not be resolved.
   if(!cards.length){
     try{
       const r=await apiCardsQuery({name:'Energia base'});
@@ -1127,38 +1157,18 @@ async function findBasicEnergyCandidates(identity){
     }catch(e){}
   }
 
-  // De-duplicate.
   const seen=new Set();
-  cards=cards.filter(c=>{
-    const k=c.id||`${c.name}|${c.number}|${c.set?.id||''}`;
-    if(seen.has(k))return false;
-    seen.add(k); return true;
-  });
-
-  // Score by printed set code, number and type/name.
+  cards=cards.filter(c=>{const k=c.id||`${c.name}|${c.number||c.localId}|${c.set?.id||''}`;if(seen.has(k))return false;seen.add(k);return true});
   const scored=cards.map(c=>{
     let score=0;
-    const cid=normText(c.id||'');
-    const setid=normText(c.set?.id||'');
-    const name=normText(c.name||'');
-    const num=String(parseInt(c.number||'0',10));
-
-    if(identity?.code?.set){
-      const s=normText(identity.code.set);
-      if(cid.includes(s)||setid.includes(s))score+=5;
-    }
-    if(identity?.code?.num && num===String(parseInt(identity.code.num,10)))score+=7;
+    const cid=normText(c.id||''), setid=normText(c.set?.id||''), name=normText(c.name||'');
+    const num=String(parseInt(c.number||c.localId||'0',10));
+    if(identity?.code?.set){const ss=normText(identity.code.set);if(cid.includes(ss)||setid===ss)score+=20}
+    if(identity?.code?.num && num===String(parseInt(identity.code.num,10)))score+=15;
     if(name.includes('energia')||name.includes('energy'))score+=2;
-
-    if(identity?.type){
-      const t=normText(identity.type);
-      if(name.includes(t))score+=4;
-      const types=(c.types||[]).map(normText).join(' ');
-      if(types.includes(t))score+=3;
-    }
+    if(identity?.type){const t=normText(identity.type);if(name.includes(t))score+=4;(c.types||[]).map(normText).includes(t)&&(score+=3)}
     return {c,score};
   }).sort((a,b)=>b.score-a.score);
-
   return scored.filter(x=>x.score>0).map(x=>x.c);
 }
 
@@ -1175,7 +1185,7 @@ async function runSmartOCR(){
     await loadTesseract();
     const img=await downscaleImageForOCR(f,1100,1600);
 
-    // V5.8 — Basic Energy special route.
+    // V5.9 — MEE Basic Energy deterministic route.
     setScanProgress(12,'Controllo se è un’Energia Base…');
     const energy=await readBasicEnergyIdentity(img);
 
