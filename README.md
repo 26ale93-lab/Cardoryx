@@ -1,26 +1,30 @@
-# Cardoryx V1.5.4 — Hotfix Home, Salvataggi e Play! Pokémon
+# Cardoryx V1.5.5 — Valutazione sicura Play! Pokémon
 
-## Correzioni
-- Ripristinata `renderHomeDashboard()`: era assente nella V1.5.3 e causava il crash della Home.
-- Il crash della Home interrompeva anche `persist()` durante Modifica carta, per questo il popup poteva non chiudersi.
-- Il salvataggio da Scanner ora scrive realmente nel database:
-  - Finitura
-  - Stamp / Edizione
-  - eventuale Prize Pack Series
-- Il riconoscimento dei duplicati distingue anche Stamp e Prize Pack Series.
-- Salvataggio Modifica carta reso più robusto: chiude il popup prima del rendering.
-- `persist()` salva comunque i dati anche se una sezione dell'interfaccia dovesse avere un errore.
-- Migliorato il riconoscimento delle Energie Speciali.
+Basata sulla V1.5.4 stabile.
+
+## Nuova logica valore
+Cardoryx distingue:
+1. `Valorizzata` — prezzo specifico disponibile.
+2. `Valore da verificare` — soprattutto Play! Pokémon con più possibili ristampe/serie.
+3. `Valore non disponibile` — nessuna quotazione specifica disponibile.
+
+Una carta senza prezzo NON vale 0 € e NON riceve automaticamente il prezzo della versione normale.
+
+## Totale collezione
+Le carte senza prezzo specifico vengono escluse dal totale numerico.
+La Home mostra anche quante carte restano da valutare, comprese le Play! da verificare.
+
+Esempio:
+`125,40 € + 4 carte da valutare (3 Play! da verificare)`
+
+## Scanner
+Se una Play! Pokémon non ha una corrispondenza di prezzo specifica:
+- mostra `Valore da verificare`;
+- non applica il prezzo standard;
+- permette comunque di salvare la carta.
 
 ## Prize Pack Series
-La serie NON è obbligatoria.
+Rimane opzionale. Il logo Play! Pokémon non indica da solo il numero della serie.
 
-Il logo Play! Pokémon stampato sulla carta non contiene il numero della Prize Pack Series, quindi dalla sola carta spesso non è possibile sapere se è Series 7, 8, 9 ecc.
-
-Puoi lasciare:
-`Non so / lascia automatico`
-
-Cardoryx conserva comunque correttamente:
-`Finitura + Play! Pokémon`.
-
-La serie va compilata solo quando è stata identificata con certezza tramite la specifica ristampa/database Cardmarket.
+## Backup
+Il backup salva anche il numero di carte senza prezzo e delle Play! da verificare.
