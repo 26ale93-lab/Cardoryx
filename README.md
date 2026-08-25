@@ -171,3 +171,11 @@ V4.7 Name-First: scanner ranking priority changed to Name > Set > Number. Collec
 - Numero + Totale Set mantiene la ricerca precisa V5.0.
 - Nome resta prioritario quando presente.
 - Cache PWA `cardoryx-v5.1.0`.
+
+
+## V5.2 — Zoom immagini
+- Tocca l'immagine di una carta nei risultati per aprirla a schermo quasi intero.
+- Funziona anche nel browser del set.
+- Prova automaticamente l'immagine `high.webp`, con fallback alla versione già caricata.
+- Chiusura con X o tocco fuori dall'immagine.
+- Cache PWA `cardoryx-v5.2.0`.

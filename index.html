@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V5.1</title>
+<title>Cardoryx V5.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -155,6 +155,28 @@
 .search-mode-note{margin-top:10px;padding:10px 12px;border-radius:14px;background:#f8fafc;border:1px solid #e5e7eb;color:#475467;font-size:12px;line-height:1.4}
 .set-view-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 12px}
 .set-view-head h3{margin:0;font-size:20px}
+
+
+.card-zoomable{cursor:zoom-in}
+.image-lightbox{
+  position:fixed;inset:0;z-index:99999;background:rgba(8,12,22,.92);
+  display:none;align-items:center;justify-content:center;padding:18px;
+}
+.image-lightbox.open{display:flex}
+.image-lightbox img{
+  max-width:96vw;max-height:88vh;object-fit:contain;border-radius:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+}
+.image-lightbox-close{
+  position:absolute;top:max(18px,env(safe-area-inset-top));right:18px;
+  width:48px;height:48px;border:0;border-radius:50%;font-size:28px;
+  background:#fff;color:#111827;font-weight:800;cursor:pointer;
+}
+.image-lightbox-hint{
+  position:absolute;bottom:max(18px,env(safe-area-inset-bottom));
+  left:50%;transform:translateX(-50%);color:#fff;font-size:13px;
+  background:rgba(0,0,0,.35);padding:8px 12px;border-radius:999px;
+}
 
 </style>
 </head>
@@ -795,6 +817,36 @@ async function fetchFullCandidate(c){
 }
 
 
+
+function openCardZoom(src){
+  if(!src)return;
+  const box=document.getElementById('imageLightbox');
+  const img=document.getElementById('imageLightboxImg');
+  if(!box||!img)return;
+  // Prefer high resolution when TCGdex image base URL is available.
+  let high=String(src).replace(/\/low\.webp(?:\?.*)?$/,'/high.webp');
+  img.src=high;
+  img.onerror=()=>{img.onerror=null;img.src=src;};
+  box.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeCardZoom(e){
+  const box=document.getElementById('imageLightbox');
+  if(e && e.target && e.target.id==='imageLightboxImg')return;
+  if(box)box.classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCardZoom();});
+
+document.addEventListener('click',function(e){
+  const img=e.target.closest && e.target.closest('.candidate img, #confirmCard img, .selected-card img');
+  if(img && !img.closest('#imageLightbox')){
+    e.preventDefault();
+    openCardZoom(img.src);
+  }
+});
+
+
 let browseSetState={set:null,cards:[],shown:0,pageSize:12};
 
 async function fetchAllSets(){
@@ -868,7 +920,7 @@ function renderFullSetChunk(){
     const key=`set_${i}`;
     candidateMap[key]=c;
     return `<div class="candidate">
-      <img src="${c.image?c.image+'/low.webp':''}" onerror="this.style.visibility='hidden'">
+      <img class="card-zoomable" src="${c.image?c.image+'/low.webp':''}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
       <h3>${esc(c.name||'Carta')}</h3>
       <div class="small">N° ${esc(c.localId||'—')}</div>
       <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
@@ -937,7 +989,7 @@ async function searchCards(opts={}){
         candidateMap[key]=c;
         const count=setOfficialCount(c);
         return `<div class="candidate">
-          <img src="${c.image?c.image+'/low.webp':''}" onerror="this.style.visibility='hidden'">
+          <img class="card-zoomable" src="${c.image?c.image+'/low.webp':''}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
           <h3>${esc(c.name)}</h3>
           <div class="small">N° ${esc(c.localId)}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
           <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
@@ -977,7 +1029,7 @@ async function searchCards(opts={}){
       const count=setOfficialCount(c);
       const isExact=autoCandidate?.id===c.id;
       return `<div class="candidate ${isExact?'best':''}">
-        <img src="${c.image?c.image+'/low.webp':''}" onerror="this.style.visibility='hidden'">
+        <img class="card-zoomable" src="${c.image?c.image+'/low.webp':''}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
         <h3>${esc(c.name)}</h3>
         <div class="small">N° ${esc(c.localId)}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
         ${isExact?'<span class="rank-badge">★ CORRISPONDENZA ESATTA</span>':''}
@@ -1381,4 +1433,11 @@ document.getElementById('cardDetailModal')?.addEventListener('click',e=>{
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 renderAll();renderSettings();
 </script>
+
+<div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom(event)">
+  <button class="image-lightbox-close" type="button" aria-label="Chiudi" onclick="closeCardZoom(event)">×</button>
+  <img id="imageLightboxImg" alt="Carta ingrandita">
+  <div class="image-lightbox-hint">Tocca fuori dalla carta per chiudere</div>
+</div>
+
 </body></html>
