@@ -57,6 +57,7 @@
 .collection-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#dbeafe}
 .collection-card-img{width:96px;height:134px;object-fit:contain;border-radius:11px;background:#f3f4f6;cursor:zoom-in}
 .collection-card-main{min-width:0}
+.price-main{font-size:18px;font-weight:900;color:#166534;margin-top:7px}.price-sub{font-size:11px;color:#6b7280;margin-top:2px}.value-hero{background:linear-gradient(135deg,#052e16,#166534);color:#fff;border-radius:18px;padding:16px;margin:12px 0}.value-hero .value-total{font-size:32px;font-weight:900;margin-top:4px}.value-hero .small{color:#d1fae5}.value-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .collection-card h3{font-size:18px;line-height:1.1;margin:2px 0 5px}
 .collection-sub{font-size:12px;color:#6b7280;line-height:1.4;margin-bottom:8px}
 .collection-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
@@ -411,6 +412,14 @@
       <div class="stats-mini"><div class="n" id="statCopies">0</div><div class="l">Carte totali</div></div>
       <div class="stats-mini"><div class="n" id="statHolo">0</div><div class="l">Holo / speciali</div></div>
       <div class="stats-mini"><div class="n" id="statNM">0</div><div class="l">Condizione NM</div></div>
+    </div>
+
+    <div class="value-hero">
+      <div class="small">💰 VALORE COLLEZIONE · CARDMARKET</div>
+      <div class="value-total" id="collectionValue">€0,00</div>
+      <div class="small" id="collectionValueInfo">Valore indicativo basato sul trend Cardmarket disponibile.</div>
+      <div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">↻ Aggiorna valori</button><button class="btn alt" type="button" onclick="showView('catalog')">📚 Vedi carte</button></div>
+      <div id="priceRefreshStatus" class="footer-note"></div>
     </div>
 
     <div class="category-hero">
@@ -1350,7 +1359,7 @@ function toggleManualEnergy(){
 function meeEnergyEmoji(t){return ({Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️'})[t]||'⚡'}
 function renderMeeEnergyGrid(){
   const g=document.getElementById('meeEnergyGrid'); if(!g)return;
-  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<div class="btn alt" style="min-height:170px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:flex-start"><div style="min-height:104px;display:flex;align-items:center;justify-content:center"><img src="${meeImageUrl(num)}" style="width:74px;height:104px;object-fit:contain;border-radius:8px" onerror="setMeeImageFallback(this,'${num}',0)" onclick="event.stopPropagation();openCardZoom(this.src)"></div><button type="button" style="border:0;background:transparent;font:inherit;padding:0;cursor:pointer" onclick="selectMeeEnergy('${num}')"><div><b>${meeEnergyEmoji(e.type)} ${e.type}</b></div><div class="small">MEE IT ${num}</div></button><a class="mee-source-link" href="${meeOfficialPage(num)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Fonte Pokémon ↗</a></div>`).join('');
+  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<div class="btn alt" style="min-height:170px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:flex-start"><div style="min-height:104px;display:flex;align-items:center;justify-content:center"><img src="${meeImageUrl(num)}" style="width:74px;height:104px;object-fit:contain;border-radius:8px" onerror="setMeeImageFallback(this,'${num}',0)" onclick="event.stopPropagation();openCardZoom(this.src)"></div><button type="button" style="border:0;background:transparent;font:inherit;padding:0;cursor:pointer" onclick="selectMeeEnergy('${num}')"><div><b>${meeEnergyEmoji(e.type)} ${e.type}</b></div><div class="small">MEE IT ${num}</div></button></div>`).join('');
 }
 async function selectMeeEnergy(num){
   num=String(num).padStart(3,'0');
@@ -1889,6 +1898,7 @@ function saveSelected(){
       image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',imageCandidates:selectedCard._imageCandidates||[],officialPage:selectedCard._officialPage||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:selectedVariant(),status:selectedStatus(),condition:selectedCondition(),
+      pricing:selectedCard.pricing||null,priceUpdatedAt:selectedCard.pricing?.cardmarket?.updated||'',
       qty:1,addedAt:new Date().toISOString()
     };
 
@@ -2091,6 +2101,38 @@ function saveCardNotes(){
   }
 }
 
+function euro(v){return Number.isFinite(Number(v))?Number(v).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
+function cardUnitPrice(c){
+  const cm=c?.pricing?.cardmarket;if(!cm)return null;
+  const v=String(c.variant||'Normale').toLowerCase();
+  let n=null;
+  if(v.includes('holo') && !v.includes('reverse')) n=cm['trend-holo'] ?? cm['avg-holo'] ?? null;
+  else n=cm.trend ?? cm.avg ?? null;
+  n=Number(n);return Number.isFinite(n)&&n>=0?n:null;
+}
+function cardPriceHtml(c){
+  const u=cardUnitPrice(c),q=Number(c.qty)||1;
+  if(u==null)return `<div class="price-main" style="color:#6b7280">Valore non disponibile</div><div class="price-sub">Cardmarket · nessun prezzo associato</div>`;
+  const total=u*q;
+  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">Trend Cardmarket · ${esc(c.variant||'Normale')}${c.priceUpdatedAt?' · agg. '+new Date(c.priceUpdatedAt).toLocaleDateString('it-IT'):''}</div>`;
+}
+function collectionMarketValue(){return db.reduce((sum,c)=>{const u=cardUnitPrice(c);return sum+(u==null?0:u*(Number(c.qty)||1))},0)}
+function pricedCopies(){return db.reduce((n,c)=>n+(cardUnitPrice(c)==null?0:(Number(c.qty)||1)),0)}
+async function refreshPriceForRecord(c){
+  if(!c?.id || String(c.id).startsWith('mee-local-'))return false;
+  try{
+    const r=await fetch(`${API}/cards/${encodeURIComponent(c.id)}`);if(!r.ok)return false;
+    const full=await r.json();
+    if(full?.pricing){c.pricing=full.pricing;c.priceUpdatedAt=full.pricing?.cardmarket?.updated||new Date().toISOString();return true}
+  }catch(e){}
+  return false;
+}
+async function refreshAllPrices(){
+  const st=document.getElementById('priceRefreshStatus');let ok=0,done=0;
+  if(st)st.textContent='Aggiornamento prezzi…';
+  for(const c of db){done++;if(await refreshPriceForRecord(c))ok++;if(st)st.textContent=`Aggiornamento ${done}/${db.length}…`}
+  persist();renderCatalog();renderStats();if(st)st.textContent=`Aggiornati ${ok} record su ${db.length}.`;
+}
 function catalogUniqueCount(){return db.length}
 function catalogCopyCount(){return db.reduce((a,c)=>a+(Number(c.qty)||1),0)}
 function catalogHoloCount(){return db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Speciale / Altro'].includes(c.variant||'')).reduce((a,c)=>a+(Number(c.qty)||1),0)}
@@ -2152,6 +2194,7 @@ function renderCatalog(){
         <div class="collection-card-main">
           <h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
           <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
+          ${cardPriceHtml(c)}
           <div class="collection-badges">
             <span class="collection-badge">${esc(cardCategory(c))}</span>
             <span class="collection-badge">${esc(c.variant||'Normale')}</span>
@@ -2179,6 +2222,7 @@ function deleteRecord(key){
 
 function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
 function renderStats(){
+  const cv=document.getElementById('collectionValue'),ci=document.getElementById('collectionValueInfo');if(cv)cv.textContent=euro(collectionMarketValue());if(ci)ci.textContent=`${pricedCopies()} carte valorizzate su ${catalogCopyCount()} · trend Cardmarket disponibile.`;
   const su=document.getElementById('statUnique'), sc=document.getElementById('statCopies'), sh=document.getElementById('statHolo'), sn=document.getElementById('statNM');
   if(su)su.textContent=catalogUniqueCount();
   if(sc)sc.textContent=catalogCopyCount();
