@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.9 Play Price Resolver</title>
+<title>Cardoryx V1.8.0 Dynamic Play Price Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2615,6 +2615,96 @@ function playAutoValuation(card){
   return {value:null,exact:false,series:m.series||[],source:m.source,updated:m.verified};
 }
 
+
+
+// V1.8.0 — resolver dinamico Play! Pokémon / Prize Pack.
+// Il catalogo locale resta un fallback; quando manca un prezzo tenta una
+// risoluzione live della pagina Cardmarket della Prize Pack Series selezionata.
+const PLAY_SERIES_MARKET_SLUG={
+  '7':'Play-Pokemon-Prize-Pack-Series-Seven',
+  '8':'Play-Pokemon-Prize-Pack-Series-Eight',
+  '9':'Play-Pokemon-Prize-Pack-Series-Nine'
+};
+const PLAY_SET_CODE={
+  'fiammespettrali':'PFL','equilibrioperfetto':'POR','megaevoluzione':'MEG',
+  'avventureinsieme':'JTG','fuocobianco':'WHT','lucebianca':'BLK',
+  'ascesadeglieroi':'ASC','rivalkdestinies':'DRI'
+};
+function playSetCode(card){
+  const raw=normText(card?.set?.name||card?.set||'');
+  return PLAY_SET_CODE[raw]||String(card?.set?.abbreviation||card?.set?.code||'').toUpperCase();
+}
+function playCollector(card){return (String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));}
+function parseEuroText(x){
+  const m=String(x||'').match(/([0-9]+(?:[.,][0-9]{1,2})?)\s*€/);return m?Number(m[1].replace(',','.')):null;
+}
+async function fetchPublicText(url){
+  const attempts=[url,`https://r.jina.ai/http://${url.replace(/^https?:\/\//,'')}`];
+  for(const u of attempts){
+    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const t=await r.text();if(t&&t.length>80)return t}}catch(e){}
+  }
+  return '';
+}
+function cardmarketProductUrlsFromListing(text,card,series){
+  const num=playCollector(card),code=playSetCode(card),urls=[];
+  const urlRe=/https?:\/\/www\.cardmarket\.com\/[^\s)"']+\/Pokemon\/Products\/Singles\/Play-Pokemon-Prize-Pack-Series-[^\s)"']+\/[^\s)"']+/gi;
+  for(const m of String(text||'').matchAll(urlRe)){
+    const u=m[0].replace(/[>.,]+$/,'');
+    const probe=decodeURIComponent(u).toUpperCase();
+    if(probe.includes(`PPS${series}`)&&probe.match(new RegExp(`[-_]0*${num}(?:\\D|$)`))&&(!code||probe.includes(code)))urls.push(u);
+  }
+  // HTML href relative
+  const relRe=/href=["']([^"']*\/Pokemon\/Products\/Singles\/Play-Pokemon-Prize-Pack-Series-[^"']+)["']/gi;
+  for(const m of String(text||'').matchAll(relRe)){
+    const u=m[1].startsWith('http')?m[1]:`https://www.cardmarket.com${m[1]}`;
+    const probe=decodeURIComponent(u).toUpperCase();
+    if(probe.includes(`PPS${series}`)&&probe.match(new RegExp(`[-_]0*${num}(?:\\D|$)`))&&(!code||probe.includes(code)))urls.push(u);
+  }
+  return [...new Set(urls)].slice(0,6);
+}
+function parseCardmarketPricePage(text,url){
+  const t=String(text||'');
+  const grab=(labels)=>{for(const label of labels){const i=t.toLowerCase().indexOf(label.toLowerCase());if(i>=0){const v=parseEuroText(t.slice(i,i+150));if(v!=null)return v}}return null};
+  const low=grab(['From','Da','ab','De']);
+  const trend=grab(['Price Trend','Tendenza dei prezzi','Prezzo-Trend','Tendance des prix']);
+  const avg30=grab(['30-days average price','Prezzo medio 30 giorni','30-Tages-Durchschnitt','Prix moyen 30 jours']);
+  const avg7=grab(['7-days average price','Prezzo medio 7 giorni','7-Tages-Durchschnitt','Prix moyen 7 jours']);
+  if(low==null&&trend==null&&avg7==null&&avg30==null)return null;
+  let version='';const vm=String(url||'').match(/-V([12])-/i);if(vm)version=vm[1];
+  return {low,trend,avg7,avg30,version,url};
+}
+async function resolveLivePlayPrice(card,series,finish){
+  const ps=normalizedPlaySeries(series);if(!ps||!PLAY_SERIES_MARKET_SLUG[ps])return null;
+  const slug=PLAY_SERIES_MARKET_SLUG[ps];
+  // Le prime pagine contengono normalmente le ristampe più recenti; scandisci fino a 6 pagine.
+  let urls=[];
+  for(let page=1;page<=6&&!urls.length;page++){
+    const base=`https://www.cardmarket.com/en/Pokemon/Products/Singles/${slug}${page>1?`?site=${page}`:''}`;
+    const text=await fetchPublicText(base);if(!text)continue;
+    urls=cardmarketProductUrlsFromListing(text,card,ps);
+  }
+  if(!urls.length)return null;
+  const rows=[];
+  for(const u of urls){const text=await fetchPublicText(u);const r=parseCardmarketPricePage(text,u);if(r)rows.push(r)}
+  if(!rows.length)return null;
+  const f=canonicalVariant(finish||'Normal');
+  let chosen=null;
+  // Cardmarket tende a usare V1 per stampa standard e V2 per la versione foil/Cosmos.
+  if(['Holo','Cosmos Holo','Reverse Holo'].includes(f))chosen=rows.find(x=>x.version==='2')||null;
+  else if(f==='Normal')chosen=rows.find(x=>x.version==='1')||null;
+  if(!chosen&&rows.length===1)chosen=rows[0];
+  if(chosen){return {...chosen,value:Number(chosen.trend??chosen.avg7??chosen.avg30??chosen.low)||null,exact:true,source:'Cardmarket · Play! Pokémon · live',updated:new Date().toISOString().slice(0,10)}}
+  const vals=rows.map(x=>Number(x.trend??x.avg7??x.avg30??x.low)).filter(Number.isFinite);
+  const lows=rows.map(x=>Number(x.low)).filter(Number.isFinite);
+  return {value:null,exact:false,ambiguous:true,minValue:vals.length?Math.min(...vals):null,maxValue:vals.length?Math.max(...vals):null,offerLow:lows.length?Math.min(...lows):null,offerHigh:lows.length?Math.max(...lows):null,versions:rows.length,source:'Cardmarket · Play! Pokémon · live',updated:new Date().toISOString().slice(0,10)};
+}
+function storedLivePlayPrice(card,series,finish){
+  const x=card?.livePlayPrice;if(!x)return null;
+  if(normalizedPlaySeries(x.series)!==normalizedPlaySeries(series))return null;
+  if(canonicalVariant(x.finish||'Normal')!==canonicalVariant(finish||'Normal'))return null;
+  return x;
+}
+
 const VERIFIED_PLAY_SERIES_PRICES = {
   // Zoroark-ex di N — Avventure Insieme 098
   'avventure insieme|098|Holo|7': {
@@ -2852,6 +2942,34 @@ async function renderScanValue(card){
       return;
     }
     if(selStamp==='Play! Pokémon' && !playPrice){
+      // V1.8.0: se il catalogo locale non basta, interroga Cardmarket live.
+      if(selSeries){
+        valueEl.textContent='Cerco prezzo Play!…';
+        metaEl.textContent=`Cardmarket · Series ${selSeries} · ricerca live…`;
+        const live=await resolveLivePlayPrice(scanPriceCard||card,selSeries,selVariant);
+        if(live){
+          if(selectedCard)selectedCard.livePlayPrice={...live,series:selSeries,finish:canonicalVariant(selVariant)};
+          if(scanPriceCard)scanPriceCard.livePlayPrice={...live,series:selSeries,finish:canonicalVariant(selVariant)};
+          if(live.value!=null){
+            valueEl.textContent=scanEuro(live.value);
+            metaEl.textContent=`${live.source} · Series ${selSeries} · aggiornato ${live.updated}`;
+            document.getElementById('scanLowPrice').textContent=scanEuro(live.low);
+            document.getElementById('scanTrendPrice').textContent=scanEuro(live.trend);
+            document.getElementById('scanAvg7Price').textContent=scanEuro(live.avg7);
+            document.getElementById('scanMarketStats').classList.remove('hidden');
+            document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
+            document.getElementById('scanProtectionAdvice').innerHTML=variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">✓ Prezzo Play! recuperato dinamicamente da Cardmarket.</div>';
+            return;
+          }
+          if(live.ambiguous){
+            const lo=live.minValue??live.offerLow,hi=live.maxValue??live.offerHigh;
+            valueEl.textContent=(lo!=null&&hi!=null)?`${scanEuro(lo)}–${scanEuro(hi)}`:'Valore da verificare';
+            metaEl.textContent=`${live.source} · più versioni Cardmarket · seleziona la finitura corretta`;
+            document.getElementById('scanProtectionAdvice').innerHTML=variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">≈ Esistono più versioni Play! della stessa carta. Il prezzo non viene forzato finché la finitura non identifica una versione.</div>';
+            return;
+          }
+        }
+      }
       valueEl.textContent='Valore da verificare';
       if(playAuto?.ambiguous){
         metaEl.textContent=`Play! Pokémon · possibile Series ${playAuto.series.join(' / ')} · seleziona la serie per il prezzo esatto`;
@@ -3227,6 +3345,7 @@ function cardValuationState(c){
   const info=cardPriceInfo(c);
   if(info.value!=null)return {status:info.ambiguous?'estimated':'priced',value:info.value,info,message:info.ambiguous?`Serie compatibili ${info.seriesCandidates.join(' / ')} · trend ${euro(info.minValue)}–${euro(info.maxValue)}`:''};
   if(info.kind==='play-offers-only')return {status:'estimated',value:null,info,message:`Series ${info.seriesCandidates.join(' / ')} · offerte Cardmarket da ${euro(info.offerLow)} a ${euro(info.offerHigh)} · trend non disponibile`};
+  if(info.kind==='play-live-ambiguous')return {status:'estimated',value:null,info,message:`Più versioni Cardmarket · ${info.minValue!=null&&info.maxValue!=null?`${euro(info.minValue)}–${euro(info.maxValue)}`:'seleziona la finitura corretta'}`};
   const stamp=canonicalStamp(c?.stamp||'None'),ps=normalizedPlaySeries(c?.playSeries||'');
   if(stamp==='Play! Pokémon'){const candidates=info.seriesCandidates||[];return {status:ps?'unavailable':'ambiguous',value:null,info,message:candidates.length?`Serie compatibili: ${candidates.join(' / ')}`:(ps?`Prezzo specifico Play! Pokémon Series ${ps} non ancora disponibile`:'Versione Play! Pokémon da verificare')}}
   return {status:'unavailable',value:null,info,message:'Valore non disponibile'};
@@ -3241,6 +3360,11 @@ function ambiguousCopyCount(){
 function cardPriceInfo(c){
   const variant=canonicalVariant(c?.variant||'Normal'),stamp=canonicalStamp(c?.stamp||'None'),series=normalizedPlaySeries(c?.playSeries||'');
   if(stamp==='Play! Pokémon'){
+    const live=storedLivePlayPrice(c,series,variant);
+    if(live){
+      if(live.value!=null)return {value:Number(live.value),exact:!!live.exact,source:live.source||'Cardmarket · Play! Pokémon · live',updated:live.updated||'',stamp,series};
+      if(live.ambiguous)return {value:null,exact:false,kind:'play-live-ambiguous',minValue:live.minValue,maxValue:live.maxValue,offerLow:live.offerLow,offerHigh:live.offerHigh,source:live.source||'Cardmarket · Play! Pokémon · live',updated:live.updated||'',stamp,series};
+    }
     const auto=playAutoValuation(c);
     if(auto?.value!=null)return {value:auto.value,exact:!!auto.exact,ambiguous:!!auto.ambiguous,minValue:auto.minValue,maxValue:auto.maxValue,seriesCandidates:auto.series||[],source:auto.source,updated:auto.updated||'',stamp,series};
     if(auto?.offersOnly)return {value:null,exact:false,offerLow:auto.offerLow,offerHigh:auto.offerHigh,seriesCandidates:auto.series||[],source:auto.source,updated:auto.updated||'',kind:'play-offers-only',stamp,series};
@@ -3264,6 +3388,7 @@ function cardPriceHtml(c){
     if(info?.kind==='play-offers-only' && Number.isFinite(Number(info.offerLow)) && Number.isFinite(Number(info.offerHigh))){
       return `<div class="price-main">${euro(info.offerLow)}–${euro(info.offerHigh)}</div><div class="price-sub">Cardmarket · intervallo offerte · ${esc(combo)} · trend non disponibile</div>`;
     }
+    if(info?.kind==='play-live-ambiguous'){const lo=info.minValue??info.offerLow,hi=info.maxValue??info.offerHigh;if(lo!=null&&hi!=null)return `<div class="price-main">${euro(lo)}–${euro(hi)}</div><div class="price-sub">Cardmarket live · più versioni · ${esc(combo)}</div>`;}
     const title=state.status==='estimated'?'Valore indicativo':(state.status==='ambiguous'?'Valore da verificare':'Valore non disponibile');return `<div class="price-main" style="color:#6b7280">${title}</div><div class="price-sub">${esc(state.message||'Cardmarket · nessun prezzo associato')}</div>`
   }
   const total=u*q,label=info.ambiguous?'Stima da trend Cardmarket':(info.exact?'Cardmarket · versione verificata':'Trend Cardmarket'),range=info.ambiguous&&info.minValue!=null?` · range ${euro(info.minValue)}–${euro(info.maxValue)}`:'',series=info.seriesCandidates?.length?` · Series ${info.seriesCandidates.join('/')}`:'';
@@ -3304,6 +3429,10 @@ async function resolveTcgdexIdForRecord(c){
   c.id=best.id;c.tcgdexId=best.id;if(!c.set&&best.set?.name)c.set=best.set.name;return best.id;
 }
 async function refreshPriceForRecord(c){
+  if(canonicalStamp(c?.stamp||'None')==='Play! Pokémon'&&normalizedPlaySeries(c?.playSeries||'')){
+    const live=await resolveLivePlayPrice(c,c.playSeries,c.variant||'Normal');
+    if(live){c.livePlayPrice={...live,series:normalizedPlaySeries(c.playSeries),finish:canonicalVariant(c.variant||'Normal')};c.priceUpdatedAt=live.updated||new Date().toISOString();return true;}
+  }
   if(String(c?.id||'').startsWith('mee-local-'))return false;
   const id=await resolveTcgdexIdForRecord(c);if(!id)return false;
   const full=await fetchFullCardForPrice(id);
