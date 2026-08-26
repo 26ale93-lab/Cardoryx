@@ -1,4 +1,4 @@
-# Cardoryx V1.7.3 — Resolver Hydration Fix
+# Cardoryx V1.7.4 — Play Price Fix
 
 Correzione applicata direttamente alla V1.7.2 caricata.
 
