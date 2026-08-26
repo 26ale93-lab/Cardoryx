@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.8.3 Official Product Catalogue Resolver</title>
+<title>Cardoryx V1.8.4 Metacard Bridge Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2617,7 +2617,7 @@ function playAutoValuation(card){
 
 
 
-// V1.8.3 — il resolver Play! non usa più scraping/Jina/Cardmarket HTML.
+// V1.8.4 — il resolver Play! non usa più scraping/Jina/Cardmarket HTML.
 // I prezzi vengono risolti esclusivamente dai download pubblici ufficiali Cardmarket.
 
 function storedLivePlayPrice(card,series,finish){
@@ -2628,7 +2628,7 @@ function storedLivePlayPrice(card,series,finish){
 }
 
 
-// V1.8.3 — Product Catalogue + Price Guide ufficiali Cardmarket.
+// V1.8.4 — Metacard Bridge + Product Catalogue + Price Guide ufficiali Cardmarket.
 // Il catalogo trova l'idProduct Prize Pack da Series + codice set + numero carta;
 // il Price Guide fornisce poi low/trend/avg7/avg30. Nessuno scraping runtime.
 const CM_OFFICIAL_PRODUCT_CATALOG_URL='https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json';
@@ -2692,21 +2692,51 @@ function tcgdexPlayCMIds(card){
 }
 function cmProductName(row){return String(row?.name??row?.Name??row?.productName??'')}
 function cmProductId(row){return Number(row?.idProduct??row?.id_product??row?.id)}
-function cmCatalogPlayIds(rows,card,series){
-  const ps=normalizedPlaySeries(series),code=playSetCode(card),num=playCollector(card);
-  if(!ps||!code||!num)return [];
-  const targetNum=String(Number(num));
-  const token=`PPS${ps}`.toUpperCase();
-  const out=[];
+function cmRowExpansion(row){return Number(row?.idExpansion??row?.id_expansion)}
+function cmRowMetacard(row){return Number(row?.idMetacard??row?.id_metacard)}
+function romanSeriesWord(n){return {1:'One',2:'Two',3:'Three',4:'Four',5:'Five',6:'Six',7:'Seven',8:'Eight',9:'Nine',10:'Ten'}[Number(n)]||String(n)}
+function cmPrizeExpansionIds(rows,series){
+  const ps=normalizedPlaySeries(series); if(!ps)return [];
+  const word=romanSeriesWord(ps).toLowerCase();
+  const needles=[`play! pokémon prize pack series ${word}`,`play! pokemon prize pack series ${word}`,`prize pack series ${word}`];
+  const ids=[];
   for(const row of rows){
-    const name=cmProductName(row),upper=name.toUpperCase();
-    if(!upper.includes(token)||!upper.includes(code.toUpperCase()))continue;
-    // Cardmarket nomina le Prize Pack come: Nome (PPS9 PFL 089).
-    const m=upper.match(new RegExp(`PPS${ps}\\s+${code.toUpperCase()}\\s+0*(\\d+)`));
-    if(!m||String(Number(m[1]))!==targetNum)continue;
-    const id=cmProductId(row);if(Number.isFinite(id)&&id>0)out.push(id);
+    const n=cmProductName(row).toLowerCase();
+    // Le Code Card hanno il nome della Prize Pack Series e ci permettono di ricavare idExpansion senza tabella manuale.
+    if(needles.some(x=>n.includes(x))){const id=cmRowExpansion(row);if(Number.isFinite(id)&&id>0)ids.push(id)}
   }
-  return [...new Set(out)];
+  return [...new Set(ids)];
+}
+function tcgdexBaseCMIds(card){
+  const list=Array.isArray(card?.variants_detailed)?card.variants_detailed:[];
+  const ids=[];
+  for(const x of list){
+    const id=Number(x?.thirdParty?.cardmarket);
+    const stamped=(x?.stamp||[]).length||x?.foil==='player-reward'||x?.foil==='league';
+    if(Number.isFinite(id)&&id>0&&!stamped)ids.push(id);
+  }
+  return [...new Set(ids)];
+}
+function cmCatalogPlayIds(rows,card,series){
+  const expansionIds=cmPrizeExpansionIds(rows,series);
+  if(!expansionIds.length)return [];
+  const expSet=new Set(expansionIds);
+  // Ponte robusto: TCGdex idProduct della stampa base -> catalogo Cardmarket -> idMetacard -> stessa metacard nella Prize Pack Series.
+  const byProduct=new Map();
+  for(const row of rows){const id=cmProductId(row);if(Number.isFinite(id))byProduct.set(id,row)}
+  const meta=new Set();
+  for(const id of tcgdexBaseCMIds(card)){const r=byProduct.get(id),m=cmRowMetacard(r);if(Number.isFinite(m)&&m>0)meta.add(m)}
+  let candidates=[];
+  if(meta.size){
+    candidates=rows.filter(r=>expSet.has(cmRowExpansion(r))&&meta.has(cmRowMetacard(r)));
+  }
+  // Fallback controllato: nome inglese della stampa base ricavato dal catalogo, sempre limitato alla Series corretta.
+  if(!candidates.length){
+    const names=new Set();
+    for(const id of tcgdexBaseCMIds(card)){const r=byProduct.get(id);if(r)names.add(normText(cmProductName(r)))}
+    if(names.size)candidates=rows.filter(r=>expSet.has(cmRowExpansion(r))&&names.has(normText(cmProductName(r))));
+  }
+  return [...new Set(candidates.map(cmProductId).filter(id=>Number.isFinite(id)&&id>0))];
 }
 function cmOfficialRowToPrice(row,id,finish,createdAt=''){
   if(!row)return null;
@@ -2726,7 +2756,7 @@ async function resolveOfficialPlayPrice(card,series,finish){
   const ps=normalizedPlaySeries(series);if(!ps)return null;
   const guide=await loadOfficialCMPriceGuide();
   let ids=tcgdexPlayCMIds(card);
-  // TCGdex spesso non espone l'id della variante Prize Pack: risoluzione ufficiale dal Product Catalogue.
+  // Se TCGdex non espone la variante Prize Pack, usa il ponte idProduct base → idMetacard → espansione Prize Pack.
   if(!ids.length){
     const catalog=await loadOfficialCMProductCatalog();
     ids=cmCatalogPlayIds(catalog.rows,card,ps);

@@ -1,3 +1,7 @@
+# Cardoryx V1.8.4 — Metacard Bridge Resolver
+
+V1.8.4 corregge il resolver Play! usando il ponte Cardmarket idProduct della stampa base → idMetacard → idExpansion della Prize Pack Series → idProduct variante → Price Guide. L’idExpansion della Series viene individuato dal catalogo tramite le relative Code Card, evitando mapping manuali carta-per-carta. Se esistono più prodotti compatibili V1/V2, Cardoryx mantiene un range invece di inventare un prezzo singolo.
+
 # Cardoryx V1.8.3 — Official Cardmarket Price Guide
 
 Correzione applicata direttamente alla V1.7.2 caricata.
