@@ -1,14 +1,21 @@
-# Cardoryx V1.6.2 — OCR Numero/Set
+# Cardoryx V1.7.0 — Collector Code Scanner
 
-Lo scanner ora privilegia realmente il codice stampato in basso a sinistra.
+Cambio del metodo di riconoscimento.
 
-- 3 ritagli stretti diversi della zona Numero/Set.
-- Più livelli di contrasto.
-- OCR dedicato con whitelist numerica.
-- I migliori codici letti vengono verificati contro TCGdex prima di essere accettati.
-- Evita di fidarsi ciecamente di letture errate come `005/159`.
-- Se riconosce `146/159`, compila automaticamente i campi Scanner Pro.
-- Il nome OCR viene usato solo se Numero/Set non identifica la carta.
-- `Ritaglia / raddrizza` viene ora usato realmente anche dall'OCR.
+## Nome OCR disattivato
+Il nome non viene più usato per identificare automaticamente la carta.
+Tesseract.js può leggere male font, foil, riflessi e testi stilizzati.
+
+## Flusso
+1. Cardoryx legge la zona Numero / Totale set.
+2. Verifica il codice con TCGdex.
+3. Mostra le carte reali compatibili.
+4. Il nome viene preso dal database TCGdex.
+5. Se Numero/Set non viene letto, Cardoryx chiede soltanto i due numeri manualmente.
+
+Esempio:
+`146 / 159` → TCGdex → `Ricerca di Brock`.
+
+Il vecchio OCR del nome non può più generare stringhe casuali e far scegliere la carta sbagliata.
 
 Database, prezzi, Play! Pokémon, catalogo e backup restano invariati.

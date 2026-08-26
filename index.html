@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.6.2 OCR Numero/Set</title>
+<title>Cardoryx V1.7.0 Collector Code Scanner</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -377,17 +377,18 @@
       <div id="scanStatusPro" class="scan-status-pro">Pronto. Prima Numero/Set, poi il nome solo se serve.</div>
       <div class="scan-mode-row">
         <span id="modeCode" class="scan-mode-chip active">1 · Numero/Set</span>
-        <span id="modeNameSet" class="scan-mode-chip">2 · Nome + Set</span>
-        <span id="modeName" class="scan-mode-chip">3 · Nome</span>
+        <span id="modeNameSet" class="scan-mode-chip">2 · Verifica database</span>
+        <span id="modeName" class="scan-mode-chip">3 · Conferma</span>
       </div>
       <div id="scanFallbackInfo"></div>
 
 
-      <div id="ocrStatus" class="footer-note">Cardoryx legge più volte la zona Numero/Set e verifica il risultato con TCGdex. Il nome viene usato solo come fallback.</div>
+      <div id="ocrStatus" class="footer-note">Cardoryx identifica la carta dal codice collezione. Il nome arriva dal database TCGdex.</div>
     </div>
 
     <div class="scanner-pro-panel">
-  <div class="scanner-pro-title">🔎 Scanner Pro — numero carta</div>
+  <div class="scanner-pro-title">🔎 Collector Code Scanner</div>
+<div class="small" style="margin-top:4px">Il nome non viene letto dalla foto: dopo Numero/Set Cardoryx prende il nome ufficiale da TCGdex.</div>
 <div class="card">
       <div class="section-title">2. Cerca la carta</div>
       <div><div class="label">Nome</div><input id="nameInput" placeholder="es. Kilowattrel di Kissara"></div>
@@ -395,7 +396,7 @@
         <div><div class="label">Numero</div><input id="numberInput" inputmode="numeric" placeholder="es. 055"></div>
         <div><div class="label">Totale set</div><input id="setTotalInput" inputmode="numeric" placeholder="es. 159"></div>
       </div>
-      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V1.6.2 · Numero-First: Cardoryx legge più volte solo la zona inferiore <strong>Numero/Set</strong>, verifica i codici trovati con TCGdex e usa il nome soltanto se serve.</div>
+      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V1.7.0 · Collector Code Scanner: Cardoryx identifica la carta da <strong>numero / totale set</strong>. Il nome OCR non viene più usato per decidere la carta.</div>
       <div id="searchMsg" class="footer-note"></div>
       <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
       <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
@@ -1175,7 +1176,7 @@ function applyCardCrop(){
   document.addEventListener('input',e=>{if(e.target?.id===id)renderCardCrop()});
 });
 
-function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò prima la zona Numero/Set con più letture.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
+function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Leggerò Numero/Totale set. Il nome OCR è disattivato.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -2139,36 +2140,22 @@ async function runSmartOCR(){
       return;
     }
 
-    // STEP 2 — collector code itself was not readable: then and only then use the name.
+    // STEP 2 — collector code itself was not readable.
+    // Do not OCR the card name automatically: stylized TCG text causes false names.
     if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';
     if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';
-    setScannerRoute('Numero/Set non leggibile. Passo all’OCR del nome.','warn');
-    setScanProgress(52,'Numero/Set non leggibile: leggo il nome…');
+    lastOCR={name:'',number:'',total:''};
+    nameInput.value='';
 
-    const rawName=await readNameOnlyWhenNeeded(img);
-    lastOCR.name=rawName||'';
-    nameInput.value=rawName||'';
-
-    if(rawName){
-      ocrStatus.textContent=`Nome OCR: ${rawName}`;
-      setScanMode('modeName',`Cerco “${rawName}”…`);
-      const found=await fastCascadeSearch({name:rawName,num:'',total:''});
-
-      if(found.results?.length){
-        setScanProgress(100,'Ricerca completata.');
-        await renderFastCandidates(found.results.slice(0,6),found.route);
-        return;
-      }
-    }
-
-    ocrStatus.textContent='Non sono riuscito a leggere dati sufficienti.';
-    setScannerRoute('Usa la ricerca manuale: la foto resta disponibile.','warn');
-    setScanProgress(100,'Ricerca manuale disponibile.');
+    setScannerRoute('Numero/Set non leggibile con sicurezza. Inserisci i due numeri manualmente.','warn');
+    setScanProgress(100,'Inserisci Numero e Totale Set.');
+    ocrStatus.textContent='Nome OCR disattivato per evitare identificazioni casuali.';
+    return;
 
   }catch(e){
     console.error(e);
     ocrStatus.textContent='Riconoscimento interrotto. La foto resta disponibile.';
-    setScannerRoute('Puoi continuare con Numero/Set o Nome manualmente.','warn');
+    setScannerRoute('Puoi continuare inserendo Numero e Totale Set manualmente.','warn');
     setScanProgress(100,'Ricerca manuale disponibile.');
   }finally{
     ocrBtn.disabled=false;
