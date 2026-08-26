@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.6 Play Price Fix</title>
+<title>Cardoryx V1.7.7 Play Price Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2573,7 +2573,8 @@ const PLAY_AUTO_CATALOG = {
   'fiamme spettrali|12': {series:['9'],offers:{low:0.02,high:0.20},source:'Cardmarket · PPS9 PFL 012',verified:'26/08/2026'},
   'avventure insieme|146': {series:['7','9'],prices:{'7':{low:0.02,trend:0.13,avg7:0.09,avg30:0.10},'9':{low:0.02,trend:0.16,avg7:0.25,avg30:0.29}},source:'Cardmarket · PPS7/PPS9 JTG 146',verified:'26/08/2026'},
   'avventure insieme|98': {series:['7','8','9'],prices:{'7':{trend:4.24},'8':{trend:3.81},'9':{low:1.50,trend:2.32,avg7:3.85,avg30:4.27}},source:'Cardmarket · Play! Pokémon Prize Pack',verified:'26/08/2026'},
-  'fuoco bianco|84': {series:['9'],source:'Cardmarket · PPS9 WHT 084',verified:'26/08/2026'}
+  'fuoco bianco|84': {series:['9'],source:'Cardmarket · PPS9 WHT 084',verified:'26/08/2026'},
+  'megaevoluzione|76': {series:['9'],prices:{'9':{low:1.30,trend:2.39}},source:'Cardmarket · Play! Pokémon Prize Pack Series 9 · MEG 076',verified:'26/08/2026',finish:'Cosmos Holo'}
 };
 function playAutoKey(card){
   const setName=normText(card?.set?.name||card?.set||'');
@@ -3559,7 +3560,17 @@ document.getElementById('playSeries')?.addEventListener('change',()=>{
 function applyPlayAutoSeries(card,edit=false){
   if(!card)return;
   const series=playAutoSeries(card),el=document.getElementById(edit?'editPlaySeries':'playSeries');
-  if(el&&series.length===1&&!el.value)el.value=series[0];
+  if(!el)return;
+  // Se il catalogo verificato conosce le Prize Pack Series compatibili,
+  // impedisce di scegliere serie che non appartengono a quella carta.
+  // Per carte non ancora catalogate lascia invece tutte le opzioni disponibili.
+  [...el.options].forEach(o=>{
+    if(!o.value){o.disabled=false;return;}
+    o.disabled=series.length>0 && !series.includes(normalizedPlaySeries(o.value));
+  });
+  const current=normalizedPlaySeries(el.value||'');
+  if(series.length===1 && (!current || !series.includes(current)))el.value=series[0];
+  else if(series.length>1 && current && !series.includes(current))el.value='';
 }
 
 
