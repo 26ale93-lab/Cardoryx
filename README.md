@@ -1,4 +1,4 @@
-# Cardoryx V1.7.5 — Play Price Fix
+# Cardoryx V1.7.6 — Play Price Fix
 
 Correzione applicata direttamente alla V1.7.2 caricata.
 
@@ -19,5 +19,12 @@ Test prioritario dopo pubblicazione:
 146 + 159 -> Ricerca di Brock.
 
 
-## V1.7.5 — Play! Prize Pack Resolver
+## V1.7.6 — Play! Prize Pack Resolver
 Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi/accenti rimossi) ora corrispondono alle chiavi leggibili del catalogo. Esempio verificato: Ricerca di Brock 146/159, Avventure Insieme, Prize Pack Series 9 → trend Cardmarket 0,16 €.
+
+
+## V1.7.6 — Resolver set recenti / fallback IT+EN
+- Ricerca manuale Numero/Totale interroga sia TCGdex IT sia EN.
+- Cerca prima per localId e valida il totale set, evitando la scansione pesante di tutti i set.
+- Hydration della carta con fallback EN per espansioni recenti non ancora complete nel catalogo IT.
+- Correzione mirata al caso Riolu 076/132 (Megaevoluzione) e casi analoghi.

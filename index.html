@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.5 Play Price Fix</title>
+<title>Cardoryx V1.7.6 Play Price Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1325,12 +1325,19 @@ function setScanMode(mode,msg=''){
 
 async function apiCardsQuery(params){
   const qs=new URLSearchParams(params);
-  try{
-    const r=await fetch(`${API}/cards?${qs.toString()}`);
-    if(!r.ok)return [];
-    const data=await r.json();
-    return Array.isArray(data)?data:(data.cards||data.data||[]);
-  }catch(e){return []}
+  const merged=new Map();
+  // Alcune espansioni recenti possono essere presenti prima nel catalogo EN.
+  // Interroghiamo entrambe le lingue e uniamo i risultati per id.
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
+    try{
+      const r=await fetch(`${base}/cards?${qs.toString()}`,{cache:'no-store'});
+      if(!r.ok)continue;
+      const data=await r.json();
+      const arr=Array.isArray(data)?data:(data.cards||data.data||[]);
+      for(const c of arr||[])if(c?.id)merged.set(c.id,c);
+    }catch(e){}
+  }
+  return [...merged.values()];
 }
 
 
@@ -1446,11 +1453,24 @@ async function queryByPrintedCode(num,total){
   const hinted=await fetchHintedPrintedCard(cleanNum,cleanTotal);
   if(hinted)return [hinted];
 
-  const variants=numVariants(cleanNum);
-  const sets=await querySetsByOfficialCount(cleanTotal);
   const found=new Map();
 
-  // Primary route: official set list -> exact set/card endpoint.
+  // Fast route: cerca subito il numero carta su IT + EN, poi valida il totale set.
+  // Evita di dover idratare centinaia di set prima di trovare espansioni recenti.
+  const briefs=await queryByAnyLocalId(cleanNum);
+  for(const b of briefs.slice(0,120)){
+    const c=await fetchFullCandidate(b);
+    if(c?.id &&
+       sameCollectorNumber(c.localId,cleanNum) &&
+       sameSetTotal(setOfficialCount(c),cleanTotal)){
+      found.set(c.id,c);
+    }
+  }
+  if(found.size)return [...found.values()];
+
+  // Second route: trova i set con il totale ufficiale richiesto e prova l'endpoint esatto.
+  const variants=numVariants(cleanNum);
+  const sets=await querySetsByOfficialCount(cleanTotal);
   for(const s of sets){
     for(const v of variants){
       for(const base of [API,'https://api.tcgdex.net/v2/en']){
@@ -1467,19 +1487,6 @@ async function queryByPrintedCode(num,total){
         }catch(e){}
       }
       if([...found.values()].some(c=>c?.set?.id===s.id))break;
-    }
-  }
-
-  if(found.size)return [...found.values()];
-
-  // Fallback: global localId search, then fetch full card and validate printed total.
-  const briefs=await queryByAnyLocalId(cleanNum);
-  for(const b of briefs.slice(0,100)){
-    const c=await fetchFullCandidate(b);
-    if(c?.id &&
-       sameCollectorNumber(c.localId,cleanNum) &&
-       sameSetTotal(setOfficialCount(c),cleanTotal)){
-      found.set(c.id,c);
     }
   }
 
@@ -2104,8 +2111,15 @@ async function runSmartOCR(){
 }
 
 async function fetchFullCandidate(c){
-  try{return {...c,...await fetch(`${API}/cards/${c.id}`).then(r=>r.json())}}
-  catch(e){return c}
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
+    try{
+      const r=await fetch(`${base}/cards/${encodeURIComponent(c.id)}`,{cache:'no-store'});
+      if(!r.ok)continue;
+      const full=await r.json();
+      if(full?.id)return {...c,...full};
+    }catch(e){}
+  }
+  return c;
 }
 
 
@@ -2912,7 +2926,7 @@ async function chooseCard(s){
       setTimeout(()=>confirmCard.scrollIntoView({behavior:'smooth',block:'end'}),120);
       return;
     }
-    const full=await fetch(`${API}/cards/${brief.id}`).then(r=>r.json());
+    const full=await fetchFullCandidate(brief);
     selectedCard={...brief,...full};
     const category=inferCategory(full),type=inferType(full),stage=full.stage||'';
     confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;
