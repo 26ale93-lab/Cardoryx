@@ -1,6 +1,6 @@
-# Cardoryx V1.8.4 — Metacard Bridge Resolver
+# Cardoryx V1.9.0 — Metacard Bridge Resolver
 
-V1.8.4 corregge il resolver Play! usando il ponte Cardmarket idProduct della stampa base → idMetacard → idExpansion della Prize Pack Series → idProduct variante → Price Guide. L’idExpansion della Series viene individuato dal catalogo tramite le relative Code Card, evitando mapping manuali carta-per-carta. Se esistono più prodotti compatibili V1/V2, Cardoryx mantiene un range invece di inventare un prezzo singolo.
+V1.9.0 corregge il resolver Play! usando il ponte Cardmarket idProduct della stampa base → idMetacard → idExpansion della Prize Pack Series → idProduct variante → Price Guide. L’idExpansion della Series viene individuato dal catalogo tramite le relative Code Card, evitando mapping manuali carta-per-carta. Se esistono più prodotti compatibili V1/V2, Cardoryx mantiene un range invece di inventare un prezzo singolo.
 
 # Cardoryx V1.8.3 — Official Cardmarket Price Guide
 
@@ -85,3 +85,11 @@ Il resolver Play! usa Jina Reader come proxy CORS per leggere le pagine Cardmark
 - Normal/Holo vengono letti dai rispettivi campi dello stesso prodotto Cardmarket.
 - Nessun fallback al prezzo della stampa normale per una carta Play!.
 - Timeout brevi: la UI non deve restare bloccata su “Cerco prezzo Play!”.
+
+
+## V1.9.0 — Static Cardmarket Play Index
+
+Il browser usa `data/cardmarket_play_index.json`, generato da GitHub Actions dai download ufficiali Cardmarket.
+Il workflow scarica cataloghi singles/non-singles e Price Guide, ricava gli idExpansion delle Prize Pack Series dai prodotti sigillati, collega stampa base e Prize Pack tramite `idMetacard`, e incorpora solo i prezzi necessari.
+
+Dopo il primo upload su GitHub: Actions → **Update Cardmarket Play Index** → Run workflow. Il file generato viene committato automaticamente.
