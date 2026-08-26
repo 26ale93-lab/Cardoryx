@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.8.0 Dynamic Play Price Resolver</title>
+<title>Cardoryx V1.8.1 Jina Play Price Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2639,11 +2639,38 @@ function parseEuroText(x){
   const m=String(x||'').match(/([0-9]+(?:[.,][0-9]{1,2})?)\s*€/);return m?Number(m[1].replace(',','.')):null;
 }
 async function fetchPublicText(url){
-  const attempts=[url,`https://r.jina.ai/http://${url.replace(/^https?:\/\//,'')}`];
+  // V1.8.1: GitHub Pages non può leggere Cardmarket direttamente per CORS.
+  // Jina Reader effettua il fetch server-side e restituisce testo/Markdown leggibile dal browser.
+  const target=String(url||'').replace(/^http:\/\//,'https://');
+  const attempts=[`https://r.jina.ai/${target}`,target];
   for(const u of attempts){
-    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const t=await r.text();if(t&&t.length>80)return t}}catch(e){}
+    try{
+      const r=await fetch(u,{cache:'no-store',headers:{'Accept':'text/plain'}});
+      if(r.ok){const t=await r.text();if(t&&t.length>80)return t}
+    }catch(e){}
   }
   return '';
+}
+function cardmarketSlugName(s=''){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+async function englishPlayCardName(card){
+  const ids=[card?.id,card?.tcgdexId].map(x=>String(x||'').trim()).filter(Boolean);
+  for(const id of [...new Set(ids)]){
+    try{
+      const r=await fetch(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+      if(r.ok){const x=await r.json();if(x?.name)return x.name}
+    }catch(e){}
+  }
+  return card?.name||'';
+}
+function directPlayCardmarketUrls(name,card,series){
+  const ps=normalizedPlaySeries(series),code=playSetCode(card),num=String(playCollector(card)||'').padStart(3,'0');
+  const seriesSlug=PLAY_SERIES_MARKET_SLUG[ps],nameSlug=cardmarketSlugName(name);
+  if(!ps||!code||!num||!seriesSlug||!nameSlug)return [];
+  const stem=`https://www.cardmarket.com/en/Pokemon/Products/Singles/${seriesSlug}/${nameSlug}`;
+  const tail=`PPS${ps}${code}-${num}`;
+  return [`${stem}-V1-${tail}`,`${stem}-V2-${tail}`,`${stem}-${tail}`];
 }
 function cardmarketProductUrlsFromListing(text,card,series){
   const num=playCollector(card),code=playSetCode(card),urls=[];
@@ -2676,28 +2703,45 @@ function parseCardmarketPricePage(text,url){
 async function resolveLivePlayPrice(card,series,finish){
   const ps=normalizedPlaySeries(series);if(!ps||!PLAY_SERIES_MARKET_SLUG[ps])return null;
   const slug=PLAY_SERIES_MARKET_SLUG[ps];
-  // Le prime pagine contengono normalmente le ristampe più recenti; scandisci fino a 6 pagine.
-  let urls=[];
-  for(let page=1;page<=6&&!urls.length;page++){
-    const base=`https://www.cardmarket.com/en/Pokemon/Products/Singles/${slug}${page>1?`?site=${page}`:''}`;
-    const text=await fetchPublicText(base);if(!text)continue;
-    urls=cardmarketProductUrlsFromListing(text,card,ps);
-  }
-  if(!urls.length)return null;
   const rows=[];
-  for(const u of urls){const text=await fetchPublicText(u);const r=parseCardmarketPricePage(text,u);if(r)rows.push(r)}
+
+  // V1.8.1: prova prima gli URL deterministici Cardmarket.
+  // Il nome inglese arriva da TCGdex; il codice set e il numero collezione sono già noti.
+  const enName=await englishPlayCardName(card);
+  const directUrls=directPlayCardmarketUrls(enName,card,ps);
+  for(const u of directUrls){
+    const text=await fetchPublicText(u);if(!text)continue;
+    // Reader restituisce anche pagine di errore: accetta solo contenuti con segnali prezzo/prodotto.
+    if(!/Price Trend|Available items|30-days average price|Prezzo medio|Tendenza dei prezzi/i.test(text))continue;
+    const r=parseCardmarketPricePage(text,u);if(r)rows.push(r);
+  }
+
+  // Fallback: scansione della listing della Prize Pack, sempre via Reader/CORS-safe.
+  if(!rows.length){
+    let urls=[];
+    for(let page=1;page<=10&&!urls.length;page++){
+      const base=`https://www.cardmarket.com/en/Pokemon/Products/Singles/${slug}${page>1?`?site=${page}`:''}`;
+      const text=await fetchPublicText(base);if(!text)continue;
+      urls=cardmarketProductUrlsFromListing(text,card,ps);
+    }
+    for(const u of urls){const text=await fetchPublicText(u);const r=parseCardmarketPricePage(text,u);if(r)rows.push(r)}
+  }
+
   if(!rows.length)return null;
+  // Deduplica per URL/versione, perché V1/V2/no-version possono reindirizzare alla stessa pagina.
+  const uniq=[];const seen=new Set();
+  for(const r of rows){const k=`${r.version||'0'}|${r.trend}|${r.low}|${r.avg7}|${r.avg30}`;if(!seen.has(k)){seen.add(k);uniq.push(r)}}
   const f=canonicalVariant(finish||'Normal');
   let chosen=null;
-  // Cardmarket tende a usare V1 per stampa standard e V2 per la versione foil/Cosmos.
-  if(['Holo','Cosmos Holo','Reverse Holo'].includes(f))chosen=rows.find(x=>x.version==='2')||null;
-  else if(f==='Normal')chosen=rows.find(x=>x.version==='1')||null;
-  if(!chosen&&rows.length===1)chosen=rows[0];
-  if(chosen){return {...chosen,value:Number(chosen.trend??chosen.avg7??chosen.avg30??chosen.low)||null,exact:true,source:'Cardmarket · Play! Pokémon · live',updated:new Date().toISOString().slice(0,10)}}
-  const vals=rows.map(x=>Number(x.trend??x.avg7??x.avg30??x.low)).filter(Number.isFinite);
-  const lows=rows.map(x=>Number(x.low)).filter(Number.isFinite);
-  return {value:null,exact:false,ambiguous:true,minValue:vals.length?Math.min(...vals):null,maxValue:vals.length?Math.max(...vals):null,offerLow:lows.length?Math.min(...lows):null,offerHigh:lows.length?Math.max(...lows):null,versions:rows.length,source:'Cardmarket · Play! Pokémon · live',updated:new Date().toISOString().slice(0,10)};
+  if(['Holo','Cosmos Holo','Reverse Holo'].includes(f))chosen=uniq.find(x=>x.version==='2')||null;
+  else if(f==='Normal')chosen=uniq.find(x=>x.version==='1')||null;
+  if(!chosen&&uniq.length===1)chosen=uniq[0];
+  if(chosen){return {...chosen,value:Number(chosen.trend??chosen.avg7??chosen.avg30??chosen.low)||null,exact:true,source:'Cardmarket · Play! Pokémon · Jina Reader',updated:new Date().toISOString().slice(0,10)}}
+  const vals=uniq.map(x=>Number(x.trend??x.avg7??x.avg30??x.low)).filter(Number.isFinite);
+  const lows=uniq.map(x=>Number(x.low)).filter(Number.isFinite);
+  return {value:null,exact:false,ambiguous:true,minValue:vals.length?Math.min(...vals):null,maxValue:vals.length?Math.max(...vals):null,offerLow:lows.length?Math.min(...lows):null,offerHigh:lows.length?Math.max(...lows):null,versions:uniq.length,source:'Cardmarket · Play! Pokémon · Jina Reader',updated:new Date().toISOString().slice(0,10)};
 }
+
 function storedLivePlayPrice(card,series,finish){
   const x=card?.livePlayPrice;if(!x)return null;
   if(normalizedPlaySeries(x.series)!==normalizedPlaySeries(series))return null;
@@ -2942,7 +2986,7 @@ async function renderScanValue(card){
       return;
     }
     if(selStamp==='Play! Pokémon' && !playPrice){
-      // V1.8.0: se il catalogo locale non basta, interroga Cardmarket live.
+      // V1.8.1: se il catalogo locale non basta, usa Jina Reader come proxy CORS verso Cardmarket.
       if(selSeries){
         valueEl.textContent='Cerco prezzo Play!…';
         metaEl.textContent=`Cardmarket · Series ${selSeries} · ricerca live…`;
@@ -2958,7 +3002,7 @@ async function renderScanValue(card){
             document.getElementById('scanAvg7Price').textContent=scanEuro(live.avg7);
             document.getElementById('scanMarketStats').classList.remove('hidden');
             document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
-            document.getElementById('scanProtectionAdvice').innerHTML=variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">✓ Prezzo Play! recuperato dinamicamente da Cardmarket.</div>';
+            document.getElementById('scanProtectionAdvice').innerHTML=variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">✓ Prezzo Play! recuperato da Cardmarket tramite resolver remoto.</div>';
             return;
           }
           if(live.ambiguous){
