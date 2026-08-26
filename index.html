@@ -2792,15 +2792,41 @@ async function renderScanValue(card){
     const selSeries=normalizedPlaySeries(document.getElementById('playSeries')?.value||'');
     const playExact=verifiedPlaySeriesPrice(scanPriceCard||card,selVariant,selStamp,selSeries);
     const stampExact=verifiedStampPrice(scanPriceCard||card,selVariant,selStamp);
-    if(selStamp==='Play! Pokémon' && !playExact && !stampExact){
+    const playAuto=selStamp==='Play! Pokémon' ? playAutoValuation({...card,...(scanPriceCard||{}),playSeries:selSeries}) : null;
+
+    // Play! Pokémon: prima usa il catalogo Prize Pack verificato per set/numero/serie.
+    // Questo evita di ricadere sul prezzo della stampa normale.
+    const playPrice=playExact||stampExact||(playAuto?.exact&&playAuto?.value?{
+      low:playAuto.low, trend:playAuto.value, avg7:playAuto.avg7, avg30:playAuto.avg30,
+      source:playAuto.source, verified:playAuto.updated
+    }:null);
+    if(selStamp==='Play! Pokémon' && playPrice){
+      valueEl.textContent=scanEuro(playPrice.trend||playPrice.avg7||playPrice.avg30||playPrice.low);
+      metaEl.textContent=`${playPrice.source||'Cardmarket · Play! Pokémon'}${selSeries?` · Series ${selSeries}`:''} · prezzo specifico verificato${playPrice.verified?` · ${playPrice.verified}`:''}`;
+      document.getElementById('scanLowPrice').textContent=scanEuro(playPrice.low);
+      document.getElementById('scanTrendPrice').textContent=scanEuro(playPrice.trend);
+      document.getElementById('scanAvg7Price').textContent=scanEuro(playPrice.avg7);
+      document.getElementById('scanMarketStats').classList.remove('hidden');
+      document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
+      document.getElementById('scanProtectionAdvice').innerHTML=
+        variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">✓ Prezzo specifico Play! Pokémon / Prize Pack verificato su Cardmarket.</div>';
+      return;
+    }
+    if(selStamp==='Play! Pokémon' && !playPrice){
       valueEl.textContent='Valore da verificare';
-      metaEl.textContent=selSeries
-        ?`Play! Pokémon · Series ${selSeries} · prezzo specifico non ancora associato`
-        :'Play! Pokémon · serie non identificata · nessun prezzo standard applicato';
+      if(playAuto?.ambiguous){
+        metaEl.textContent=`Play! Pokémon · possibile Series ${playAuto.series.join(' / ')} · seleziona la serie per il prezzo esatto`;
+      }else if(playAuto?.offersOnly){
+        metaEl.textContent=`${playAuto.source} · offerte ${scanEuro(playAuto.offerLow)}–${scanEuro(playAuto.offerHigh)} · trend non disponibile`;
+      }else{
+        metaEl.textContent=selSeries
+          ?`Play! Pokémon · Series ${selSeries} · prezzo specifico non ancora associato`
+          :'Play! Pokémon · serie non identificata · nessun prezzo standard applicato';
+      }
       document.getElementById('scanMarketStats').classList.add('hidden');
       document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
       document.getElementById('scanProtectionAdvice').innerHTML=
-        variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">La carta viene salvata senza valore finché la versione Play! non è identificata.</div>';
+        variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">La carta viene salvata senza usare il prezzo della stampa normale finché la versione Play! non è identificata.</div>';
       return;
     }
     const exact=verifiedVariantPrice(scanPriceCard||card,selVariant);
