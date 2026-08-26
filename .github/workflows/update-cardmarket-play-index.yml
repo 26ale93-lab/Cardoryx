@@ -1,0 +1,36 @@
+name: Update Cardmarket Play Index
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 7 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Build compact Play index from official Cardmarket data
+        run: python scripts/build_play_index.py
+
+      - name: Validate generated index
+        run: |
+          python -c "import json; p=json.load(open('data/cardmarket_play_index.json')); assert p['stats']['playProducts'] > 0; assert p['stats']['baseProductsMapped'] > 0; print(p['stats'])"
+
+      - name: Commit refreshed index
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cardmarket_play_index.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Update Cardmarket Play index"
+          git push
