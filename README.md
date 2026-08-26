@@ -1,30 +1,10 @@
-# Cardoryx V1.5.5 — Valutazione sicura Play! Pokémon
+# Cardoryx V1.5.6 — Play! Auto Catalog
 
-Basata sulla V1.5.4 stabile.
+Aggiunto riconoscimento automatico delle serie Play! Pokémon e gestione dei prezzi/range verificati.
 
-## Nuova logica valore
-Cardoryx distingue:
-1. `Valorizzata` — prezzo specifico disponibile.
-2. `Valore da verificare` — soprattutto Play! Pokémon con più possibili ristampe/serie.
-3. `Valore non disponibile` — nessuna quotazione specifica disponibile.
+- Charmeleon 012/094 Fiamme Spettrali: Series 9; Cardmarket mostra due versioni PPS9 con offerte da 0,02 € e 0,20 €. Non viene inventato un trend.
+- Ricerca di Brock 146/159 Avventure Insieme: Series 7 / 9; trend 0,13 € / 0,16 €, con stima automatica e range.
+- Zoroark-ex di N 098/159: Series 7 / 8 / 9.
+- Anita 084 Fuoco Bianco: Series 9.
 
-Una carta senza prezzo NON vale 0 € e NON riceve automaticamente il prezzo della versione normale.
-
-## Totale collezione
-Le carte senza prezzo specifico vengono escluse dal totale numerico.
-La Home mostra anche quante carte restano da valutare, comprese le Play! da verificare.
-
-Esempio:
-`125,40 € + 4 carte da valutare (3 Play! da verificare)`
-
-## Scanner
-Se una Play! Pokémon non ha una corrispondenza di prezzo specifica:
-- mostra `Valore da verificare`;
-- non applica il prezzo standard;
-- permette comunque di salvare la carta.
-
-## Prize Pack Series
-Rimane opzionale. Il logo Play! Pokémon non indica da solo il numero della serie.
-
-## Backup
-Il backup salva anche il numero di carte senza prezzo e delle Play! da verificare.
+Se una sola serie è compatibile viene proposta automaticamente. Se ce ne sono più di una, Cardoryx mostra le serie compatibili senza obbligare l'utente a indovinare.
