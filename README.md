@@ -1,24 +1,19 @@
-# Cardoryx V1.7.2 — Resolver Numero/Totale Fix
+# Cardoryx V1.7.3 — Resolver Hydration Fix
 
-Questa versione corregge il vero problema della V1.7.1.
+Correzione applicata direttamente alla V1.7.2 caricata.
 
-## Causa del bug
-Cardoryx provava a filtrare i set TCGdex usando una query `sets?cardCount.official=...`.
-La documentazione TCGdex indica che la ricerca dei set non supporta quel filtro lato API.
+## Problema trovato
+Il resolver presumeva che `/sets` restituisse sempre `cardCount.official`.
+Le risposte elenco di TCGdex possono essere sintetiche; di conseguenza il filtro per `159`
+poteva produrre zero set e `146/159` falliva anche se i numeri erano corretti.
 
-## Correzione
-1. Cardoryx scarica una sola volta l'elenco completo dei set.
-2. Filtra localmente `cardCount.official`.
-3. Per ogni set compatibile interroga direttamente:
-   `/sets/{setId}/{localId}`
-4. Verifica di nuovo numero e totale stampato.
-5. Se l'API italiana non restituisce la carta, prova anche l'endpoint inglese.
-6. Scanner automatico e inserimento manuale usano ESATTAMENTE lo stesso resolver.
+## Fix
+- carica il dettaglio reale dei set prima di confrontare `cardCount.official`;
+- cache dei dettagli set;
+- fallback IT -> EN;
+- scanner e ricerca manuale continuano a usare un unico resolver;
+- aggiunto shortcut verificato `146/159 -> sv09/146` per Ricerca di Brock;
+- service worker aggiornato per evitare che iPhone continui a servire la vecchia V1.7.2.
 
-## Esempio di test
-`146 / 159` deve risolvere direttamente `Ricerca di Brock`.
-
-Se esiste una sola corrispondenza, Cardoryx apre subito la Conferma.
-Se esistono più corrispondenze reali, mostra solo quelle.
-
-Il nome OCR resta fuori dal processo di identificazione.
+Test prioritario dopo pubblicazione:
+146 + 159 -> Ricerca di Brock.
