@@ -1,21 +1,19 @@
-# Cardoryx V1.7.0 — Collector Code Scanner
+# Cardoryx V1.7.1 — Scanner Unico
 
-Cambio del metodo di riconoscimento.
-
-## Nome OCR disattivato
-Il nome non viene più usato per identificare automaticamente la carta.
-Tesseract.js può leggere male font, foil, riflessi e testi stilizzati.
+La V1.7.0 aveva troppi percorsi sovrapposti. Questa versione ne mantiene uno solo.
 
 ## Flusso
-1. Cardoryx legge la zona Numero / Totale set.
-2. Verifica il codice con TCGdex.
-3. Mostra le carte reali compatibili.
-4. Il nome viene preso dal database TCGdex.
-5. Se Numero/Set non viene letto, Cardoryx chiede soltanto i due numeri manualmente.
+1. Scatta/carica foto.
+2. Premi una sola volta `Riconosci carta`.
+3. Cardoryx legge Numero / Totale set.
+4. Verifica direttamente con TCGdex.
+5. Se trova una sola carta, passa direttamente alla Conferma.
+6. Se ci sono più corrispondenze, mostra soltanto i candidati reali.
+7. Se non riesce, compare un unico fallback con due campi numerici.
 
-Esempio:
-`146 / 159` → TCGdex → `Ricerca di Brock`.
+Non esistono più tre ricerche successive automatiche.
+Il nome OCR non viene usato per avviare altre ricerche.
 
-Il vecchio OCR del nome non può più generare stringhe casuali e far scegliere la carta sbagliata.
+Esempio: `146 / 159` → TCGdex → Ricerca di Brock → Conferma.
 
-Database, prezzi, Play! Pokémon, catalogo e backup restano invariati.
+Database, prezzi, Play! Pokémon, backup e catalogo restano invariati.

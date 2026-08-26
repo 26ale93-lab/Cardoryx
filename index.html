@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.0 Collector Code Scanner</title>
+<title>Cardoryx V1.7.1 Scanner Unico</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -374,40 +374,40 @@
       </div>
 
       <div class="scan-progress"><span id="scanProgressBar"></span></div>
-      <div id="scanStatusPro" class="scan-status-pro">Pronto. Prima Numero/Set, poi il nome solo se serve.</div>
-      <div class="scan-mode-row">
-        <span id="modeCode" class="scan-mode-chip active">1 · Numero/Set</span>
-        <span id="modeNameSet" class="scan-mode-chip">2 · Verifica database</span>
-        <span id="modeName" class="scan-mode-chip">3 · Conferma</span>
-      </div>
+      <div id="scanStatusPro" class="scan-status-pro">Pronto. Premi una sola volta “Riconosci carta”.</div>
       <div id="scanFallbackInfo"></div>
 
 
-      <div id="ocrStatus" class="footer-note">Cardoryx identifica la carta dal codice collezione. Il nome arriva dal database TCGdex.</div>
+      <div id="ocrStatus" class="footer-note">Un solo flusso: foto → Numero/Set → TCGdex → carta.</div>
     </div>
 
-    <div class="scanner-pro-panel">
-  <div class="scanner-pro-title">🔎 Collector Code Scanner</div>
-<div class="small" style="margin-top:4px">Il nome non viene letto dalla foto: dopo Numero/Set Cardoryx prende il nome ufficiale da TCGdex.</div>
-<div class="card">
-      <div class="section-title">2. Cerca la carta</div>
-      <div><div class="label">Nome</div><input id="nameInput" placeholder="es. Kilowattrel di Kissara"></div>
-      <div class="row">
-        <div><div class="label">Numero</div><input id="numberInput" inputmode="numeric" placeholder="es. 055"></div>
-        <div><div class="label">Totale set</div><input id="setTotalInput" inputmode="numeric" placeholder="es. 159"></div>
-      </div>
-      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V1.7.0 · Collector Code Scanner: Cardoryx identifica la carta da <strong>numero / totale set</strong>. Il nome OCR non viene più usato per decidere la carta.</div>
-      <div id="searchMsg" class="footer-note"></div>
-      <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
-      <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
-        <div style="font-weight:800;margin-bottom:4px">Energie Base MEE</div>
-        <div class="small" style="margin-bottom:10px">Se la scansione non riconosce il codice, scegli direttamente l’Energia. Cardoryx prova prima le immagini ufficiali Pokémon; la tua foto ritagliata resta il fallback più affidabile.</div>
-        <div id="meeEnergyGrid" class="grid"></div>
-      </div>
-      <div id="results"></div>
+    <div id="singleScanFallback" class="card hidden">
+  <div class="section-title">Inserimento manuale solo se serve</div>
+  <div class="small">Se la lettura automatica non riesce, inserisci soltanto i due numeri stampati sulla carta.</div>
+  <div class="row" style="margin-top:10px">
+    <div>
+      <div class="label">Numero carta</div>
+      <input id="numberInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="146">
     </div>
+    <div>
+      <div class="label">Totale set</div>
+      <input id="setTotalInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="159">
+    </div>
+  </div>
+  <input id="nameInput" type="hidden">
+  <div class="spacer"></div>
+  <button class="btn big" type="button" onclick="runManualCollectorSearch()">🔎 Identifica carta</button>
+  <div id="searchMsg" class="footer-note"></div>
+  <div id="results"></div>
+  <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
+  <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
+    <div style="font-weight:800;margin-bottom:4px">Energie Base MEE</div>
+    <div class="small" style="margin-bottom:10px">Scegli direttamente l’Energia solo se il codice non è leggibile.</div>
+    <div id="meeEnergyGrid" class="grid"></div>
+  </div>
+</div>
 
-    <div id="confirmCard" class="card hidden">
+<div id="confirmCard" class="card hidden">
       <div class="section-title">3. Conferma</div>
       <div class="result"><img id="confirmImg"><div class="meta"><h3 id="confirmName"></h3><div id="confirmInfo" class="small"></div><div id="confirmTags"></div></div></div>
       <div class="label">Finitura</div><select id="variant">
@@ -458,22 +458,7 @@
       <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
       
 
-  <div class="small">Numero e totale set separati. Esempio: <b>012 / 094</b>.</div>
-  <div class="scanner-pro-split">
-    <div class="scanner-pro-field">
-      <label>NUMERO CARTA</label>
-      <input id="scannerProLocal" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="012">
-    </div>
-    <div class="scanner-pro-slash">/</div>
-    <div class="scanner-pro-field">
-      <label>TOTALE SET</label>
-      <input id="scannerProTotal" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="094">
-    </div>
-  </div>
-  <button class="btn alt scanner-pro-find" type="button" id="scannerProFindBtn">Trova carta</button>
-  <div id="scannerProStatus" class="small"></div>
-  <div id="scannerProCandidates" class="scanner-pro-candidates"></div>
-</div><div id="scanValueBox" class="scan-value-box hidden">
+  <div id="scanValueBox" class="scan-value-box hidden">
   <div class="scan-value-head"><div><b>💰 Valore carta</b><div id="scanMarketValue" class="scan-value-main">—</div><div id="scanMarketMeta" class="scan-value-sub">Cerco Cardmarket…</div></div><span id="scanProtectionBadge" class="pill">Valutazione</span></div>
   <div id="scanMarketStats" class="scan-market-grid hidden"><div class="scan-market-stat"><strong id="scanLowPrice">—</strong><span>MINIMO</span></div><div class="scan-market-stat"><strong id="scanTrendPrice">—</strong><span>TREND</span></div><div class="scan-market-stat"><strong id="scanAvg7Price">—</strong><span>MEDIA 7 GG</span></div></div>
   <div id="scanProtectionAdvice" class="small" style="margin-top:8px"></div>
@@ -1176,7 +1161,7 @@ function applyCardCrop(){
   document.addEventListener('input',e=>{if(e.target?.id===id)renderCardCrop()});
 });
 
-function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Leggerò Numero/Totale set. Il nome OCR è disattivato.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
+function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';document.getElementById('singleScanFallback')?.classList.add('hidden');clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Leggerò Numero/Totale set. Il nome OCR è disattivato.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -1515,6 +1500,9 @@ async function renderFastCandidates(results,route){
 
   if(full.length===1){
     await chooseCard(candidateMap[full[0].id]);
+  }else{
+    const fallback=document.getElementById('singleScanFallback');
+    if(fallback)fallback.classList.remove('hidden');
   }
   return true;
 }
@@ -1958,208 +1946,72 @@ async function runSmartOCR(){
   if(!f)return;
 
   ocrBtn.disabled=true;
+  const fallback=document.getElementById('singleScanFallback');
+  if(fallback)fallback.classList.add('hidden');
+  results.innerHTML='';
+  searchMsg.textContent='';
+  clearSelection();
+
   setScanProgress(5,'Preparo la foto…');
-  ocrStatus.textContent='Analisi in corso…';
-  setScannerRoute('Leggo prima Numero/Set.','ok');
+  ocrStatus.textContent='Riconoscimento in corso…';
+  setScannerRoute('Leggo Numero / Totale set.');
 
   try{
     await loadTesseract();
     const img=await downscaleImageForOCR(f,1100,1600);
 
-    // V5.9 — MEE Basic Energy deterministic route.
-    setScanProgress(12,'Controllo se è un’Energia Base…');
+    // Keep the deterministic Basic Energy route.
+    setScanProgress(15,'Controllo se è un’Energia Base…');
     const energy=await readBasicEnergyIdentity(img);
-
     if(energy.isBasic){
-      const label=[
-        'Energia Base',
-        energy.type ? energy.type.charAt(0).toUpperCase()+energy.type.slice(1) : '',
-        energy.code ? `${energy.code.set} IT ${energy.code.num}` : ''
-      ].filter(Boolean).join(' · ');
-
-      ocrStatus.textContent=`Rilevata: ${label}`;
-      setScannerRoute(`⚡ Modalità Energia Base: ${label}.`);
-      setScanProgress(48,'Cerco l’Energia Base…');
-
       const energyCards=await findBasicEnergyCandidates(energy);
-
       if(energyCards.length){
-        const top=energyCards[0];
-        lastOCR.name=top.name||'Energia Base';
-        lastOCR.number=energy.code?.num||top.number||'';
-        nameInput.value=top.name||'Energia Base';
-        if(energy.code?.num) numberInput.value=energy.code.num;
-
-        setScannerRoute(`✓ Energia Base identificata${energy.code?` da ${energy.code.set} IT ${energy.code.num}`:''}.`);
         setScanProgress(100,'Energia identificata.');
-
-        // If confidence is strong, show the best result first; retain alternatives when useful.
-        await renderFastCandidates(energyCards.slice(0,4),'Energia Base · codice/tipo');
+        ocrStatus.textContent='Energia Base identificata.';
+        await renderFastCandidates(energyCards.slice(0,4),'Energia Base');
         return;
-      }
-
-      // We know it is an energy even if the external database does not contain that exact printing.
-      lastOCR.name=energy.type ? `Energia Base ${energy.type}` : 'Energia Base';
-      nameInput.value=lastOCR.name;
-      if(energy.code?.num) numberInput.value=energy.code.num;
-
-      setScannerRoute(
-        energy.code
-          ? `Energia Base riconosciuta (${energy.code.set} IT ${energy.code.num}), ma questa stampa non è stata trovata automaticamente nel database.`
-          : 'Energia Base riconosciuta. Il codice inferiore non è abbastanza leggibile.',
-        'warn'
-      );
-      setScanProgress(100,'Energia riconosciuta: verifica manualmente.');
-      return;
-    }
-
-    // STEP 1 — collector code first, focused on the lower-left footer.
-    setScanProgress(24,'Leggo la zona Numero/Set…');
-    const codeCandidates=await readCollectorCodeFocused(img);
-
-    let code=codeCandidates[0]||null;
-    let pool=[];
-
-    if(codeCandidates.length){
-      setScanProgress(36,'Verifico i codici letti con TCGdex…');
-      for(const candidate of codeCandidates.slice(0,4)){
-        const test=await queryByPrintedCode(candidate.num,candidate.total);
-        if(test.length){
-          code=candidate;
-          pool=test;
-          break;
-        }
       }
     }
 
-    if(code){
-      numberInput.value=code.num;
-      setTotalInput.value=code.total;
-      lastOCR.number=code.num;
-      lastOCR.total=code.total;
+    // Single identification route: collector number + printed set total.
+    setScanProgress(30,'Leggo Numero / Totale set…');
+    const codes=await readCollectorCodeFocused(img);
 
-      ocrStatus.textContent=`Codice letto: ${code.num}/${code.total}`;
-      setScanProgress(46,`Cerco ${code.num}/${code.total}…`);
-      setScanMode('modeCode',`Cerco ${code.num}/${code.total}…`);
+    for(const code of codes.slice(0,5)){
+      if(!collectorCodeValid(code))continue;
 
-      fillScannerProCode(code);
+      setScanProgress(55,`Verifico ${code.num}/${code.total}…`);
+      const cards=await queryByPrintedCode(code.num,code.total);
 
-      // If the focused OCR candidate was not already verified above, query it now.
-      if(!pool.length)pool=await queryByPrintedCode(code.num,code.total);
+      if(cards.length){
+        numberInput.value=code.num;
+        setTotalInput.value=code.total;
+        lastOCR={name:'',number:code.num,total:code.total};
 
-      // Exact collector code identifies one card: skip name OCR entirely.
-      if(pool.length===1){
-        const card=pool[0];
-        lastOCR.name=card.name||'';
-        nameInput.value=card.name||'';
+        setScanProgress(100,'Carta trovata.');
+        ocrStatus.textContent=`✓ ${code.num}/${code.total} riconosciuto.`;
 
-        setScannerRoute(`✓ ${code.num}/${code.total} identifica una sola carta: ${card.name}. Salto l'OCR del nome.`);
-        setScanProgress(100,'Carta identificata.');
-
-        await renderFastCandidates([card],'Numero + Totale set');
+        // renderFastCandidates automatically confirms when there is one match.
+        await renderFastCandidates(cards.slice(0,6),'Numero + Totale set');
         return;
       }
-
-      // Multiple matches: now OCR the name only to choose among a small pool.
-      if(pool.length>1){
-        setScannerRoute(`${pool.length} carte compatibili con ${code.num}/${code.total}. Leggo solo il nome per scegliere.`);
-        setScanProgress(62,'Più candidati: leggo soltanto il nome…');
-
-        const rawName=await readNameOnlyWhenNeeded(img);
-        const official=bestOfficialCandidateFromOCR(rawName,pool);
-
-        if(rawName){
-          ocrStatus.textContent=`Codice: ${code.num}/${code.total} · Nome OCR: ${rawName}`;
-        }else{
-          ocrStatus.textContent=`Codice: ${code.num}/${code.total} · Nome non leggibile`;
-        }
-
-        if(official){
-          lastOCR.name=official.name||'';
-          nameInput.value=official.name||'';
-
-          setScannerRoute(`✓ Nome corretto dal database: ${official.name}.`);
-          setScanProgress(100,'Carta identificata.');
-          await renderFastCandidates([official],'Numero/Set + Nome');
-          return;
-        }
-
-        // If OCR name cannot disambiguate, still show code candidates.
-        lastOCR.name=rawName||'';
-        nameInput.value=rawName||'';
-        setScannerRoute('Nome non abbastanza affidabile: mostro comunque i candidati trovati da Numero/Set.','warn');
-        setScanProgress(100,'Scegli tra i candidati.');
-        await renderFastCandidates(pool.slice(0,6),'Numero + Totale set');
-        return;
-      }
-
-      // Code was read but database found nothing exact: use name as fallback.
-      setScannerRoute(`Nessuna corrispondenza esatta per ${code.num}/${code.total}. Provo il nome.`,`warn`);
-      setScanProgress(62,'Codice senza match: leggo il nome…');
-
-      const rawName=await readNameOnlyWhenNeeded(img);
-      lastOCR.name=rawName||'';
-      nameInput.value=rawName||'';
-
-      if(rawName){
-        ocrStatus.textContent=`Codice: ${code.num}/${code.total} · Nome OCR: ${rawName}`;
-        const found=await fastCascadeSearch({
-          name:rawName,
-          num:code.num,
-          total:code.total
-        });
-
-        if(found.results?.length){
-          setScanProgress(100,'Ricerca completata.');
-          await renderFastCandidates(found.results.slice(0,6),found.route);
-          return;
-        }
-
-        // Important fallback: name + set, ignoring the number.
-        setScanMode('modeNameSet',`Provo nome + set ignorando il numero…`);
-        const byName=await apiCardsQuery({name:rawName});
-        if(byName.length){
-          const full=[];
-          for(const c of byName.slice(0,30))full.push(await fetchFullCandidate(c));
-          const bySet=full.filter(c=>sameSetTotal(setOfficialCount(c),code.total));
-          const usable=bySet.length?bySet:full;
-
-          if(usable.length){
-            setScannerRoute('Numero non utile: uso Nome + Totale set.','warn');
-            setScanProgress(100,'Ricerca completata.');
-            await renderFastCandidates(usable.slice(0,6),'Nome + Totale set');
-            return;
-          }
-        }
-      }
-
-      // Never fail just because the name OCR failed.
-      ocrStatus.textContent=`Codice letto: ${code.num}/${code.total}. Nessun match automatico.`;
-      setScannerRoute('Il codice è stato letto, ma non basta per identificare la carta. Puoi correggere il nome manualmente.','warn');
-      setScanProgress(100,'Ricerca manuale disponibile.');
-      return;
     }
 
-    // STEP 2 — collector code itself was not readable.
-    // Do not OCR the card name automatically: stylized TCG text causes false names.
-    if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';
-    if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';
-    lastOCR={name:'',number:'',total:''};
-    nameInput.value='';
-
-    setScannerRoute('Numero/Set non leggibile con sicurezza. Inserisci i due numeri manualmente.','warn');
-    setScanProgress(100,'Inserisci Numero e Totale Set.');
-    ocrStatus.textContent='Nome OCR disattivato per evitare identificazioni casuali.';
-    return;
+    // One fallback only. No OCR name, no second/third automatic searches.
+    setScanProgress(100,'Inserimento manuale richiesto.');
+    setScannerRoute('Numero/Set non letto con sicurezza. Inseriscilo una sola volta qui sotto.','warn');
+    ocrStatus.textContent='Non ho trovato una corrispondenza certa. La foto resta disponibile.';
+    if(fallback)fallback.classList.remove('hidden');
+    numberInput.focus();
 
   }catch(e){
-    console.error(e);
-    ocrStatus.textContent='Riconoscimento interrotto. La foto resta disponibile.';
-    setScannerRoute('Puoi continuare inserendo Numero e Totale Set manualmente.','warn');
-    setScanProgress(100,'Ricerca manuale disponibile.');
+    console.error('Scanner unico:',e);
+    setScanProgress(100,'Riconoscimento interrotto.');
+    setScannerRoute('Riconoscimento non riuscito. Inserisci Numero e Totale set una sola volta.','warn');
+    ocrStatus.textContent='La foto resta disponibile.';
+    if(fallback)fallback.classList.remove('hidden');
   }finally{
     ocrBtn.disabled=false;
-    setTimeout(()=>setScanProgress(0,'Pronto per una nuova carta.'),1800);
   }
 }
 
@@ -2302,6 +2154,38 @@ function renderFullSetChunk(){
       </div>`:''}
   `;
   searchMsg.textContent=`Mostrate ${st.shown} di ${st.cards.length} carte.`;
+}
+
+
+async function runManualCollectorSearch(){
+  const num=String(numberInput.value||'').replace(/\D/g,'');
+  const total=String(setTotalInput.value||'').replace(/\D/g,'');
+
+  if(!num||!total){
+    searchMsg.textContent='Inserisci Numero carta e Totale set.';
+    return;
+  }
+
+  searchMsg.textContent=`Cerco ${num}/${total}…`;
+  results.innerHTML='';
+  clearSelection();
+
+  try{
+    const cards=await queryByPrintedCode(num,total);
+    if(!cards.length){
+      searchMsg.textContent=`Nessuna carta trovata per ${num}/${total}. Controlla i due numeri.`;
+      return;
+    }
+
+    searchMsg.textContent=cards.length===1
+      ?'Carta trovata.'
+      :`${cards.length} carte compatibili: scegli quella corretta.`;
+
+    await renderFastCandidates(cards.slice(0,8),'Numero + Totale set');
+  }catch(e){
+    console.error('Ricerca manuale collector code:',e);
+    searchMsg.textContent='Ricerca non riuscita. Riprova.';
+  }
 }
 
 async function searchCards(opts={}){
