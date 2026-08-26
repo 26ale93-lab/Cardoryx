@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.5.6</title>
+<title>Cardoryx V1.6.0 Scanner Pro</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -273,7 +273,7 @@
 .variant-price-warning{margin-top:7px;padding:8px 10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.35}
 
 .variant-badge+.variant-badge{margin-left:5px}
-</style>
+.scanner-pro-panel{margin:12px 0;padding:12px;border:1px solid #dbe3ea;border-radius:14px;background:#fff}.scanner-pro-title{font-weight:800}.scanner-pro-row{display:flex;gap:8px;margin-top:9px}.scanner-pro-row input{flex:1;min-width:0}.scanner-pro-candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.scanner-pro-card{border:1px solid #dbe3ea;border-radius:12px;padding:8px;background:#fff;text-align:left}.scanner-pro-card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#f5f7f9}.scanner-pro-card b{display:block;margin-top:5px}@media(min-width:700px){.scanner-pro-candidates{grid-template-columns:repeat(4,minmax(0,1fr))}}</style>
 </head>
 <body>
 <div class="app">
@@ -454,7 +454,12 @@
     </select>
       <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
       
-<div id="scanValueBox" class="scan-value-box hidden">
+<div class="scanner-pro-panel">
+<div class="scanner-pro-title">🔎 Scanner Pro — numero carta</div>
+<div class="small">Usa prima il numero completo, es. <b>146/159</b>. È più affidabile del solo nome OCR.</div>
+<div class="scanner-pro-row"><input id="scannerProNumber" inputmode="numeric" placeholder="146/159"><button class="btn alt" type="button" id="scannerProFindBtn">Trova</button></div>
+<div id="scannerProStatus" class="small"></div><div id="scannerProCandidates" class="scanner-pro-candidates"></div>
+</div><div id="scanValueBox" class="scan-value-box hidden">
   <div class="scan-value-head"><div><b>💰 Valore carta</b><div id="scanMarketValue" class="scan-value-main">—</div><div id="scanMarketMeta" class="scan-value-sub">Cerco Cardmarket…</div></div><span id="scanProtectionBadge" class="pill">Valutazione</span></div>
   <div id="scanMarketStats" class="scan-market-grid hidden"><div class="scan-market-stat"><strong id="scanLowPrice">—</strong><span>MINIMO</span></div><div class="scan-market-stat"><strong id="scanTrendPrice">—</strong><span>TREND</span></div><div class="scan-market-stat"><strong id="scanAvg7Price">—</strong><span>MEDIA 7 GG</span></div></div>
   <div id="scanProtectionAdvice" class="small" style="margin-top:8px"></div>
@@ -3449,6 +3454,63 @@ function applyPlayAutoSeries(card,edit=false){
   if(el&&series.length===1&&!el.value)el.value=series[0];
 }
 
+
+const SCANNER_PRO_API='https://api.tcgdex.net/v2/it';
+function scannerProParseNumber(raw){
+ const s=String(raw||'').replace(/\s/g,'');let m=s.match(/(\d{1,3})[/\\|](\d{2,3})/);
+ if(m)return {local:String(Number(m[1])),official:Number(m[2]),raw:`${m[1]}/${m[2]}`};
+ m=s.match(/^0*(\d{1,3})$/);return m?{local:String(Number(m[1])),official:null,raw:m[1]}:null;
+}
+function scannerProExtractNumber(text){
+ const a=[...String(text||'').matchAll(/(\d{1,3})\s*[/\\|]\s*(\d{2,3})/g)]
+ .map(m=>({local:String(Number(m[1])),official:Number(m[2]),raw:`${m[1]}/${m[2]}`}))
+ .filter(x=>Number(x.local)>0&&x.official>0&&Number(x.local)<=x.official);
+ return a[0]||null;
+}
+async function scannerProJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(String(r.status));return r.json()}
+async function scannerProFindCandidates(n){
+ const sets=await scannerProJSON(`${SCANNER_PRO_API}/sets`);
+ const compatible=n.official?sets.filter(s=>Number(s?.cardCount?.official||0)===n.official):sets;
+ const found=[];
+ for(let i=0;i<compatible.length;i+=15){
+  const rows=await Promise.all(compatible.slice(i,i+15).map(async s=>{try{
+   const c=await scannerProJSON(`${SCANNER_PRO_API}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(n.local)}`);
+   return (!n.official||Number(c?.set?.cardCount?.official||0)===n.official)?c:null;
+  }catch(e){return null}}));
+  found.push(...rows.filter(Boolean));if(found.length>=12)break;
+ }
+ return found;
+}
+function scannerProImg(c){return c?.image?`${c.image}/high.webp`:''}
+function scannerProRender(cards,n){
+ const box=document.getElementById('scannerProCandidates'),st=document.getElementById('scannerProStatus');
+ if(!cards.length){st.textContent=`Nessuna corrispondenza per ${n.raw}. Usa la ricerca manuale.`;box.innerHTML='';return}
+ st.textContent=cards.length===1?'1 candidato: conferma toccando la carta.':`${cards.length} candidati: confronta l'immagine.`;
+ box.innerHTML=cards.slice(0,12).map((c,i)=>`<button class="scanner-pro-card" type="button" data-sp="${i}">${scannerProImg(c)?`<img src="${esc(scannerProImg(c))}" alt="">`:''}<b>${esc(c.name||'')}</b><div class="small">${esc(c.set?.name||'')} · ${esc(c.localId||'')}/${esc(c.set?.cardCount?.official||'')}</div></button>`).join('');
+ box.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>scannerProSelect(cards[Number(b.dataset.sp)]));
+}
+function scannerProSelect(c){
+ selectedCard=c;scanPriceCard=c;
+ try{
+  const ni=document.getElementById('nameInput');if(ni)ni.value=c.name||'';
+  const si=document.getElementById('setInput');if(si)si.value=c.set?.name||'';
+  const no=document.getElementById('numberInput');if(no)no.value=c.localId||'';
+  if(typeof renderScanValue==='function')renderScanValue(c);
+ }catch(e){console.error('Scanner Pro select',e)}
+ const st=document.getElementById('scannerProStatus');if(st)st.textContent=`✓ ${c.name} · ${c.set?.name||''} · ${c.localId}/${c.set?.cardCount?.official||''}`;
+}
+async function scannerProRun(raw){
+ const n=scannerProParseNumber(raw),st=document.getElementById('scannerProStatus'),box=document.getElementById('scannerProCandidates');
+ if(!n){st.textContent='Inserisci il numero come 146/159.';return}
+ st.textContent='Ricerca TCGdex…';box.innerHTML='';
+ try{scannerProRender(await scannerProFindCandidates(n),n)}catch(e){console.error(e);st.textContent='Ricerca non riuscita. Riprova o usa la ricerca manuale.'}
+}
+function scannerProConsumeOCRText(text){
+ const n=scannerProExtractNumber(text);if(!n)return false;
+ const el=document.getElementById('scannerProNumber');if(el)el.value=n.raw;scannerProRun(n.raw);return true;
+}
+document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scannerProRun(document.getElementById('scannerProNumber')?.value));
+document.getElementById('scannerProNumber')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();scannerProRun(e.currentTarget.value)}});
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
