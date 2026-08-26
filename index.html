@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.1 Scanner Unico</title>
+<title>Cardoryx V1.7.2 Resolver Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -378,7 +378,7 @@
       <div id="scanFallbackInfo"></div>
 
 
-      <div id="ocrStatus" class="footer-note">Un solo flusso: foto → Numero/Set → TCGdex → carta.</div>
+      <div id="ocrStatus" class="footer-note">Un solo flusso: foto → Numero/Totale → TCGdex → Conferma.</div>
     </div>
 
     <div id="singleScanFallback" class="card hidden">
@@ -1362,44 +1362,72 @@ async function queryByAnyLocalId(num){
 }
 
 
+let ALL_SETS_CACHE=null;
+async function fetchAllSetsCached(){
+  if(Array.isArray(ALL_SETS_CACHE)&&ALL_SETS_CACHE.length)return ALL_SETS_CACHE;
+  const locales=[API,'https://api.tcgdex.net/v2/en'];
+  for(const base of locales){
+    try{
+      const r=await fetch(`${base}/sets`,{cache:'no-store'});
+      if(!r.ok)continue;
+      const data=await r.json();
+      if(Array.isArray(data)&&data.length){
+        ALL_SETS_CACHE=data;
+        return data;
+      }
+    }catch(e){}
+  }
+  return [];
+}
 async function querySetsByOfficialCount(total){
   const n=Number(String(total||'').replace(/\D/g,''));
   if(!n)return [];
-  try{
-    const r=await fetch(`${API}/sets?cardCount.official=${encodeURIComponent(n)}`);
-    if(!r.ok)return [];
-    const data=await r.json();
-    return Array.isArray(data)?data:[];
-  }catch(e){return []}
+  const sets=await fetchAllSetsCached();
+  return sets.filter(s=>Number(s?.cardCount?.official||0)===n);
 }
 
 async function queryByPrintedCode(num,total){
-  const variants=numVariants(num);
+  const cleanNum=String(num||'').replace(/\D/g,'');
+  const cleanTotal=Number(String(total||'').replace(/\D/g,''));
+  if(!cleanNum||!cleanTotal)return [];
+
+  const variants=numVariants(cleanNum);
+  const sets=await querySetsByOfficialCount(cleanTotal);
   const found=new Map();
 
-  const sets=await querySetsByOfficialCount(total);
-  for(const s of sets.slice(0,30)){
+  // Primary route: official set list -> exact set/card endpoint.
+  for(const s of sets){
     for(const v of variants){
-      try{
-        const r=await fetch(`${API}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(v)}`);
-        if(!r.ok)continue;
-        const card=await r.json();
-        if(card?.id && sameCollectorNumber(card.localId,num) && sameSetTotal(setOfficialCount(card),total)){
-          found.set(card.id,card);
-          break;
-        }
-      }catch(e){}
+      for(const base of [API,'https://api.tcgdex.net/v2/en']){
+        try{
+          const r=await fetch(`${base}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(v)}`,{cache:'no-store'});
+          if(!r.ok)continue;
+          const card=await r.json();
+          if(card?.id &&
+             sameCollectorNumber(card.localId,cleanNum) &&
+             sameSetTotal(setOfficialCount(card),cleanTotal)){
+            found.set(card.id,card);
+            break;
+          }
+        }catch(e){}
+      }
+      if([...found.values()].some(c=>c?.set?.id===s.id))break;
     }
   }
+
   if(found.size)return [...found.values()];
 
-  const briefs=await queryByAnyLocalId(num);
-  for(const b of briefs.slice(0,50)){
+  // Fallback: global localId search, then fetch full card and validate printed total.
+  const briefs=await queryByAnyLocalId(cleanNum);
+  for(const b of briefs.slice(0,100)){
     const c=await fetchFullCandidate(b);
-    if(sameCollectorNumber(c.localId,num) && sameSetTotal(setOfficialCount(c),total)){
+    if(c?.id &&
+       sameCollectorNumber(c.localId,cleanNum) &&
+       sameSetTotal(setOfficialCount(c),cleanTotal)){
       found.set(c.id,c);
     }
   }
+
   return [...found.values()];
 }
 
@@ -1989,9 +2017,14 @@ async function runSmartOCR(){
         lastOCR={name:'',number:code.num,total:code.total};
 
         setScanProgress(100,'Carta trovata.');
-        ocrStatus.textContent=`✓ ${code.num}/${code.total} riconosciuto.`;
 
-        // renderFastCandidates automatically confirms when there is one match.
+        if(cards.length===1){
+          ocrStatus.textContent=`✓ ${cards[0].name} · ${code.num}/${code.total}`;
+          await chooseCard(cards[0]);
+          return;
+        }
+
+        ocrStatus.textContent=`✓ ${code.num}/${code.total}: ${cards.length} candidati reali.`;
         await renderFastCandidates(cards.slice(0,6),'Numero + Totale set');
         return;
       }
@@ -2166,24 +2199,28 @@ async function runManualCollectorSearch(){
     return;
   }
 
-  searchMsg.textContent=`Cerco ${num}/${total}…`;
+  searchMsg.textContent=`Identifico ${num}/${total}…`;
   results.innerHTML='';
   clearSelection();
 
   try{
     const cards=await queryByPrintedCode(num,total);
+
     if(!cards.length){
       searchMsg.textContent=`Nessuna carta trovata per ${num}/${total}. Controlla i due numeri.`;
       return;
     }
 
-    searchMsg.textContent=cards.length===1
-      ?'Carta trovata.'
-      :`${cards.length} carte compatibili: scegli quella corretta.`;
+    if(cards.length===1){
+      searchMsg.textContent=`✓ ${cards[0].name} · ${cards[0].localId}/${setOfficialCount(cards[0])}`;
+      await chooseCard(cards[0]);
+      return;
+    }
 
+    searchMsg.textContent=`${cards.length} carte compatibili. Scegli quella corretta.`;
     await renderFastCandidates(cards.slice(0,8),'Numero + Totale set');
   }catch(e){
-    console.error('Ricerca manuale collector code:',e);
+    console.error('Resolver Numero/Totale:',e);
     searchMsg.textContent='Ricerca non riuscita. Riprova.';
   }
 }
