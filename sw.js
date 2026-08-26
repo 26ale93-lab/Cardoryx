@@ -1,4 +1,4 @@
-const CACHE='cardoryx-v1.6.1-scanner-pro-split';
+const CACHE='cardoryx-v1.6.2-focused-number-ocr';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./cardoryx-logo.png','./apple-touch-icon.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});

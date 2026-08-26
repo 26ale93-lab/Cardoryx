@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.6.1 Scanner Pro</title>
+<title>Cardoryx V1.6.2 OCR Numero/Set</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -383,7 +383,7 @@
       <div id="scanFallbackInfo"></div>
 
 
-      <div id="ocrStatus" class="footer-note">Cardoryx legge separatamente nome e numero. Se il nome non è chiaro, usa il numero per mostrare le carte candidate.</div>
+      <div id="ocrStatus" class="footer-note">Cardoryx legge più volte la zona Numero/Set e verifica il risultato con TCGdex. Il nome viene usato solo come fallback.</div>
     </div>
 
     <div class="scanner-pro-panel">
@@ -395,7 +395,7 @@
         <div><div class="label">Numero</div><input id="numberInput" inputmode="numeric" placeholder="es. 055"></div>
         <div><div class="label">Totale set</div><input id="setTotalInput" inputmode="numeric" placeholder="es. 159"></div>
       </div>
-      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V6.0 · Name-First: Cardoryx cerca <strong>prima il nome</strong>, poi usa set e numero solo per confermare e ordinare. Se il numero OCR è sbagliato, non può più scavalcare il nome.</div>
+      <div class="spacer"></div><button class="btn big" onclick="searchCards()">🔎 Cerca candidati</button><div class="scan-note" style="margin-top:10px">V1.6.2 · Numero-First: Cardoryx legge più volte solo la zona inferiore <strong>Numero/Set</strong>, verifica i codici trovati con TCGdex e usa il nome soltanto se serve.</div>
       <div id="searchMsg" class="footer-note"></div>
       <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
       <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
@@ -1175,7 +1175,7 @@ function applyCardCrop(){
   document.addEventListener('input',e=>{if(e.target?.id===id)renderCardCrop()});
 });
 
-function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò solo nome e numero/set.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
+function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Analizzerò prima la zona Numero/Set con più letture.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -1225,7 +1225,17 @@ function bestOfficialNameFromCandidates(raw,cands=[]){
 function cleanNameCandidate(text){const lines=text.split(/\n/).map(x=>x.replace(/[^A-Za-zÀ-ÿ0-9'’\- .]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);const banned=/^(BASE|FASE\s*[12]?|PS\s*\d+|ALLENATORE|ENERGIA|POKEMON|POKÉMON)$/i;let best=lines.filter(x=>x.length>=3&&x.length<=32&&!banned.test(x)&&!/^\d+$/.test(x)).sort((a,b)=>{const sa=(/[A-Za-zÀ-ÿ]{4,}/.test(a)?5:0)-(/PS|FASE|BASE/i.test(a)?4:0);const sb=(/[A-Za-zÀ-ÿ]{4,}/.test(b)?5:0)-(/PS|FASE|BASE/i.test(b)?4:0);return sb-sa})[0]||'';return best.replace(/\bPS\s*\d+.*/i,'').replace(/^FASE\s*\d*\s*/i,'').replace(/^BASE\s*/i,'').trim()}
 
 async function downscaleImageForOCR(file,maxW=1100,maxH=1600){
-  const img=await imageFromFile(file);
+  let img;
+  if(editedCardPhoto){
+    img=await new Promise((res,rej)=>{
+      const i=new Image();
+      i.onload=()=>res(i);
+      i.onerror=rej;
+      i.src=editedCardPhoto;
+    });
+  }else{
+    img=await imageFromFile(file);
+  }
   const scale=Math.min(1,maxW/img.naturalWidth,maxH/img.naturalHeight);
   if(scale>=0.999)return img;
   const c=document.createElement('canvas');
@@ -1254,6 +1264,60 @@ function extractCollectorCode(text=''){
   }
   return null;
 }
+
+function collectorCodeKey(c){
+  return c?`${Number(c.num)}/${Number(c.total)}`:'';
+}
+function collectorCodeValid(c){
+  if(!c)return false;
+  const a=Number(c.num),b=Number(c.total);
+  return a>0 && b>0 && a<=b && b<=999;
+}
+async function readCollectorCodeFocused(img){
+  const crops=[
+    cropImage(img,.015,.875,.58,.105,4.0),
+    cropImage(img,.015,.845,.68,.135,3.5),
+    cropImage(img,.000,.895,.72,.090,4.2)
+  ];
+
+  const attempts=[];
+  for(const crop of crops){
+    attempts.push([crop,'7',null]);
+    attempts.push([enhanceForOCR(crop,150),'7','0123456789/|']);
+    attempts.push([enhanceForOCR(crop,175),'7','0123456789/|']);
+    attempts.push([enhanceForOCR(crop,195),'6','0123456789/|']);
+  }
+
+  const counts=new Map();
+  for(const [canvas,psm,whitelist] of attempts){
+    try{
+      const opts={tessedit_pageseg_mode:psm};
+      if(whitelist)opts.tessedit_char_whitelist=whitelist;
+      const r=await Tesseract.recognize(canvas,'eng',opts);
+      const text=String(r?.data?.text||'').trim();
+      const code=extractCollectorCode(text);
+      if(!collectorCodeValid(code))continue;
+      const key=collectorCodeKey(code);
+      const current=counts.get(key)||{code,count:0,texts:[]};
+      current.count++;
+      current.texts.push(text);
+      counts.set(key,current);
+    }catch(e){}
+  }
+
+  return [...counts.values()]
+    .sort((a,b)=>b.count-a.count)
+    .map(x=>({...x.code,votes:x.count,ocrTexts:x.texts}));
+}
+
+function fillScannerProCode(code){
+  if(!code)return;
+  const a=document.getElementById('scannerProLocal');
+  const b=document.getElementById('scannerProTotal');
+  if(a)a.value=String(code.num||'').padStart(3,'0');
+  if(b)b.value=String(code.total||'').padStart(3,'0');
+}
+
 function cleanOCRNameV45(s=''){
   return String(s)
     .replace(/^\s*(FASE\s*\d+|BASE)\s*/i,'')
@@ -1948,16 +2012,24 @@ async function runSmartOCR(){
       return;
     }
 
-    // STEP 1 — collector code first.
-    const codeCrop=cropImage(img,.02,.81,.96,.18,2.15);
-    setScanProgress(24,'Leggo numero e totale set…');
+    // STEP 1 — collector code first, focused on the lower-left footer.
+    setScanProgress(24,'Leggo la zona Numero/Set…');
+    const codeCandidates=await readCollectorCodeFocused(img);
 
-    const codeRes=await Tesseract.recognize(codeCrop,'eng',{
-      tessedit_pageseg_mode:'6'
-    });
-    const code=extractCollectorCode(codeRes.data.text||'');
-
+    let code=codeCandidates[0]||null;
     let pool=[];
+
+    if(codeCandidates.length){
+      setScanProgress(36,'Verifico i codici letti con TCGdex…');
+      for(const candidate of codeCandidates.slice(0,4)){
+        const test=await queryByPrintedCode(candidate.num,candidate.total);
+        if(test.length){
+          code=candidate;
+          pool=test;
+          break;
+        }
+      }
+    }
 
     if(code){
       numberInput.value=code.num;
@@ -1969,8 +2041,10 @@ async function runSmartOCR(){
       setScanProgress(46,`Cerco ${code.num}/${code.total}…`);
       setScanMode('modeCode',`Cerco ${code.num}/${code.total}…`);
 
-      // Query exact number + printed set total.
-      pool=await queryByPrintedCode(code.num,code.total);
+      fillScannerProCode(code);
+
+      // If the focused OCR candidate was not already verified above, query it now.
+      if(!pool.length)pool=await queryByPrintedCode(code.num,code.total);
 
       // Exact collector code identifies one card: skip name OCR entirely.
       if(pool.length===1){
@@ -2066,6 +2140,8 @@ async function runSmartOCR(){
     }
 
     // STEP 2 — collector code itself was not readable: then and only then use the name.
+    if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';
+    if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';
     setScannerRoute('Numero/Set non leggibile. Passo all’OCR del nome.','warn');
     setScanProgress(52,'Numero/Set non leggibile: leggo il nome…');
 
