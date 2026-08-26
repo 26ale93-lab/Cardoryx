@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.8 Play Price Fix</title>
+<title>Cardoryx V1.7.9 Play Price Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2574,7 +2574,10 @@ const PLAY_AUTO_CATALOG = {
   'avventure insieme|146': {series:['7','9'],prices:{'7':{low:0.02,trend:0.13,avg7:0.09,avg30:0.10},'9':{low:0.02,trend:0.16,avg7:0.25,avg30:0.29}},source:'Cardmarket · PPS7/PPS9 JTG 146',verified:'26/08/2026'},
   'avventure insieme|98': {series:['7','8','9'],prices:{'7':{trend:4.24},'8':{trend:3.81},'9':{low:1.50,trend:2.32,avg7:3.85,avg30:4.27}},source:'Cardmarket · Play! Pokémon Prize Pack',verified:'26/08/2026'},
   'fuoco bianco|84': {series:['9'],source:'Cardmarket · PPS9 WHT 084',verified:'26/08/2026'},
-  'megaevoluzione|76': {series:['9'],prices:{'9':{low:1.30,trend:2.39}},source:'Cardmarket · Play! Pokémon Prize Pack Series 9 · MEG 076',verified:'26/08/2026',finish:'Cosmos Holo'}
+  'megaevoluzione|76': {series:['9'],prices:{'9':{low:1.30,trend:2.39}},source:'Cardmarket · Play! Pokémon Prize Pack Series 9 · MEG 076',verified:'26/08/2026',finish:'Cosmos Holo'},
+  // Energia Fighting Rocciosa / Rocky [F] Energy — Equilibrio Perfetto 087/094.
+  // Cardmarket PPS9 POR 087, Versione 1 (stampa standard Play!).
+  'equilibrio perfetto|87': {series:['9'],prices:{'9':{low:0.20,trend:0.18,avg7:0.35,avg30:0.50}},source:'Cardmarket · PPS9 POR 087 · Versione 1',verified:'26/08/2026'}
 };
 function playAutoKey(card){
   const setName=normText(card?.set?.name||card?.set||'');
@@ -2628,6 +2631,11 @@ const VERIFIED_PLAY_SERIES_PRICES = {
     low:1.50, trend:2.32, avg7:3.85, avg30:3.11,
     source:'Cardmarket · Play! Pokémon Prize Pack Series 9',
     verified:'25/08/2026'
+  },
+  'equilibrio perfetto|087|Normal|9': {
+    low:0.20, trend:0.18, avg7:0.35, avg30:0.50,
+    source:'Cardmarket · Play! Pokémon Prize Pack Series 9 · POR 087 · Versione 1',
+    verified:'26/08/2026'
   }
 };
 function verifiedPlaySeriesPrice(card,variant,stamp,series){
@@ -2848,7 +2856,16 @@ async function renderScanValue(card){
       if(playAuto?.ambiguous){
         metaEl.textContent=`Play! Pokémon · possibile Series ${playAuto.series.join(' / ')} · seleziona la serie per il prezzo esatto`;
       }else if(playAuto?.offersOnly){
-        metaEl.textContent=`${playAuto.source} · offerte ${scanEuro(playAuto.offerLow)}–${scanEuro(playAuto.offerHigh)} · trend non disponibile`;
+        valueEl.textContent=`${scanEuro(playAuto.offerLow)}–${scanEuro(playAuto.offerHigh)}`;
+        metaEl.textContent=`${playAuto.source} · intervallo offerte Cardmarket · trend non disponibile`;
+        document.getElementById('scanLowPrice').textContent=scanEuro(playAuto.offerLow);
+        document.getElementById('scanTrendPrice').textContent='—';
+        document.getElementById('scanAvg7Price').textContent='—';
+        document.getElementById('scanMarketStats').classList.remove('hidden');
+        document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
+        document.getElementById('scanProtectionAdvice').innerHTML=
+          variantBadgeHTML(selVariant)+stampBadgeHTML(selStamp)+'<div class="variant-price-warning">≈ Cardmarket pubblica più versioni/offerte per questa carta Play!. Mostro l’intervallo disponibile senza inventare un trend.</div>';
+        return;
       }else{
         metaEl.textContent=selSeries
           ?`Play! Pokémon · Series ${selSeries} · prezzo specifico non ancora associato`
@@ -3243,7 +3260,12 @@ function cardUnitPrice(c){return cardPriceInfo(c).value}
 function cardPriceHtml(c){
   const state=cardValuationState(c),info=state.info,u=state.value,q=Number(c.qty)||1,finish=canonicalVariant(c.variant||'Normal'),stamp=canonicalStamp(c.stamp||'None'),ps=normalizedPlaySeries(c.playSeries||'');
   let combo=stamp==='None'?finish:`${finish} + ${stamp}`;if(stamp==='Play! Pokémon'&&ps)combo+=` · Series ${ps}`;
-  if(u==null){const title=state.status==='estimated'?'Valore indicativo':(state.status==='ambiguous'?'Valore da verificare':'Valore non disponibile');return `<div class="price-main" style="color:#6b7280">${title}</div><div class="price-sub">${esc(state.message||'Cardmarket · nessun prezzo associato')}</div>`}
+  if(u==null){
+    if(info?.kind==='play-offers-only' && Number.isFinite(Number(info.offerLow)) && Number.isFinite(Number(info.offerHigh))){
+      return `<div class="price-main">${euro(info.offerLow)}–${euro(info.offerHigh)}</div><div class="price-sub">Cardmarket · intervallo offerte · ${esc(combo)} · trend non disponibile</div>`;
+    }
+    const title=state.status==='estimated'?'Valore indicativo':(state.status==='ambiguous'?'Valore da verificare':'Valore non disponibile');return `<div class="price-main" style="color:#6b7280">${title}</div><div class="price-sub">${esc(state.message||'Cardmarket · nessun prezzo associato')}</div>`
+  }
   const total=u*q,label=info.ambiguous?'Stima da trend Cardmarket':(info.exact?'Cardmarket · versione verificata':'Trend Cardmarket'),range=info.ambiguous&&info.minValue!=null?` · range ${euro(info.minValue)}–${euro(info.maxValue)}`:'',series=info.seriesCandidates?.length?` · Series ${info.seriesCandidates.join('/')}`:'';
   return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">${label} · ${esc(combo)}${series}${range}</div>`;
 }

@@ -1,4 +1,4 @@
-# Cardoryx V1.7.8 — Play Variant Validator
+# Cardoryx V1.7.9 — Play Price Resolver
 
 Correzione applicata direttamente alla V1.7.2 caricata.
 
@@ -30,7 +30,7 @@ Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi
 - Correzione mirata al caso Riolu 076/132 (Megaevoluzione) e casi analoghi.
 
 
-## V1.7.8 — Play Variant Validator
+## V1.7.9 — Play Price Resolver
 - aggiunto Riolu Megaevoluzione 076/132 nel catalogo Play! Pokémon Prize Pack Series 9;
 - prezzo Cardmarket verificato: da 1,30 €, trend 2,39 € al 26/08/2026;
 - il selettore Prize Pack ora limita le Series quando la carta è già presente nel catalogo verificato;
@@ -42,3 +42,11 @@ Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi
 - Il blocco Numero carta + Totale set è sempre visibile nello Scanner.
 - La ricerca funziona anche senza aver scattato una foto.
 - Il resolver Numero/Totale e il Play Variant Validator restano invariati.
+
+
+## V1.7.9 — stabilizzazione prezzi Play!
+
+- Le carte Play! con più versioni Cardmarket e senza trend univoco mostrano ora un **intervallo reale di offerte** invece di un generico “Valore da verificare”.
+- Aggiunto il prezzo verificato di **Energia Fighting Rocciosa 087/094 — Equilibrio Perfetto — Prize Pack Series 9, Versione 1**.
+- Il valore della collezione non usa automaticamente il punto medio di un intervallo: evita di gonfiare o abbassare la collezione con una stima arbitraria.
+- Scanner e ricerca Numero carta + Totale set restano invariati.
