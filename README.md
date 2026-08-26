@@ -1,10 +1,8 @@
-# Cardoryx V1.6.0 — Scanner Pro
+# Cardoryx V1.6.1 — Scanner Pro Split
 
-Nuovo percorso di identificazione **numero-first**:
-- inserimento `numero/totale` (es. `146/159`);
-- filtro dei set TCGdex tramite `cardCount.official`;
-- ricerca del `localId`;
-- candidati con immagine, nome, set e numero;
-- conferma visiva prima del salvataggio.
-
-Lo scanner/OCR precedente resta disponibile: Scanner Pro lo affianca senza modificare database, collezione, backup, prezzi o Play! Auto Catalog.
+- Scanner Pro spostato prima di `3. Conferma`.
+- Numero carta e totale set sono due campi separati.
+- Entrambi usano tastiera numerica su iPhone.
+- Cardoryx ricompone internamente `012/094`.
+- OCR può compilare automaticamente entrambi i campi quando legge il numero completo.
+- Se legge solo il numero carta, il totale può essere completato manualmente.

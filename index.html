@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.6.0 Scanner Pro</title>
+<title>Cardoryx V1.6.1 Scanner Pro</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -273,7 +273,7 @@
 .variant-price-warning{margin-top:7px;padding:8px 10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.35}
 
 .variant-badge+.variant-badge{margin-left:5px}
-.scanner-pro-panel{margin:12px 0;padding:12px;border:1px solid #dbe3ea;border-radius:14px;background:#fff}.scanner-pro-title{font-weight:800}.scanner-pro-row{display:flex;gap:8px;margin-top:9px}.scanner-pro-row input{flex:1;min-width:0}.scanner-pro-candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.scanner-pro-card{border:1px solid #dbe3ea;border-radius:12px;padding:8px;background:#fff;text-align:left}.scanner-pro-card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#f5f7f9}.scanner-pro-card b{display:block;margin-top:5px}@media(min-width:700px){.scanner-pro-candidates{grid-template-columns:repeat(4,minmax(0,1fr))}}</style>
+.scanner-pro-panel{margin:12px 0;padding:12px;border:1px solid #dbe3ea;border-radius:14px;background:#fff}.scanner-pro-title{font-weight:800}.scanner-pro-split{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-top:10px}.scanner-pro-field label{display:block;font-size:12px;font-weight:800;color:#6b7280;margin-bottom:5px}.scanner-pro-field input{width:100%;min-width:0}.scanner-pro-slash{font-size:26px;font-weight:800;padding-bottom:12px}.scanner-pro-find{width:100%;margin-top:9px}.scanner-pro-candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.scanner-pro-card{border:1px solid #dbe3ea;border-radius:12px;padding:8px;background:#fff;text-align:left}.scanner-pro-card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#f5f7f9}.scanner-pro-card b{display:block;margin-top:5px}@media(min-width:700px){.scanner-pro-candidates{grid-template-columns:repeat(4,minmax(0,1fr))}}</style>
 </head>
 <body>
 <div class="app">
@@ -386,7 +386,9 @@
       <div id="ocrStatus" class="footer-note">Cardoryx legge separatamente nome e numero. Se il nome non è chiaro, usa il numero per mostrare le carte candidate.</div>
     </div>
 
-    <div class="card">
+    <div class="scanner-pro-panel">
+  <div class="scanner-pro-title">🔎 Scanner Pro — numero carta</div>
+<div class="card">
       <div class="section-title">2. Cerca la carta</div>
       <div><div class="label">Nome</div><input id="nameInput" placeholder="es. Kilowattrel di Kissara"></div>
       <div class="row">
@@ -454,11 +456,22 @@
     </select>
       <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
       
-<div class="scanner-pro-panel">
-<div class="scanner-pro-title">🔎 Scanner Pro — numero carta</div>
-<div class="small">Usa prima il numero completo, es. <b>146/159</b>. È più affidabile del solo nome OCR.</div>
-<div class="scanner-pro-row"><input id="scannerProNumber" inputmode="numeric" placeholder="146/159"><button class="btn alt" type="button" id="scannerProFindBtn">Trova</button></div>
-<div id="scannerProStatus" class="small"></div><div id="scannerProCandidates" class="scanner-pro-candidates"></div>
+
+  <div class="small">Numero e totale set separati. Esempio: <b>012 / 094</b>.</div>
+  <div class="scanner-pro-split">
+    <div class="scanner-pro-field">
+      <label>NUMERO CARTA</label>
+      <input id="scannerProLocal" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="012">
+    </div>
+    <div class="scanner-pro-slash">/</div>
+    <div class="scanner-pro-field">
+      <label>TOTALE SET</label>
+      <input id="scannerProTotal" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="094">
+    </div>
+  </div>
+  <button class="btn alt scanner-pro-find" type="button" id="scannerProFindBtn">Trova carta</button>
+  <div id="scannerProStatus" class="small"></div>
+  <div id="scannerProCandidates" class="scanner-pro-candidates"></div>
 </div><div id="scanValueBox" class="scan-value-box hidden">
   <div class="scan-value-head"><div><b>💰 Valore carta</b><div id="scanMarketValue" class="scan-value-main">—</div><div id="scanMarketMeta" class="scan-value-sub">Cerco Cardmarket…</div></div><span id="scanProtectionBadge" class="pill">Valutazione</span></div>
   <div id="scanMarketStats" class="scan-market-grid hidden"><div class="scan-market-stat"><strong id="scanLowPrice">—</strong><span>MINIMO</span></div><div class="scan-market-stat"><strong id="scanTrendPrice">—</strong><span>TREND</span></div><div class="scan-market-stat"><strong id="scanAvg7Price">—</strong><span>MEDIA 7 GG</span></div></div>
@@ -3456,10 +3469,11 @@ function applyPlayAutoSeries(card,edit=false){
 
 
 const SCANNER_PRO_API='https://api.tcgdex.net/v2/it';
-function scannerProParseNumber(raw){
- const s=String(raw||'').replace(/\s/g,'');let m=s.match(/(\d{1,3})[/\\|](\d{2,3})/);
- if(m)return {local:String(Number(m[1])),official:Number(m[2]),raw:`${m[1]}/${m[2]}`};
- m=s.match(/^0*(\d{1,3})$/);return m?{local:String(Number(m[1])),official:null,raw:m[1]}:null;
+function scannerProParseNumber(localRaw,totalRaw){
+  const local=String(localRaw||'').replace(/\D/g,'');
+  const total=String(totalRaw||'').replace(/\D/g,'');
+  if(!local)return null;
+  return {local:String(Number(local)),official:total?Number(total):null,raw:total?`${local}/${total}`:local};
 }
 function scannerProExtractNumber(text){
  const a=[...String(text||'').matchAll(/(\d{1,3})\s*[/\\|]\s*(\d{2,3})/g)]
@@ -3499,18 +3513,45 @@ function scannerProSelect(c){
  }catch(e){console.error('Scanner Pro select',e)}
  const st=document.getElementById('scannerProStatus');if(st)st.textContent=`✓ ${c.name} · ${c.set?.name||''} · ${c.localId}/${c.set?.cardCount?.official||''}`;
 }
-async function scannerProRun(raw){
- const n=scannerProParseNumber(raw),st=document.getElementById('scannerProStatus'),box=document.getElementById('scannerProCandidates');
- if(!n){st.textContent='Inserisci il numero come 146/159.';return}
- st.textContent='Ricerca TCGdex…';box.innerHTML='';
- try{scannerProRender(await scannerProFindCandidates(n),n)}catch(e){console.error(e);st.textContent='Ricerca non riuscita. Riprova o usa la ricerca manuale.'}
+async function scannerProRun(localRaw,totalRaw){
+  const n=scannerProParseNumber(localRaw,totalRaw),
+        st=document.getElementById('scannerProStatus'),
+        box=document.getElementById('scannerProCandidates');
+  if(!n){if(st)st.textContent='Inserisci almeno il numero carta.';return}
+  if(st)st.textContent='Ricerca TCGdex…';
+  if(box)box.innerHTML='';
+  try{
+    scannerProRender(await scannerProFindCandidates(n),n);
+  }catch(e){
+    console.error(e);
+    if(st)st.textContent='Ricerca non riuscita. Riprova o usa la ricerca manuale.';
+  }
 }
 function scannerProConsumeOCRText(text){
- const n=scannerProExtractNumber(text);if(!n)return false;
- const el=document.getElementById('scannerProNumber');if(el)el.value=n.raw;scannerProRun(n.raw);return true;
+  const n=scannerProExtractNumber(text);
+  if(!n)return false;
+  const a=document.getElementById('scannerProLocal');
+  const b=document.getElementById('scannerProTotal');
+  if(a)a.value=String(n.local).padStart(3,'0');
+  if(b&&n.official)b.value=String(n.official).padStart(3,'0');
+  scannerProRun(a?.value||n.local,b?.value||(n.official||''));
+  return true;
 }
-document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scannerProRun(document.getElementById('scannerProNumber')?.value));
-document.getElementById('scannerProNumber')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();scannerProRun(e.currentTarget.value)}});
+
+document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scannerProRun(
+  document.getElementById('scannerProLocal')?.value,
+  document.getElementById('scannerProTotal')?.value
+));
+['scannerProLocal','scannerProTotal'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    scannerProRun(
+      document.getElementById('scannerProLocal')?.value,
+      document.getElementById('scannerProTotal')?.value
+    );
+  }
+}));
+
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
