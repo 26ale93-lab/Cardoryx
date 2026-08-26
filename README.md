@@ -1,4 +1,4 @@
-# Cardoryx V1.8.2 — Official Cardmarket Price Guide
+# Cardoryx V1.8.3 — Official Cardmarket Price Guide
 
 Correzione applicata direttamente alla V1.7.2 caricata.
 
@@ -30,7 +30,7 @@ Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi
 - Correzione mirata al caso Riolu 076/132 (Megaevoluzione) e casi analoghi.
 
 
-## V1.8.2 — Official Cardmarket Price Guide
+## V1.8.3 — Official Cardmarket Price Guide
 - aggiunto Riolu Megaevoluzione 076/132 nel catalogo Play! Pokémon Prize Pack Series 9;
 - prezzo Cardmarket verificato: da 1,30 €, trend 2,39 € al 26/08/2026;
 - il selettore Prize Pack ora limita le Series quando la carta è già presente nel catalogo verificato;
@@ -44,7 +44,7 @@ Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi
 - Il resolver Numero/Totale e il Play Variant Validator restano invariati.
 
 
-## V1.8.2 — stabilizzazione prezzi Play!
+## V1.8.3 — stabilizzazione prezzi Play!
 
 - Le carte Play! con più versioni Cardmarket e senza trend univoco mostrano ora un **intervallo reale di offerte** invece di un generico “Valore da verificare”.
 - Aggiunto il prezzo verificato di **Energia Fighting Rocciosa 087/094 — Equilibrio Perfetto — Prize Pack Series 9, Versione 1**.
@@ -52,7 +52,7 @@ Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi
 - Scanner e ricerca Numero carta + Totale set restano invariati.
 
 
-## V1.8.2 — Official Cardmarket Price Guide
+## V1.8.3 — Official Cardmarket Price Guide
 - Il prezzo Play!/Prize Pack non dipende più soltanto dal catalogo locale.
 - Quando manca un valore, l’app tenta una ricerca live su Cardmarket per Series + set + numero.
 - Gestisce V1/V2 usando la finitura selezionata quando possibile.
@@ -61,13 +61,23 @@ Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi
 - Se esistono più versioni e la finitura non basta a distinguerle, mostra un intervallo senza inventare un prezzo unico.
 
 
-## V1.8.2
+## V1.8.3
 Il resolver Play! usa Jina Reader come proxy CORS per leggere le pagine Cardmarket da GitHub Pages. Prova prima URL deterministici costruiti da nome inglese TCGdex + Series + codice set + numero, poi usa la listing Prize Pack come fallback.
 
 
-## V1.8.2
+## V1.8.3
 - Rimosso Jina come fonte primaria dei prezzi Play!.
 - Usa il JSON ufficiale giornaliero Cardmarket `price_guide_6.json` senza API key.
 - Collega le varianti Play! tramite `thirdParty.cardmarket` di TCGdex.
 - Timeout: nessuna ricerca resta bloccata indefinitamente.
 - Jina rimane solo come fallback limitato.
+
+
+## V1.8.3 — Official Product Catalogue Resolver
+- Rimosso completamente il resolver runtime Jina/scraping Cardmarket.
+- Aggiunto Product Catalogue ufficiale Pokémon (`products_singles_6.json`).
+- Mapping Prize Pack tramite `PPS{series} + codice set + numero carta` → `idProduct`.
+- Prezzo letto dal Price Guide ufficiale (`price_guide_6.json`).
+- Normal/Holo vengono letti dai rispettivi campi dello stesso prodotto Cardmarket.
+- Nessun fallback al prezzo della stampa normale per una carta Play!.
+- Timeout brevi: la UI non deve restare bloccata su “Cerco prezzo Play!”.
