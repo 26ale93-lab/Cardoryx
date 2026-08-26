@@ -1,4 +1,4 @@
-# Cardoryx V1.7.4 — Play Price Fix
+# Cardoryx V1.7.5 — Play Price Fix
 
 Correzione applicata direttamente alla V1.7.2 caricata.
 
@@ -17,3 +17,7 @@ poteva produrre zero set e `146/159` falliva anche se i numeri erano corretti.
 
 Test prioritario dopo pubblicazione:
 146 + 159 -> Ricerca di Brock.
+
+
+## V1.7.5 — Play! Prize Pack Resolver
+Corretto il resolver del catalogo Play! Pokémon: i nomi set normalizzati (spazi/accenti rimossi) ora corrispondono alle chiavi leggibili del catalogo. Esempio verificato: Ricerca di Brock 146/159, Avventure Insieme, Prize Pack Series 9 → trend Cardmarket 0,16 €.

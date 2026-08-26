@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.4 Play Price Fix</title>
+<title>Cardoryx V1.7.5 Play Price Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2566,7 +2566,23 @@ function playAutoKey(card){
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   return `${setName}|${num}`;
 }
-function playAutoMatch(card){return PLAY_AUTO_CATALOG[playAutoKey(card)]||null}
+function playAutoMatch(card){
+  // PLAY_AUTO_CATALOG was originally written with human-readable set names
+  // (e.g. "avventure insieme|146"), while playAutoKey() uses normText()
+  // ("avventureinsieme|146"). Resolve both forms so a valid Prize Pack
+  // price is not lost just because of spaces/accents in the catalogue key.
+  const direct=PLAY_AUTO_CATALOG[playAutoKey(card)];
+  if(direct)return direct;
+  const setName=normText(card?.set?.name||card?.set||'');
+  const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
+  for(const [key,value] of Object.entries(PLAY_AUTO_CATALOG)){
+    const cut=key.lastIndexOf('|');
+    if(cut<0)continue;
+    const ks=key.slice(0,cut),kn=key.slice(cut+1);
+    if(normText(ks)===setName && (String(kn).replace(/^0+/,'')||String(kn))===num)return value;
+  }
+  return null;
+}
 function playAutoSeries(card){return playAutoMatch(card)?.series||[]}
 function playAutoValuation(card){
   const m=playAutoMatch(card); if(!m)return null;
