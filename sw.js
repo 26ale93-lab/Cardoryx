@@ -1,4 +1,4 @@
-const CACHE='cardoryx-v1.7.7-play-variant-validator';
+const CACHE='cardoryx-v1.7.8-play-variant-validator';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./cardoryx-logo.png','./apple-touch-icon.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});

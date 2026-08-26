@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.7.7 Play Price Fix</title>
+<title>Cardoryx V1.7.8 Play Price Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -381,9 +381,9 @@
       <div id="ocrStatus" class="footer-note">Un solo flusso: foto → Numero/Totale → TCGdex → Conferma.</div>
     </div>
 
-    <div id="singleScanFallback" class="card hidden">
-  <div class="section-title">Inserimento manuale solo se serve</div>
-  <div class="small">Se la lettura automatica non riesce, inserisci soltanto i due numeri stampati sulla carta.</div>
+    <div id="singleScanFallback" class="card">
+  <div class="section-title">🔢 Ricerca senza foto</div>
+  <div class="small">Puoi cercare direttamente una carta inserendo <b>Numero carta</b> e <b>Totale set</b>, anche senza scattare alcuna foto.</div>
   <div class="row" style="margin-top:10px">
     <div>
       <div class="label">Numero carta</div>
@@ -1161,7 +1161,7 @@ function applyCardCrop(){
   document.addEventListener('input',e=>{if(e.target?.id===id)renderCardCrop()});
 });
 
-function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';document.getElementById('singleScanFallback')?.classList.add('hidden');clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Leggerò Numero/Totale set. Il nome OCR è disattivato.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
+function loadQueueItem(i){updateQuickQueueInfo();if(i<0||i>=scanQueue.length)return;queueIndex=i;editedCardPhoto='';const f=scanQueue[i];preview.src=URL.createObjectURL(f);previewWrap.classList.remove('hidden');document.getElementById('photoEditActions')?.classList.remove('hidden');ocrBtn.disabled=false;nameInput.value='';numberInput.value='';setTotalInput.value='';lastOCR={name:'',number:'',total:''};if(document.getElementById('scannerProLocal'))document.getElementById('scannerProLocal').value='';if(document.getElementById('scannerProTotal'))document.getElementById('scannerProTotal').value='';results.innerHTML='';searchMsg.textContent='';document.getElementById('singleScanFallback')?.classList.remove('hidden');clearSelection();renderQueue();ocrStatus.textContent=`Carta ${i+1} di ${scanQueue.length}. Premi “Riconosci carta”.`;setScanProgress(0,'Pronto. Leggerò Numero/Totale set. Il nome OCR è disattivato.');setScanMode('modeCode','');document.getElementById('scanFallbackInfo').innerHTML=''}
 function nextQueueItem(){if(queueIndex>=0&&queueIndex<scanQueue.length-1){loadQueueItem(queueIndex+1);return true}return false}
 async function loadTesseract(){if(window.Tesseract)return;ocrStatus.textContent='Carico OCR…';await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 async function imageFromFile(file){return await new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=URL.createObjectURL(file)})}
@@ -2037,7 +2037,7 @@ async function runSmartOCR(){
 
   ocrBtn.disabled=true;
   const fallback=document.getElementById('singleScanFallback');
-  if(fallback)fallback.classList.add('hidden');
+  if(fallback)fallback.classList.remove('hidden');
   results.innerHTML='';
   searchMsg.textContent='';
   clearSelection();
