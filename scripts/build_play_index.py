@@ -356,15 +356,16 @@ def main():
         )
     )
 
-# DEBUG — mostra i prodotti Mangiafuoco / Firebreather della Series 9
-print('\n=== DEBUG FIREBREATHER SERIES 9 ===')
-for p in by_product.values():
-    if p.get('series') == '9' and (
-        'firebreather' in norm(p.get('name', '')) or
-        'mangiafuoco' in norm(p.get('name', ''))
-    ):
-        print(json.dumps(p, ensure_ascii=False, indent=2))
-print('=== FINE DEBUG ===\n')
+    # DEBUG — mostra i prodotti Mangiafuoco / Firebreather della Series 9
+    print('\n=== DEBUG FIREBREATHER SERIES 9 ===')
+    for p in by_product.values():
+        if p.get('series') == '9' and (
+            'firebreather' in norm(p.get('name', '')) or
+            'mangiafuoco' in norm(p.get('name', ''))
+        ):
+            print(json.dumps(p, ensure_ascii=False, indent=2))
+    print('=== FINE DEBUG ===\n')
+
     print(
         json.dumps(
             out['stats'],
@@ -381,7 +382,5 @@ print('=== FINE DEBUG ===\n')
         'Wrote',
         dest
     )
-
-
 if __name__ == '__main__':
     main()
