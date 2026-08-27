@@ -1448,46 +1448,99 @@ async function fetchHintedPrintedCard(num,total){
 async function queryByPrintedCode(num,total){
   const cleanNum=String(num||'').replace(/\D/g,'');
   const cleanTotal=Number(String(total||'').replace(/\D/g,''));
-  if(!cleanNum||!cleanTotal)return [];
 
-  const hinted=await fetchHintedPrintedCard(cleanNum,cleanTotal);
-  if(hinted)return [hinted];
+  if(!cleanNum || !cleanTotal)return [];
 
   const found=new Map();
-
-  // Fast route: cerca subito il numero carta su IT + EN, poi valida il totale set.
-  // Evita di dover idratare centinaia di set prima di trovare espansioni recenti.
-  const briefs=await queryByAnyLocalId(cleanNum);
-  for(const b of briefs.slice(0,120)){
-    const c=await fetchFullCandidate(b);
-    if(c?.id &&
-       sameCollectorNumber(c.localId,cleanNum) &&
-       sameSetTotal(setOfficialCount(c),cleanTotal)){
-      found.set(c.id,c);
-    }
-  }
-  if(found.size)return [...found.values()];
-
-  // Second route: trova i set con il totale ufficiale richiesto e prova l'endpoint esatto.
   const variants=numVariants(cleanNum);
-  const sets=await querySetsByOfficialCount(cleanTotal);
-  for(const s of sets){
-    for(const v of variants){
-      for(const base of [API,'https://api.tcgdex.net/v2/en']){
-        try{
-          const r=await fetch(`${base}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(v)}`,{cache:'no-store'});
-          if(!r.ok)continue;
-          const card=await r.json();
-          if(card?.id &&
-             sameCollectorNumber(card.localId,cleanNum) &&
-             sameSetTotal(setOfficialCount(card),cleanTotal)){
-            found.set(card.id,card);
-            break;
-          }
-        }catch(e){}
-      }
-      if([...found.values()].some(c=>c?.set?.id===s.id))break;
+  const bases=[API,'https://api.tcgdex.net/v2/en'];
+
+  // 0) Eventuale scorciatoia già conosciuta
+  try{
+    const hinted=await fetchHintedPrintedCard(cleanNum,cleanTotal);
+    if(hinted?.id){
+      found.set(hinted.id,hinted);
+      return [...found.values()];
     }
+  }catch(e){
+    console.warn('Printed hint:',e);
+  }
+
+  // 1) PERCORSO PRINCIPALE
+  // Prima identifica i set con quel totale, poi interroga direttamente
+  // numero/set. Evita decine di richieste inutili su mobile.
+  try{
+    const sets=await querySetsByOfficialCount(cleanTotal);
+
+    for(const s of sets){
+      if(!s?.id)continue;
+
+      for(const v of variants){
+        let matched=false;
+
+        for(const base of bases){
+          try{
+            const url=
+              `${base}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(v)}`;
+
+            const r=await fetch(url,{cache:'no-store'});
+            if(!r.ok)continue;
+
+            const card=await r.json();
+
+            if(
+              card?.id &&
+              sameCollectorNumber(card.localId,cleanNum)
+            ){
+              // Il set è già stato selezionato tramite il totale ufficiale,
+              // quindi non dipendiamo dal fatto che la card response
+              // ripeta correttamente cardCount.
+              found.set(card.id,card);
+              matched=true;
+              break;
+            }
+          }catch(e){
+            console.warn('Direct set/card lookup:',s.id,v,e);
+          }
+        }
+
+        if(matched)break;
+      }
+    }
+
+    if(found.size)return [...found.values()];
+  }catch(e){
+    console.warn('Set total lookup:',e);
+  }
+
+  // 2) FALLBACK
+  // Cerca il numero globalmente, ma limita fortemente le richieste.
+  try{
+    const briefs=await queryByAnyLocalId(cleanNum);
+
+    const batch=briefs.slice(0,30);
+
+    const full=await Promise.all(
+      batch.map(async b=>{
+        try{
+          return await fetchFullCandidate(b);
+        }catch(e){
+          return null;
+        }
+      })
+    );
+
+    for(const c of full){
+      if(
+        c?.id &&
+        sameCollectorNumber(c.localId,cleanNum) &&
+        sameSetTotal(setOfficialCount(c),cleanTotal)
+      ){
+        found.set(c.id,c);
+      }
+    }
+  }catch(e){
+    console.warn('Global collector fallback:',e);
   }
 
   return [...found.values()];
