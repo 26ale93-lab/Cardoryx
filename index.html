@@ -1453,38 +1453,94 @@ async function queryByPrintedCode(num,total){
   if(!cleanNum || !cleanTotal)return [];
 
   const found=new Map();
-  const variants=numVariants(cleanNum);
-  const bases=[API,'https://api.tcgdex.net/v2/en'];
 
-  // 0) Eventuale scorciatoia già conosciuta
+  // 0) Manteniamo temporaneamente gli hint già presenti.
+  // Sono solo una scorciatoia e non sono più necessari per le nuove carte.
   try{
     const hinted=await fetchHintedPrintedCard(cleanNum,cleanTotal);
     if(hinted?.id){
       found.set(hinted.id,hinted);
       return [...found.values()];
     }
+  }catch(e){}
+
+  // 1) Cerca esclusivamente le carte con quel numero.
+  // TCGdex viene interrogato sia IT sia EN da queryByAnyLocalId().
+  let briefs=[];
+  try{
+    briefs=await queryByAnyLocalId(cleanNum);
   }catch(e){
-    console.warn('Printed hint:',e);
+    console.warn('Ricerca localId:',e);
   }
 
-  // 1) PERCORSO PRINCIPALE
-  // Prima identifica i set con quel totale, poi interroga direttamente
-  // numero/set. Evita decine di richieste inutili su mobile.
-  try{
-    const sets=await querySetsByOfficialCount(cleanTotal);
+  if(!briefs.length)return [];
 
-    for(const s of sets){
-      if(!s?.id)continue;
+  // 2) Per ogni candidato controlla SOLTANTO il suo set.
+  // Non scarichiamo più l'intero archivio dei set TCGdex.
+  for(const brief of briefs.slice(0,60)){
+    try{
+      const full=await fetchFullCandidate(brief);
+
+      if(!full?.id || !sameCollectorNumber(full.localId,cleanNum)){
+        continue;
+      }
+
+      const setId=
+        full?.set?.id ||
+        brief?.set?.id ||
+        '';
+
+      if(!setId)continue;
+
+      const setDetail=await fetchSetDetail(setId);
+      if(!setDetail)continue;
+
+      const official=Number(setDetail?.cardCount?.official||0);
+
+      if(official!==cleanTotal)continue;
+
+      // Il numero e il totale del set corrispondono.
+      found.set(full.id,{
+        ...full,
+        set:{
+          ...(full.set||{}),
+          ...setDetail
+        }
+      });
+
+    }catch(e){
+      console.warn('Verifica candidato Numero/Totale:',brief?.id,e);
+    }
+  }
+
+  if(found.size)return [...found.values()];
+
+  // 3) Ultimo fallback:
+  // se il brief possiede già un set, prova direttamente
+  // /sets/{setId}/{numero} con le varianti 98 / 098 ecc.
+  const variants=numVariants(cleanNum);
+
+  for(const brief of briefs.slice(0,60)){
+    const setId=brief?.set?.id;
+    if(!setId)continue;
+
+    try{
+      const setDetail=await fetchSetDetail(setId);
+      if(
+        !setDetail ||
+        Number(setDetail?.cardCount?.official||0)!==cleanTotal
+      ){
+        continue;
+      }
 
       for(const v of variants){
-        let matched=false;
-
-        for(const base of bases){
+        for(const base of [API,'https://api.tcgdex.net/v2/en']){
           try{
-            const url=
-              `${base}/sets/${encodeURIComponent(s.id)}/${encodeURIComponent(v)}`;
+            const r=await fetch(
+              `${base}/sets/${encodeURIComponent(setId)}/${encodeURIComponent(v)}`,
+              {cache:'no-store'}
+            );
 
-            const r=await fetch(url,{cache:'no-store'});
             if(!r.ok)continue;
 
             const card=await r.json();
@@ -1493,55 +1549,17 @@ async function queryByPrintedCode(num,total){
               card?.id &&
               sameCollectorNumber(card.localId,cleanNum)
             ){
-              // Il set è già stato selezionato tramite il totale ufficiale,
-              // quindi non dipendiamo dal fatto che la card response
-              // ripeta correttamente cardCount.
               found.set(card.id,card);
-              matched=true;
               break;
             }
-          }catch(e){
-            console.warn('Direct set/card lookup:',s.id,v,e);
-          }
+          }catch(e){}
         }
 
-        if(matched)break;
+        if(found.size)break;
       }
-    }
+    }catch(e){}
 
-    if(found.size)return [...found.values()];
-  }catch(e){
-    console.warn('Set total lookup:',e);
-  }
-
-  // 2) FALLBACK
-  // Cerca il numero globalmente, ma limita fortemente le richieste.
-  try{
-    const briefs=await queryByAnyLocalId(cleanNum);
-
-    const batch=briefs.slice(0,30);
-
-    const full=await Promise.all(
-      batch.map(async b=>{
-        try{
-          return await fetchFullCandidate(b);
-        }catch(e){
-          return null;
-        }
-      })
-    );
-
-    for(const c of full){
-      if(
-        c?.id &&
-        sameCollectorNumber(c.localId,cleanNum) &&
-        sameSetTotal(setOfficialCount(c),cleanTotal)
-      ){
-        found.set(c.id,c);
-      }
-    }
-  }catch(e){
-    console.warn('Global collector fallback:',e);
+    if(found.size)break;
   }
 
   return [...found.values()];
