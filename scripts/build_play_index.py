@@ -219,6 +219,14 @@ def main():
 
             pr = price_by.get(pid, {})
 
+                        # Conserva anche i metadati originali Cardmarket.
+            # Servono per distinguere V1 / V2 / foil senza inventare regole.
+            catalog_meta = {
+                str(k): v
+                for k, v in r.items()
+                if isinstance(v, (str, int, float, bool)) or v is None
+            }
+
             payload = {
                 'idProduct': pid,
                 'series': str(exp_to_series[exp]),
@@ -227,11 +235,15 @@ def main():
                 'name': product_name(r),
                 'nameKey': norm(product_name(r)),
                 'updated': generated,
+
+                'catalog': catalog_meta,
+
                 'prices': {
                     k: pr.get(k)
                     for k in price_fields
                     if pr.get(k) is not None
                 }
+            }
             }
 
             payloads.append(payload)
