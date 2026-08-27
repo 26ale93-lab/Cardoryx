@@ -2675,10 +2675,18 @@ function staticPlayCandidates(index,card,series){
   }
 
   // 2) ID Cardmarket della carta base -> stessa metacard -> Prize Pack
-  for(const id of tcgdexBaseCMIds(card)){
-    const arr=index.byBaseProduct?.[String(id)]?.[ps];
-    if(Array.isArray(arr))out.push(...arr);
-  }
+const baseIds=new Set(tcgdexBaseCMIds(card));
+
+// TCGdex espone spesso l'idProduct Cardmarket direttamente nel pricing.
+const pricingId=Number(card?.pricing?.cardmarket?.idProduct);
+if(Number.isFinite(pricingId) && pricingId>0){
+  baseIds.add(pricingId);
+}
+
+for(const id of baseIds){
+  const arr=index.byBaseProduct?.[String(id)]?.[ps];
+  if(Array.isArray(arr))out.push(...arr);
+}
 
   // 3) Fallback tramite idMetacard
   // Schema V2 dell'indice Cardoryx
