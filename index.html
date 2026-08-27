@@ -2663,20 +2663,72 @@ function tcgdexBaseCMIds(card){
   return [...new Set(ids)];
 }
 function staticPlayCandidates(index,card,series){
-  const ps=String(normalizedPlaySeries(series)||''); if(!ps)return [];
+  const ps=String(normalizedPlaySeries(series)||'');
+  if(!ps)return [];
+
   const out=[];
-  // 1) Se TCGdex conosce già l'idProduct Play, l'indice lo usa direttamente.
+
+  // 1) ID Cardmarket della versione Play! già conosciuto da TCGdex
   for(const id of tcgdexPlayCMIds(card)){
     const p=index.byProduct?.[String(id)];
     if(p && String(p.series)===ps)out.push(p);
   }
-  // 2) Percorso principale: idProduct base -> idMetacard -> prodotti della Prize Pack Series.
+
+  // 2) ID Cardmarket della carta base -> stessa metacard -> Prize Pack
   for(const id of tcgdexBaseCMIds(card)){
     const arr=index.byBaseProduct?.[String(id)]?.[ps];
     if(Array.isArray(arr))out.push(...arr);
   }
+
+  // 3) Fallback tramite idMetacard
+  // Schema V2 dell'indice Cardoryx
+  const metaIds=new Set();
+
+  const variants=Array.isArray(card?.variants_detailed)
+    ? card.variants_detailed
+    : [];
+
+  for(const x of variants){
+    const meta=Number(
+      x?.thirdParty?.cardmarketMetacard ??
+      x?.thirdParty?.idMetacard ??
+      x?.idMetacard
+    );
+
+    if(Number.isFinite(meta) && meta>0){
+      metaIds.add(String(meta));
+    }
+  }
+
+  const directMeta=Number(card?.idMetacard);
+  if(Number.isFinite(directMeta) && directMeta>0){
+    metaIds.add(String(directMeta));
+  }
+
+  for(const meta of metaIds){
+    const arr=index.byMetacard?.[meta]?.[ps];
+    if(Array.isArray(arr))out.push(...arr);
+  }
+
+  // 4) Fallback V2 tramite nome carta.
+  // Utile quando TCGdex non fornisce un collegamento Cardmarket sufficiente.
+  const nameKey=normText(card?.name||'');
+
+  if(nameKey){
+    const arr=index.byName?.[nameKey]?.[ps];
+    if(Array.isArray(arr))out.push(...arr);
+  }
+
+  // Elimina eventuali duplicati
   const seen=new Set();
-  return out.filter(x=>x&&x.idProduct&&!seen.has(x.idProduct)&&(seen.add(x.idProduct),true));
+
+  return out.filter(x=>{
+    const id=Number(x?.idProduct);
+    if(!Number.isFinite(id) || id<=0)return false;
+    if(seen.has(id))return false;
+    seen.add(id);
+    return true;
+  });
 }
 function staticProductToPrice(p,finish){
   if(!p)return null;
