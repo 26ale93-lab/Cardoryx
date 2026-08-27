@@ -3173,7 +3173,13 @@ function saveSelected(){
       image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',imageCandidates:selectedCard._imageCandidates||[],officialPage:selectedCard._officialPage||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:canonicalVariant(document.getElementById('variant')?.value||'Normal'),stamp:canonicalStamp(document.getElementById('stamp')?.value||'None'),playSeries:canonicalStamp(document.getElementById('stamp')?.value||'None')==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('playSeries')?.value||''):'',status:selectedStatus(),condition:selectedCondition(),
-      pricing:selectedCard.pricing||null,priceUpdatedAt:selectedCard.pricing?.cardmarket?.updated||'',
+      pricing:selectedCard.pricing||null,
+livePlayPrice:selectedCard.livePlayPrice||scanPriceCard?.livePlayPrice||null,
+priceUpdatedAt:
+  selectedCard.livePlayPrice?.updated||
+  scanPriceCard?.livePlayPrice?.updated||
+  selectedCard.pricing?.cardmarket?.updated||
+  '',
       qty:1,addedAt:new Date().toISOString()
     };
 
