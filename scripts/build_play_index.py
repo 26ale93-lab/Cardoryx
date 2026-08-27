@@ -244,7 +244,6 @@ def main():
                     if pr.get(k) is not None
                 }
             }
-            }
 
             payloads.append(payload)
 
