@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.28 MEE30 Edition Guard</title>
+<title>Cardoryx V2.1.29 Safe MEE30 Guard</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2837,15 +2837,20 @@ function cacheOfficialPlaySeries(card,series){
   card._cardoryxOfficialPlaySeries=xs;
   return xs;
 }
-// V2.1.28 — exact identity guard for the 30th Celebration Basic Energies.
-// Cardmarket names the expansion "30° Anniversario" (IT) / "30th Celebration" (EN).
-// These are MEE 009–016 and must never inherit Prize Pack matches from MEE 001–008
-// merely because the generic Basic Energy name is identical.
+// V2.1.29 — startup-safe identity guard for MEE 009–016.
+// IMPORTANT: this helper intentionally does not call codedEnergyInfo() or any
+// constants declared later in the script, so it is safe even during startup.
 function isMee30CelebrationEnergy(card){
-  const x=codedEnergyIdentityFromCard(card);
-  if(!x || x.set!=='MEE')return false;
-  const n=Number(x.num);
-  return n>=9 && n<=16;
+  if(!card)return false;
+  const id=String(card.id||'').toUpperCase();
+  const setRaw=String(card.set?.id||card.set?.code||card.set||'').toUpperCase();
+  const set=(setRaw==='MEE'||/^MEE[-_]/.test(id))?'MEE':'';
+  if(set!=='MEE')return false;
+  let raw=String(card.localId??card.number??'').trim();
+  if(!raw){const m=id.match(/^MEE[-_](\d{1,3})$/);if(m)raw=m[1];}
+  const m=raw.match(/(\d{1,3})/);if(!m)return false;
+  const n=Number(m[1]);
+  return Number.isInteger(n)&&n>=9&&n<=16;
 }
 function stampEvidenceVerified(card,stamp){
   const st=canonicalStamp(stamp);
@@ -2866,11 +2871,7 @@ function stampEvidenceVerified(card,stamp){
 function stampExistsForCard(card,stamp){
   const st=canonicalStamp(stamp);
   if(isMee30CelebrationEnergy(card)){
-    if(st==='30° Anniversario'||st==='Altro')return true;
-    // MEE 009–016 are intrinsic 30th Celebration energies, not Pokémon Day
-    // and not Play! Pokémon Prize Pack cards. "Nessuno" is intentionally
-    // unavailable so the edition cannot be accidentally stripped.
-    return false;
+    return st==='30° Anniversario'||st==='Altro';
   }
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
@@ -2888,7 +2889,6 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
     sel.value='30° Anniversario';
     const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
     if(ps)ps.value='';
-    if(card){card.playSeries=''; if(!edit)card.stamp='30° Anniversario';}
   }
   // Never keep an unsupported edition selected. During the first async
   // hydration in the edit modal we may preserve it briefly until the
@@ -2929,13 +2929,6 @@ function migrateFinishStamp(c){
   }
 
   c.stamp=canonicalStamp(c.stamp||'None');
-  if(isMee30CelebrationEnergy(c)){
-    c.stamp='30° Anniversario';
-    c.playSeries='';
-    // Every 30th Celebration card is foil, including Basic Energy.
-    // Correct only the impossible legacy Normal selection; preserve manual/unknown choices.
-    if(canonicalVariant(c.variant||'Normal')==='Normal')c.variant='Holo';
-  }
   return c;
 }
 
@@ -3231,12 +3224,6 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   if(!card)return new Set(['Speciale / Altro','Non so']);
   const stamp=canonicalStamp(stampOverride ?? card?.stamp ?? 'None');
   const series=normalizedPlaySeries(seriesOverride ?? card?.playSeries ?? '');
-  if(isMee30CelebrationEnergy(card)){
-    // Pokémon states that every 30th Celebration card is foil, including Basic Energy.
-    // Cardmarket has not yet published per-card MEE009–016 prices, so finish evidence
-    // is limited to the physical foil fact; no Prize Pack finish is allowed to leak in.
-    return new Set(['Holo','Speciale / Altro','Non so']);
-  }
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
   const pool=it.length?it:d;
@@ -3471,7 +3458,6 @@ function tcgdexBaseCMIds(card){
 function staticPlayCandidates(index,card,series){
   const ps=String(normalizedPlaySeries(series)||'');
   if(!ps)return [];
-  // V2.1.28: never match MEE009–016 to Prize Pack by generic Basic Energy name.
   if(isMee30CelebrationEnergy(card))return [];
 
   const out=[];
@@ -5155,11 +5141,6 @@ function applyPlayAutoSeries(card,edit=false){
   if(!card)return;
   const series=playAutoSeries(card),el=document.getElementById(edit?'editPlaySeries':'playSeries');
   if(!el)return;
-  if(isMee30CelebrationEnergy(card)){
-    el.value='';
-    [...el.options].forEach(o=>{o.disabled=!!o.value;});
-    return;
-  }
   // Se il catalogo verificato conosce le Prize Pack Series compatibili,
   // impedisce di scegliere serie che non appartengono a quella carta.
   // Per carte non ancora catalogate lascia invece tutte le opzioni disponibili.
