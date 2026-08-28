@@ -2774,17 +2774,29 @@ function addCoarseStandardFinishes(allowed,card){
   const v=card?.variants && !Array.isArray(card.variants)?card.variants:null;
   if(!v)return false;
 
-  // Some modern ex / high-rarity records have incomplete or polluted coarse
-  // variant flags because promo/reprint information is mixed into the card.
-  // For intrinsically-foil rarity classes, the regular set printing is Holo.
+  // Intrinsically-foil modern rarities are a special case: coarse flags can be
+  // polluted by promo/reprint data. Their regular set printing is Holo.
   if(rarityForcesStandardHolo(card)){
     allowed.add('Holo');
     return true;
   }
 
+  // TCGdex documents these booleans as "printing is known to exist". They are
+  // complementary evidence to variants_detailed, not a fallback that must be
+  // ignored merely because one detailed row exists.
   if(v.normal===true)allowed.add('Normal');
   if(v.holo===true)allowed.add('Holo');
   if(v.reverse===true)allowed.add('Reverse Holo');
+  return allowed.size>0;
+}
+
+function addMarketplaceStandardFinishes(allowed,card){
+  const p=card?.pricing?.tcgplayer;
+  if(!p || typeof p!=='object')return false;
+  const keys=Object.keys(p).map(normText);
+  if(keys.some(k=>k==='normal'))allowed.add('Normal');
+  if(keys.some(k=>k==='holofoil'||k==='holo'))allowed.add('Holo');
+  if(keys.some(k=>k==='reverseholofoil'||k==='reverseholo'))allowed.add('Reverse Holo');
   return allowed.size>0;
 }
 
@@ -2799,20 +2811,17 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   let allowed=new Set();
 
   if(stamp==='None'){
-    // 1) Explicit unstamped detailed rows are the strongest evidence.
-    if(basePool.length){
-      addDetailedBaseFinishes(allowed,basePool);
-    }else{
-      // 2) If variants_detailed contains only stamped/promo rows, do NOT treat
-      //    that as proof that the standard printing has no finish. Fall back to
-      //    the card-level variants object. This is the Riolu MEG 076 case.
-      addCoarseStandardFinishes(allowed,card);
+    // V2.1.10 — combine independent evidence instead of choosing exactly one
+    // source. variants_detailed can legitimately contain only the special
+    // Poké Ball/Master Ball rows while the coarse variants object still carries
+    // Holo/Reverse. Treating detailed data as exclusive caused those standard
+    // finishes to disappear in Edit.
+    if(basePool.length)addDetailedBaseFinishes(allowed,basePool);
+    addCoarseStandardFinishes(allowed,card);
+    addMarketplaceStandardFinishes(allowed,card);
 
-      // 3) Old saved records may predate persistence of `variants`. A narrow
-      //    rarity fallback prevents intrinsically-foil cards (e.g. Double Rare
-      //    Pokémon ex) from silently becoming Normal.
-      if(!allowed.size && rarityForcesStandardHolo(card))allowed.add('Holo');
-    }
+    // Last-resort protection for old/incomplete records.
+    if(!allowed.size && rarityForcesStandardHolo(card))allowed.add('Holo');
   }
 
   // For Play! Pokémon, use the detailed TCGdex rows that explicitly carry
@@ -3828,8 +3837,6 @@ async function hydrateEditCardEvidence(card){
   addId(card.tcgdexId);
   addId(card.id);
 
-  // Old collection records can lack the full TCGdex payload. Recover it here
-  // instead of guessing finishes from the saved display state.
   if(!ids.length || !ids.some(x=>x.includes('-'))){
     try{
       const briefs=await apiCardsQuery({name:String(card.name||'').trim()});
@@ -3847,21 +3854,43 @@ async function hydrateEditCardEvidence(card){
     }catch(e){}
   }
 
+  const mergeDetailed=(target,rows)=>{
+    const out=Array.isArray(target)?target.slice():[];
+    for(const x of (Array.isArray(rows)?rows:[])){
+      const sig=JSON.stringify([x?.type||'',x?.subtype||'',x?.foil||'',Array.isArray(x?.stamp)?[...x.stamp].sort():[],Array.isArray(x?.languages)?[...x.languages].sort():[],x?.thirdParty?.cardmarket||'',x?.thirdParty?.tcgplayer||'']);
+      if(!out.some(y=>JSON.stringify([y?.type||'',y?.subtype||'',y?.foil||'',Array.isArray(y?.stamp)?[...y.stamp].sort():[],Array.isArray(y?.languages)?[...y.languages].sort():[],y?.thirdParty?.cardmarket||'',y?.thirdParty?.tcgplayer||''])===sig))out.push(x);
+    }
+    return out;
+  };
+  const mergeCoarse=(a,b)=>{
+    const out={...(a&&typeof a==='object'&&!Array.isArray(a)?a:{})};
+    if(b&&typeof b==='object'&&!Array.isArray(b))for(const [k,v] of Object.entries(b))out[k]=(out[k]===true||v===true)?true:(out[k]??v);
+    return Object.keys(out).length?out:null;
+  };
+
+  // Fetch BOTH Italian and English payloads. Completion can differ by language;
+  // returning after the first response was the remaining Edit-mode data loss.
   for(const id of ids){
+    let matched=false;
     for(const base of [API,'https://api.tcgdex.net/v2/en']){
       try{
         const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
         if(!r.ok)continue;
         const full=await r.json();
         if(!full?.id)continue;
-        if(full.variants!==undefined)card.variants=full.variants;
-        if(Array.isArray(full.variants_detailed))card.variants_detailed=full.variants_detailed;
-        if(full.pricing && !card.pricing)card.pricing=full.pricing;
+        if(card.localId && full.localId && !sameCollectorNumber(card.localId,full.localId))continue;
+        if(!priceSetMatches(card,full))continue;
+        matched=true;
+        card.variants=mergeCoarse(card.variants,full.variants);
+        card.variants_detailed=mergeDetailed(card.variants_detailed,full.variants_detailed);
+        if(full.pricing){
+          card.pricing={...(card.pricing||{}),...full.pricing};
+        }
+        if(full.rarity&&!card.rarity)card.rarity=full.rarity;
         card.tcgdexId=full.id||card.tcgdexId||'';
-        try{await enrichCardoryxEnglishIdentity(card)}catch(e){}
-        return card;
       }catch(e){}
     }
+    if(matched){try{await enrichCardoryxEnglishIdentity(card)}catch(e){};return card;}
   }
   return card;
 }
