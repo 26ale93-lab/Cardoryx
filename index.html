@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.13 Prize Pack Series 1–9 Resolver</title>
+<title>Cardoryx V2.1.14 Prize Pack Series 1–9 Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2782,7 +2782,7 @@ function isModernParallelEra(card){
 }
 
 
-// V2.1.13 — Prize Pack Series 1–9 resolver.
+// V2.1.14 — Prize Pack Series 1–9 resolver + exact product refresh.
 // The official Cardmarket catalogue exposes one product for a single printing
 // and two products (V1/V2, ordered by product id) when Standard + Standard Foil
 // are both present. We only turn that product structure into finishes when the
@@ -3246,6 +3246,24 @@ for(const id of baseIds){
   const uniqueBaseNames=[...new Set(baseNames)];
   const identityText=normText(card?._cardoryxEnglishIdentityText||identityPhrases.join(' '));
 
+  // Pre-compute qualified-name fallbacks per base name. Cardmarket often
+  // stores species cards as "Name [Ability | Attack]" while older saved
+  // records may not yet have the English attack text hydrated. If exactly ONE
+  // Cardmarket name in the requested Prize Pack Series starts with the base
+  // card name, that qualified identity is safe to use as a fallback. If there
+  // are multiple possible qualified identities we keep the match unresolved.
+  const uniqueQualifiedByBase=new Map();
+  for(const baseName of uniqueBaseNames){
+    const matches=[];
+    for(const [kk,sm] of Object.entries(index.byName||{})){
+      const aa=sm?.[ps];
+      if(!Array.isArray(aa)||!aa.length)continue;
+      const compact=normText(kk);
+      if(compact===baseName||compact.startsWith(baseName))matches.push([kk,aa]);
+    }
+    if(matches.length===1)uniqueQualifiedByBase.set(baseName,matches[0][0]);
+  }
+
   for(const [k,seriesMap] of Object.entries(index.byName||{})){
     const arr=seriesMap?.[ps];
     if(!Array.isArray(arr)||!arr.length)continue;
@@ -3253,9 +3271,10 @@ for(const id of baseIds){
     let matched=false;
     for(const baseName of uniqueBaseNames){
       if(keyCompact===baseName){matched=true;break;}
-      if(identityText && keyCompact.startsWith(baseName)){
+      if(keyCompact.startsWith(baseName)){
         const qualifier=keyCompact.slice(baseName.length);
-        if(qualifier && identityText.includes(qualifier)){matched=true;break;}
+        if(identityText && qualifier && identityText.includes(qualifier)){matched=true;break;}
+        if(uniqueQualifiedByBase.get(baseName)===k){matched=true;break;}
       }
     }
     if(matched)out.push(...arr);
@@ -3972,11 +3991,14 @@ function saveSelected(){
       _cardoryxEnglishPhrases:(selectedCard._cardoryxEnglishPhrases||scanPriceCard?._cardoryxEnglishPhrases||[]),
       _cardoryxEnglishIdentityText:(selectedCard._cardoryxEnglishIdentityText||scanPriceCard?._cardoryxEnglishIdentityText||''),
 livePlayPrice:(()=>{
-        const existing=selectedCard.livePlayPrice||scanPriceCard?.livePlayPrice||null;
-        if(existing)return existing;
         const st=canonicalStamp(document.getElementById('stamp')?.value||'None');
         const ps=normalizedPlaySeries(document.getElementById('playSeries')?.value||'');
         const fv=canonicalVariant(document.getElementById('variant')?.value||'Normal');
+        const existing=selectedCard.livePlayPrice||scanPriceCard?.livePlayPrice||null;
+        // Never persist a stale price resolved for a different Series/finish.
+        // This was the cause of a previous V1/V2 range surviving after the user
+        // selected an exact physical finish.
+        if(existing && normalizedPlaySeries(existing.series||'')===ps && canonicalVariant(existing.finish||'')===fv)return existing;
         if(st==='Play! Pokémon' && ps){
           const local=playAutoValuation({...selectedCard,playSeries:ps},fv);
           if(local?.exact && local?.value!=null)return {...local,series:ps,finish:fv};
@@ -4195,7 +4217,7 @@ function closeEditModal(){
   editingKey=null;
   editingCardRef=null;
 }
-function saveEditModal(){
+async function saveEditModal(){
   if(!editingKey)return;
   const c=editingCardRef||db.find(x=>recordKey(x)===editingKey);
   if(!c)return;
@@ -4219,6 +4241,32 @@ function saveEditModal(){
   c.playSeries=canonicalStamp(c.stamp)==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('editPlaySeries')?.value||''):'';
   c.status=document.getElementById('editStatus').value;
   c.condition=document.getElementById('editCondition').value;
+
+  // V2.1.14 — refresh the exact Prize Pack product immediately after an edit.
+  // A finish change must invalidate any previous ambiguous/different V1/V2
+  // result instead of leaving an old range in the collection card.
+  if(c.stamp==='Play! Pokémon' && c.playSeries && !isManualVariantChoice(c.variant)){
+    try{
+      const live=await resolveOfficialPlayPrice(c,c.playSeries,c.variant);
+      if(live){
+        c.livePlayPrice={...live,series:c.playSeries,finish:c.variant};
+        c.priceUpdatedAt=live.updated||new Date().toISOString();
+      }else{
+        c.livePlayPrice=null;
+        c.priceUpdatedAt='';
+      }
+    }catch(e){
+      console.warn('Prize Pack exact price refresh after edit failed:',e);
+      c.livePlayPrice=null;
+      c.priceUpdatedAt='';
+    }
+  }else{
+    // Non so / Speciale / Altro and non-Play editions must never inherit a
+    // previously resolved Prize Pack price.
+    c.livePlayPrice=null;
+    if(c.stamp!=='Play! Pokémon'||isManualVariantChoice(c.variant))c.priceUpdatedAt='';
+  }
+
   localStorage.setItem('cardoryx_db',JSON.stringify(db));
   closeEditModal();
   try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render after edit:',e)}
