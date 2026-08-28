@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.15 Smart Basic Energy Resolver</title>
+<title>Cardoryx V2.1.16 Energy UI Category Image Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -805,9 +805,16 @@ function cardCategory(c){
   const name=normText(c?.name||'');
   const cat=normText(c?.category||'');
   const type=normText(c?.type||'');
-  if(type.includes('energy')||cat.includes('energy')||name.includes('energia')){
-    if(name.includes('energia base')||cat.includes('base energy'))return '⚡ Energie Base';
-    return '⚡ Energie Speciali';
+  const energyType=normText(c?.energyType||'');
+  const isEnergy=energyType||type.includes('energy')||cat.includes('energy')||cat.includes('energia')||name.includes('energia')||name.includes('energy');
+  if(isEnergy){
+    // energyType is the strongest signal. This also repairs older saved Basic
+    // Energy records at render time without requiring a database migration.
+    if(energyType.includes('base')||energyType.includes('basic')||name.includes('energia base')||name.includes('basic energy')||cat.includes('base energy'))return '⚡ Energie Base';
+    if(energyType.includes('special')||energyType.includes('speciale'))return '✨ Energie Speciali';
+    // A numbered/basic-looking energy must not silently fall into Special.
+    if(/^\s*(sve|mee)/i.test(String(c?.printedCode||''))||/^\s*(sve|mee)-/i.test(String(c?.id||'')))return '⚡ Energie Base';
+    return '✨ Energie Speciali';
   }
   if(cat)return c.category;
   if(type)return c.type;
@@ -1982,14 +1989,22 @@ function energyOfficialPage(setCode,num){
   const n=String(parseInt(String(num),10));
   return `https://www.pokemon.com/it/gcc/archivio-carte/series/${set.toLowerCase()}/${n}/`;
 }
+function energyArchiveImageUrl(setCode,num){
+  const x=codedEnergyInfo(setCode,num);if(!x)return '';
+  // Last-resort visual reference for cards whose current pokemon.com CDN path
+  // is not exposed yet. The filename pattern is stable in Bulbagarden Archives.
+  return `https://archives.bulbagarden.net/wiki/Special:Redirect/file/Basic${x.en}Energy${x.set}Energy${parseInt(x.num,10)}.jpg`;
+}
 function energyOfficialImageCandidates(setCode,num){
   const set=String(setCode||'').toUpperCase();
   const n=String(parseInt(String(num),10));
+  const archive=energyArchiveImageUrl(set,n);
   return [
     `https://www.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/${set}/${set}_IT_${n}.png`,
     `https://assets.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/${set}/${set}_IT_${n}.png`,
-    `https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/${set}/${set}_IT_${n}.png`
-  ];
+    `https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/${set}/${set}_IT_${n}.png`,
+    archive
+  ].filter(Boolean);
 }
 function energyImageUrl(setCode,num){return energyOfficialImageCandidates(setCode,num)[0]}
 function setEnergyImageFallback(img,setCode,num,index=0){
@@ -2102,12 +2117,26 @@ function energyPlayFamilyForSeries(type,series){
 function renderEnergyTypeChoices(type){
   const box=document.getElementById('energyTypeChoices');if(!box)return;
   const historic=type==='Folletto';
-  const modern=!historic?[0,1,2].map(b=>({set:'SVE',num:energyNumberForType(type,b)})).concat([0,1].map(b=>({set:'MEE',num:energyNumberForType(type,b)}))):[];
   box.classList.remove('hidden');
-  box.innerHTML=`<div style="font-weight:800;margin-bottom:6px">${meeEnergyEmoji(type)} Energia ${type}</div>
-    ${!historic?`<div class="small" style="margin-bottom:6px">Play! Pokémon: scegli direttamente la Series. Cardoryx determina codice/famiglia automaticamente.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px">${Array.from({length:9},(_,i)=>i+1).map(s=>`<button type="button" class="btn alt" onclick="selectPlayBasicEnergy('${type}','${s}')">Series ${s}</button>`).join('')}</div>`:''}
-    ${modern.length?`<div class="small" style="margin-bottom:6px">Stampe moderne con codice · tocca il design corretto</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:12px">${modern.map(x=>`<button type="button" class="btn alt" style="padding:7px;display:flex;align-items:center;gap:8px;text-align:left" onclick="selectCodedBasicEnergy('${x.set}','${x.num}')"><span style="width:42px;height:58px;display:flex;align-items:center;justify-content:center;flex:0 0 42px"><img src="${energyImageUrl(x.set,x.num)}" style="max-width:42px;max-height:58px;object-fit:contain;border-radius:4px" onerror="setEnergyImageFallback(this,'${x.set}','${x.num}',0)"></span><span><b>${x.set} ${x.num}</b><br><span class="small">${x.set==='SVE'?'Scarlatto/Violetto':'Megaevoluzione'}</span></span></button>`).join('')}</div>`:''}
-    <button type="button" class="btn alt big" onclick="searchHistoricBasicEnergy('${type}')">🕰️ Cerca stampe storiche / senza codice</button>`;
+  box.innerHTML=`<div style="font-weight:800;margin-bottom:8px">${meeEnergyEmoji(type)} Energia ${type}</div>
+    <div class="small" style="margin-bottom:8px">Scegli il percorso più rapido.</div>
+    <div style="display:grid;grid-template-columns:${historic?'1fr':'repeat(2,1fr)'};gap:8px">
+      ${!historic?`<button type="button" class="btn big" onclick="renderPlayEnergySeries('${type}')">🏆 Play! Pokémon</button>`:''}
+      <button type="button" class="btn alt big" onclick="renderOtherEnergyChoices('${type}')">⚡ Altra Energia Base</button>
+    </div>`;
+}
+function renderPlayEnergySeries(type){
+  const box=document.getElementById('energyTypeChoices');if(!box)return;
+  box.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button type="button" class="btn alt" style="padding:7px 10px" onclick="renderEnergyTypeChoices('${type}')">←</button><div><b>${meeEnergyEmoji(type)} Energia ${type} · Play! Pokémon</b><div class="small">Scegli la Series. Codice/famiglia vengono determinati automaticamente.</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">${Array.from({length:9},(_,i)=>i+1).map(s=>`<button type="button" class="btn alt" onclick="selectPlayBasicEnergy('${type}','${s}')">Series ${s}</button>`).join('')}</div>`;
+}
+function renderOtherEnergyChoices(type){
+  const box=document.getElementById('energyTypeChoices');if(!box)return;
+  const historic=type==='Folletto';
+  const modern=!historic?[0,1,2].map(b=>({set:'SVE',num:energyNumberForType(type,b)})).concat([0,1].map(b=>({set:'MEE',num:energyNumberForType(type,b)}))):[];
+  box.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button type="button" class="btn alt" style="padding:7px 10px" onclick="renderEnergyTypeChoices('${type}')">←</button><div><b>${meeEnergyEmoji(type)} Energia ${type}</b><div class="small">Tocca il design/codice, oppure cerca una stampa storica.</div></div></div>
+    ${modern.length?`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px">${modern.map(x=>`<button type="button" class="btn alt" style="padding:7px;display:flex;align-items:center;gap:8px;text-align:left" onclick="selectCodedBasicEnergy('${x.set}','${x.num}')"><span style="width:42px;height:58px;display:flex;align-items:center;justify-content:center;flex:0 0 42px"><img src="${energyImageUrl(x.set,x.num)}" data-energy-set="${x.set}" data-energy-num="${x.num}" style="max-width:42px;max-height:58px;object-fit:contain;border-radius:4px" onerror="setEnergyImageFallback(this,'${x.set}','${x.num}',0)"></span><span><b>${x.set} ${x.num}</b><br><span class="small">${x.set==='SVE'?'Scarlatto/Violetto':'Megaevoluzione'}</span></span></button>`).join('')}</div>`:''}
+    <button type="button" class="btn alt big" onclick="searchHistoricBasicEnergy('${type}')">🕰️ Stampe storiche / senza codice</button>`;
 }
 function selectEnergyType(type){selectedEnergyType=type;renderEnergyTypeChoices(type)}
 async function lookupBasicEnergyCode(){
@@ -2481,7 +2510,7 @@ async function searchCards(opts={}){
   searchMsg.textContent='Cerco…';
 
   try{
-    // V2.1.15 manual coded Basic Energy lookup: SVE 001–024 and MEE 001–016.
+    // V2.1.16 manual coded Basic Energy lookup: SVE 001–024 and MEE 001–016.
     const rawManual=[name,num,total].filter(Boolean).join(' ');
     const mm=rawManual.toUpperCase().match(/\b(SVE|MEE)(?:\s*IT)?\s*0*(\d{1,3})\b/);
     if(mm){
