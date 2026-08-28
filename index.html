@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.17 Energy Category Guard Fix</title>
+<title>Cardoryx V2.1.18 Energy Category Guard Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -801,27 +801,41 @@ function showView(v){
   window.scrollTo(0,0);
 }
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function energyKind(c){
+  const name=normText(c?.name||'');
+  const cat=normText(c?.category||'');
+  const et=normText(c?.energyType||'');
+  const code=String(c?.printedCode||'').trim();
+  const id=String(c?.id||'').trim();
+  const fam=String(c?._energyFamily||'').toUpperCase();
+  // Strong deterministic Basic Energy identities. These remain valid even if
+  // an older save contains a stale energyType value.
+  if(fam==='SVE'||fam==='MEE'||/^\s*(SVE|MEE)\b/i.test(code)||/^\s*(sve|mee)-/i.test(id))return 'Base';
+  if(name.includes('energia base')||name.includes('basic energy'))return 'Base';
+  const basicNames=[
+    'energia erba','energia fuoco','energia acqua','energia lampo','energia psico','energia lotta','energia oscurita','energia metallo','energia folletto',
+    'grass energy','fire energy','water energy','lightning energy','psychic energy','fighting energy','darkness energy','metal energy','fairy energy'
+  ];
+  if(basicNames.includes(name))return 'Base';
+  // Explicit Special from TCGdex wins for every non-basic identity.
+  if(et.includes('special')||et.includes('speciale'))return 'Speciale';
+  // Generic Energy cards with their own proper name/collector number are
+  // Special Energy unless they matched one of the Basic rules above.
+  const isEnergy=cat==='energy'||cat==='energia'||cat.includes('energie base')||cat.includes('energie speciali')||!!et;
+  if(isEnergy)return 'Speciale';
+  return '';
+}
 function cardCategory(c){
   const name=normText(c?.name||'');
   const cat=normText(c?.category||'');
   const type=normText(c?.type||'');
-  const energyType=normText(c?.energyType||'');
-  // Never let a stale energyType flag reclassify a real Pokemon/Trainer.
-  // Older Cardoryx saves could persist energyType='Base' on every selected card.
   const isPokemon=cat.includes('pokemon')||!!c?.hp||!!c?.stage;
   const isTrainer=cat.includes('trainer')||cat.includes('allenatore')||!!c?.trainerType;
   if(isPokemon){ if(type)return c.type||type; return c.category||'Pokémon'; }
   if(isTrainer)return c.category||'Allenatore';
-  const isEnergy=cat==='energy'||cat==='energia'||cat.includes('energie base')||cat.includes('energie speciali')||name.includes('energia base')||name.includes('basic energy')||(!isPokemon&&!isTrainer&&!!energyType);
-  if(isEnergy){
-    // energyType is the strongest signal. This also repairs older saved Basic
-    // Energy records at render time without requiring a database migration.
-    if(energyType.includes('base')||energyType.includes('basic')||name.includes('energia base')||name.includes('basic energy')||cat.includes('base energy')||cat.includes('energie base'))return '⚡ Energie Base';
-    if(energyType.includes('special')||energyType.includes('speciale'))return '✨ Energie Speciali';
-    // A numbered/basic-looking energy must not silently fall into Special.
-    if(/^\s*(sve|mee)/i.test(String(c?.printedCode||''))||/^\s*(sve|mee)-/i.test(String(c?.id||'')))return '⚡ Energie Base';
-    return '✨ Energie Speciali';
-  }
+  const ek=energyKind(c);
+  if(ek==='Base')return '⚡ Energie Base';
+  if(ek==='Speciale')return '✨ Energie Speciali';
   if(cat)return c.category;
   if(type)return c.type;
   return 'Altro';
@@ -2160,16 +2174,33 @@ async function selectCodedBasicEnergy(setCode,num){
   // Prefer the live TCGdex record when available: it can add exact artwork,
   // language metadata and documented variants. The deterministic local card is
   // retained as a safe fallback, so the Energy selector never depends on the API.
-  let live=null;
+  let live=null,liveWithPrice=null;
   const ids=[`${String(setCode).toLowerCase()}-${parseInt(num,10)}`,`${String(setCode).toLowerCase()}-${String(num).padStart(3,'0')}`];
+  // TCGdex localisation can expose artwork/card data before Cardmarket pricing.
+  // Keep the first valid record, but continue through EN and both id forms until
+  // a record with pricing.cardmarket is found.
   for(const base of [API,'https://api.tcgdex.net/v2/en']){
     for(const id of ids){
-      try{const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});if(r.ok){const x=await r.json();if(x&&!x.error){live=x;break}}}catch(e){}
+      try{
+        const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+        if(!r.ok)continue;
+        const x=await r.json();
+        if(!x||x.error)continue;
+        if(!live)live=x;
+        if(x?.pricing?.cardmarket){liveWithPrice=x;break;}
+      }catch(e){}
     }
-    if(live)break;
+    if(liveWithPrice)break;
   }
+  live=liveWithPrice||live;
   if(live){
     live={...local,...live,_energyFamily:local._energyFamily,_printedCode:local._printedCode};
+    // Prefer the real TCGdex artwork if present. Do not let the deterministic
+    // local fallback _imageUrl hide a valid live image (fixes SVE 009/010/017 etc.).
+    const liveImage=String(live.image||'');
+    if(liveImage){live._imageUrl='';live.image=liveImage;}
+    else {live._imageUrl=local._imageUrl;live.image=local.image;}
+    live._imageCandidates=local._imageCandidates;
     live._cardoryxLocal=false;
     await chooseCard(live);
   }else await chooseCard(local);
@@ -4087,11 +4118,12 @@ function saveSelected(){
     if(trainerType==='Supporter')trainerType='Aiuto';
     if(trainerType==='Stadium')trainerType='Stadio';
     if(trainerType==='Pokémon Tool')trainerType='Oggetto Pokémon';
-    const energyBlob=normText(`${selectedCard.energyType||''} ${selectedCard.category||''} ${selectedCard.name||''}`);
     const selectedCategory=inferCategory(selectedCard);
-    const energyType=selectedCategory==='Energia'
-      ? ((energyBlob.includes('special')||energyBlob.includes('speciale'))?'Speciale':'Base')
-      : '';
+    // Persist the energy kind only when it is genuinely an Energy card. Basic
+    // is opt-in through deterministic Basic identities; named Energy cards such
+    // as Energia Fighting Rocciosa remain Special even if an old record carried
+    // the stale value "Base".
+    const energyType=selectedCategory==='Energia' ? (energyKind(selectedCard)||'Speciale') : '';
 
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
