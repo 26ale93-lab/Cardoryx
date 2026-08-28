@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.24 Energy Stable Media</title>
+<title>Cardoryx V2.1.25 Energy Stable Media</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2071,7 +2071,16 @@ function energyOfficialImageCandidates(setCode,num){
   // plain <img> resource on Safari/GitHub Pages. Keep both naming variants
   // used by the CDN, then retain the previous sources only as fallbacks.
   const limitlessBase=`https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/${set}/${set}_${p}_R_EN`;
+  // v2.1.25 — MEE 009–016 are 30th Celebration energies (not yet present on
+  // the regular Limitless MEE CDN as of 2026-08-28). Bulbagarden already
+  // hosts the verified scans. Route only these eight known archive files
+  // through weserv's HTTPS image cache/proxy so Safari never hotlinks the
+  // Bulbagarden origin directly. SVE and MEE 001–008 remain unchanged.
+  const mee30Proxy=(set==='MEE' && Number(n)>=9 && Number(n)<=16 && archive)
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(archive)}&w=734&output=webp&q=90`
+    : '';
   return [
+    mee30Proxy,
     `${limitlessBase}_LG.png`,
     `${limitlessBase}.png`,
     tcgSeries?`https://assets.tcgdex.net/en/${tcgSeries}/${set.toLowerCase()}/${n}/high.webp`:'',
