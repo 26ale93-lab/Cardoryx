@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.39 Cardmarket Variant Resolver</title>
+<title>Cardoryx V2.1.40 Cardmarket Finish Mapping</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4147,31 +4147,63 @@ function cardmarketValueForVariant(cm,variant){
 // Cardoryx fails closed instead of guessing.
 function cardmarketValueForCardVariant(card,variant){
   const cm=card?.pricing?.cardmarket;
-  const base=cardmarketValueForVariant(cm,variant);
-  if(base?.value)return base;
+  if(!cm)return {value:0,kind:'none'};
   const v=canonicalVariant(variant||'Normal');
-  if(v!=='Reverse Holo' || !cm)return base;
+  const n=k=>{const x=Number(cm[k]||0);return Number.isFinite(x)&&x>0?x:0};
+  const standard=()=>n('trend')||n('avg7')||n('avg30')||n('avg')||n('low');
+  const reverse=()=>n('trend-holo')||n('avg7-holo')||n('avg30-holo')||n('avg-holo')||n('low-holo');
+
+  if(v==='Play! Pokémon Prize Pack'||v==='Play! Pokémon Stamp'||v==='Pokémon Day Stamp'||
+     v==='Poké Ball Reverse Holo'||v==='Master Ball Reverse Holo'||
+     v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so'){
+    return {value:0,kind:'needs-exact-variant'};
+  }
 
   let allowed=new Set();
   try{allowed=documentedVariantsForCard(card,'None','')}catch(e){}
+  const hasNormal=allowed.has('Normal');
+  const hasHolo=allowed.has('Holo');
   const hasReverse=allowed.has('Reverse Holo');
-  const hasHolo=allowed.has('Holo') || allowed.has('Cosmos Holo');
-  if(!hasReverse || hasHolo)return base;
 
-  const n=k=>{const x=Number(cm[k]||0);return Number.isFinite(x)&&x>0?x:0};
-  const value=n('trend-holo')||n('avg7-holo')||n('avg30-holo')||n('avg-holo')||n('low-holo');
-  if(!value)return base;
-  return {
-    value,
-    kind:'reverse-from-cardmarket-foil',
-    exact:true,
-    source:'Cardmarket · prezzo foil associato alla Reverse Holo documentata'
-  };
+  // Cardmarket Pokémon: la quotazione standard descrive la stampa base del prodotto.
+  // La colonna *-holo del Price Guide corrisponde alla variante con attributo Reverse Holo.
+  // Una Holo di rarità è quindi la stampa base quando non esiste anche una Normal.
+  if(v==='Reverse Holo'){
+    if(!hasReverse)return {value:0,kind:'needs-exact-variant'};
+    const x=reverse();
+    return x?{value:x,kind:'reverse-cardmarket',exact:true,
+      source:'Cardmarket · quotazione Reverse Holo'}:{value:0,kind:'needs-exact-variant'};
+  }
+
+  if(v==='Holo'){
+    if(!hasHolo)return {value:0,kind:'needs-exact-variant'};
+    // Holo + Reverse, senza Normal: la Holo è la stampa standard; Reverse usa *-holo.
+    if(!hasNormal){
+      const x=standard();
+      return x?{value:x,kind:'holo-standard-cardmarket',exact:true,
+        source:'Cardmarket · quotazione standard della carta Holo'}:{value:0,kind:'none'};
+    }
+    // Se TCGdex documenta contemporaneamente Normal e Holo, non assumiamo che
+    // il prezzo standard appartenga alla Holo.
+    return {value:0,kind:'needs-exact-variant'};
+  }
+
+  if(v==='Normal'){
+    if(hasNormal || !hasHolo){
+      const x=standard();
+      return x?{value:x,kind:'normal',exact:true,
+        source:'Cardmarket · quotazione standard'}:{value:0,kind:'none'};
+    }
+    return {value:0,kind:'needs-exact-variant'};
+  }
+
+  return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
   const cm=card?.pricing?.cardmarket||{};
   const info=cardmarketValueForCardVariant(card,variant);
-  if(info?.kind==='reverse-from-cardmarket-foil' || canonicalVariant(variant||'Normal')==='Holo'){
+  const v=canonicalVariant(variant||'Normal');
+  if(info?.kind==='reverse-cardmarket' || v==='Reverse Holo'){
     return {
       low:cm['low-holo'],
       trend:cm['trend-holo'],
