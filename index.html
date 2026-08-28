@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.34 MEE Prize Pack Exact Resolver</title>
+<title>Cardoryx V2.1.35 Group Allocations</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -662,7 +662,13 @@
       <button type="button" class="condition-close" onclick="closeEditModal()">×</button>
     </div>
     <div class="edit-grid">
-      <div><div class="label">Quantità</div><input id="editQty" type="number" min="1" inputmode="numeric"></div>
+      <div><div class="label">Quantità totale</div><input id="editQty" type="number" min="1" inputmode="numeric"></div>
+      <div id="editAllocationWrap" class="hidden" style="grid-column:1/-1">
+        <div class="label">Distribuzione copie</div>
+        <div id="editAllocationSummary" class="small" style="margin-bottom:8px"></div>
+        <div id="editAllocationGrid" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center"></div>
+        <div class="small" style="margin-top:8px">La somma delle allocazioni deve coincidere con la quantità totale.</div>
+      </div>
       <div><div class="label">Finitura</div>
         <select id="editVariant">
 <option value="Normal">Normale</option>
@@ -4586,13 +4592,60 @@ async function hydrateEditCardEvidence(card){
   return card;
 }
 
+let editingGroupKey=null;
+const CARDORYX_ALLOCATION_STATUSES=['Disponibile','Protetta','Mazzo 1','Mazzo 2','Vendita'];
+
+function allocationInputsHtml(alloc,total){
+  return CARDORYX_ALLOCATION_STATUSES.map(st=>`<label>${esc(st)}</label><input class="edit-allocation-input" data-status="${esc(st)}" type="number" min="0" max="${total}" inputmode="numeric" value="${Number(alloc?.[st]||0)}">`).join('');
+}
+function syncEditAllocationTotal(){
+  if(!editingGroupKey)return;
+  const vals=[...document.querySelectorAll('.edit-allocation-input')].map(el=>Math.max(0,parseInt(el.value,10)||0));
+  const sum=vals.reduce((a,b)=>a+b,0);
+  const qtyEl=document.getElementById('editQty');if(qtyEl)qtyEl.value=sum;
+  const info=document.getElementById('editAllocationSummary');if(info)info.textContent=`Totale allocato: ${sum}`;
+}
+function openGroupEditModal(encodedGroupKey){
+  const gkey=decodeURIComponent(encodedGroupKey);
+  const g=catalogGroups().find(x=>x.key===gkey);if(!g)return;
+  const c=g.representative;
+  editingGroupKey=gkey;editingKey=recordKey(c);editingCardRef=c;
+  document.getElementById('editTitle').textContent=c.name;
+  const qtyEl=document.getElementById('editQty');qtyEl.value=g.qty;qtyEl.readOnly=true;
+  document.getElementById('editVariant').value=canonicalVariant(c.variant||'Normal');
+  if(document.getElementById('editStamp'))document.getElementById('editStamp').value=canonicalStamp(c.stamp||'None');
+  if(document.getElementById('editPlaySeries'))document.getElementById('editPlaySeries').value=normalizedPlaySeries(c.playSeries||'');
+  syncEditPlaySeriesVisibility();
+  document.getElementById('editStatus').value=c.status||'Disponibile';
+  document.getElementById('editStatus').disabled=true;
+  document.getElementById('editCondition').value=c.condition||'NM';
+  const wrap=document.getElementById('editAllocationWrap');wrap?.classList.remove('hidden');
+  const alloc=groupAllocations(g);
+  const grid=document.getElementById('editAllocationGrid');if(grid)grid.innerHTML=allocationInputsHtml(alloc,g.qty);
+  document.querySelectorAll('.edit-allocation-input').forEach(el=>el.addEventListener('input',syncEditAllocationTotal));
+  syncEditAllocationTotal();
+  const modal=document.getElementById('editModal');modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  applyPlayAutoSeries(c,true);syncStampAvailability(c,true,true);
+  if(cardHasEditVariantEvidence(c)||c?.livePlayPrice?.exact)syncVariantAvailability(c,true);
+  hydrateEditCardEvidence(c).then(async()=>{
+    if(editingGroupKey!==gkey)return;
+    localStorage.setItem('cardoryx_db',JSON.stringify(db));
+    await refreshOfficialPlayAvailability(c,true,false);
+    if(editingGroupKey!==gkey)return;
+    applyPlayAutoSeries(c,true);syncStampAvailability(c,true,false);syncVariantAvailability(c,true);
+  }).catch(e=>console.warn('Group edit evidence hydration failed:',e));
+}
+
 async function openEditModal(key){
+  editingGroupKey=null;
   const c=findRecordByKey(key);
   if(!c)return;
   editingKey=recordKey(c);
   editingCardRef=c;
   document.getElementById('editTitle').textContent=c.name;
-  document.getElementById('editQty').value=Number(c.qty)||1;
+  document.getElementById('editQty').value=Number(c.qty)||1;document.getElementById('editQty').readOnly=false;
+  document.getElementById('editStatus').disabled=false;
+  document.getElementById('editAllocationWrap')?.classList.add('hidden');
   document.getElementById('editVariant').value=canonicalVariant(c.variant||'Normal');if(document.getElementById('editStamp'))document.getElementById('editStamp').value=canonicalStamp(c.stamp||'None');if(document.getElementById('editPlaySeries'))document.getElementById('editPlaySeries').value=normalizedPlaySeries(c.playSeries||'');syncEditPlaySeriesVisibility();
   document.getElementById('editStatus').value=c.status||'Disponibile';
   document.getElementById('editCondition').value=c.condition||'NM';
@@ -4637,11 +4690,48 @@ function closeEditModal(){
   if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
   editingKey=null;
   editingCardRef=null;
+  editingGroupKey=null;
+  const qtyEl=document.getElementById('editQty');if(qtyEl)qtyEl.readOnly=false;
+  const statusEl=document.getElementById('editStatus');if(statusEl)statusEl.disabled=false;
+  document.getElementById('editAllocationWrap')?.classList.add('hidden');
 }
 async function saveEditModal(){
   if(!editingKey)return;
   const c=editingCardRef||db.find(x=>recordKey(x)===editingKey);
   if(!c)return;
+  if(editingGroupKey){
+    const g=catalogGroups().find(x=>x.key===editingGroupKey);if(!g)return;
+    const inputs=[...document.querySelectorAll('.edit-allocation-input')];
+    const alloc={};let total=0;
+    inputs.forEach(el=>{const n=Math.max(0,parseInt(el.value,10)||0);alloc[el.dataset.status]=n;total+=n});
+    if(total<1){alert('La quantità totale deve essere almeno 1.');return}
+    const editStampEl=document.getElementById('editStamp');syncStampAvailability(c,true,false);
+    if(editStampEl?.selectedOptions?.[0]?.disabled){alert('Questa edizione / Stamp non risulta disponibile per la carta selezionata.');return}
+    syncVariantAvailability(c,true);
+    const editVariantEl=document.getElementById('editVariant');const editFinish=canonicalVariant(editVariantEl?.value||'Non so');
+    if(editVariantEl?.selectedOptions?.[0]?.disabled && !isManualVariantChoice(editFinish)){alert('Questa finitura non risulta disponibile per la carta selezionata.');return}
+    const stamp=canonicalStamp(editStampEl?.value||'None');
+    const playSeries=stamp==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('editPlaySeries')?.value||''):'';
+    const condition=document.getElementById('editCondition').value;
+    let live=null;
+    if(stamp==='Play! Pokémon'&&playSeries&&!isManualVariantChoice(editFinish)){
+      try{live=await resolveOfficialPlayPrice({...c,variant:editFinish,stamp,playSeries},playSeries,editFinish)}catch(e){console.warn('Group Prize Pack exact price refresh failed:',e)}
+    }
+    const oldRecords=[...g.records];
+    const base={...g.representative,variant:editFinish,stamp,playSeries,condition};
+    delete base.qty;delete base.status;
+    db=db.filter(x=>!oldRecords.includes(x));
+    for(const st of CARDORYX_ALLOCATION_STATUSES){
+      const q=alloc[st]||0;if(!q)continue;
+      const nr={...base,status:st,qty:q};
+      if(live){nr.livePlayPrice={...live,series:playSeries,finish:editFinish};nr.priceUpdatedAt=live.updated||new Date().toISOString()}
+      else{nr.livePlayPrice=null;if(stamp!=='Play! Pokémon'||isManualVariantChoice(editFinish))nr.priceUpdatedAt=''}
+      db.push(nr);
+    }
+    localStorage.setItem('cardoryx_db',JSON.stringify(db));closeEditModal();
+    try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render after group edit:',e)}
+    return;
+  }
   const qty=parseInt(document.getElementById('editQty').value,10);
   if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
   c.qty=qty;
@@ -4962,7 +5052,7 @@ async function refreshAllPrices(){
   persist();renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
 }
 
-// V2.1.34 — catalog grouping: identical physical printing/condition records are
+// V2.1.35 — catalog grouping + allocation-aware editing: identical physical printing/condition records are
 // shown as one card even when copies have different allocations/statuses.
 // Storage remains unchanged: no migration and no loss of per-copy allocation.
 function collectionIdentityKey(c){
@@ -5037,7 +5127,7 @@ function renderCatalog(){
       <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
       ${cardPriceHtml({...c,qty:g.qty})}
       <div class="collection-badges"><span class="collection-badge">${esc(cardCategory(c))}</span><span class="collection-badge">${esc(c.variant||'Normale')}</span><span class="collection-badge">${esc(c.condition||'NM')}</span>${groupAllocationHtml(g)}</div>
-      <div class="collection-actions"><button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button><button class="btn alt" onclick="openEditModal('${key}')">✏️ Modifica</button></div>
+      <div class="collection-actions"><button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button><button class="btn alt" onclick="openGroupEditModal('${gkey}')">✏️ Modifica</button></div>
     </div></article>`}).join('')}</div>`;
 }
 
