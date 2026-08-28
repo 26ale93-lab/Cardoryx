@@ -2932,6 +2932,22 @@ function migrateFinishStamp(c){
   return c;
 }
 
+// V2.1.31 — exact family guard for the first Mega Evolution Basic Energy block.
+// MEE 001–008 are the Basic Energies used by Play! Pokémon Prize Pack Series 8/9.
+// Keep this separate from MEE 009–016 (30th Celebration).
+function isMeePrizePackEnergy(card){
+  if(!card)return false;
+  const id=String(card.id||'').toUpperCase();
+  const setRaw=String(card.set?.id||card.set?.code||card.set||'').toUpperCase();
+  const set=(setRaw==='MEE'||/^MEE[-_]/.test(id))?'MEE':'';
+  if(set!=='MEE')return false;
+  let raw=String(card.localId??card.number??'').trim();
+  if(!raw){const m=id.match(/^MEE[-_](\d{1,3})$/);if(m)raw=m[1];}
+  const m=raw.match(/(\d{1,3})/);if(!m)return false;
+  const n=Number(m[1]);
+  return Number.isInteger(n)&&n>=1&&n<=8;
+}
+
 function canonicalVariant(v){
   const n=normText(v||'');
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
@@ -3225,12 +3241,17 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   const stamp=canonicalStamp(stampOverride ?? card?.stamp ?? 'None');
   const series=normalizedPlaySeries(seriesOverride ?? card?.playSeries ?? '');
 
-  // V2.1.30 — 30th Celebration Basic Energies MEE 009–016 are foil-only.
+  // V2.1.31 — 30th Celebration Basic Energies MEE 009–016 are foil-only.
   // Pokémon explicitly states every 30th Celebration card is foil, including
   // Basic Energy. Keep the exact edition guard, but expose the real finish.
   // No database migration and no guessed Cardmarket price are performed here.
   if(isMee30CelebrationEnergy(card) && stamp==='30° Anniversario'){
     return new Set(['Holo','Speciale / Altro','Non so']);
+  }
+  // MEE 001–008 Prize Pack Series 8/9: Cardmarket V1/V2 correspond to
+  // Standard / Standard Foil. For these Basic Energies the foil printing is Cosmos Holo.
+  if(isMeePrizePackEnergy(card) && stamp==='Play! Pokémon' && ['8','9'].includes(series)){
+    return new Set(['Normal','Cosmos Holo','Speciale / Altro','Non so']);
   }
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
@@ -3467,6 +3488,9 @@ function staticPlayCandidates(index,card,series){
   const ps=String(normalizedPlaySeries(series)||'');
   if(!ps)return [];
   if(isMee30CelebrationEnergy(card))return [];
+  // MEE 001–008 share generic Basic Energy names with older Prize Packs.
+  // Never allow the name fallback to associate them with Series 1–7.
+  if(isMeePrizePackEnergy(card) && !['8','9'].includes(ps))return [];
 
   const out=[];
 
@@ -3593,6 +3617,22 @@ async function officialPlaySeriesForCard(card){
   const index=await loadCardoryxPlayIndex();
   const found=[];
   const productsBySeries={};
+
+  // MEE 001–008 are documented in Prize Pack Series 8 and 9 only.
+  // Their generic names (e.g. Basic Fire Energy) otherwise collide with older
+  // Basic Energies in the Cardmarket name index and can falsely enable S1/S2.
+  if(isMeePrizePackEnergy(card)){
+    for(const ps of ['8','9']){
+      const candidates=staticPlayCandidates(index,card,ps);
+      found.push(ps);
+      if(candidates.length){
+        productsBySeries[ps]=candidates.map(p=>({idProduct:Number(p.idProduct),idMetacard:Number(p.idMetacard)||null,name:p.name||''}));
+      }
+    }
+    card._cardoryxOfficialPlayProductsBySeries=productsBySeries;
+    return found;
+  }
+
   for(let n=1;n<=9;n++){
     const ps=String(n);
     const candidates=staticPlayCandidates(index,card,ps);
