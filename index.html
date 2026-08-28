@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.29 Safe MEE30 Guard</title>
+<title>Cardoryx V2.1.30 Safe MEE30 Finish</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3224,6 +3224,14 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   if(!card)return new Set(['Speciale / Altro','Non so']);
   const stamp=canonicalStamp(stampOverride ?? card?.stamp ?? 'None');
   const series=normalizedPlaySeries(seriesOverride ?? card?.playSeries ?? '');
+
+  // V2.1.30 — 30th Celebration Basic Energies MEE 009–016 are foil-only.
+  // Pokémon explicitly states every 30th Celebration card is foil, including
+  // Basic Energy. Keep the exact edition guard, but expose the real finish.
+  // No database migration and no guessed Cardmarket price are performed here.
+  if(isMee30CelebrationEnergy(card) && stamp==='30° Anniversario'){
+    return new Set(['Holo','Speciale / Altro','Non so']);
+  }
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
   const pool=it.length?it:d;
