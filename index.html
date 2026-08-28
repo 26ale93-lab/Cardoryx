@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.16 Energy UI Category Image Fix</title>
+<title>Cardoryx V2.1.17 Energy Category Guard Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -806,11 +806,17 @@ function cardCategory(c){
   const cat=normText(c?.category||'');
   const type=normText(c?.type||'');
   const energyType=normText(c?.energyType||'');
-  const isEnergy=energyType||type.includes('energy')||cat.includes('energy')||cat.includes('energia')||name.includes('energia')||name.includes('energy');
+  // Never let a stale energyType flag reclassify a real Pokemon/Trainer.
+  // Older Cardoryx saves could persist energyType='Base' on every selected card.
+  const isPokemon=cat.includes('pokemon')||!!c?.hp||!!c?.stage;
+  const isTrainer=cat.includes('trainer')||cat.includes('allenatore')||!!c?.trainerType;
+  if(isPokemon){ if(type)return c.type||type; return c.category||'Pokémon'; }
+  if(isTrainer)return c.category||'Allenatore';
+  const isEnergy=cat==='energy'||cat==='energia'||cat.includes('energie base')||cat.includes('energie speciali')||name.includes('energia base')||name.includes('basic energy')||(!isPokemon&&!isTrainer&&!!energyType);
   if(isEnergy){
     // energyType is the strongest signal. This also repairs older saved Basic
     // Energy records at render time without requiring a database migration.
-    if(energyType.includes('base')||energyType.includes('basic')||name.includes('energia base')||name.includes('basic energy')||cat.includes('base energy'))return '⚡ Energie Base';
+    if(energyType.includes('base')||energyType.includes('basic')||name.includes('energia base')||name.includes('basic energy')||cat.includes('base energy')||cat.includes('energie base'))return '⚡ Energie Base';
     if(energyType.includes('special')||energyType.includes('speciale'))return '✨ Energie Speciali';
     // A numbered/basic-looking energy must not silently fall into Special.
     if(/^\s*(sve|mee)/i.test(String(c?.printedCode||''))||/^\s*(sve|mee)-/i.test(String(c?.id||'')))return '⚡ Energie Base';
@@ -4082,7 +4088,10 @@ function saveSelected(){
     if(trainerType==='Stadium')trainerType='Stadio';
     if(trainerType==='Pokémon Tool')trainerType='Oggetto Pokémon';
     const energyBlob=normText(`${selectedCard.energyType||''} ${selectedCard.category||''} ${selectedCard.name||''}`);
-    const energyType=(energyBlob.includes('special')||energyBlob.includes('speciale')||(inferCategory(selectedCard)==='Energia'&&!energyBlob.includes('energia base')&&!energyBlob.includes('basic energy')))?'Speciale':'Base';
+    const selectedCategory=inferCategory(selectedCard);
+    const energyType=selectedCategory==='Energia'
+      ? ((energyBlob.includes('special')||energyBlob.includes('speciale'))?'Speciale':'Base')
+      : '';
 
     const rec={
       id:selectedCard.id||`${selectedCard.name}-${selectedCard.localId}`,
