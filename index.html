@@ -550,8 +550,14 @@
 
     <div class="card">
       <div class="section-title">Nuovo mazzo</div>
-      <div class="deck-create">
-        <input id="newDeckName" type="text" maxlength="40" placeholder="Es. Elettro principianti">
+      <div class="deck-create" style="grid-template-columns:1fr auto">
+        <div style="display:grid;gap:8px">
+          <input id="newDeckName" type="text" maxlength="40" placeholder="Es. Elettro principianti">
+          <select id="newDeckType">
+            <option value="game">🎮 Mazzo da gioco</option>
+            <option value="sale">🏷️ Mazzo per la vendita</option>
+          </select>
+        </div>
         <button class="btn" type="button" onclick="createDeck()">＋ Crea</button>
       </div>
     </div>
@@ -607,7 +613,8 @@
 
     <div class="grid">
       <button class="btn alt" type="button" onclick="renameCurrentDeck()">✏️ Rinomina</button>
-      <button class="btn red" type="button" onclick="deleteCurrentDeck()">🗑️ Elimina mazzo</button>
+      <button id="deckSoldBtn" class="btn" type="button" onclick="sellCurrentDeck()" style="display:none">✅ Venduto</button>
+      <button id="deckDismantleBtn" class="btn red" type="button" onclick="dismantleCurrentDeck()">↩️ Sfai mazzo</button>
     </div>
   </div>
 </section>
@@ -849,10 +856,18 @@ function cardCategory(c){
   return 'Altro';
 }
 
+const DECK_KEY='cardoryx_decks';
+let decks=(()=>{try{const x=JSON.parse(localStorage.getItem(DECK_KEY)||'[]');return Array.isArray(x)?x:[]}catch(e){return[]}})();
+decks=decks.map(d=>({...d,type:d?.type==='sale'?'sale':'game',entries:Array.isArray(d?.entries)?d.entries:[]}));
+let currentDeckId=null;
+function deckType(d){return d?.type==='sale'?'sale':'game'}
+function deckTypeLabel(d){return deckType(d)==='sale'?'🏷️ Vendita':'🎮 Gioco'}
+
 function persistDecks(){
   localStorage.setItem(DECK_KEY,JSON.stringify(decks));
   renderDecks();
   renderHomeDashboard();
+  try{renderCatalog()}catch(e){}
 }
 function deckId(){
   return 'deck_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
@@ -861,7 +876,8 @@ function createDeck(){
   const input=ui('newDeckName');
   const name=(input?.value||'').trim();
   if(!name){alert('Inserisci un nome per il mazzo.');return}
-  const d={id:deckId(),name,createdAt:new Date().toISOString(),entries:[]};
+  const type=ui('newDeckType')?.value==='sale'?'sale':'game';
+  const d={id:deckId(),name,type,createdAt:new Date().toISOString(),entries:[]};
   decks.push(d);
   if(input)input.value='';
   persistDecks();
@@ -884,6 +900,7 @@ function allocatedInOtherDecks(cardKey,excludeDeckId=''){
   return decks.filter(d=>d.id!==excludeDeckId).reduce((sum,d)=>sum+deckEntryQty(d,cardKey),0);
 }
 function availableForDeck(c,d){
+  if((c?.status||'Disponibile')!=='Disponibile')return 0;
   return Math.max(0,(Number(c.qty)||1)-allocatedInOtherDecks(deckRecordKey(c),d?.id||''));
 }
 function isBasicEnergy(c){
@@ -919,6 +936,7 @@ function deckNameCounts(d){
 }
 function validateDeck(d){
   const total=deckTotal(d),counts=deckCounts(d),issues=[];
+  if(deckType(d)==='sale')return {valid:true,issues,total,counts,sale:true};
   if(total!==60)issues.push(`Il mazzo deve contenere esattamente 60 carte: ora ne ha ${total}.`);
   if(counts.basic<1)issues.push('Serve almeno 1 Pokémon Base.');
   const names=deckNameCounts(d);
@@ -938,11 +956,12 @@ function renderDecks(){
     const v=validateDeck(d),pct=Math.min(100,Math.round(v.total/60*100));
     return `<div class="deck-card">
       <div class="deck-card-top">
-        <div><div class="deck-name">${esc(d.name)}</div><div class="deck-sub">${v.valid?'✓ Pronto per giocare':`${v.total}/60 carte`}</div></div>
+        <div><div class="deck-name">${esc(d.name)}</div><div class="deck-sub">${deckType(d)==='sale'?`${v.total} carte pronte per la vendita`:(v.valid?'✓ Pronto per giocare':`${v.total}/60 carte`)}</div></div>
         <button class="btn alt" onclick="openDeck('${d.id}')">Apri</button>
       </div>
       <div class="deck-progress"><span style="width:${pct}%"></span></div>
       <div class="deck-mini-stats">
+        <span class="deck-chip">${deckTypeLabel(d)}</span>
         <span class="deck-chip">🟣 Pokémon ${v.counts.pokemon}</span>
         <span class="deck-chip">🧰 Allenatori ${v.counts.trainer}</span>
         <span class="deck-chip">⚡ Energie ${v.counts.energy}</span>
@@ -993,16 +1012,19 @@ function changeDeckQty(cardKey,delta){
 function renderDeckBuilder(){
   const d=currentDeck();if(!d)return;
   const val=validateDeck(d),total=val.total,pct=Math.min(100,total/60*100);
-  ui('deckBuilderName').textContent=d.name;
-  ui('deckBuilderTotal').textContent=`${total}/60`;
-  ui('deckBuilderProgress').style.width=pct+'%';
+  ui('deckBuilderName').textContent=`${d.name} · ${deckTypeLabel(d)}`;
+  ui('deckBuilderTotal').textContent=deckType(d)==='sale'?`${total}`:`${total}/60`;
+  ui('deckBuilderProgress').style.width=(deckType(d)==='sale'?Math.min(100,total):pct)+'%';
   ui('deckPokemonCount').textContent=val.counts.pokemon;
   ui('deckTrainerCount').textContent=val.counts.trainer;
   ui('deckEnergyCount').textContent=val.counts.energy;
 
   const validation=ui('deckValidation');
-  if(val.valid)validation.innerHTML='<div class="deck-valid ok"><b>✓ Mazzo valido</b><br>60 carte, almeno un Pokémon Base e limite copie rispettato.</div>';
+  if(deckType(d)==='sale')validation.innerHTML=`<div class="deck-valid ok"><b>🏷️ Mazzo per la vendita</b><br>${total} carte riservate. Quando lo vendi puoi rimuoverle dal Catalogo; se lo sfai tornano semplicemente disponibili.</div>`;
+  else if(val.valid)validation.innerHTML='<div class="deck-valid ok"><b>✓ Mazzo valido</b><br>60 carte, almeno un Pokémon Base e limite copie rispettato.</div>';
   else validation.innerHTML=`<div class="deck-valid ${total>60?'bad':'warn'}"><b>${total>60?'⚠️ Mazzo non valido':'Costruzione in corso'}</b><ul class="deck-warning-list">${val.issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  const soldBtn=ui('deckSoldBtn');if(soldBtn)soldBtn.style.display=deckType(d)==='sale'?'block':'none';
+  const disBtn=ui('deckDismantleBtn');if(disBtn)disBtn.textContent=deckType(d)==='sale'?'↩️ Sfai (non venduto)':'↩️ Sfai mazzo';
 
   const entries=ui('deckEntries');
   entries.innerHTML=d.entries.length?d.entries.map(e=>{
@@ -1028,6 +1050,7 @@ function renderDeckLibrary(){
   const d=currentDeck(),el=ui('deckLibrary');if(!d||!el)return;
   const q=normText(ui('deckCardSearch')?.value||''),cat=ui('deckCategoryFilter')?.value||'';
   const items=db.filter(c=>{
+    if((c.status||'Disponibile')!=='Disponibile')return false;
     const text=normText(`${c.name||''} ${c.set||''} ${c.type||''} ${c.trainerType||''}`);
     return (!q||text.includes(q))&&(!cat||cardCategory(c)===cat);
   }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
@@ -1059,14 +1082,43 @@ function renameCurrentDeck(){
   const n=prompt('Nuovo nome del mazzo',d.name);
   if(n&&n.trim()){d.name=n.trim().slice(0,40);persistDecks();renderDeckBuilder()}
 }
-function deleteCurrentDeck(){
+function dismantleCurrentDeck(){
   const d=currentDeck();if(!d)return;
-  if(!confirm(`Eliminare il mazzo “${d.name}”? Le carte resteranno nel Catalogo.`))return;
+  const msg=deckType(d)==='sale'
+    ? `Sfatare il mazzo vendita “${d.name}”?\n\nLe carte NON verranno eliminate: la riserva viene rimossa e torneranno disponibili nel Catalogo.`
+    : `Sfatare il mazzo “${d.name}”?\n\nLe carte resteranno nel Catalogo e torneranno disponibili per altri mazzi.`;
+  if(!confirm(msg))return;
   decks=decks.filter(x=>x.id!==d.id);
   currentDeckId=null;
   persistDecks();
   closeDeckBuilder();
 }
+function sellCurrentDeck(){
+  const d=currentDeck();if(!d||deckType(d)!=='sale')return;
+  const total=deckTotal(d);
+  if(total<1){alert('Il mazzo vendita è vuoto.');return}
+  if(!confirm(`Confermi che “${d.name}” è stato VENDUTO?\n\n${total} carte verranno rimosse dal Catalogo. Questa operazione modifica le quantità possedute.`))return;
+  const ops=[];
+  for(const e of d.entries||[]){
+    const c=findCardForDeckEntry(e);const q=Math.max(0,Number(e.qty)||0);
+    if(!c||q<1){alert('Una carta del mazzo non è più presente nel Catalogo. Vendita annullata.');return}
+    const owned=Math.max(0,Number(c.qty)||0);
+    if(owned<q){alert(`Quantità insufficiente per ${c.name}. Vendita annullata.`);return}
+    ops.push([c,q]);
+  }
+  for(const [c,q] of ops){
+    const owned=Number(c.qty)||0;
+    if(owned>q)c.qty=owned-q;else db=db.filter(x=>x!==c);
+  }
+  decks=decks.filter(x=>x.id!==d.id);
+  currentDeckId=null;
+  localStorage.setItem('cardoryx_db',JSON.stringify(db));
+  localStorage.setItem(DECK_KEY,JSON.stringify(decks));
+  try{renderAll();renderSettings();renderDecks();renderHomeDashboard()}catch(e){}
+  closeDeckBuilder();
+  alert(`Vendita registrata: ${total} carte rimosse dal Catalogo.`);
+}
+function deleteCurrentDeck(){dismantleCurrentDeck()}
 
 
 function renderHomeDashboard(){
@@ -4593,10 +4645,40 @@ async function hydrateEditCardEvidence(card){
 }
 
 let editingGroupKey=null;
-const CARDORYX_ALLOCATION_STATUSES=['Disponibile','Protetta','Mazzo 1','Mazzo 2','Vendita'];
-
-function allocationInputsHtml(alloc,total){
-  return CARDORYX_ALLOCATION_STATUSES.map(st=>`<label>${esc(st)}</label><input class="edit-allocation-input" data-status="${esc(st)}" type="number" min="0" max="${total}" inputmode="numeric" value="${Number(alloc?.[st]||0)}">`).join('');
+const CARDORYX_ALLOCATION_STATUSES=['Disponibile','Protetta','Vendita'];
+function groupDeckAllocations(g){
+  const keys=new Set((g?.records||[]).map(deckRecordKey));
+  const out={};
+  for(const d of decks||[]){
+    const q=(d.entries||[]).reduce((sum,e)=>sum+(keys.has(e.cardKey)?Math.max(0,Number(e.qty)||0):0),0);
+    if(q>0)out[d.id]=q;
+  }
+  return out;
+}
+function groupRawStatusAllocations(g){
+  const out={};
+  (g?.records||[]).forEach(c=>{const st=c.status||'Disponibile';out[st]=(out[st]||0)+Math.max(1,Number(c.qty)||1)});
+  return out;
+}
+function groupEditableAllocations(g){
+  const raw=groupRawStatusAllocations(g),deckAlloc=groupDeckAllocations(g);
+  const reserved=Object.values(deckAlloc).reduce((a,b)=>a+b,0);
+  const out={};
+  out.Disponibile=Math.max(0,(raw.Disponibile||0)-reserved);
+  out.Protetta=raw.Protetta||0;
+  out.Vendita=raw.Vendita||0;
+  Object.entries(raw).forEach(([st,q])=>{if(!CARDORYX_ALLOCATION_STATUSES.includes(st))out[st]=q});
+  return {statuses:out,decks:deckAlloc};
+}
+function allocationInputsHtml(g){
+  const data=groupEditableAllocations(g),total=g.qty;
+  const legacy=Object.keys(data.statuses).filter(st=>!CARDORYX_ALLOCATION_STATUSES.includes(st));
+  const base=[...CARDORYX_ALLOCATION_STATUSES,...legacy].map(st=>{
+    const label=legacy.includes(st)?`${st} (legacy)`:st;
+    return `<label>${esc(label)}</label><input class="edit-allocation-input" data-kind="status" data-status="${esc(st)}" type="number" min="0" max="${total}" inputmode="numeric" value="${Number(data.statuses[st]||0)}">`;
+  }).join('');
+  const deckRows=(decks||[]).map(d=>`<label>${esc(deckTypeLabel(d)+' · '+d.name)}</label><input class="edit-allocation-input" data-kind="deck" data-deck-id="${esc(d.id)}" type="number" min="0" max="${total}" inputmode="numeric" value="${Number(data.decks[d.id]||0)}">`).join('');
+  return base+deckRows;
 }
 function syncEditAllocationTotal(){
   if(!editingGroupKey)return;
@@ -4620,8 +4702,7 @@ function openGroupEditModal(encodedGroupKey){
   document.getElementById('editStatus').disabled=true;
   document.getElementById('editCondition').value=c.condition||'NM';
   const wrap=document.getElementById('editAllocationWrap');wrap?.classList.remove('hidden');
-  const alloc=groupAllocations(g);
-  const grid=document.getElementById('editAllocationGrid');if(grid)grid.innerHTML=allocationInputsHtml(alloc,g.qty);
+  const grid=document.getElementById('editAllocationGrid');if(grid)grid.innerHTML=allocationInputsHtml(g);
   document.querySelectorAll('.edit-allocation-input').forEach(el=>el.addEventListener('input',syncEditAllocationTotal));
   syncEditAllocationTotal();
   const modal=document.getElementById('editModal');modal.classList.add('open');modal.setAttribute('aria-hidden','false');
@@ -4702,8 +4783,11 @@ async function saveEditModal(){
   if(editingGroupKey){
     const g=catalogGroups().find(x=>x.key===editingGroupKey);if(!g)return;
     const inputs=[...document.querySelectorAll('.edit-allocation-input')];
-    const alloc={};let total=0;
-    inputs.forEach(el=>{const n=Math.max(0,parseInt(el.value,10)||0);alloc[el.dataset.status]=n;total+=n});
+    const alloc={},deckAlloc={};let total=0;
+    inputs.forEach(el=>{
+      const n=Math.max(0,parseInt(el.value,10)||0);total+=n;
+      if(el.dataset.kind==='deck')deckAlloc[el.dataset.deckId]=n;else alloc[el.dataset.status]=n;
+    });
     if(total<1){alert('La quantità totale deve essere almeno 1.');return}
     const editStampEl=document.getElementById('editStamp');syncStampAvailability(c,true,false);
     if(editStampEl?.selectedOptions?.[0]?.disabled){alert('Questa edizione / Stamp non risulta disponibile per la carta selezionata.');return}
@@ -4718,17 +4802,33 @@ async function saveEditModal(){
       try{live=await resolveOfficialPlayPrice({...c,variant:editFinish,stamp,playSeries},playSeries,editFinish)}catch(e){console.warn('Group Prize Pack exact price refresh failed:',e)}
     }
     const oldRecords=[...g.records];
+    const oldKeys=new Set(oldRecords.map(deckRecordKey));
     const base={...g.representative,variant:editFinish,stamp,playSeries,condition};
     delete base.qty;delete base.status;
+    // Remove old reservations for this physical group before rebuilding them.
+    for(const d of decks||[])d.entries=(d.entries||[]).filter(e=>!oldKeys.has(e.cardKey));
     db=db.filter(x=>!oldRecords.includes(x));
-    for(const st of CARDORYX_ALLOCATION_STATUSES){
-      const q=alloc[st]||0;if(!q)continue;
+    const deckReserved=Object.values(deckAlloc).reduce((a,b)=>a+b,0);
+    const statusNames=[...new Set([...CARDORYX_ALLOCATION_STATUSES,...Object.keys(alloc)])];
+    let availableRecord=null;
+    for(const st of statusNames){
+      let q=alloc[st]||0;
+      if(st==='Disponibile')q+=deckReserved;
+      if(!q)continue;
       const nr={...base,status:st,qty:q};
       if(live){nr.livePlayPrice={...live,series:playSeries,finish:editFinish};nr.priceUpdatedAt=live.updated||new Date().toISOString()}
       else{nr.livePlayPrice=null;if(stamp!=='Play! Pokémon'||isManualVariantChoice(editFinish))nr.priceUpdatedAt=''}
-      db.push(nr);
+      db.push(nr);if(st==='Disponibile')availableRecord=nr;
     }
-    localStorage.setItem('cardoryx_db',JSON.stringify(db));closeEditModal();
+    if(deckReserved && !availableRecord){alert('Errore interno: le copie assegnate ai mazzi devono avere una base Disponibile.');return}
+    if(availableRecord){
+      const newKey=deckRecordKey(availableRecord);
+      for(const [deckId,q] of Object.entries(deckAlloc)){
+        if(!q)continue;const d=deckById(deckId);if(!d)continue;
+        d.entries.push({cardKey:newKey,cardId:availableRecord.id||'',variant:availableRecord.variant||'Normale',qty:q});
+      }
+    }
+    localStorage.setItem('cardoryx_db',JSON.stringify(db));localStorage.setItem(DECK_KEY,JSON.stringify(decks));closeEditModal();
     try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render after group edit:',e)}
     return;
   }
@@ -5052,7 +5152,7 @@ async function refreshAllPrices(){
   persist();renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
 }
 
-// V2.1.35 — catalog grouping + allocation-aware editing: identical physical printing/condition records are
+// V2.1.36 — dynamic deck allocations + sale deck lifecycle. V2.1.35 catalog grouping remains: identical physical printing/condition records are
 // shown as one card even when copies have different allocations/statuses.
 // Storage remains unchanged: no migration and no loss of per-copy allocation.
 function collectionIdentityKey(c){
@@ -5071,12 +5171,13 @@ function catalogGroups(records=db){
   return [...m.values()];
 }
 function groupAllocations(g){
-  const out={};
-  (g?.records||[]).forEach(c=>{const st=c.status||'Disponibile';out[st]=(out[st]||0)+Math.max(1,Number(c.qty)||1)});
-  return out;
+  return groupEditableAllocations(g).statuses;
 }
 function groupAllocationHtml(g){
-  return Object.entries(groupAllocations(g)).map(([st,q])=>`<span class="collection-badge">${esc(st)}${g.qty>1?` ×${q}`:''}</span>`).join('');
+  const data=groupEditableAllocations(g);
+  const statusHtml=Object.entries(data.statuses).filter(([,q])=>q>0).map(([st,q])=>`<span class="collection-badge">${esc(st)}${g.qty>1?` ×${q}`:''}</span>`).join('');
+  const deckHtml=Object.entries(data.decks).filter(([,q])=>q>0).map(([id,q])=>{const d=deckById(id);return d?`<span class="collection-badge">${esc(d.name)}${g.qty>1?` ×${q}`:''}</span>`:''}).join('');
+  return statusHtml+deckHtml;
 }
 function changeGroupQty(encodedGroupKey,delta){
   const key=decodeURIComponent(encodedGroupKey);const g=catalogGroups().find(x=>x.key===key);if(!g)return;
@@ -5086,9 +5187,12 @@ function changeGroupQty(encodedGroupKey,delta){
     else{const base={...g.representative};delete base.livePlayPrice;base.status='Disponibile';base.qty=1;base.addedAt=new Date().toISOString();db.push(base)}
     persist();return;
   }
-  if(!available){alert('Le copie sono assegnate a un mazzo o a un altro stato. Modifica prima l’allocazione della copia che vuoi rimuovere.');return}
+  if(!available){alert('Non ci sono copie Disponibili da rimuovere.');return}
+  const reserved=(decks||[]).reduce((sum,d)=>sum+deckEntryQty(d,deckRecordKey(available)),0);
   const q=Number(available.qty)||1;
-  if(q>1)available.qty=q-1;else db=db.filter(x=>x!==available);
+  if(q-reserved<=0){alert('Le copie disponibili sono già riservate a uno o più mazzi. Usa Modifica oppure sfai il mazzo prima di rimuoverle.');return}
+  available.qty=q-1;
+  if(available.qty<=0)db=db.filter(x=>x!==available);
   persist();
 }
 function catalogUniqueCount(){return catalogGroups().length}
