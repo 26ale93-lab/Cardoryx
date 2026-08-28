@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.44 Category Repair</title>
+<title>Cardoryx V2.1.45 Category Symbols</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1321,7 +1321,7 @@ function renderHomeDashboard(){
       prev.label=label;
       counts.set(key,prev);
     });
-    cg.innerHTML=[...counts.values()].sort((a,b)=>b.n-a.n).map(({label,n})=>`<button class="home-cat" onclick="filterByCategory('${String(label).replace(/'/g,"\\'")}')"><b>${n}</b><span>${esc(label)}</span></button>`).join('')||'<div class="small">La collezione è vuota.</div>';
+    cg.innerHTML=[...counts.values()].sort((a,b)=>b.n-a.n).map(({label,n})=>`<button class="home-cat" onclick="filterByCategory('${String(label).replace(/'/g,"\\'")}')"><b>${n}</b><span>${esc(categoryDisplayLabel(label))}</span></button>`).join('')||'<div class="small">La collezione è vuota.</div>';
   }
 }
 
@@ -5186,6 +5186,32 @@ function categoryFilterKey(v){
   };
   return aliases[n]||n;
 }
+
+function categoryDisplayLabel(v){
+  const key=categoryFilterKey(v);
+  const labels={
+    erba:'🌿 Erba',
+    fuoco:'🔥 Fuoco',
+    acqua:'💧 Acqua',
+    lampo:'⚡ Lampo',
+    psico:'🔮 Psico',
+    lotta:'🥊 Lotta',
+    oscurita:'🌑 Oscurità',
+    metallo:'⚙️ Metallo',
+    drago:'🐉 Drago',
+    incolore:'⚪ Incolore',
+    folletto:'🧚 Folletto',
+    aiuto:'👤 Aiuto',
+    strumenti:'🧰 Strumenti',
+    stadio:'🏟️ Stadio',
+    oggettipokemon:'🎒 Oggetti Pokémon',
+    allenatore:'🧑‍🏫 Allenatore',
+    energiebase:'⚡ Energie Base',
+    energiespeciali:'✨ Energie Speciali'
+  };
+  return labels[key]||String(v||'Altro');
+}
+
 function clearHomeCategoryFilter(){activeHomeCategoryFilter=''}
 function filterByCategory(cat){
   activeHomeCategoryFilter=cat||'';
