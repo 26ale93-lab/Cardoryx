@@ -3138,6 +3138,13 @@ function prizePackFinishPlan(card,series){
   const ps=normalizedPlaySeries(series);
   if(!ps)return {finishes:[],authoritative:false,reason:'no-series'};
 
+  // V2.1.32 — MEE 001–008 are documented in Prize Pack Series 8/9 as
+  // Standard (Cardmarket V1) + Standard Foil/Cosmos Holo (Cardmarket V2).
+  // This rule is tied to the exact printed MEE code, never to the generic Energy name.
+  if(isMeePrizePackEnergy(card) && ['8','9'].includes(ps)){
+    return {finishes:['Normal','Cosmos Holo'],authoritative:true,reason:'mee-prizepack-v1-v2'};
+  }
+
   const pm=playAutoMatch(card);
   const localSeries=Array.isArray(pm?.finishesBySeries?.[ps])
     ? pm.finishesBySeries[ps].map(canonicalVariant).filter(Boolean)
@@ -3247,6 +3254,12 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   // No database migration and no guessed Cardmarket price are performed here.
   if(isMee30CelebrationEnergy(card) && stamp==='30° Anniversario'){
     return new Set(['Holo','Speciale / Altro','Non so']);
+  }
+  // V2.1.32 — standard Mega Evolution Energies MEE001–008 are the non-stamped
+  // Normal printing. Do not expose a generic Reverse Holo merely because the
+  // card is classified as Common by the provider.
+  if(isMeePrizePackEnergy(card) && stamp==='None'){
+    return new Set(['Normal','Speciale / Altro','Non so']);
   }
   // MEE 001–008 Prize Pack Series 8/9: Cardmarket V1/V2 correspond to
   // Standard / Standard Foil. For these Basic Energies the foil printing is Cosmos Holo.
@@ -3459,7 +3472,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=215`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=232`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3714,6 +3727,17 @@ function mappedPrizePackProduct(candidates,card,series,finish){
   const target=canonicalVariant(finish||'Non so');
   const plan=prizePackFinishPlan(card,series);
   if(!plan.authoritative || !plan.finishes.includes(target))return null;
+
+  // V2.1.32 — exact MEE Prize Pack mapping. Cardmarket publishes V1 and V2 as
+  // separate products; their ordinary price columns belong to those products.
+  // Never read Normal price fields from one product as the foil price of another.
+  if(isMeePrizePackEnergy(card) && ['8','9'].includes(normalizedPlaySeries(series))){
+    if(rows.length!==2)return null; // fail closed if the official index is incomplete/ambiguous
+    if(target==='Normal')return rows[0];       // V1 = Standard / Normal
+    if(target==='Cosmos Holo')return rows[1]; // V2 = Standard Foil / Cosmos Holo
+    return null;
+  }
+
   if(rows.length===1 && plan.finishes.length===1)return rows[0];
   if(rows.length===2 && plan.finishes.length===2){
     // Cardmarket PPS V1/V2 ordering: V1 = Standard, V2 = Standard Foil.
