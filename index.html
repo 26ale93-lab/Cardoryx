@@ -2067,12 +2067,12 @@ function energyOfficialImageCandidates(setCode,num){
   const archive=energyArchiveImageUrl(set,n);
   const tcgSeries=set==='SVE'?'sv':(set==='MEE'?'me':'');
   return [
+    archive,
     `https://www.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/${set}/${set}_IT_${n}.png`,
     `https://assets.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/${set}/${set}_IT_${n}.png`,
     `https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/${set}/${set}_IT_${n}.png`,
     tcgSeries?`https://assets.tcgdex.net/en/${tcgSeries}/${set.toLowerCase()}/${n}/high.webp`:'',
     tcgSeries?`https://assets.tcgdex.net/en/${tcgSeries}/${set.toLowerCase()}/${String(parseInt(n,10))}/high.webp`:'',
-    archive,
     redirect
   ].filter(Boolean);
 }
@@ -4052,7 +4052,7 @@ async function renderScanValue(card){
       return;
     }
 
-    // V2.1.21: the confirmation panel and the saved collection now use the
+    // V2.1.22: the confirmation panel and the saved collection now use the
     // same verified Basic Energy fallback. This prevents MEE/SVE cards from
     // showing “Valore non disponibile” before save and a price after save.
     if(energyExact){
