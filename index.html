@@ -2077,16 +2077,52 @@ function energyOfficialImageCandidates(setCode,num){
   ].filter(Boolean);
 }
 function energyImageUrl(setCode,num){return energyOfficialImageCandidates(setCode,num)[0]}
+// v2.1.23 — resolve the current Bulbagarden file URL through MediaWiki instead
+// of guessing its hashed /media/upload path. Results are cached for the session.
+const ENERGY_MEDIAWIKI_CACHE=new Map();
+function energyArchiveFilename(setCode,num){
+  const x=codedEnergyInfo(setCode,num);if(!x)return '';
+  return `Basic${x.en}Energy${x.set}Energy${parseInt(x.num,10)}.jpg`;
+}
+async function resolveEnergyMediaWikiUrl(setCode,num){
+  const x=codedEnergyInfo(setCode,num);if(!x)return '';
+  const key=`${x.set}-${x.num}`;
+  if(ENERGY_MEDIAWIKI_CACHE.has(key))return ENERGY_MEDIAWIKI_CACHE.get(key);
+  const filename=energyArchiveFilename(x.set,x.num);
+  const api=`https://archives.bulbagarden.net/w/api.php?action=query&prop=imageinfo&iiprop=url&format=json&origin=*&titles=${encodeURIComponent('File:'+filename)}`;
+  try{
+    const r=await fetch(api,{cache:'force-cache',mode:'cors'});if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json(),pages=j?.query?.pages||{};
+    const page=Object.values(pages)[0],url=page?.imageinfo?.[0]?.thumburl||page?.imageinfo?.[0]?.url||'';
+    if(url){ENERGY_MEDIAWIKI_CACHE.set(key,url);return url;}
+  }catch(e){}
+  ENERGY_MEDIAWIKI_CACHE.set(key,'');return '';
+}
+async function hydrateEnergyImage(img,setCode,num){
+  if(!img)return;
+  const url=await resolveEnergyMediaWikiUrl(setCode,num);if(!url)return;
+  img.onerror=()=>setEnergyImageFallback(img,setCode,num,0);
+  img.style.display='';img.style.visibility='visible';img.src=url;
+  const holder=img.parentElement,fb=holder?.querySelector('.mee-image-fallback');if(fb)fb.remove();
+}
+function hydrateVisibleEnergyImages(){
+  document.querySelectorAll('img[data-energy-set][data-energy-num]').forEach(img=>hydrateEnergyImage(img,img.dataset.energySet,img.dataset.energyNum));
+}
 function setEnergyImageFallback(img,setCode,num,index=0){
   if(!img)return;
   const list=energyOfficialImageCandidates(setCode,num),next=index+1;
   if(next<list.length){img.onerror=()=>setEnergyImageFallback(img,setCode,num,next);img.src=list[next];return;}
-  img.onerror=null;img.style.display='none';
-  const holder=img.parentElement;
-  if(holder&&!holder.querySelector('.mee-image-fallback')){
-    const d=document.createElement('div');d.className='mee-image-fallback';
-    d.innerHTML='<div style="font-size:28px">⚡</div><div style="font-size:10px;font-weight:800">Immagine non caricata</div>';holder.appendChild(d);
-  }
+  img.onerror=null;
+  // Last attempt: ask MediaWiki for the canonical current file URL.
+  resolveEnergyMediaWikiUrl(setCode,num).then(url=>{
+    if(url){img.style.display='';img.style.visibility='visible';img.src=url;return;}
+    img.style.display='none';
+    const holder=img.parentElement;
+    if(holder&&!holder.querySelector('.mee-image-fallback')){
+      const d=document.createElement('div');d.className='mee-image-fallback';
+      d.innerHTML='<div style="font-size:28px">⚡</div><div style="font-size:10px;font-weight:800">Immagine non caricata</div>';holder.appendChild(d);
+    }
+  });
 }
 // Backward-compatible helpers used by already working MEE image code.
 function meeOfficialPage(num){return energyOfficialPage('MEE',num)}
@@ -2110,6 +2146,8 @@ function cardImgOnError(img,c){
   if(x){
     const idx=Number(img.dataset.energyFallbackIndex||0),list=energyOfficialImageCandidates(x.set,x.num),next=idx+1;
     if(next<list.length){img.dataset.energyFallbackIndex=String(next);img.src=list[next];return;}
+    resolveEnergyMediaWikiUrl(x.set,x.num).then(url=>{if(url){img.style.visibility='visible';img.onerror=null;img.src=url;}else img.style.visibility='hidden';});
+    return;
   }
   img.style.visibility='hidden';
 }
@@ -2222,6 +2260,7 @@ function renderOtherEnergyChoices(type){
     ${fairy}
     ${modern.length?`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px">${modern.map(x=>`<button type="button" class="btn alt" style="padding:7px;display:flex;align-items:center;gap:8px;text-align:left" onclick="selectCodedBasicEnergy('${x.set}','${x.num}')"><span style="width:42px;height:58px;display:flex;align-items:center;justify-content:center;flex:0 0 42px"><img src="${energyImageUrl(x.set,x.num)}" data-energy-set="${x.set}" data-energy-num="${x.num}" style="max-width:42px;max-height:58px;object-fit:contain;border-radius:4px" onerror="setEnergyImageFallback(this,'${x.set}','${x.num}',0)"></span><span><b>${x.set} ${x.num}</b><br><span class="small">${x.set==='SVE'?'Scarlatto/Violetto':'Megaevoluzione'}</span></span></button>`).join('')}</div>`:''}
     <button type="button" class="btn alt big" onclick="searchHistoricBasicEnergy('${type}')">🕰️ ${historic?'Altre stampe Folletto / senza codice':'Stampe storiche / senza codice'}</button>`;
+  setTimeout(hydrateVisibleEnergyImages,0);
 }
 function selectEnergyType(type){selectedEnergyType=type;renderEnergyTypeChoices(type)}
 async function lookupBasicEnergyCode(){
