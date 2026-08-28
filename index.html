@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.33 MEE Prize Pack Exact Resolver</title>
+<title>Cardoryx V2.1.34 MEE Prize Pack Exact Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4962,15 +4962,52 @@ async function refreshAllPrices(){
   persist();renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
 }
 
-function catalogUniqueCount(){return db.length}
+// V2.1.34 — catalog grouping: identical physical printing/condition records are
+// shown as one card even when copies have different allocations/statuses.
+// Storage remains unchanged: no migration and no loss of per-copy allocation.
+function collectionIdentityKey(c){
+  const identity=String(c?.id||c?.tcgdexId||`${c?.set||''}::${c?.localId||''}::${c?.name||''}`).toLowerCase();
+  return [identity,canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),normalizedPlaySeries(c?.playSeries||''),c?.condition||'NM'].join('|||');
+}
+function catalogGroups(records=db){
+  const m=new Map();
+  (records||[]).forEach(c=>{
+    const k=collectionIdentityKey(c);
+    if(!m.has(k))m.set(k,{key:k,records:[],qty:0,representative:c});
+    const g=m.get(k);g.records.push(c);g.qty+=Math.max(1,Number(c.qty)||1);
+    // Prefer the ordinary available record for editing/details when present.
+    if((c.status||'Disponibile')==='Disponibile')g.representative=c;
+  });
+  return [...m.values()];
+}
+function groupAllocations(g){
+  const out={};
+  (g?.records||[]).forEach(c=>{const st=c.status||'Disponibile';out[st]=(out[st]||0)+Math.max(1,Number(c.qty)||1)});
+  return out;
+}
+function groupAllocationHtml(g){
+  return Object.entries(groupAllocations(g)).map(([st,q])=>`<span class="collection-badge">${esc(st)}${g.qty>1?` ×${q}`:''}</span>`).join('');
+}
+function changeGroupQty(encodedGroupKey,delta){
+  const key=decodeURIComponent(encodedGroupKey);const g=catalogGroups().find(x=>x.key===key);if(!g)return;
+  let available=g.records.find(c=>(c.status||'Disponibile')==='Disponibile');
+  if(delta>0){
+    if(available)available.qty=(Number(available.qty)||1)+1;
+    else{const base={...g.representative};delete base.livePlayPrice;base.status='Disponibile';base.qty=1;base.addedAt=new Date().toISOString();db.push(base)}
+    persist();return;
+  }
+  if(!available){alert('Le copie sono assegnate a un mazzo o a un altro stato. Modifica prima l’allocazione della copia che vuoi rimuovere.');return}
+  const q=Number(available.qty)||1;
+  if(q>1)available.qty=q-1;else db=db.filter(x=>x!==available);
+  persist();
+}
+function catalogUniqueCount(){return catalogGroups().length}
 function catalogCopyCount(){return db.reduce((a,c)=>a+(Number(c.qty)||1),0)}
 function catalogHoloCount(){return db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Speciale / Altro'].includes(c.variant||'')).reduce((a,c)=>a+(Number(c.qty)||1),0)}
 function catalogNMCount(){return db.filter(c=>(c.condition||'NM')==='NM').reduce((a,c)=>a+(Number(c.qty)||1),0)}
 
 function renderCatalog(){
-  const el=document.getElementById('catalogList');
-  if(!el)return;
-
+  const el=document.getElementById('catalogList');if(!el)return;
   const q=(document.getElementById('catalogSearch')?.value||'').toLowerCase().trim();
   const tf=document.getElementById('typeFilter')?.value||'';
   const sf=document.getElementById('statusFilter')?.value||'';
@@ -4978,68 +5015,31 @@ function renderCatalog(){
   const cf=document.getElementById('conditionFilter')?.value||'';
   const sort=document.getElementById('sortFilter')?.value||'name';
 
-  let items=db.filter(c=>{
+  let groups=catalogGroups().filter(g=>{
+    const c=g.representative;
     const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''} ${c.notes||''}`.toLowerCase();
-    return (!q||blob.includes(q)) &&
-           (!tf||cardCategory(c)===tf) &&
-           (!sf||(c.status||'Disponibile')===sf) &&
-           (!vf||(c.variant||'Normale')===vf) &&
-           (!cf||(c.condition||'NM')===cf);
+    return (!q||blob.includes(q)) && (!tf||cardCategory(c)===tf) &&
+      (!sf||g.records.some(r=>(r.status||'Disponibile')===sf)) &&
+      (!vf||(c.variant||'Normale')===vf) && (!cf||(c.condition||'NM')===cf);
   });
+  if(sort==='recent')groups.sort((a,b)=>String(b.representative.addedAt||'').localeCompare(String(a.representative.addedAt||'')));
+  else if(sort==='qty')groups.sort((a,b)=>b.qty-a.qty);
+  else if(sort==='set')groups.sort((a,b)=>String(a.representative.set||'').localeCompare(String(b.representative.set||''),'it'));
+  else groups.sort((a,b)=>String(a.representative.name||'').localeCompare(String(b.representative.name||''),'it'));
+  const visibleTotal=groups.reduce((a,g)=>a+g.qty,0);
+  if(!groups.length){el.innerHTML=`<div class="catalog-empty"><div class="emoji">📚</div><b>Nessuna carta trovata</b><div class="small" style="margin-top:5px">Modifica i filtri oppure aggiungi una carta dallo Scanner.</div></div>`;return}
 
-  if(sort==='recent')items.sort((a,b)=>String(b.addedAt||'').localeCompare(String(a.addedAt||'')));
-  else if(sort==='qty')items.sort((a,b)=>(Number(b.qty)||1)-(Number(a.qty)||1));
-  else if(sort==='set')items.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''),'it'));
-  else items.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
-
-  const visibleTotal=items.reduce((a,c)=>a+(Number(c.qty)||1),0);
-
-  if(!items.length){
-    el.innerHTML=`<div class="catalog-empty">
-      <div class="emoji">📚</div>
-      <b>Nessuna carta trovata</b>
-      <div class="small" style="margin-top:5px">Modifica i filtri oppure aggiungi una carta dallo Scanner.</div>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML=`<div class="catalog-toolbar">
-      <div class="catalog-summary">${items.length} schede · ${visibleTotal} carte</div>
-      <div class="small">${tf?`Filtro: ${esc(tf)}`:'Tutta la collezione'}</div>
-    </div>
-    <div class="catalog-grid">
-    ${items.map(c=>{
-      const key=encodeURIComponent(recordKey(c));
-      const img=cardImageSrc(c,'low');
-      return `<article class="collection-card">
-        <div>
-          ${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
-          <div class="qty-control">
-            <button type="button" onclick="changeQty('${key}',-1)">−</button>
-            <strong>×${Number(c.qty)||1}</strong>
-            <button type="button" onclick="changeQty('${key}',1)">+</button>
-          </div>
-        </div>
-        <div class="collection-card-main">
-          <h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
-          <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
-          ${cardPriceHtml(c)}
-          <div class="collection-badges">
-            <span class="collection-badge">${esc(cardCategory(c))}</span>
-            <span class="collection-badge">${esc(c.variant||'Normale')}</span>
-            <span class="collection-badge">${esc(c.condition||'NM')}</span>
-            <span class="collection-badge">${esc(c.status||'Disponibile')}</span>
-          </div>
-          <div class="collection-actions">
-            <button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button>
-            <button class="btn alt" onclick="openEditModal('${key}')">✏️ Modifica</button>
-          </div>
-        </div>
-      </article>`;
-    }).join('')}
-    </div>`;
+  el.innerHTML=`<div class="catalog-toolbar"><div class="catalog-summary">${groups.length} schede · ${visibleTotal} carte</div><div class="small">${tf?`Filtro: ${esc(tf)}`:'Tutta la collezione'}</div></div><div class="catalog-grid">
+  ${groups.map(g=>{const c=g.representative,key=encodeURIComponent(recordKey(c)),gkey=encodeURIComponent(g.key),img=cardImageSrc(c,'low');return `<article class="collection-card">
+    <div>${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
+      <div class="qty-control"><button type="button" onclick="changeGroupQty('${gkey}',-1)">−</button><strong>×${g.qty}</strong><button type="button" onclick="changeGroupQty('${gkey}',1)">+</button></div></div>
+    <div class="collection-card-main"><h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
+      <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
+      ${cardPriceHtml({...c,qty:g.qty})}
+      <div class="collection-badges"><span class="collection-badge">${esc(cardCategory(c))}</span><span class="collection-badge">${esc(c.variant||'Normale')}</span><span class="collection-badge">${esc(c.condition||'NM')}</span>${groupAllocationHtml(g)}</div>
+      <div class="collection-actions"><button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button><button class="btn alt" onclick="openEditModal('${key}')">✏️ Modifica</button></div>
+    </div></article>`}).join('')}</div>`;
 }
-
 
 function deleteRecord(key){
   const c=findRecordByKey(key);
