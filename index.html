@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.45 Category Symbols</title>
+<title>Cardoryx V2.1.46 Trainer Metadata</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2654,12 +2654,31 @@ async function refreshUnknownTrainerSubtypes(){
     const isTrainer=cat==='trainer'||cat==='allenatore'||cat.includes('trainer')||cat.includes('allenatore');
     return isTrainer && !canonicalTrainerType(c);
   });
-  for(const c of candidates){
+
+  const fetchTrainerSubtype=async(c)=>{
     const ids=[];
     const add=x=>{x=String(x||'').trim();if(x&&!ids.includes(x))ids.push(x)};
     add(c.tcgdexId); add(c.id);
-    if(c?.setId && c?.localId)add(`${c.setId}-${c.localId}`);
-    let resolved='';
+
+    // Saved Cardoryx records use _cardoryxSetId, not setId.
+    const setId=String(c?._cardoryxSetId||c?.setId||c?.set?.id||'').trim();
+    const localId=String(c?.localId||'').trim();
+
+    // First try the most deterministic endpoint when set + local number are known.
+    if(setId && localId){
+      for(const base of [API,'https://api.tcgdex.net/v2/en']){
+        try{
+          const r=await fetch(`${base}/sets/${encodeURIComponent(setId)}/${encodeURIComponent(localId)}`,{cache:'no-store'});
+          if(r.ok){
+            const full=await r.json();
+            const t=canonicalTrainerType(full);
+            if(t)return t;
+          }
+        }catch(e){}
+      }
+    }
+
+    // Then try global card ids.
     for(const id of ids){
       for(const base of [API,'https://api.tcgdex.net/v2/en']){
         try{
@@ -2667,16 +2686,21 @@ async function refreshUnknownTrainerSubtypes(){
           if(!r.ok)continue;
           const full=await r.json();
           const t=canonicalTrainerType(full);
-          if(t){resolved=t;break}
+          if(t)return t;
         }catch(e){}
       }
-      if(resolved)break;
     }
+    return '';
+  };
+
+  for(const c of candidates){
+    const resolved=await fetchTrainerSubtype(c);
     if(resolved && c.trainerType!==resolved){
       c.trainerType=resolved;
       changed=true;
     }
   }
+
   if(changed){
     try{localStorage.setItem('cardoryx_db',JSON.stringify(db))}catch(e){}
     renderHomeDashboard();
@@ -4685,7 +4709,7 @@ function clearSelection(){
     [...ps.options].forEach(o=>o.disabled=false);
   }
   document.getElementById('scanValueBox')?.classList.add('hidden');selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
-function saveSelected(){
+async function saveSelected(){
   if(selectedCard){
     selectedCard.variant=canonicalVariant(document.getElementById('variant')?.value||selectedCard.variant||'Normal');
     selectedCard.stamp=canonicalStamp(document.getElementById('stamp')?.value||selectedCard.stamp||'None');
@@ -4717,6 +4741,21 @@ function saveSelected(){
   if(btn)btn.disabled=true;
 
   try{
+    // If this is a Trainer and the brief/localized object lacks trainerType,
+    // hydrate the exact card before saving. This is metadata-only and does not
+    // alter finish, stamp, price, status or quantity.
+    const preCategory=inferCategory(selectedCard);
+    if(preCategory==='Allenatore' && !canonicalTrainerType(selectedCard)){
+      try{
+        const full=await fetchFullCandidate(selectedCard);
+        const resolved=canonicalTrainerType(full);
+        if(resolved){
+          selectedCard={...selectedCard,...full,trainerType:resolved};
+          if(scanPriceCard)scanPriceCard={...scanPriceCard,trainerType:resolved};
+        }
+      }catch(e){}
+    }
+
     const category=inferCategory(selectedCard),type=inferType(selectedCard);
     let trainerType=canonicalTrainerType(selectedCard);
     const selectedCategory=inferCategory(selectedCard);
