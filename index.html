@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.12 Prize Pack Finish Mapping Fix</title>
+<title>Cardoryx V2.1.13 Prize Pack Series 1–9 Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2666,6 +2666,10 @@ function canonicalVariant(v){
   if(n.includes('non so')||n.includes('unknown'))return 'Non so';
   return 'Normal';
 }
+function isManualVariantChoice(v){
+  const x=canonicalVariant(v);
+  return x==='Non so'||x==='Speciale / Altro';
+}
 function isBallReverseVariant(v){
   const x=canonicalVariant(v);
   return x==='Poké Ball Reverse Holo'||x==='Master Ball Reverse Holo';
@@ -2775,6 +2779,103 @@ function isModernParallelEra(card){
   const sid=cardSetId(card);
   const cid=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   return /^(sv|me)/.test(sid) || /^(sv|me)/.test(cid);
+}
+
+
+// V2.1.13 — Prize Pack Series 1–9 resolver.
+// The official Cardmarket catalogue exposes one product for a single printing
+// and two products (V1/V2, ordered by product id) when Standard + Standard Foil
+// are both present. We only turn that product structure into finishes when the
+// Series/card rules are safe; uncertain cases remain "Non so".
+function cachedOfficialPlayProducts(card,series){
+  const ps=normalizedPlaySeries(series);
+  const map=card?._cardoryxOfficialPlayProductsBySeries;
+  return ps && map && Array.isArray(map[ps]) ? map[ps] : [];
+}
+function explicitPlayFinishes(card){
+  const list=tcgdexVariantDetails(card);
+  const out=new Set();
+  for(const x of list){
+    const stamps=Array.isArray(x?.stamp)?x.stamp.map(normText):[];
+    const foil=normText(x?.foil||'');
+    const name=normText(x?.name||x?.variant||'');
+    const isPlay=stamps.some(v=>v.includes('playerrewards')||v.includes('playpokemon')||v.includes('prizepack')||v.includes('league')) ||
+                 ['playerreward','league'].includes(foil) || name.includes('playpokemon') || name.includes('prizepack');
+    if(!isPlay)continue;
+    const type=normText(x?.type||'');
+    if(type==='normal')out.add('Normal');
+    if(type==='holo' && foil==='cosmos')out.add('Cosmos Holo');
+    else if(type==='holo')out.add('Holo');
+    if(type==='reverse' && foil==='pokeball')out.add('Poké Ball Reverse Holo');
+    else if(type==='reverse' && foil==='masterball')out.add('Master Ball Reverse Holo');
+    else if(type==='reverse')out.add('Reverse Holo');
+  }
+  return [...out];
+}
+function prizePackUsesOriginalFoil(card,series){
+  const ps=Number(normalizedPlaySeries(series));
+  const n=normText(card?.name||'');
+  const r=normText(card?.rarity||'');
+  const isEx=/(^|[^a-z])ex($|[^a-z])/.test(String(card?.name||'').toLowerCase()) || n.endsWith('ex');
+  const isV=n.endsWith('v')||n.includes('vmax')||n.includes('vstar')||r.includes('rareholo v')||r.includes('vmax')||r.includes('vstar');
+  const isRadiant=r.includes('radiant')||r.includes('radiante');
+  const isAce=r.includes('acespec')||r.includes('ace spec')||n.includes('acespec');
+  if(ps===3)return isEx||isV||isRadiant;
+  if(ps===4)return isEx||isV;
+  if(ps>=5 && ps<=8)return isEx||isAce;
+  if(ps===9)return isEx;
+  // Series 1–2 predate the explicit per-Series exception wording used by later
+  // checklists. If TCGdex does not state the foil, do not invent Cosmos here.
+  return isEx||isV||isRadiant||isAce;
+}
+function prizePackFoilFinish(card,series){
+  const explicit=explicitPlayFinishes(card);
+  if(explicit.includes('Cosmos Holo'))return 'Cosmos Holo';
+  if(explicit.includes('Holo'))return 'Holo';
+  const ps=Number(normalizedPlaySeries(series));
+  if(prizePackUsesOriginalFoil(card,series))return 'Holo';
+  // Series 3–9 explicitly use Cosmos Holo for Standard Set Foil, apart from
+  // the original-foil exceptions handled above.
+  if(ps>=3 && ps<=9)return 'Cosmos Holo';
+  // Series 1–2: keep a generic Holo label unless an exact Cosmos row exists.
+  if(ps===1||ps===2)return 'Holo';
+  return '';
+}
+function prizePackFinishPlan(card,series){
+  const ps=normalizedPlaySeries(series);
+  if(!ps)return {finishes:[],authoritative:false,reason:'no-series'};
+
+  const pm=playAutoMatch(card);
+  const localSeries=Array.isArray(pm?.finishesBySeries?.[ps])
+    ? pm.finishesBySeries[ps].map(canonicalVariant).filter(Boolean)
+    : [];
+  if(localSeries.length)return {finishes:[...new Set(localSeries)],authoritative:true,reason:'verified-series-map'};
+  if(pm?.finish && (!pm.series?.length || pm.series.map(normalizedPlaySeries).includes(ps))){
+    return {finishes:[canonicalVariant(pm.finish)],authoritative:true,reason:'verified-single-finish'};
+  }
+
+  const explicit=explicitPlayFinishes(card);
+  const products=cachedOfficialPlayProducts(card,ps);
+  if(products.length===1 && explicit.length===1){
+    return {finishes:explicit,authoritative:true,reason:'single-product-explicit'};
+  }
+
+  if(products.length===2){
+    // Across PPS1–PPS9 Cardmarket V1/V2 is the Standard / Standard Foil pair.
+    // For original-foil card classes we require explicit evidence because
+    // "Standard Foil" is not necessarily Cosmos and can share the base pattern.
+    if(prizePackUsesOriginalFoil(card,ps)){
+      if(explicit.length>=1)return {finishes:[...new Set(explicit)],authoritative:true,reason:'dual-product-original-foil-explicit'};
+      return {finishes:[],authoritative:false,reason:'dual-product-original-foil-uncertain'};
+    }
+    const foil=prizePackFoilFinish(card,ps);
+    if(foil)return {finishes:['Normal',foil],authoritative:true,reason:'dual-product-standard-foil'};
+  }
+
+  if(products.length===1 && explicit.length){
+    return {finishes:[...new Set(explicit)],authoritative:true,reason:'single-product-explicit-many'};
+  }
+  return {finishes:[],authoritative:false,reason:products.length?'unmapped-products':'no-products'};
 }
 
 function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
@@ -2912,20 +3013,12 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     if(stamp==='Play! Pokémon' && series && verifiedPlaySeriesPrice(card,name,stamp,series))allowed.add(name);
   }
 
-  // Verified Prize Pack catalogue finish is authoritative for that stamped
-  // printing. If no exact finish is known (e.g. ambiguous Moltres products),
-  // the resolver deliberately remains "Non so" rather than guessing.
+  // Prize Pack finish plan: verified local mappings first, then the general
+  // Series 1–9 Standard / Standard Foil product structure. Uncertain cases do
+  // not guess and therefore fall through to "Non so".
   if(stamp==='Play! Pokémon'){
-    const pm=playAutoMatch(card);
-    const known=pm?.finish?canonicalVariant(pm.finish):'';
-    const seriesFinishes=(series && Array.isArray(pm?.finishesBySeries?.[series]))
-      ? pm.finishesBySeries[series].map(canonicalVariant).filter(Boolean)
-      : [];
-    // Exact per-Series finish lists are authoritative when present. This is
-    // deliberately data-driven so any future Prize Pack dual printing can be
-    // represented without adding card-specific resolver branches.
-    if(seriesFinishes.length)allowed=new Set(seriesFinishes);
-    else if(known)allowed=new Set([known]);
+    const plan=prizePackFinishPlan(card,series);
+    if(plan.authoritative && plan.finishes.length)allowed=new Set(plan.finishes.map(canonicalVariant));
   }
 
   if(!allowed.size)allowed.add('Non so');
@@ -3060,7 +3153,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=212`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=213`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3189,10 +3282,17 @@ async function officialPlaySeriesForCard(card){
   if(!card)return [];
   const index=await loadCardoryxPlayIndex();
   const found=[];
+  const productsBySeries={};
   for(let n=1;n<=9;n++){
     const ps=String(n);
-    if(staticPlayCandidates(index,card,ps).length)found.push(ps);
+    const candidates=staticPlayCandidates(index,card,ps);
+    if(candidates.length){
+      found.push(ps);
+      // Cache only the identity fields needed by the synchronous finish UI.
+      productsBySeries[ps]=candidates.map(p=>({idProduct:Number(p.idProduct),idMetacard:Number(p.idMetacard)||null,name:p.name||''}));
+    }
   }
+  card._cardoryxOfficialPlayProductsBySeries=productsBySeries;
   return found;
 }
 async function refreshOfficialPlayAvailability(card,edit=false,rerender=true){
@@ -3250,6 +3350,30 @@ async function refreshOfficialPlayAvailability(card,edit=false,rerender=true){
   }
 }
 
+function staticMappedPrizePackPrice(p,finish,series){
+  if(!p)return null;
+  const q=p.prices||{};
+  const low=numOrNull(q.low),trend=numOrNull(q.trend),avg7=numOrNull(q.avg7),avg30=numOrNull(q.avg30);
+  const value=trend??avg7??avg30??low;
+  if(value==null)return null;
+  return {idProduct:Number(p.idProduct),low,trend,avg7,avg30,value,exact:true,
+    source:`Cardmarket · Prize Pack Series ${normalizedPlaySeries(series)} · ${canonicalVariant(finish)} · prodotto ufficiale`,updated:p.updated||''};
+}
+function mappedPrizePackProduct(candidates,card,series,finish){
+  const rows=[...(Array.isArray(candidates)?candidates:[])].sort((a,b)=>Number(a.idProduct)-Number(b.idProduct));
+  const target=canonicalVariant(finish||'Non so');
+  const plan=prizePackFinishPlan(card,series);
+  if(!plan.authoritative || !plan.finishes.includes(target))return null;
+  if(rows.length===1 && plan.finishes.length===1)return rows[0];
+  if(rows.length===2 && plan.finishes.length===2){
+    // Cardmarket PPS V1/V2 ordering: V1 = Standard, V2 = Standard Foil.
+    if(target==='Normal')return rows[0];
+    const foil=plan.finishes.find(x=>x!=='Normal');
+    if(foil && target===foil)return rows[1];
+  }
+  return null;
+}
+
 function staticProductToPrice(p,finish){
   if(!p)return null;
   const f=canonicalVariant(finish||'Normal');
@@ -3276,10 +3400,24 @@ function staticProductToPrice(p,finish){
 }
 async function resolveOfficialPlayPrice(card,series,finish){
   const ps=normalizedPlaySeries(series);if(!ps)return null;
+  const target=canonicalVariant(finish||'Non so');
+  if(isManualVariantChoice(target))return null;
   const index=await loadCardoryxPlayIndex();
   const candidates=staticPlayCandidates(index,card,ps);
   if(!candidates.length)return null;
-  const rows=candidates.map(p=>staticProductToPrice(p,finish)).filter(Boolean);
+
+  // V2.1.13 — if the Prize Pack structure resolves the physical finish to one
+  // exact Cardmarket V1/V2 product, use that product's ordinary price columns.
+  // Cardmarket stores these as separate products, not as *-holo price fields.
+  const mapped=mappedPrizePackProduct(candidates,card,ps,target);
+  if(mapped){
+    const exact=staticMappedPrizePackPrice(mapped,target,ps);
+    if(exact)return exact;
+  }
+
+  // Conservative fallback for older/special cases that expose a real holo
+  // price column. Multiple differing products stay ambiguous.
+  const rows=candidates.map(p=>staticProductToPrice(p,target)).filter(Boolean);
   if(!rows.length)return null;
   if(rows.length===1)return rows[0];
   const vals=rows.map(x=>x.value).filter(Number.isFinite);
@@ -3796,7 +3934,8 @@ function saveSelected(){
 
   syncVariantAvailability(scanPriceCard||selectedCard,false);
   const saveVariantEl=document.getElementById('variant');
-  if(saveVariantEl?.selectedOptions?.[0]?.disabled){
+  const saveFinish=canonicalVariant(saveVariantEl?.value||'Non so');
+  if(saveVariantEl?.selectedOptions?.[0]?.disabled && !isManualVariantChoice(saveFinish)){
     saveMsg.textContent='Impossibile salvare: la finitura selezionata non risulta disponibile per questa carta.';
     renderScanValue(scanPriceCard||selectedCard);
     return;
@@ -4072,7 +4211,7 @@ function saveEditModal(){
   // "Non so" and manual "Speciale / Altro" are intentional safe escape
   // values. Never reject them because asynchronous evidence refresh changed
   // option.disabled while the modal was open.
-  if(editVariantEl?.selectedOptions?.[0]?.disabled && !['Non so','Speciale / Altro'].includes(editFinish)){
+  if(editVariantEl?.selectedOptions?.[0]?.disabled && !isManualVariantChoice(editFinish)){
     alert('Questa finitura non risulta disponibile per la carta selezionata.');return
   }
   c.variant=editFinish;
