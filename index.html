@@ -2604,8 +2604,8 @@ function stampExistsForCard(card,stamp){
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
 }
-function syncStampAvailability(card){
-  const sel=document.getElementById('stamp'); if(!sel||!card)return;
+function syncStampAvailability(card,edit=false,preserveCurrent=false){
+  const sel=document.getElementById(edit?'editStamp':'stamp'); if(!sel||!card)return [];
   const available=[];
   for(const o of sel.options){
     const st=canonicalStamp(o.value);
@@ -2613,15 +2613,18 @@ function syncStampAvailability(card){
     o.disabled=!ok;
     if(ok && st!=='None' && st!=='Altro')available.push(st);
   }
-  // Never keep a stale special edition selected after changing card.
-  if(sel.selectedOptions[0]?.disabled)sel.value='None';
-  const info=document.getElementById('stampAvailabilityInfo');
+  // Never keep an unsupported edition selected. During the first async
+  // hydration in the edit modal we may preserve it briefly until the
+  // official Cardmarket Prize Pack index has been resolved.
+  if(!preserveCurrent && sel.selectedOptions[0]?.disabled)sel.value='None';
+  const info=document.getElementById(edit?'editStampAvailabilityInfo':'stampAvailabilityInfo');
   if(info){
     info.textContent=available.length
       ? `Edizioni documentate per questa carta: ${available.join(' · ')}. Le altre sono bloccate.`
       : 'Nessuna edizione speciale documentata per questa carta. “Altro” resta disponibile solo per inserimento manuale e senza prezzo automatico.';
   }
-  syncPlaySeriesVisibility();
+  if(edit)syncEditPlaySeriesVisibility(); else syncPlaySeriesVisibility();
+  return available;
 }
 function stampSelectionIsVerified(card){
   const st=canonicalStamp(document.getElementById('stamp')?.value||'None');
@@ -3052,6 +3055,9 @@ async function refreshOfficialPlayAvailability(card,edit=false,rerender=true){
     const official=await officialPlaySeriesForCard(card);
     if(token!==officialPlayAvailabilityToken)return official;
     cacheOfficialPlaySeries(card,official);
+    // Re-evaluate every Stamp / Edition option for the active UI (scanner or edit).
+    // This is required because Play! can become verified only after the official index resolves.
+    syncStampAvailability(card,edit,false);
 
     // Se l'indice ufficiale trova la carta, è lui la fonte prioritaria.
     // Il catalogo locale resta fallback quando l'indice non ha ancora il record.
@@ -3731,10 +3737,12 @@ function openEditModal(key){
   const modal=document.getElementById('editModal');
   modal.classList.add('open');modal.setAttribute('aria-hidden','false');
   applyPlayAutoSeries(c,true);
+  syncStampAvailability(c,true,true);
   syncVariantAvailability(c,true);
   refreshOfficialPlayAvailability(c,true,false).then(()=>{
     if(editingKey===recordKey(c)){
       applyPlayAutoSeries(c,true);
+      syncStampAvailability(c,true,false);
       syncVariantAvailability(c,true);
     }
   }).catch(()=>{});
@@ -3751,6 +3759,9 @@ function saveEditModal(){
   const qty=parseInt(document.getElementById('editQty').value,10);
   if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
   c.qty=qty;
+  syncStampAvailability(c,true,false);
+  const editStampEl=document.getElementById('editStamp');
+  if(editStampEl?.selectedOptions?.[0]?.disabled){alert('Questa edizione / Stamp non risulta disponibile per la carta selezionata.');return}
   syncVariantAvailability(c,true);
   const editVariantEl=document.getElementById('editVariant');
   if(editVariantEl?.selectedOptions?.[0]?.disabled){alert('Questa finitura non risulta disponibile per la carta selezionata.');return}
@@ -4273,16 +4284,18 @@ document.getElementById('editStamp')?.addEventListener('change',()=>{
   syncEditPlaySeriesVisibility();
   const c=editingKey?db.find(x=>recordKey(x)===editingKey):null;
   if(!c)return;
+  syncStampAvailability(c,true,false);
   applyPlayAutoSeries(c,true);
   syncVariantAvailability(c,true);
   refreshOfficialPlayAvailability(c,true,false).then(()=>{
     applyPlayAutoSeries(c,true);
+    syncStampAvailability(c,true,false);
     syncVariantAvailability(c,true);
   }).catch(()=>{});
 });
 document.getElementById('editPlaySeries')?.addEventListener('change',()=>{
   const c=editingKey?db.find(x=>recordKey(x)===editingKey):null;
-  if(c)syncVariantAvailability(c,true);
+  if(c){syncStampAvailability(c,true,false);syncVariantAvailability(c,true);}
 });
 document.getElementById('playSeries')?.addEventListener('change',()=>{
   if(scanPriceCard||selectedCard)syncVariantAvailability(scanPriceCard||selectedCard);
