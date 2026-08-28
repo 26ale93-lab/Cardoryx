@@ -2004,6 +2004,48 @@ const SVE_BASIC_ENERGIES=Object.fromEntries(Array.from({length:24},(_,i)=>{
   const x=codedEnergyInfo('SVE',i+1);return [x.num,{type:x.type,name:x.name}];
 }));
 
+const ENERGY_ARCHIVE_DIRECT={
+  'SVE-001':'https://archives.bulbagarden.net/media/upload/f/f0/BasicGrassEnergySVEEnergy1.jpg',
+  'SVE-002':'https://archives.bulbagarden.net/media/upload/2/24/BasicFireEnergySVEEnergy2.jpg',
+  'SVE-003':'https://archives.bulbagarden.net/media/upload/c/c2/BasicWaterEnergySVEEnergy3.jpg',
+  'SVE-004':'https://archives.bulbagarden.net/media/upload/7/7b/BasicLightningEnergySVEEnergy4.jpg',
+  'SVE-005':'https://archives.bulbagarden.net/media/upload/a/a6/BasicPsychicEnergySVEEnergy5.jpg',
+  'SVE-006':'https://archives.bulbagarden.net/media/upload/8/84/BasicFightingEnergySVEEnergy6.jpg',
+  'SVE-007':'https://archives.bulbagarden.net/media/upload/b/ba/BasicDarknessEnergySVEEnergy7.jpg',
+  'SVE-008':'https://archives.bulbagarden.net/media/upload/8/82/BasicMetalEnergySVEEnergy8.jpg',
+  'SVE-009':'https://archives.bulbagarden.net/media/upload/6/65/BasicGrassEnergySVEEnergy9.jpg',
+  'SVE-010':'https://archives.bulbagarden.net/media/upload/0/0f/BasicFireEnergySVEEnergy10.jpg',
+  'SVE-011':'https://archives.bulbagarden.net/media/upload/e/e1/BasicWaterEnergySVEEnergy11.jpg',
+  'SVE-012':'https://archives.bulbagarden.net/media/upload/f/fc/BasicLightningEnergySVEEnergy12.jpg',
+  'SVE-013':'https://archives.bulbagarden.net/media/upload/3/37/BasicPsychicEnergySVEEnergy13.jpg',
+  'SVE-014':'https://archives.bulbagarden.net/media/upload/1/1b/BasicFightingEnergySVEEnergy14.jpg',
+  'SVE-015':'https://archives.bulbagarden.net/media/upload/6/67/BasicDarknessEnergySVEEnergy15.jpg',
+  'SVE-016':'https://archives.bulbagarden.net/media/upload/9/98/BasicMetalEnergySVEEnergy16.jpg',
+  'SVE-017':'https://archives.bulbagarden.net/media/upload/b/bf/BasicGrassEnergySVEEnergy17.jpg',
+  'SVE-018':'https://archives.bulbagarden.net/media/upload/0/0b/BasicFireEnergySVEEnergy18.jpg',
+  'SVE-019':'https://archives.bulbagarden.net/media/upload/1/10/BasicWaterEnergySVEEnergy19.jpg',
+  'SVE-020':'https://archives.bulbagarden.net/media/upload/e/e7/BasicLightningEnergySVEEnergy20.jpg',
+  'SVE-021':'https://archives.bulbagarden.net/media/upload/d/de/BasicPsychicEnergySVEEnergy21.jpg',
+  'SVE-022':'https://archives.bulbagarden.net/media/upload/a/a1/BasicFightingEnergySVEEnergy22.jpg',
+  'SVE-023':'https://archives.bulbagarden.net/media/upload/f/f1/BasicDarknessEnergySVEEnergy23.jpg',
+  'SVE-024':'https://archives.bulbagarden.net/media/upload/c/c9/BasicMetalEnergySVEEnergy24.jpg',
+  'MEE-001':'https://archives.bulbagarden.net/media/upload/2/28/BasicGrassEnergyMEEEnergy1.jpg',
+  'MEE-002':'https://archives.bulbagarden.net/media/upload/1/17/BasicFireEnergyMEEEnergy2.jpg',
+  'MEE-003':'https://archives.bulbagarden.net/media/upload/d/d5/BasicWaterEnergyMEEEnergy3.jpg',
+  'MEE-004':'https://archives.bulbagarden.net/media/upload/9/9b/BasicLightningEnergyMEEEnergy4.jpg',
+  'MEE-005':'https://archives.bulbagarden.net/media/upload/a/ad/BasicPsychicEnergyMEEEnergy5.jpg',
+  'MEE-006':'https://archives.bulbagarden.net/media/upload/6/6c/BasicFightingEnergyMEEEnergy6.jpg',
+  'MEE-007':'https://archives.bulbagarden.net/media/upload/2/27/BasicDarknessEnergyMEEEnergy7.jpg',
+  'MEE-008':'https://archives.bulbagarden.net/media/upload/5/5b/BasicMetalEnergyMEEEnergy8.jpg',
+  'MEE-009':'https://archives.bulbagarden.net/media/upload/2/20/BasicGrassEnergyMEEEnergy9.jpg',
+  'MEE-010':'https://archives.bulbagarden.net/media/upload/7/71/BasicFireEnergyMEEEnergy10.jpg',
+  'MEE-011':'https://archives.bulbagarden.net/media/upload/3/3d/BasicWaterEnergyMEEEnergy11.jpg',
+  'MEE-012':'https://archives.bulbagarden.net/media/upload/1/10/BasicLightningEnergyMEEEnergy12.jpg',
+  'MEE-013':'https://archives.bulbagarden.net/media/upload/3/33/BasicPsychicEnergyMEEEnergy13.jpg',
+  'MEE-014':'https://archives.bulbagarden.net/media/upload/8/8c/BasicFightingEnergyMEEEnergy14.jpg',
+  'MEE-015':'https://archives.bulbagarden.net/media/upload/f/f8/BasicDarknessEnergyMEEEnergy15.jpg',
+  'MEE-016':'https://archives.bulbagarden.net/media/upload/9/9a/BasicMetalEnergyMEEEnergy16.jpg'
+};
 function energyOfficialPage(setCode,num){
   const set=String(setCode||'').toUpperCase();
   const n=String(parseInt(String(num),10));
@@ -2011,9 +2053,7 @@ function energyOfficialPage(setCode,num){
 }
 function energyArchiveImageUrl(setCode,num){
   const x=codedEnergyInfo(setCode,num);if(!x)return '';
-  // Last-resort visual reference for cards whose current pokemon.com CDN path
-  // is not exposed yet. The filename pattern is stable in Bulbagarden Archives.
-  return `https://archives.bulbagarden.net/wiki/Special:Redirect/file/Basic${x.en}Energy${x.set}Energy${parseInt(x.num,10)}.jpg`;
+  return ENERGY_ARCHIVE_DIRECT[`${x.set}-${x.num}`]||'';
 }
 function energyOfficialImageCandidates(setCode,num){
   const set=String(setCode||'').toUpperCase();
@@ -2150,13 +2190,28 @@ function renderPlayEnergySeries(type){
   box.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button type="button" class="btn alt" style="padding:7px 10px" onclick="renderEnergyTypeChoices('${type}')">←</button><div><b>${meeEnergyEmoji(type)} Energia ${type} · Play! Pokémon</b><div class="small">Scegli la Series. Codice/famiglia vengono determinati automaticamente.</div></div></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">${Array.from({length:9},(_,i)=>i+1).map(s=>`<button type="button" class="btn alt" onclick="selectPlayBasicEnergy('${type}','${s}')">Series ${s}</button>`).join('')}</div>`;
 }
+const FAIRY_NUMBERED_PRINTS=[
+  {id:'xy1-140',label:'XY 140/146'},
+  {id:'g1-83',label:'Generations 83/83'},
+  {id:'xy12-99',label:'Evolutions 99/108'},
+  {id:'sm3-169',label:'Burning Shadows 169/147'}
+];
+async function selectHistoricEnergyById(id,label){
+  searchMsg.textContent=`Carico ${label||id}…`;
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
+    try{const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});if(!r.ok)continue;const c=await r.json();if(c&&!c.error){await chooseCard(c);searchMsg.textContent=`Selezionata ${label||c.name||id}.`;return;}}catch(e){}
+  }
+  searchMsg.textContent=`Non riesco a caricare ${label||id} automaticamente. Prova la ricerca standard.`;
+}
 function renderOtherEnergyChoices(type){
   const box=document.getElementById('energyTypeChoices');if(!box)return;
   const historic=type==='Folletto';
   const modern=!historic?[0,1,2].map(b=>({set:'SVE',num:energyNumberForType(type,b)})).concat([0,1].map(b=>({set:'MEE',num:energyNumberForType(type,b)}))):[];
-  box.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button type="button" class="btn alt" style="padding:7px 10px" onclick="renderEnergyTypeChoices('${type}')">←</button><div><b>${meeEnergyEmoji(type)} Energia ${type}</b><div class="small">Tocca il design/codice, oppure cerca una stampa storica.</div></div></div>
+  const fairy=historic?`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px">${FAIRY_NUMBERED_PRINTS.map(x=>`<button type="button" class="btn alt" style="padding:10px;text-align:left" onclick="selectHistoricEnergyById('${x.id}','${x.label}')"><b>${x.label}</b><br><span class="small">Energia Folletto numerata</span></button>`).join('')}</div>`:'';
+  box.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button type="button" class="btn alt" style="padding:7px 10px" onclick="renderEnergyTypeChoices('${type}')">←</button><div><b>${meeEnergyEmoji(type)} Energia ${type}</b><div class="small">${historic?'Scegli una stampa numerata oppure cerca le stampe senza numero.':'Tocca il design/codice, oppure cerca una stampa storica.'}</div></div></div>
+    ${fairy}
     ${modern.length?`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px">${modern.map(x=>`<button type="button" class="btn alt" style="padding:7px;display:flex;align-items:center;gap:8px;text-align:left" onclick="selectCodedBasicEnergy('${x.set}','${x.num}')"><span style="width:42px;height:58px;display:flex;align-items:center;justify-content:center;flex:0 0 42px"><img src="${energyImageUrl(x.set,x.num)}" data-energy-set="${x.set}" data-energy-num="${x.num}" style="max-width:42px;max-height:58px;object-fit:contain;border-radius:4px" onerror="setEnergyImageFallback(this,'${x.set}','${x.num}',0)"></span><span><b>${x.set} ${x.num}</b><br><span class="small">${x.set==='SVE'?'Scarlatto/Violetto':'Megaevoluzione'}</span></span></button>`).join('')}</div>`:''}
-    <button type="button" class="btn alt big" onclick="searchHistoricBasicEnergy('${type}')">🕰️ Stampe storiche / senza codice</button>`;
+    <button type="button" class="btn alt big" onclick="searchHistoricBasicEnergy('${type}')">🕰️ ${historic?'Altre stampe Folletto / senza codice':'Stampe storiche / senza codice'}</button>`;
 }
 function selectEnergyType(type){selectedEnergyType=type;renderEnergyTypeChoices(type)}
 async function lookupBasicEnergyCode(){
