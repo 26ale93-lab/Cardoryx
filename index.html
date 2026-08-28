@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.46 Trainer Metadata</title>
+<title>Cardoryx V2.1.47 Trainer Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2655,37 +2655,88 @@ async function refreshUnknownTrainerSubtypes(){
     return isTrainer && !canonicalTrainerType(c);
   });
 
+  const fullFromId=async(id)=>{
+    id=String(id||'').trim();
+    if(!id)return null;
+    for(const base of [API,'https://api.tcgdex.net/v2/en']){
+      try{
+        const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+        if(!r.ok)continue;
+        const full=await r.json();
+        if(full?.id)return full;
+      }catch(e){}
+    }
+    return null;
+  };
+
+  const setCards=async(setId)=>{
+    setId=String(setId||'').trim();
+    if(!setId)return [];
+    for(const base of [API,'https://api.tcgdex.net/v2/en']){
+      try{
+        const r=await fetch(`${base}/sets/${encodeURIComponent(setId)}`,{cache:'no-store'});
+        if(!r.ok)continue;
+        const set=await r.json();
+        if(Array.isArray(set?.cards))return set.cards;
+      }catch(e){}
+    }
+    return [];
+  };
+
+  const findSetIdByName=async(setName)=>{
+    const wanted=normText(setName||'');
+    if(!wanted)return '';
+    for(const base of [API,'https://api.tcgdex.net/v2/en']){
+      try{
+        const r=await fetch(`${base}/sets`,{cache:'no-store'});
+        if(!r.ok)continue;
+        const sets=await r.json();
+        const exact=(Array.isArray(sets)?sets:[]).find(s=>normText(s?.name||'')===wanted);
+        if(exact?.id)return String(exact.id);
+      }catch(e){}
+    }
+    return '';
+  };
+
   const fetchTrainerSubtype=async(c)=>{
-    const ids=[];
-    const add=x=>{x=String(x||'').trim();if(x&&!ids.includes(x))ids.push(x)};
-    add(c.tcgdexId); add(c.id);
-
-    // Saved Cardoryx records use _cardoryxSetId, not setId.
-    const setId=String(c?._cardoryxSetId||c?.setId||c?.set?.id||'').trim();
-    const localId=String(c?.localId||'').trim();
-
-    // First try the most deterministic endpoint when set + local number are known.
-    if(setId && localId){
-      for(const base of [API,'https://api.tcgdex.net/v2/en']){
-        try{
-          const r=await fetch(`${base}/sets/${encodeURIComponent(setId)}/${encodeURIComponent(localId)}`,{cache:'no-store'});
-          if(r.ok){
-            const full=await r.json();
-            const t=canonicalTrainerType(full);
-            if(t)return t;
-          }
-        }catch(e){}
-      }
+    // 1) Existing global ids.
+    for(const id of [c?.tcgdexId,c?.id]){
+      const full=await fullFromId(id);
+      const t=canonicalTrainerType(full);
+      if(t)return t;
     }
 
-    // Then try global card ids.
-    for(const id of ids){
+    // 2) Resolve through the set card list. This avoids relying on a particular
+    // REST route for set+localId and works with old Cardoryx records.
+    let setId=String(c?._cardoryxSetId||c?.setId||c?.set?.id||'').trim();
+    const localId=String(c?.localId||'').trim();
+    if(!setId && c?.set)setId=await findSetIdByName(c.set);
+
+    if(setId && localId){
+      const briefs=await setCards(setId);
+      const target=briefs.find(x=>String(x?.localId||'').replace(/^0+/,'')===localId.replace(/^0+/,''))
+                ||briefs.find(x=>normText(x?.name||'')===normText(c?.name||''));
+      if(target){
+        let t=canonicalTrainerType(target);
+        if(t)return t;
+        const full=await fullFromId(target.id);
+        t=canonicalTrainerType(full);
+        if(t)return t;
+      }
+
+      // 3) Some API versions expose set filtering on /cards.
       for(const base of [API,'https://api.tcgdex.net/v2/en']){
         try{
-          const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+          const r=await fetch(`${base}/cards?set.id=${encodeURIComponent(setId)}`,{cache:'no-store'});
           if(!r.ok)continue;
-          const full=await r.json();
-          const t=canonicalTrainerType(full);
+          const rows=await r.json();
+          const target=(Array.isArray(rows)?rows:[]).find(x=>String(x?.localId||'').replace(/^0+/,'')===localId.replace(/^0+/,''))
+                    ||(Array.isArray(rows)?rows:[]).find(x=>normText(x?.name||'')===normText(c?.name||''));
+          if(!target)continue;
+          let t=canonicalTrainerType(target);
+          if(t)return t;
+          const full=await fullFromId(target.id);
+          t=canonicalTrainerType(full);
           if(t)return t;
         }catch(e){}
       }
