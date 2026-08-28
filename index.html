@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.37 Legacy Deck Migration</title>
+<title>Cardoryx V2.1.38 Protection Advice</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5021,20 +5021,44 @@ function clearCatalogFilters(){
 function adviceUnitValue(c){
   return cardPriceInfo(c).value;
 }
+// V2.1.38 — advisory only. This function never changes card status or quantities.
+function protectionRecommendation(c){
+  const info=cardPriceInfo(c), value=info?.value==null?null:Number(info.value);
+  const rarity=normText(c?.rarity||''), finish=canonicalVariant(c?.variant||'Normal');
+  const rare=/rara|rare|ultra|segreta|secret|illustration|special|doppia|double|hyper|ace spec|shiny/.test(rarity);
+  const specialFinish=['Poké Ball Reverse Holo','Master Ball Reverse Holo','Speciale / Altro'].includes(finish);
+  const foilFinish=['Holo','Reverse Holo','Cosmos Holo'].includes(finish);
+  const reasons=[];
+  if(value!=null && value>=30)reasons.push(`valore Cardmarket ${euro(value)} (≥ 30 €)`);
+  else if(value!=null && value>=15)reasons.push(`valore Cardmarket ${euro(value)} (≥ 15 €)`);
+  else if(value!=null && value>=5)reasons.push(`valore Cardmarket ${euro(value)} (≥ 5 €)`);
+  else if(value!=null && value>=1)reasons.push(`valore Cardmarket ${euro(value)} (≥ 1 €)`);
+  if(specialFinish)reasons.push(`finitura speciale ${finish}`);
+  else if(foilFinish)reasons.push(`finitura ${finish}`);
+  if(rare)reasons.push(`rarità ${c.rarity||'speciale'}`);
+  let level='standard',label='Protezione standard',text='Non emergono motivi particolari per una protezione superiore alla normale conservazione.';
+  if((value!=null&&value>=15)||specialFinish){level='high';label='Protezione alta consigliata';text='Proteggi questa carta con particolare attenzione. Cardoryx consiglia almeno una sleeve; per maggiore rigidità puoi usare anche un supporto rigido.'}
+  else if((value!=null&&value>=1)||foilFinish||rare){level='recommended';label='Protezione consigliata';text='Cardoryx consiglia almeno una sleeve e una conservazione ordinata per ridurre graffi e usura.'}
+  return {recommended:level!=='standard',level,label,text,reasons,value,priceKnown:value!=null,priceInfo:info};
+}
+function protectionCatalogBadge(c,g){
+  const r=protectionRecommendation(c);if(!r.recommended)return '';
+  const protectedQty=(g?.records||[]).filter(x=>(x.status||'Disponibile')==='Protetta').reduce((a,x)=>a+Math.max(1,Number(x.qty)||1),0);
+  if(g && protectedQty>=g.qty)return '';
+  return `<span class="collection-badge" title="${esc(r.reasons.join(' · ')||r.label)}">🛡️ ${esc(r.label)}</span>`;
+}
 function renderCardoryxAdvice(c){
-  const value=adviceUnitValue(c), rarity=normText(c.rarity||''), variant=normText(c.variant||''), status=normText(c.status||''), condition=normText(c.condition||''), qty=Math.max(1,Number(c.qty||1));
-  const rare=/rara|rare|ultra|segreta|secret|illustration|special|doppia|double|hyper/.test(rarity);
-  let score=(value>=3?2:0)+(value>=10?2:0)+(value>=30?2:0)+(rare?2:0)+(/holo|reverse/.test(variant)?1:0);
-  const priority=score>=5?'Prioritaria':score>=2?'Da proteggere':'Standard';
+  const r=protectionRecommendation(c), status=normText(c.status||''), condition=normText(c.condition||''), qty=Math.max(1,Number(c.qty||1));
   const rows=[];
-  if((rare||value>=3)&&!status.includes('protett')) rows.push(['🔒 Protezione consigliata',value>=10?'Consigliata sleeve di buona qualità e conservazione in raccoglitore o top loader.':'Consigliata almeno una sleeve e conservazione ordinata nel raccoglitore.']);
-  else if(status.includes('protett')) rows.push(['🔒 Carta già protetta','Mantieni sleeve e protezione pulite e sostituiscile se presentano graffi, polvere o pieghe.']);
-  else rows.push(['✅ Protezione standard','Non emergono motivi particolari per una protezione superiore alla normale conservazione.']);
-  if(value>0) rows.push(['💰 Valore indicativo',`Cardmarket: circa ${value.toLocaleString('it-IT',{style:'currency',currency:'EUR'})} per copia. Il prezzo può cambiare nel tempo.`]);
-  else rows.push(['↻ Prezzo da controllare','Non è disponibile un valore Cardmarket associato. Puoi riprovare con “Aggiorna valori”.']);
-  if(qty>1) rows.push(['🃏 Più copie',`Hai ${qty} copie. Confronta la condizione e proteggi per prima la copia migliore.`]);
-  if((condition&&!/near mint|mint|nm/.test(condition))||value>=10) rows.push(['🔎 Condizione importante','Controlla bordi, angoli, superficie e centratura: possono incidere sul valore reale della carta.']);
-  return `<div class="cardoryx-advice"><div class="cardoryx-advice-head"><b>💡 Consigli Cardoryx</b><span class="advice-priority">${priority}</span></div>${rows.map(r=>`<div class="advice-row"><strong>${r[0]}</strong>${esc(r[1])}</div>`).join('')}</div>`;
+  if(status.includes('protett'))rows.push(['🛡️ Carta già protetta','La carta risulta già assegnata manualmente a Protetta. Cardoryx non modifica automaticamente questo stato.']);
+  else rows.push([r.recommended?'🛡️ '+r.label:'✅ '+r.label,r.text]);
+  if(r.reasons.length)rows.push(['Perché',r.reasons.join(' · ')+'.']);
+  if(r.priceKnown)rows.push(['💰 Valore indicativo',`Cardmarket: circa ${r.value.toLocaleString('it-IT',{style:'currency',currency:'EUR'})} per copia. Il prezzo può cambiare nel tempo.`]);
+  else rows.push(['↻ Valore non usato nel consiglio','Non è disponibile un prezzo Cardmarket affidabile per questa variante. Il consiglio, quando presente, deriva solo da finitura e/o rarità; Cardoryx non inventa un prezzo.']);
+  if(qty>1)rows.push(['🃏 Più copie',`Hai ${qty} copie in questo record. Se vuoi proteggerne solo alcune, assegnale manualmente a Protetta dalla modifica della carta.`]);
+  if((condition&&!/near mint|mint|nm/.test(condition))||(r.value!=null&&r.value>=10))rows.push(['🔎 Condizione importante','Controlla bordi, angoli, superficie e centratura: possono incidere sul valore reale della carta.']);
+  const priority=r.level==='high'?'Alta':r.level==='recommended'?'Consigliata':'Standard';
+  return `<div class="cardoryx-advice"><div class="cardoryx-advice-head"><b>💡 Consiglio protezione</b><span class="advice-priority">${priority}</span></div>${rows.map(x=>`<div class="advice-row"><strong>${x[0]}</strong>${esc(x[1])}</div>`).join('')}</div>`;
 }
 
 function openCardDetail(key){
@@ -5306,7 +5330,7 @@ function renderCatalog(){
     <div class="collection-card-main"><h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
       <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
       ${cardPriceHtml({...c,qty:g.qty})}
-      <div class="collection-badges"><span class="collection-badge">${esc(cardCategory(c))}</span><span class="collection-badge">${esc(c.variant||'Normale')}</span><span class="collection-badge">${esc(c.condition||'NM')}</span>${groupAllocationHtml(g)}</div>
+      <div class="collection-badges"><span class="collection-badge">${esc(cardCategory(c))}</span><span class="collection-badge">${esc(c.variant||'Normale')}</span><span class="collection-badge">${esc(c.condition||'NM')}</span>${groupAllocationHtml(g)}${protectionCatalogBadge(c,g)}</div>
       <div class="collection-actions"><button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button><button class="btn alt" onclick="openGroupEditModal('${gkey}')">✏️ Modifica</button></div>
     </div></article>`}).join('')}</div>`;
 }
