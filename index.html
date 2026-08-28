@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.42 Trainer Subtypes</title>
+<title>Cardoryx V2.1.43 Unified Categories</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -861,7 +861,7 @@ function energyKind(c){
   return '';
 }
 function canonicalTrainerType(c){
-  const raw=normText(c?.trainerType||'');
+  const raw=normText(c?.trainerType||c?.trainer_type||c?.trainer?.type||'');
   const cat=normText(c?.category||'');
   const name=normText(c?.name||'');
   const source=[raw,cat,name].filter(Boolean).join(' ');
@@ -869,7 +869,7 @@ function canonicalTrainerType(c){
   // TCGdex / English values + Italian values already stored by Cardoryx.
   if(raw==='supporter'||raw==='aiuto'||source.includes('supporter'))return 'Aiuto';
   if(raw==='stadium'||raw==='stadio'||source.includes('stadium')||source.includes('stadio'))return 'Stadio';
-  if(raw==='pokemon tool'||raw==='pokémon tool'||raw==='oggetto pokemon'||raw==='oggetto pokémon'||
+  if(raw==='pokemon tool'||raw==='pokémon tool'||raw==='tool'||raw==='oggetto pokemon'||raw==='oggetto pokémon'||
      source.includes('pokemon tool')||source.includes('pokémon tool')||
      source.includes('oggetto pokemon')||source.includes('oggetto pokémon'))return 'Oggetto Pokémon';
   if(raw==='item'||raw==='strumento'||raw==='strumenti'||source.includes(' trainer item')||
@@ -885,19 +885,39 @@ function trainerCategory(c){
   if(t==='Strumento')return 'Strumenti';
   return 'Allenatore';
 }
+function canonicalPokemonType(v){
+  const n=normText(Array.isArray(v)?v[0]:v||'');
+  const map={
+    grass:'Erba',erba:'Erba',
+    fire:'Fuoco',fuoco:'Fuoco',
+    water:'Acqua',acqua:'Acqua',
+    lightning:'Lampo',electric:'Lampo',elettro:'Lampo',lampo:'Lampo',
+    psychic:'Psico',psico:'Psico',
+    fighting:'Lotta',lotta:'Lotta',
+    darkness:'Oscurità',dark:'Oscurità',oscurita:'Oscurità',
+    metal:'Metallo',steel:'Metallo',metallo:'Metallo',
+    dragon:'Drago',drago:'Drago',
+    colorless:'Incolore',incolore:'Incolore',
+    fairy:'Folletto',folletto:'Folletto'
+  };
+  return map[n]||'';
+}
 function cardCategory(c){
-  const name=normText(c?.name||'');
   const cat=normText(c?.category||'');
-  const type=normText(c?.type||'');
-  const isPokemon=cat.includes('pokemon')||!!c?.hp||!!c?.stage;
-  const isTrainer=cat.includes('trainer')||cat.includes('allenatore')||!!c?.trainerType;
-  if(isPokemon){ if(type)return c.type||type; return c.category||'Pokémon'; }
-  if(isTrainer)return trainerCategory(c);
+  const rawType=(Array.isArray(c?.types)&&c.types.length?c.types[0]:c?.type)||'';
+  const isTrainer=cat==='trainer'||cat==='allenatore'||cat.includes('trainer')||cat.includes('allenatore')||!!c?.trainerType||!!c?.trainer_type;
   const ek=energyKind(c);
+  if(isTrainer)return trainerCategory(c);
   if(ek==='Base')return '⚡ Energie Base';
   if(ek==='Speciale')return '✨ Energie Speciali';
+  const isPokemon=cat==='pokemon'||cat.includes('pokemon')||!!c?.hp||!!c?.stage||Array.isArray(c?.types);
+  if(isPokemon){
+    const t=canonicalPokemonType(rawType);
+    return t||'Pokémon';
+  }
+  const t=canonicalPokemonType(rawType);
+  if(t)return t;
   if(cat)return c.category;
-  if(type)return c.type;
   return 'Altro';
 }
 
@@ -1278,9 +1298,17 @@ function renderHomeDashboard(){
 
   const cg=ui('homeCategoryGrid');
   if(cg){
-    const counts={};
-    db.forEach(c=>{const k=cardCategory(c)||'Altro';counts[k]=(counts[k]||0)+(Number(c.qty)||1)});
-    cg.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<button class="home-cat" onclick="filterByCategory('${String(k).replace(/'/g,"\\'")}')"><b>${n}</b><span>${esc(k)}</span></button>`).join('')||'<div class="small">La collezione è vuota.</div>';
+    const counts=new Map();
+    db.forEach(c=>{
+      const label=cardCategory(c)||'Altro';
+      const key=categoryFilterKey(label);
+      const prev=counts.get(key)||{label,n:0};
+      prev.n+=(Number(c.qty)||1);
+      // Prefer the canonical current label over legacy/raw aliases.
+      prev.label=label;
+      counts.set(key,prev);
+    });
+    cg.innerHTML=[...counts.values()].sort((a,b)=>b.n-a.n).map(({label,n})=>`<button class="home-cat" onclick="filterByCategory('${String(label).replace(/'/g,"\\'")}')"><b>${n}</b><span>${esc(label)}</span></button>`).join('')||'<div class="small">La collezione è vuota.</div>';
   }
 }
 
@@ -2605,6 +2633,43 @@ async function runSmartOCR(){
   }
 }
 
+
+async function refreshUnknownTrainerSubtypes(){
+  let changed=false;
+  const candidates=db.filter(c=>{
+    const cat=normText(c?.category||'');
+    const isTrainer=cat==='trainer'||cat==='allenatore'||cat.includes('trainer')||cat.includes('allenatore')||!!c?.trainerType;
+    return isTrainer && !canonicalTrainerType(c) && (c?.tcgdexId||c?.id);
+  });
+  for(const c of candidates){
+    const ids=[c.tcgdexId,c.id].filter(Boolean);
+    let resolved='';
+    for(const id of ids){
+      for(const base of [API,'https://api.tcgdex.net/v2/en']){
+        try{
+          const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+          if(!r.ok)continue;
+          const full=await r.json();
+          const t=canonicalTrainerType(full);
+          if(t){resolved=t;break}
+        }catch(e){}
+      }
+      if(resolved)break;
+    }
+    if(resolved && c.trainerType!==resolved){
+      c.trainerType=resolved;
+      changed=true;
+    }
+  }
+  if(changed){
+    try{localStorage.setItem('cardoryx_db',JSON.stringify(db))}catch(e){}
+    renderHomeDashboard();
+    fillTypeFilter();
+    renderCatalog();
+    renderStats();
+  }
+}
+
 async function fetchFullCandidate(c){
   for(const base of [API,'https://api.tcgdex.net/v2/en']){
     try{
@@ -2628,6 +2693,10 @@ async function enrichCardoryxEnglishIdentity(card){
     const r=await fetch(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(card.id)}`,{cache:'no-store'});
     if(!r.ok)return card;
     const en=await r.json();
+    if(!canonicalTrainerType(card)){
+      const enTrainer=en?.trainerType||en?.trainer_type||en?.trainer?.type||'';
+      if(enTrainer)card.trainerType=enTrainer;
+    }
     const phrases=[];
     const push=v=>{const n=normText(v||'');if(n)phrases.push(n)};
     push(en?.name);
@@ -5085,12 +5154,20 @@ function confirmResetCatalog(){
 let activeHomeCategoryFilter='';
 
 function categoryFilterKey(v){
-  return normText(String(v||'')
-    .replace(/^[^\p{L}\p{N}]+/u,'')
-    .trim())
-    .replace(/^elettro$/,'lampo')
-    .replace(/^energie base$/,'energie base')
-    .replace(/^energie speciali$/,'energie speciali');
+  let n=normText(String(v||'').replace(/^[^\p{L}\p{N}]+/u,'').trim());
+  const aliases={
+    grass:'erba',fire:'fuoco',water:'acqua',
+    lightning:'lampo',electric:'lampo',elettro:'lampo',
+    psychic:'psico',fighting:'lotta',
+    darkness:'oscurita',dark:'oscurita',
+    metal:'metallo',steel:'metallo',dragon:'drago',
+    colorless:'incolore',
+    supporter:'aiuto',item:'strumenti',strumento:'strumenti',
+    stadium:'stadio',
+    'pokemon tool':'oggetti pokemon','pokémon tool':'oggetti pokemon',
+    'oggetto pokemon':'oggetti pokemon','oggetto pokémon':'oggetti pokemon'
+  };
+  return aliases[n]||n;
 }
 function clearHomeCategoryFilter(){activeHomeCategoryFilter=''}
 function filterByCategory(cat){
@@ -5583,6 +5660,7 @@ if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
         if(quick&&typeof quick==='object')localStorage.setItem('cardoryx_quickscan',JSON.stringify(quick));
         localStorage.setItem('cardoryx_db',JSON.stringify(db));
         renderAll();renderSettings();renderDecks();
+setTimeout(()=>refreshUnknownTrainerSubtypes(),250);
         alert(`Backup completo ripristinato: ${db.length} schede e ${decks.length} mazzi.`);
       }
     }else throw new Error('Formato backup non riconosciuto');
