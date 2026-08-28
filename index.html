@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.8 Standard Finish Evidence Fix</title>
+<title>Cardoryx V2.1.9 Standard Finish Evidence Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2815,6 +2815,30 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     }
   }
 
+  // For Play! Pokémon, use the detailed TCGdex rows that explicitly carry
+  // Play!/Prize Pack evidence. This is edition-specific evidence and avoids
+  // reusing the standard-card finishes for a stamped version.
+  if(stamp==='Play! Pokémon' && pool.length){
+    const playRows=pool.filter(x=>{
+      const stamps=Array.isArray(x?.stamp)?x.stamp.map(normText):[];
+      const foil=normText(x?.foil||'');
+      const name=normText(x?.name||x?.variant||'');
+      return stamps.some(v=>v.includes('playerrewards')||v.includes('playpokemon')||v.includes('prizepack')||v.includes('league')) ||
+             ['playerreward','league'].includes(foil) ||
+             name.includes('playpokemon') || name.includes('prizepack');
+    });
+    if(playRows.length)addDetailedBaseFinishes(allowed,playRows);
+  }
+
+  // A previously resolved exact Play price is also valid finish evidence when
+  // it belongs to the same Series. This keeps Scanner -> Collection -> Edit
+  // consistent without inventing a finish.
+  if(stamp==='Play! Pokémon' && card?.livePlayPrice?.exact){
+    const lpSeries=normalizedPlaySeries(card.livePlayPrice.series||'');
+    const lpFinish=canonicalVariant(card.livePlayPrice.finish||'');
+    if(lpFinish && (!series || !lpSeries || lpSeries===series))allowed.add(lpFinish);
+  }
+
   // Exact verified registries may add a finish for the exact edition.
   for(const name of ['Normal','Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo']){
     if(stamp==='None' && verifiedVariantPrice(card,name))allowed.add(name);
@@ -3792,7 +3816,57 @@ function openImageModal(src){
   m.classList.add('open');m.setAttribute('aria-hidden','false');
 }
 function closeImageModal(){const m=document.getElementById('imageModal');m.classList.remove('open');m.setAttribute('aria-hidden','true')}
-function openEditModal(key){
+function cardHasEditVariantEvidence(card){
+  return !!(Array.isArray(card?.variants_detailed) && card.variants_detailed.length) ||
+         !!(card?.variants && !Array.isArray(card.variants) && typeof card.variants==='object');
+}
+
+async function hydrateEditCardEvidence(card){
+  if(!card)return card;
+  const ids=[];
+  const addId=x=>{x=String(x||'').trim();if(x&&!ids.includes(x))ids.push(x)};
+  addId(card.tcgdexId);
+  addId(card.id);
+
+  // Old collection records can lack the full TCGdex payload. Recover it here
+  // instead of guessing finishes from the saved display state.
+  if(!ids.length || !ids.some(x=>x.includes('-'))){
+    try{
+      const briefs=await apiCardsQuery({name:String(card.name||'').trim()});
+      let pool=Array.isArray(briefs)?briefs:[];
+      if(card.localId){
+        const exact=pool.filter(x=>sameCollectorNumber(x.localId,card.localId));
+        if(exact.length)pool=exact;
+      }
+      const savedSet=normText(card?.set?.name||card?.set||'');
+      if(savedSet){
+        const same=pool.filter(x=>normText(x?.set?.name||'')===savedSet);
+        if(same.length)pool=same;
+      }
+      pool.slice(0,8).forEach(x=>addId(x.id));
+    }catch(e){}
+  }
+
+  for(const id of ids){
+    for(const base of [API,'https://api.tcgdex.net/v2/en']){
+      try{
+        const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
+        if(!r.ok)continue;
+        const full=await r.json();
+        if(!full?.id)continue;
+        if(full.variants!==undefined)card.variants=full.variants;
+        if(Array.isArray(full.variants_detailed))card.variants_detailed=full.variants_detailed;
+        if(full.pricing && !card.pricing)card.pricing=full.pricing;
+        card.tcgdexId=full.id||card.tcgdexId||'';
+        try{await enrichCardoryxEnglishIdentity(card)}catch(e){}
+        return card;
+      }catch(e){}
+    }
+  }
+  return card;
+}
+
+async function openEditModal(key){
   const c=findRecordByKey(key);
   if(!c)return;
   editingKey=recordKey(c);
@@ -3805,14 +3879,37 @@ function openEditModal(key){
   modal.classList.add('open');modal.setAttribute('aria-hidden','false');
   applyPlayAutoSeries(c,true);
   syncStampAvailability(c,true,true);
-  syncVariantAvailability(c,true);
-  refreshOfficialPlayAvailability(c,true,false).then(()=>{
+
+  // Do not destroy a saved finish before the full card evidence is available.
+  // Newer records can be synchronized immediately; older records are hydrated
+  // from TCGdex first and only then receive the disabled/enabled finish rules.
+  if(cardHasEditVariantEvidence(c) || c?.livePlayPrice?.exact){
+    syncVariantAvailability(c,true);
+  }
+
+  try{
+    await hydrateEditCardEvidence(c);
+    if(editingKey!==recordKey(c))return;
+    // Persist recovered source evidence so future Edit openings do not need to
+    // reconstruct the same card again. No user selection is changed here.
+    localStorage.setItem('cardoryx_db',JSON.stringify(db));
+    await refreshOfficialPlayAvailability(c,true,false);
+    if(editingKey!==recordKey(c))return;
+    applyPlayAutoSeries(c,true);
+    syncStampAvailability(c,true,false);
+    syncVariantAvailability(c,true);
+  }catch(e){
+    console.warn('Edit evidence hydration failed:',e);
     if(editingKey===recordKey(c)){
-      applyPlayAutoSeries(c,true);
-      syncStampAvailability(c,true,false);
-      syncVariantAvailability(c,true);
+      refreshOfficialPlayAvailability(c,true,false).then(()=>{
+        if(editingKey===recordKey(c)){
+          applyPlayAutoSeries(c,true);
+          syncStampAvailability(c,true,false);
+          syncVariantAvailability(c,true);
+        }
+      }).catch(()=>{});
     }
-  }).catch(()=>{});
+  }
 }
 function closeEditModal(){
   const modal=document.getElementById('editModal');
