@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.9 Standard Finish Evidence Fix</title>
+<title>Cardoryx V2.1.11 Finish Architecture Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2742,10 +2742,8 @@ function applyDetectedVariant(card){
 // Fonte primaria: variants / variants_detailed di TCGdex. Le finiture speciali
 // restano disabilitate finché non esiste una variante esplicita o un registro verificato.
 function rarityForcesStandardHolo(card){
-  // Modern rarity classes whose regular set printing is intrinsically foil.
-  // Keep this deliberately narrow: it is only a fallback when detailed base
-  // variant evidence is absent/incomplete, never an override of explicit
-  // unstamped variants_detailed rows.
+  // Rarities whose regular printing is intrinsically foil. This is a structural
+  // rule, not a replacement for explicit variant rows.
   const r=normText(card?.rarity||'');
   return [
     'doublerare','raradoppia','raredupla','double rare',
@@ -2757,33 +2755,73 @@ function rarityForcesStandardHolo(card){
     'amazingrare','amazing rare',
     'shinyrare','shiny rare','shinyrarev','shiny rare v','shinyrarevmax','shiny rare vmax',
     'blackwhiterare','black white rare','megahyperrare','mega hyper rare',
-    'holorare','holo rare','rareholo','rare holo','rareholo v','rare holo v','rareholo vmax','rare holo vmax','rareholo vstar','rare holo vstar'
+    'holorare','holo rare','rareholo','rare holo','rareholo v','rare holo v','rareholo vmax','rare holo vmax','rareholo vstar','rare holo vstar',
+    'acespecrare','ace spec rare'
   ].map(normText).includes(r);
 }
 
-function addDetailedBaseFinishes(allowed,basePool){
-  if(basePool.some(x=>x?.type==='normal'))allowed.add('Normal');
-  if(basePool.some(x=>x?.type==='holo' && x?.foil!=='cosmos'))allowed.add('Holo');
-  if(basePool.some(x=>x?.type==='holo' && x?.foil==='cosmos'))allowed.add('Cosmos Holo');
-  if(basePool.some(x=>x?.type==='reverse' && !x?.foil))allowed.add('Reverse Holo');
-  if(basePool.some(x=>x?.type==='reverse'&&x?.foil==='pokeball'))allowed.add('Poké Ball Reverse Holo');
-  if(basePool.some(x=>x?.type==='reverse'&&x?.foil==='masterball'))allowed.add('Master Ball Reverse Holo');
+function cardSetId(card){
+  return String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+}
+function cardRegulationMark(card){
+  return String(card?.regulationMark||card?._cardoryxRegulationMark||'').trim().toUpperCase();
+}
+function isModernParallelEra(card){
+  // Scarlet & Violet and Mega Evolution use the modern parallel-printing model.
+  // Prefer official regulation mark when present; set/id prefix is only a
+  // fallback for older collection records that were saved before we persisted it.
+  const mark=cardRegulationMark(card);
+  if(mark && mark.length===1 && mark>='G')return true;
+  const sid=cardSetId(card);
+  const cid=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  return /^(sv|me)/.test(sid) || /^(sv|me)/.test(cid);
+}
+
+function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
+  for(const x of (Array.isArray(rows)?rows:[])){
+    const type=normText(x?.type||'');
+    const foil=normText(x?.foil||'');
+    if(base){
+      if(type==='normal')allowed.add('Normal');
+      if(type==='holo' && !foil)allowed.add('Holo');
+      if(type==='reverse' && !foil)allowed.add('Reverse Holo');
+    }
+    if(special){
+      if(type==='holo' && foil==='cosmos')allowed.add('Cosmos Holo');
+      if(type==='reverse'&&foil==='pokeball')allowed.add('Poké Ball Reverse Holo');
+      if(type==='reverse'&&foil==='masterball')allowed.add('Master Ball Reverse Holo');
+    }
+  }
+}
+
+function addModernStandardStructure(allowed,card){
+  if(!isModernParallelEra(card))return false;
+  const r=normText(card?.rarity||'');
+
+  // Since regulation G, regular Common/Uncommon cards use a non-holo base plus
+  // reverse parallel. Regular Rare cards use holo base plus reverse parallel.
+  // Intrinsically foil rarities do not gain a Normal/Reverse merely because a
+  // promo/reprint of the same card exists elsewhere.
+  if(rarityForcesStandardHolo(card)){
+    allowed.add('Holo');
+    return true;
+  }
+  if(['rare','rara','raro'].map(normText).includes(r)){
+    allowed.add('Holo');
+    allowed.add('Reverse Holo');
+    return true;
+  }
+  if(['common','comune','uncommon','noncomune','non comune'].map(normText).includes(r)){
+    allowed.add('Normal');
+    allowed.add('Reverse Holo');
+    return true;
+  }
+  return false;
 }
 
 function addCoarseStandardFinishes(allowed,card){
   const v=card?.variants && !Array.isArray(card.variants)?card.variants:null;
   if(!v)return false;
-
-  // Intrinsically-foil modern rarities are a special case: coarse flags can be
-  // polluted by promo/reprint data. Their regular set printing is Holo.
-  if(rarityForcesStandardHolo(card)){
-    allowed.add('Holo');
-    return true;
-  }
-
-  // TCGdex documents these booleans as "printing is known to exist". They are
-  // complementary evidence to variants_detailed, not a fallback that must be
-  // ignored merely because one detailed row exists.
   if(v.normal===true)allowed.add('Normal');
   if(v.holo===true)allowed.add('Holo');
   if(v.reverse===true)allowed.add('Reverse Holo');
@@ -2791,6 +2829,10 @@ function addCoarseStandardFinishes(allowed,card){
 }
 
 function addMarketplaceStandardFinishes(allowed,card){
+  // Pricing keys are weak evidence only. They are intentionally not used for
+  // modern cards, because provider payloads may aggregate a promo/reprint (e.g.
+  // Prize Pack Holo) with the regular card identity.
+  if(isModernParallelEra(card))return false;
   const p=card?.pricing?.tcgplayer;
   if(!p || typeof p!=='object')return false;
   const keys=Object.keys(p).map(normText);
@@ -2807,41 +2849,56 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
   const pool=it.length?it:d;
-  const basePool=pool.filter(x=>!(Array.isArray(x?.stamp)?x.stamp:[]).length && !['player-reward','league'].includes(x?.foil));
+  const isPlayRow=x=>{
+    const stamps=Array.isArray(x?.stamp)?x.stamp.map(normText):[];
+    const foil=normText(x?.foil||'');
+    const name=normText(x?.name||x?.variant||'');
+    return stamps.some(v=>v.includes('playerrewards')||v.includes('playpokemon')||v.includes('prizepack')||v.includes('league')) ||
+           ['playerreward','league'].includes(foil) || name.includes('playpokemon') || name.includes('prizepack');
+  };
+  const basePool=pool.filter(x=>!(Array.isArray(x?.stamp)?x.stamp:[]).length && !isPlayRow(x));
   let allowed=new Set();
 
   if(stamp==='None'){
-    // V2.1.10 — combine independent evidence instead of choosing exactly one
-    // source. variants_detailed can legitimately contain only the special
-    // Poké Ball/Master Ball rows while the coarse variants object still carries
-    // Holo/Reverse. Treating detailed data as exclusive caused those standard
-    // finishes to disappear in Edit.
-    if(basePool.length)addDetailedBaseFinishes(allowed,basePool);
-    addCoarseStandardFinishes(allowed,card);
-    addMarketplaceStandardFinishes(allowed,card);
+    // V2.1.11 — keep standard printing evidence separate from promo/reprint
+    // evidence. Special unstamped foils (Cosmos/Poké Ball/Master Ball) can be
+    // unioned safely, but a generic Holo flag cannot leak in from Prize Pack.
+    addDetailedFinishes(allowed,basePool,{base:false,special:true});
 
-    // Last-resort protection for old/incomplete records.
-    if(!allowed.size && rarityForcesStandardHolo(card))allowed.add('Holo');
+    if(isModernParallelEra(card)){
+      // For modern cards the set-era + rarity structure is more reliable than
+      // the coarse variants booleans, which TCGdex itself has open data issues
+      // for and can be polluted by reprints.
+      const structured=addModernStandardStructure(allowed,card);
+      if(!structured){
+        // Unknown modern rarity: explicit unstamped detailed rows first, then
+        // coarse flags as a conservative fallback.
+        const before=allowed.size;
+        addDetailedFinishes(allowed,basePool,{base:true,special:false});
+        if(allowed.size===before)addCoarseStandardFinishes(allowed,card);
+      }
+    }else{
+      // Older eras vary by set. Explicit unstamped detailed rows are primary;
+      // only if absent do we consult the coarse booleans and then pricing keys.
+      const explicitBase=new Set();
+      addDetailedFinishes(explicitBase,basePool,{base:true,special:false});
+      if(explicitBase.size){for(const x of explicitBase)allowed.add(x)}
+      else{
+        const before=allowed.size;
+        addCoarseStandardFinishes(allowed,card);
+        if(allowed.size===before)addMarketplaceStandardFinishes(allowed,card);
+        if(allowed.size===before && rarityForcesStandardHolo(card))allowed.add('Holo');
+      }
+    }
   }
 
-  // For Play! Pokémon, use the detailed TCGdex rows that explicitly carry
-  // Play!/Prize Pack evidence. This is edition-specific evidence and avoids
-  // reusing the standard-card finishes for a stamped version.
   if(stamp==='Play! Pokémon' && pool.length){
-    const playRows=pool.filter(x=>{
-      const stamps=Array.isArray(x?.stamp)?x.stamp.map(normText):[];
-      const foil=normText(x?.foil||'');
-      const name=normText(x?.name||x?.variant||'');
-      return stamps.some(v=>v.includes('playerrewards')||v.includes('playpokemon')||v.includes('prizepack')||v.includes('league')) ||
-             ['playerreward','league'].includes(foil) ||
-             name.includes('playpokemon') || name.includes('prizepack');
-    });
-    if(playRows.length)addDetailedBaseFinishes(allowed,playRows);
+    const playRows=pool.filter(isPlayRow);
+    if(playRows.length)addDetailedFinishes(allowed,playRows,{base:true,special:true});
   }
 
-  // A previously resolved exact Play price is also valid finish evidence when
-  // it belongs to the same Series. This keeps Scanner -> Collection -> Edit
-  // consistent without inventing a finish.
+  // A previously resolved exact Play price is valid finish evidence only for
+  // the same Series. This preserves Scanner -> Collection -> Edit consistency.
   if(stamp==='Play! Pokémon' && card?.livePlayPrice?.exact){
     const lpSeries=normalizedPlaySeries(card.livePlayPrice.series||'');
     const lpFinish=canonicalVariant(card.livePlayPrice.finish||'');
@@ -2855,15 +2912,15 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     if(stamp==='Play! Pokémon' && series && verifiedPlaySeriesPrice(card,name,stamp,series))allowed.add(name);
   }
 
-  // A verified Prize Pack catalogue finish is authoritative for that stamped version.
+  // Verified Prize Pack catalogue finish is authoritative for that stamped
+  // printing. If no exact finish is known (e.g. ambiguous Moltres products),
+  // the resolver deliberately remains "Non so" rather than guessing.
   if(stamp==='Play! Pokémon'){
     const pm=playAutoMatch(card);
     const known=pm?.finish?canonicalVariant(pm.finish):'';
     if(known)allowed=new Set([known]);
   }
 
-  // Unknown data must stay unknown: never invent Normal merely because no
-  // evidence was found. Manual/unknown choices remain available.
   if(!allowed.size)allowed.add('Non so');
   allowed.add('Speciale / Altro');
   allowed.add('Non so');
@@ -2993,7 +3050,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=218`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=211`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3309,10 +3366,10 @@ function verifiedStampPrice(card,variant,stamp){
 }
 
 const VERIFIED_VARIANT_PRICES = {
-  'evoluzioni prismatiche|057|Normal': {
+  'evoluzioni prismatiche|057|Holo': {
     low:0.02, trend:0.13, avg7:0.11, avg30:0.08,
     source:'Cardmarket · Evoluzioni Prismatiche',
-    verified:'25/08/2026'
+    verified:'28/08/2026'
   },
   'evoluzioni prismatiche|057|Poké Ball Reverse Holo': {
     low:0.05, trend:0.42, avg7:0.42, avg30:0.37,
@@ -3747,6 +3804,10 @@ function saveSelected(){
       tcgdexId:selectedCard.tcgdexId||selectedCard.id||scanPriceCard?.id||'',
       variants:(selectedCard.variants||scanPriceCard?.variants||null),
       variants_detailed:(selectedCard.variants_detailed||scanPriceCard?.variants_detailed||[]),
+      regulationMark:selectedCard.regulationMark||scanPriceCard?.regulationMark||'',
+      _cardoryxRegulationMark:selectedCard.regulationMark||scanPriceCard?.regulationMark||'',
+      _cardoryxSetId:selectedCard.set?.id||scanPriceCard?.set?.id||'',
+      _cardoryxReleaseDate:selectedCard.set?.releaseDate||scanPriceCard?.set?.releaseDate||'',
       _cardoryxEnglishPhrases:(selectedCard._cardoryxEnglishPhrases||scanPriceCard?._cardoryxEnglishPhrases||[]),
       _cardoryxEnglishIdentityText:(selectedCard._cardoryxEnglishIdentityText||scanPriceCard?._cardoryxEnglishIdentityText||''),
 livePlayPrice:(()=>{
@@ -3818,6 +3879,7 @@ priceUpdatedAt:
 
 
 let editingKey=null;
+let editingCardRef=null;
 function openImageModal(src){
   if(!src)return;
   const m=document.getElementById('imageModal'),img=document.getElementById('imageModalImg');
@@ -3837,28 +3899,17 @@ async function hydrateEditCardEvidence(card){
   addId(card.tcgdexId);
   addId(card.id);
 
-  if(!ids.length || !ids.some(x=>x.includes('-'))){
-    try{
-      const briefs=await apiCardsQuery({name:String(card.name||'').trim()});
-      let pool=Array.isArray(briefs)?briefs:[];
-      if(card.localId){
-        const exact=pool.filter(x=>sameCollectorNumber(x.localId,card.localId));
-        if(exact.length)pool=exact;
-      }
-      const savedSet=normText(card?.set?.name||card?.set||'');
-      if(savedSet){
-        const same=pool.filter(x=>normText(x?.set?.name||'')===savedSet);
-        if(same.length)pool=same;
-      }
-      pool.slice(0,8).forEach(x=>addId(x.id));
-    }catch(e){}
-  }
-
   const mergeDetailed=(target,rows)=>{
     const out=Array.isArray(target)?target.slice():[];
+    const signature=x=>JSON.stringify([
+      x?.type||'',x?.subtype||'',x?.foil||'',
+      Array.isArray(x?.stamp)?[...x.stamp].sort():[],
+      Array.isArray(x?.languages)?[...x.languages].sort():[],
+      x?.thirdParty?.cardmarket||'',x?.thirdParty?.tcgplayer||''
+    ]);
+    const seen=new Set(out.map(signature));
     for(const x of (Array.isArray(rows)?rows:[])){
-      const sig=JSON.stringify([x?.type||'',x?.subtype||'',x?.foil||'',Array.isArray(x?.stamp)?[...x.stamp].sort():[],Array.isArray(x?.languages)?[...x.languages].sort():[],x?.thirdParty?.cardmarket||'',x?.thirdParty?.tcgplayer||'']);
-      if(!out.some(y=>JSON.stringify([y?.type||'',y?.subtype||'',y?.foil||'',Array.isArray(y?.stamp)?[...y.stamp].sort():[],Array.isArray(y?.languages)?[...y.languages].sort():[],y?.thirdParty?.cardmarket||'',y?.thirdParty?.tcgplayer||''])===sig))out.push(x);
+      const sig=signature(x);if(!seen.has(sig)){seen.add(sig);out.push(x)}
     }
     return out;
   };
@@ -3867,10 +3918,19 @@ async function hydrateEditCardEvidence(card){
     if(b&&typeof b==='object'&&!Array.isArray(b))for(const [k,v] of Object.entries(b))out[k]=(out[k]===true||v===true)?true:(out[k]??v);
     return Object.keys(out).length?out:null;
   };
+  const mergeFull=full=>{
+    card.variants=mergeCoarse(card.variants,full.variants);
+    card.variants_detailed=mergeDetailed(card.variants_detailed,full.variants_detailed);
+    if(full.pricing)card.pricing={...(card.pricing||{}),...full.pricing};
+    if(full.rarity)card.rarity=full.rarity;
+    if(full.regulationMark){card.regulationMark=full.regulationMark;card._cardoryxRegulationMark=full.regulationMark}
+    if(full.set?.id)card._cardoryxSetId=full.set.id;
+    if(full.set?.releaseDate)card._cardoryxReleaseDate=full.set.releaseDate;
+    if(full.category&&!card.category)card.category=full.category;
+    card.tcgdexId=full.id||card.tcgdexId||'';
+  };
 
-  // Fetch BOTH Italian and English payloads. Completion can differ by language;
-  // returning after the first response was the remaining Edit-mode data loss.
-  for(const id of ids){
+  const tryId=async id=>{
     let matched=false;
     for(const base of [API,'https://api.tcgdex.net/v2/en']){
       try{
@@ -3880,18 +3940,45 @@ async function hydrateEditCardEvidence(card){
         if(!full?.id)continue;
         if(card.localId && full.localId && !sameCollectorNumber(card.localId,full.localId))continue;
         if(!priceSetMatches(card,full))continue;
-        matched=true;
-        card.variants=mergeCoarse(card.variants,full.variants);
-        card.variants_detailed=mergeDetailed(card.variants_detailed,full.variants_detailed);
-        if(full.pricing){
-          card.pricing={...(card.pricing||{}),...full.pricing};
-        }
-        if(full.rarity&&!card.rarity)card.rarity=full.rarity;
-        card.tcgdexId=full.id||card.tcgdexId||'';
+        mergeFull(full);matched=true;
       }catch(e){}
     }
-    if(matched){try{await enrichCardoryxEnglishIdentity(card)}catch(e){};return card;}
+    return matched;
+  };
+
+  // 1) Try saved IDs, but never assume a hyphenated ID is valid.
+  for(const id of ids){
+    if(await tryId(id)){
+      try{await enrichCardoryxEnglishIdentity(card)}catch(e){}
+      return card;
+    }
   }
+
+  // 2) If saved IDs are stale/synthetic, resolve again by name + collector
+  // number + set. This path now runs after ANY failed ID attempt, not only when
+  // the ID lacks a hyphen.
+  try{
+    const briefs=await apiCardsQuery({name:String(card.name||'').trim()});
+    let pool=Array.isArray(briefs)?briefs:[];
+    if(card.localId){
+      const exact=pool.filter(x=>sameCollectorNumber(x.localId,card.localId));
+      if(exact.length)pool=exact;
+    }
+    const savedSet=normText(card?.set?.name||card?.set||'');
+    if(savedSet){
+      const same=pool.filter(x=>{
+        const candidateSet=normText(x?.set?.name||'');
+        return candidateSet && (candidateSet===savedSet||candidateSet.includes(savedSet)||savedSet.includes(candidateSet));
+      });
+      if(same.length)pool=same;
+    }
+    for(const br of pool.slice(0,12)){
+      if(await tryId(br.id)){
+        try{await enrichCardoryxEnglishIdentity(card)}catch(e){}
+        return card;
+      }
+    }
+  }catch(e){}
   return card;
 }
 
@@ -3899,6 +3986,7 @@ async function openEditModal(key){
   const c=findRecordByKey(key);
   if(!c)return;
   editingKey=recordKey(c);
+  editingCardRef=c;
   document.getElementById('editTitle').textContent=c.name;
   document.getElementById('editQty').value=Number(c.qty)||1;
   document.getElementById('editVariant').value=canonicalVariant(c.variant||'Normal');if(document.getElementById('editStamp'))document.getElementById('editStamp').value=canonicalStamp(c.stamp||'None');if(document.getElementById('editPlaySeries'))document.getElementById('editPlaySeries').value=normalizedPlaySeries(c.playSeries||'');syncEditPlaySeriesVisibility();
@@ -3944,10 +4032,11 @@ function closeEditModal(){
   const modal=document.getElementById('editModal');
   if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
   editingKey=null;
+  editingCardRef=null;
 }
 function saveEditModal(){
   if(!editingKey)return;
-  const c=db.find(x=>recordKey(x)===editingKey);
+  const c=editingCardRef||db.find(x=>recordKey(x)===editingKey);
   if(!c)return;
   const qty=parseInt(document.getElementById('editQty').value,10);
   if(!Number.isFinite(qty)||qty<1){alert('Inserisci una quantità valida.');return}
@@ -4475,7 +4564,7 @@ document.getElementById('stamp')?.addEventListener('change',()=>{
 });
 document.getElementById('editStamp')?.addEventListener('change',()=>{
   syncEditPlaySeriesVisibility();
-  const c=editingKey?db.find(x=>recordKey(x)===editingKey):null;
+  const c=editingCardRef||(editingKey?db.find(x=>recordKey(x)===editingKey):null);
   if(!c)return;
   syncStampAvailability(c,true,false);
   applyPlayAutoSeries(c,true);
@@ -4487,7 +4576,7 @@ document.getElementById('editStamp')?.addEventListener('change',()=>{
   }).catch(()=>{});
 });
 document.getElementById('editPlaySeries')?.addEventListener('change',()=>{
-  const c=editingKey?db.find(x=>recordKey(x)===editingKey):null;
+  const c=editingCardRef||(editingKey?db.find(x=>recordKey(x)===editingKey):null);
   if(c){syncStampAvailability(c,true,false);syncVariantAvailability(c,true);}
 });
 document.getElementById('playSeries')?.addEventListener('change',()=>{
