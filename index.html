@@ -2748,26 +2748,33 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
   const pool=it.length?it:d;
+  const basePool=pool.filter(x=>!(Array.isArray(x?.stamp)?x.stamp:[]).length);
   const v=card?.variants && !Array.isArray(card.variants)?card.variants:null;
-  const hasType=t=>pool.some(x=>x?.type===t && !(x?.stamp||[]).length);
-  const hasFoil=f=>pool.some(x=>x?.type==='reverse'&&x?.foil===f);
   let allowed=new Set();
 
-  if(v){
-    if(v.normal===true)allowed.add('Normal');
-    if(v.holo===true)allowed.add('Holo');
-    if(v.reverse===true)allowed.add('Reverse Holo');
+  // V2.1.7 — variants_detailed is authoritative when present. The coarse
+  // TCGdex `variants` booleans can describe variants across products/promos and
+  // must not re-enable Normal/Holo/Reverse for a specific saved edition.
+  if(stamp==='None'){
+    if(basePool.length){
+      if(basePool.some(x=>x?.type==='normal'))allowed.add('Normal');
+      if(basePool.some(x=>x?.type==='holo'))allowed.add('Holo');
+      if(basePool.some(x=>x?.type==='reverse' && !x?.foil))allowed.add('Reverse Holo');
+      if(basePool.some(x=>x?.type==='reverse'&&x?.foil==='pokeball'))allowed.add('Poké Ball Reverse Holo');
+      if(basePool.some(x=>x?.type==='reverse'&&x?.foil==='masterball'))allowed.add('Master Ball Reverse Holo');
+      if(basePool.some(x=>x?.foil==='cosmos'))allowed.add('Cosmos Holo');
+    }else if(!pool.length && v){
+      // Legacy fallback only when no detailed evidence exists at all.
+      if(v.normal===true)allowed.add('Normal');
+      if(v.holo===true)allowed.add('Holo');
+      if(v.reverse===true)allowed.add('Reverse Holo');
+    }
   }
-  if(hasType('normal'))allowed.add('Normal');
-  if(hasType('holo'))allowed.add('Holo');
-  if(hasType('reverse'))allowed.add('Reverse Holo');
-  if(hasFoil('pokeball'))allowed.add('Poké Ball Reverse Holo');
-  if(hasFoil('masterball'))allowed.add('Master Ball Reverse Holo');
-  if(pool.some(x=>x?.foil==='cosmos'))allowed.add('Cosmos Holo');
 
+  // Explicit verified registries may add a finish for the exact edition.
   for(const name of ['Normal','Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo']){
-    if(verifiedVariantPrice(card,name))allowed.add(name);
-    if(verifiedStampPrice(card,name,stamp))allowed.add(name);
+    if(stamp==='None' && verifiedVariantPrice(card,name))allowed.add(name);
+    if(stamp!=='None' && verifiedStampPrice(card,name,stamp))allowed.add(name);
     if(stamp==='Play! Pokémon' && series && verifiedPlaySeriesPrice(card,name,stamp,series))allowed.add(name);
   }
 
@@ -2778,9 +2785,12 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     if(known)allowed=new Set([known]);
   }
 
-  // If a saved record carries source variant metadata, the same rules above reconstruct it.
-  // If no evidence exists at all, keep only Normal rather than exposing every finish.
-  if(!allowed.size)allowed.add('Normal');
+  // Do not expose every finish when evidence is missing. Normal is only a safe
+  // legacy fallback when we truly have no detailed variant information.
+  if(!allowed.size){
+    if(stamp==='None' && !pool.length)allowed.add('Normal');
+    else allowed.add('Non so');
+  }
   allowed.add('Speciale / Altro');
   allowed.add('Non so');
   return allowed;
@@ -2909,7 +2919,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=215`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=217`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3665,7 +3675,23 @@ function saveSelected(){
       variants_detailed:(selectedCard.variants_detailed||scanPriceCard?.variants_detailed||[]),
       _cardoryxEnglishPhrases:(selectedCard._cardoryxEnglishPhrases||scanPriceCard?._cardoryxEnglishPhrases||[]),
       _cardoryxEnglishIdentityText:(selectedCard._cardoryxEnglishIdentityText||scanPriceCard?._cardoryxEnglishIdentityText||''),
-livePlayPrice:selectedCard.livePlayPrice||scanPriceCard?.livePlayPrice||null,
+livePlayPrice:(()=>{
+        const existing=selectedCard.livePlayPrice||scanPriceCard?.livePlayPrice||null;
+        if(existing)return existing;
+        const st=canonicalStamp(document.getElementById('stamp')?.value||'None');
+        const ps=normalizedPlaySeries(document.getElementById('playSeries')?.value||'');
+        const fv=canonicalVariant(document.getElementById('variant')?.value||'Normal');
+        if(st==='Play! Pokémon' && ps){
+          const local=playAutoValuation({...selectedCard,playSeries:ps},fv);
+          if(local?.exact && local?.value!=null)return {...local,series:ps,finish:fv};
+          const exact=verifiedPlaySeriesPrice(selectedCard,fv,st,ps);
+          if(exact){
+            const value=Number(exact.trend||exact.avg7||exact.avg30||exact.low||0)||null;
+            if(value!=null)return {value,low:exact.low??null,trend:exact.trend??null,avg7:exact.avg7??null,avg30:exact.avg30??null,exact:true,source:exact.source||'Cardmarket · Play! Pokémon',updated:exact.verified||'',series:ps,finish:fv};
+          }
+        }
+        return null;
+      })(),
 priceUpdatedAt:
   selectedCard.livePlayPrice?.updated||
   scanPriceCard?.livePlayPrice?.updated||
@@ -3940,7 +3966,7 @@ function cardPriceInfo(c){
       if(live.value!=null)return {value:Number(live.value),exact:!!live.exact,source:live.source||'Cardmarket · Play! Pokémon · live',updated:live.updated||'',stamp,series};
       if(live.ambiguous)return {value:null,exact:false,kind:'play-live-ambiguous',minValue:live.minValue,maxValue:live.maxValue,offerLow:live.offerLow,offerHigh:live.offerHigh,source:live.source||'Cardmarket · Play! Pokémon · live',updated:live.updated||'',stamp,series};
     }
-    const auto=playAutoValuation(c);
+    const auto=playAutoValuation(c,variant);
     if(auto?.value!=null)return {value:auto.value,exact:!!auto.exact,ambiguous:!!auto.ambiguous,minValue:auto.minValue,maxValue:auto.maxValue,seriesCandidates:auto.series||[],source:auto.source,updated:auto.updated||'',stamp,series};
     if(auto?.offersOnly)return {value:null,exact:false,offerLow:auto.offerLow,offerHigh:auto.offerHigh,seriesCandidates:auto.series||[],source:auto.source,updated:auto.updated||'',kind:'play-offers-only',stamp,series};
     const seriesPrice=verifiedPlaySeriesPrice(c,variant,stamp,series);
