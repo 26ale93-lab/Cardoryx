@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.30 Safe MEE30 Finish</title>
+<title>Cardoryx V2.1.33 MEE Prize Pack Exact Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2948,6 +2948,24 @@ function isMeePrizePackEnergy(card){
   return Number.isInteger(n)&&n>=1&&n<=8;
 }
 
+// V2.1.33 — exact Cardmarket identity for MEE 001–008 Prize Pack energies.
+// The printed MEE collector number determines the Basic Energy type; prices are
+// still read dynamically from the official Cardmarket index (no hard-coded price).
+function meePrizePackCardmarketName(card){
+  if(!isMeePrizePackEnergy(card))return '';
+  const id=String(card?.id||'').toUpperCase();
+  let raw=String(card?.localId??card?.number??'').trim();
+  if(!raw){const m=id.match(/^MEE[-_](\d{1,3})$/);if(m)raw=m[1];}
+  const m=raw.match(/(\d{1,3})/);
+  const n=m?Number(m[1]):NaN;
+  const typeByNumber={
+    1:'Grass',2:'Fire',3:'Water',4:'Lightning',
+    5:'Psychic',6:'Fighting',7:'Darkness',8:'Metal'
+  };
+  const type=typeByNumber[n];
+  return type?`basic ${type.toLowerCase()} energy`:'';
+}
+
 function canonicalVariant(v){
   const n=normText(v||'');
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
@@ -3138,6 +3156,7 @@ function prizePackFinishPlan(card,series){
   const ps=normalizedPlaySeries(series);
   if(!ps)return {finishes:[],authoritative:false,reason:'no-series'};
 
+  // V2.1.33 retains the V2.1.32 finish plan; resolver identity is fixed below.
   // V2.1.32 — MEE 001–008 are documented in Prize Pack Series 8/9 as
   // Standard (Cardmarket V1) + Standard Foil/Cosmos Holo (Cardmarket V2).
   // This rule is tied to the exact printed MEE code, never to the generic Energy name.
@@ -3472,7 +3491,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=232`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=233`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3506,6 +3525,22 @@ function staticPlayCandidates(index,card,series){
   if(isMeePrizePackEnergy(card) && !['8','9'].includes(ps))return [];
 
   const out=[];
+
+  // V2.1.33 — for MEE001–008 use the exact Cardmarket Basic Energy identity.
+  // This avoids depending on the localized TCGdex name (e.g. "Energia Fuoco")
+  // or on English hydration. The official index has exactly V1/V2 for Series 8/9.
+  if(isMeePrizePackEnergy(card)){
+    const key=meePrizePackCardmarketName(card);
+    const exact=index.byName?.[key]?.[ps];
+    if(!Array.isArray(exact)||!exact.length)return [];
+    const seenExact=new Set();
+    return exact.filter(x=>{
+      const id=Number(x?.idProduct);
+      if(!Number.isFinite(id)||id<=0||seenExact.has(id))return false;
+      seenExact.add(id);
+      return true;
+    }).sort((a,b)=>Number(a.idProduct)-Number(b.idProduct));
+  }
 
   // 1) ID Cardmarket della versione Play! già conosciuto da TCGdex
   for(const id of tcgdexPlayCMIds(card)){
