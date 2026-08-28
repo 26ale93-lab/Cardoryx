@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.40 Cardmarket Finish Mapping</title>
+<title>Cardoryx V2.1.41 Home Collection Filters</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -479,7 +479,7 @@
     <div class="card">
       <div class="section-title">Catalogo</div>
       <input id="catalogSearch" placeholder="Cerca nome, set, numero…" oninput="renderCatalog()">
-      <div class="filters" style="margin-top:8px"><select id="typeFilter" onchange="renderCatalog()"><option value="">Tutti i tipi</option></select><select id="statusFilter" onchange="renderCatalog()"><option value="">Tutti gli stati</option><option>Disponibile</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Protetta</option><option>Vendita</option></select>
+      <div class="filters" style="margin-top:8px"><select id="typeFilter" onchange="clearHomeCategoryFilter();renderCatalog()"><option value="">Tutti i tipi</option></select><select id="statusFilter" onchange="renderCatalog()"><option value="">Tutti gli stati</option><option>Disponibile</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Protetta</option><option>Vendita</option></select>
       <div class="catalog-advanced">
         <select id="variantFilter">
           <option value="">Tutte le varianti</option>
@@ -5048,10 +5048,27 @@ function confirmResetCatalog(){
   ['cardoryx_db','cardoryx_v1','cardoryx_v2','cardoryx_v3'].forEach(k=>localStorage.removeItem(k));
   persist();closeResetModal();showView('home');
 }
+let activeHomeCategoryFilter='';
+
+function categoryFilterKey(v){
+  return normText(String(v||'')
+    .replace(/^[^\p{L}\p{N}]+/u,'')
+    .trim())
+    .replace(/^elettro$/,'lampo')
+    .replace(/^energie base$/,'energie base')
+    .replace(/^energie speciali$/,'energie speciali');
+}
+function clearHomeCategoryFilter(){activeHomeCategoryFilter=''}
 function filterByCategory(cat){
+  activeHomeCategoryFilter=cat||'';
   showView('catalog');
   const f=document.getElementById('typeFilter');
-  if(f){f.value=cat;renderCatalog()}
+  if(f){
+    const wanted=categoryFilterKey(cat);
+    const match=[...f.options].find(o=>categoryFilterKey(o.textContent)===wanted);
+    f.value=match?match.value:'';
+  }
+  renderCatalog();
 }
 
 
@@ -5396,6 +5413,7 @@ function renderCatalog(){
   const el=document.getElementById('catalogList');if(!el)return;
   const q=(document.getElementById('catalogSearch')?.value||'').toLowerCase().trim();
   const tf=document.getElementById('typeFilter')?.value||'';
+  const homeTf=activeHomeCategoryFilter||'';
   const sf=document.getElementById('statusFilter')?.value||'';
   const vf=document.getElementById('variantFilter')?.value||'';
   const cf=document.getElementById('conditionFilter')?.value||'';
@@ -5404,7 +5422,11 @@ function renderCatalog(){
   let groups=catalogGroups().filter(g=>{
     const c=g.representative;
     const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''} ${c.notes||''}`.toLowerCase();
-    return (!q||blob.includes(q)) && (!tf||cardCategory(c)===tf) &&
+    const category=cardCategory(c);
+    const categoryOk=homeTf
+      ? categoryFilterKey(category)===categoryFilterKey(homeTf)
+      : (!tf || categoryFilterKey(category)===categoryFilterKey(tf));
+    return (!q||blob.includes(q)) && categoryOk &&
       (!sf||g.records.some(r=>(r.status||'Disponibile')===sf)) &&
       (!vf||(c.variant||'Normale')===vf) && (!cf||(c.condition||'NM')===cf);
   });
@@ -5415,7 +5437,8 @@ function renderCatalog(){
   const visibleTotal=groups.reduce((a,g)=>a+g.qty,0);
   if(!groups.length){el.innerHTML=`<div class="catalog-empty"><div class="emoji">📚</div><b>Nessuna carta trovata</b><div class="small" style="margin-top:5px">Modifica i filtri oppure aggiungi una carta dallo Scanner.</div></div>`;return}
 
-  el.innerHTML=`<div class="catalog-toolbar"><div class="catalog-summary">${groups.length} schede · ${visibleTotal} carte</div><div class="small">${tf?`Filtro: ${esc(tf)}`:'Tutta la collezione'}</div></div><div class="catalog-grid">
+  const activeFilterLabel=homeTf||tf;
+  el.innerHTML=`<div class="catalog-toolbar"><div class="catalog-summary">${groups.length} schede · ${visibleTotal} carte</div><div class="small">${activeFilterLabel?`Filtro: ${esc(activeFilterLabel)}`:'Tutta la collezione'}</div></div><div class="catalog-grid">
   ${groups.map(g=>{const c=g.representative,key=encodeURIComponent(recordKey(c)),gkey=encodeURIComponent(g.key),img=cardImageSrc(c,'low');return `<article class="collection-card">
     <div>${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
       <div class="qty-control"><button type="button" onclick="changeGroupQty('${gkey}',-1)">−</button><strong>×${g.qty}</strong><button type="button" onclick="changeGroupQty('${gkey}',1)">+</button></div></div>
