@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.11 Finish Architecture Fix</title>
+<title>Cardoryx V2.1.12 Prize Pack Finish Mapping Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2918,7 +2918,14 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   if(stamp==='Play! Pokémon'){
     const pm=playAutoMatch(card);
     const known=pm?.finish?canonicalVariant(pm.finish):'';
-    if(known)allowed=new Set([known]);
+    const seriesFinishes=(series && Array.isArray(pm?.finishesBySeries?.[series]))
+      ? pm.finishesBySeries[series].map(canonicalVariant).filter(Boolean)
+      : [];
+    // Exact per-Series finish lists are authoritative when present. This is
+    // deliberately data-driven so any future Prize Pack dual printing can be
+    // represented without adding card-specific resolver branches.
+    if(seriesFinishes.length)allowed=new Set(seriesFinishes);
+    else if(known)allowed=new Set([known]);
   }
 
   if(!allowed.size)allowed.add('Non so');
@@ -2959,6 +2966,9 @@ const PLAY_AUTO_CATALOG = {
   'avventure insieme|146': {series:['7','9'],prices:{'7':{low:0.02,trend:0.13,avg7:0.09,avg30:0.10},'9':{low:0.02,trend:0.16,avg7:0.25,avg30:0.29}},source:'Cardmarket · PPS7/PPS9 JTG 146',verified:'26/08/2026'},
   'avventure insieme|98': {series:['7','8','9'],prices:{'7':{trend:4.24},'8':{trend:3.81},'9':{low:1.50,trend:2.32,avg7:3.85,avg30:4.27}},source:'Cardmarket · Play! Pokémon Prize Pack',verified:'26/08/2026'},
   'fuoco bianco|84': {series:['9'],source:'Cardmarket · PPS9 WHT 084',verified:'26/08/2026'},
+  // Moltres PFL 014 — Prize Pack Series 9 has two documented physical finishes.
+  // V1 = Non-Holo/Normal; V2 = Cosmos Holo. Kept as data, not resolver special-casing.
+  'fiamme spettrali|14': {series:['9'],finishesBySeries:{'9':['Normal','Cosmos Holo']},source:'Cardmarket V1/V2 + TCGplayer Prize Pack Series Cards',verified:'28/08/2026'},
   'megaevoluzione|76': {series:['9'],prices:{'9':{low:1.30,trend:2.39}},source:'Cardmarket · Play! Pokémon Prize Pack Series 9 · MEG 076',verified:'26/08/2026',finish:'Cosmos Holo'},
   // Energia Fighting Rocciosa / Rocky [F] Energy — Equilibrio Perfetto 087/094.
   // Cardmarket PPS9 POR 087, Versione 1 (stampa standard Play!).
@@ -3050,7 +3060,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=211`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=212`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3317,6 +3327,18 @@ const VERIFIED_PLAY_SERIES_PRICES = {
     low:0.20, trend:0.18, avg7:0.35, avg30:0.50,
     source:'Cardmarket · Play! Pokémon Prize Pack Series 9 · POR 087 · Versione 1',
     verified:'26/08/2026'
+  },
+  // Moltres PFL 014 — PPS9 Version 1 is the Non-Holo/Normal printing.
+  'fiamme spettrali|014|Normal|9': {
+    low:0.19, trend:0.31, avg7:0.36, avg30:0.59,
+    source:'Cardmarket · PPS9 PFL 014 · Versione 1 · Non-Holo',
+    verified:'28/08/2026'
+  },
+  // Moltres PFL 014 — PPS9 Version 2 is the Cosmos Holo printing.
+  'fiamme spettrali|014|Cosmos Holo|9': {
+    low:1.50, trend:2.65, avg7:2.92, avg30:3.30,
+    source:'Cardmarket · PPS9 PFL 014 · Versione 2 · Cosmos Holo',
+    verified:'28/08/2026'
   }
 };
 function verifiedPlaySeriesPrice(card,variant,stamp,series){
@@ -4046,8 +4068,14 @@ function saveEditModal(){
   if(editStampEl?.selectedOptions?.[0]?.disabled){alert('Questa edizione / Stamp non risulta disponibile per la carta selezionata.');return}
   syncVariantAvailability(c,true);
   const editVariantEl=document.getElementById('editVariant');
-  if(editVariantEl?.selectedOptions?.[0]?.disabled){alert('Questa finitura non risulta disponibile per la carta selezionata.');return}
-  c.variant=canonicalVariant(editVariantEl.value);
+  const editFinish=canonicalVariant(editVariantEl?.value||'Non so');
+  // "Non so" and manual "Speciale / Altro" are intentional safe escape
+  // values. Never reject them because asynchronous evidence refresh changed
+  // option.disabled while the modal was open.
+  if(editVariantEl?.selectedOptions?.[0]?.disabled && !['Non so','Speciale / Altro'].includes(editFinish)){
+    alert('Questa finitura non risulta disponibile per la carta selezionata.');return
+  }
+  c.variant=editFinish;
   c.stamp=canonicalStamp(document.getElementById('editStamp')?.value||'None');
   c.playSeries=canonicalStamp(c.stamp)==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('editPlaySeries')?.value||''):'';
   c.status=document.getElementById('editStatus').value;
