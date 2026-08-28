@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.38 Protection Advice</title>
+<title>Cardoryx V2.1.39 Cardmarket Variant Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4140,6 +4140,48 @@ function cardmarketValueForVariant(cm,variant){
   return {value:foil,kind:foil?'foil-reference':'none'};
 }
 
+// V2.1.39 — Cardmarket exposes one foil price-guide slot for a product.
+// For Pokémon regular cards this slot can represent the Reverse Holo parallel.
+// We only map it to Reverse Holo when the card's documented physical finishes
+// prove that Reverse exists and a regular Holo does not. If both are possible,
+// Cardoryx fails closed instead of guessing.
+function cardmarketValueForCardVariant(card,variant){
+  const cm=card?.pricing?.cardmarket;
+  const base=cardmarketValueForVariant(cm,variant);
+  if(base?.value)return base;
+  const v=canonicalVariant(variant||'Normal');
+  if(v!=='Reverse Holo' || !cm)return base;
+
+  let allowed=new Set();
+  try{allowed=documentedVariantsForCard(card,'None','')}catch(e){}
+  const hasReverse=allowed.has('Reverse Holo');
+  const hasHolo=allowed.has('Holo') || allowed.has('Cosmos Holo');
+  if(!hasReverse || hasHolo)return base;
+
+  const n=k=>{const x=Number(cm[k]||0);return Number.isFinite(x)&&x>0?x:0};
+  const value=n('trend-holo')||n('avg7-holo')||n('avg30-holo')||n('avg-holo')||n('low-holo');
+  if(!value)return base;
+  return {
+    value,
+    kind:'reverse-from-cardmarket-foil',
+    exact:true,
+    source:'Cardmarket · prezzo foil associato alla Reverse Holo documentata'
+  };
+}
+function cardmarketStatsForCardVariant(card,variant){
+  const cm=card?.pricing?.cardmarket||{};
+  const info=cardmarketValueForCardVariant(card,variant);
+  if(info?.kind==='reverse-from-cardmarket-foil' || canonicalVariant(variant||'Normal')==='Holo'){
+    return {
+      low:cm['low-holo'],
+      trend:cm['trend-holo'],
+      avg7:cm['avg7-holo'],
+      avg30:cm['avg30-holo']
+    };
+  }
+  return {low:cm.low,trend:cm.trend,avg7:cm.avg7,avg30:cm.avg30};
+}
+
 function scanUnit(c){
   const variant=document.getElementById('variant')?.value||c?.variant||'Normal';
   const stamp=document.getElementById('stamp')?.value||c?.stamp||'None';
@@ -4151,7 +4193,7 @@ function scanUnit(c){
   const energyFallback=verifiedStandardEnergyPrice(c,variant);
   if(energyFallback && !c?.pricing?.cardmarket)return Number(energyFallback.trend||energyFallback.avg7||energyFallback.avg30||energyFallback.low||0);
   const cm=scanCM(c);
-  return cardmarketValueForVariant(cm,variant).value;
+  return cardmarketValueForCardVariant(c,variant).value;
 }
 
 async function fetchScanPricing(card){
@@ -4208,6 +4250,7 @@ async function renderScanValue(card){
   valueEl.textContent='—';
   metaEl.textContent='Cerco Cardmarket…';
   document.getElementById('scanMarketStats').classList.add('hidden');
+  const adviceEl=document.getElementById('scanProtectionAdvice');if(adviceEl)adviceEl.innerHTML='';
 
   try{
     scanPriceCard=await fetchScanPricing(card);
@@ -4388,7 +4431,8 @@ async function renderScanValue(card){
       return;
     }
 
-    const info=cardmarketValueForVariant(cm,selVariant);
+    const info=cardmarketValueForCardVariant(scanPriceCard||card,selVariant);
+    const cmStats=cardmarketStatsForCardVariant(scanPriceCard||card,selVariant);
     const exactNeeded=info.kind==='needs-exact-variant';
     valueEl.textContent=info.value?scanEuro(info.value):(exactNeeded?'Valore da verificare':'Valore non disponibile');
 
@@ -4406,9 +4450,9 @@ async function renderScanValue(card){
       metaEl.textContent='Cardmarket · valore indicativo';
     }
 
-    document.getElementById('scanLowPrice').textContent=scanEuro(cm?.low);
-    document.getElementById('scanTrendPrice').textContent=scanEuro(cm?.trend||info.value);
-    document.getElementById('scanAvg7Price').textContent=scanEuro(cm?.avg7);
+    document.getElementById('scanLowPrice').textContent=scanEuro(cmStats?.low);
+    document.getElementById('scanTrendPrice').textContent=scanEuro(cmStats?.trend||info.value);
+    document.getElementById('scanAvg7Price').textContent=scanEuro(cmStats?.avg7);
     document.getElementById('scanMarketStats').classList.toggle('hidden',!cm||exactNeeded);
     document.getElementById('scanProtectionBadge').textContent=canonicalVariant(selVariant);
     document.getElementById('scanProtectionAdvice').innerHTML=['Play! Pokémon Prize Pack','Play! Pokémon Stamp','Pokémon Day Stamp'].includes(canonicalVariant(selVariant))
@@ -4422,6 +4466,8 @@ async function renderScanValue(card){
     valueEl.textContent='Valore non disponibile';
     metaEl.textContent='Impossibile recuperare Cardmarket. Puoi comunque salvare la carta.';
     document.getElementById('scanMarketStats').classList.add('hidden');
+  }finally{
+    refreshScanProtectionRecommendation(scanPriceCard||card);
   }
 }
 
@@ -5047,6 +5093,20 @@ function protectionCatalogBadge(c,g){
   if(g && protectedQty>=g.qty)return '';
   return `<span class="collection-badge" title="${esc(r.reasons.join(' · ')||r.label)}">🛡️ ${esc(r.label)}</span>`;
 }
+
+function refreshScanProtectionRecommendation(card){
+  const el=document.getElementById('scanProtectionAdvice');if(!el||!card)return;
+  const variant=document.getElementById('variant')?.value||card?.variant||'Normal';
+  const stamp=document.getElementById('stamp')?.value||card?.stamp||'None';
+  const playSeries=document.getElementById('playSeries')?.value||card?.playSeries||'';
+  const temp={...card,variant,stamp,playSeries};
+  const r=protectionRecommendation(temp);
+  if(!r.recommended)return;
+  const reason=r.reasons.length?`<div class="small" style="margin-top:4px">${esc(r.reasons.join(' · '))}</div>`:'';
+  el.insertAdjacentHTML('beforeend',
+    `<div class="cardoryx-advice" style="margin-top:10px"><div class="cardoryx-advice-head"><b>🛡️ ${esc(r.label)}</b><span class="advice-priority">${r.level==='high'?'Alta':'Consigliata'}</span></div><div class="small">${esc(r.text)}</div>${reason}<div class="small" style="margin-top:5px">Lo stato resta manuale: scegli <b>Protetta</b> solo quando la carta è realmente protetta.</div></div>`
+  );
+}
 function renderCardoryxAdvice(c){
   const r=protectionRecommendation(c), status=normText(c.status||''), condition=normText(c.condition||''), qty=Math.max(1,Number(c.qty||1));
   const rows=[];
@@ -5183,7 +5243,7 @@ function cardPriceInfo(c){
   if(exact){const value=Number(exact.trend||exact.avg7||exact.avg30||exact.low||0);return {value:value>0?value:null,exact:true,source:exact.source||'Cardmarket',updated:exact.verified||'',stamp,series}}
   const energyFallback=verifiedStandardEnergyPrice(c,variant);
   if(energyFallback && !c?.pricing?.cardmarket){const value=Number(energyFallback.trend||energyFallback.avg7||energyFallback.avg30||energyFallback.low||0);return {value:value>0?value:null,exact:true,source:energyFallback.source||'Cardmarket',updated:energyFallback.verified||'',stamp,series}}
-  const info=cardmarketValueForVariant(c?.pricing?.cardmarket,variant),value=Number(info?.value||0);
+  const info=cardmarketValueForCardVariant(c,variant),value=Number(info?.value||0);
   return {value:value>0?value:null,exact:false,source:'Cardmarket',updated:c?.priceUpdatedAt||'',kind:info?.kind||'none',stamp,series};
 }
 function cardUnitPrice(c){return cardPriceInfo(c).value}
