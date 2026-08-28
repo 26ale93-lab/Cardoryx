@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.27 Local MEE Assets</title>
+<title>Cardoryx V2.1.28 MEE30 Edition Guard</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -431,6 +431,7 @@
           <option value="None">Nessuno</option>
           <option value="Play! Pokémon">Play! Pokémon</option>
           <option value="Pokémon Day">Pokémon Day</option>
+          <option value="30° Anniversario">30° Anniversario</option>
           <option value="Pokémon Center">Pokémon Center</option>
           <option value="Pre-release">Pre-release</option>
           <option value="Staff">Staff</option>
@@ -678,6 +679,7 @@
           <option value="None">Nessuno</option>
           <option value="Play! Pokémon">Play! Pokémon</option>
           <option value="Pokémon Day">Pokémon Day</option>
+          <option value="30° Anniversario">30° Anniversario</option>
           <option value="Pokémon Center">Pokémon Center</option>
           <option value="Pre-release">Pre-release</option>
           <option value="Staff">Staff</option>
@@ -2789,6 +2791,7 @@ function canonicalStamp(v){
   if(!n||n==='none'||n==='nessuno')return 'None';
   if(n.includes('play')||n.includes('player reward')||n.includes('prize pack'))return 'Play! Pokémon';
   if(n.includes('pokemon day'))return 'Pokémon Day';
+  if(n.includes('30 anniversario')||n.includes('30th celebration')||n.includes('30 celebration'))return '30° Anniversario';
   if(n.includes('pokemon center'))return 'Pokémon Center';
   if(n.includes('pre-release')||n.includes('prerelease'))return 'Pre-release';
   if(n.includes('staff'))return 'Staff';
@@ -2811,6 +2814,7 @@ function stampEvidenceFromTCGdex(card,stamp){
   const tokens={
     'Play! Pokémon':['playerrewards','playpokemon','prizepack','league'],
     'Pokémon Day':['pokemonday'],
+    '30° Anniversario':['30thcelebration','30anniversario','30thanniversary'],
     'Pokémon Center':['pokemoncenter'],
     'Pre-release':['prerelease','prereleasepromo'],
     'Staff':['staff'],
@@ -2833,8 +2837,22 @@ function cacheOfficialPlaySeries(card,series){
   card._cardoryxOfficialPlaySeries=xs;
   return xs;
 }
+// V2.1.28 — exact identity guard for the 30th Celebration Basic Energies.
+// Cardmarket names the expansion "30° Anniversario" (IT) / "30th Celebration" (EN).
+// These are MEE 009–016 and must never inherit Prize Pack matches from MEE 001–008
+// merely because the generic Basic Energy name is identical.
+function isMee30CelebrationEnergy(card){
+  const x=codedEnergyIdentityFromCard(card);
+  if(!x || x.set!=='MEE')return false;
+  const n=Number(x.num);
+  return n>=9 && n<=16;
+}
 function stampEvidenceVerified(card,stamp){
   const st=canonicalStamp(stamp);
+  if(isMee30CelebrationEnergy(card)){
+    if(st==='30° Anniversario')return true;
+    if(st==='Play! Pokémon'||st==='Pokémon Day')return false;
+  }
   // Once the official Cardmarket index has verified one or more Prize Pack
   // series for this card, synchronous UI refreshes must not disable Play! again.
   if(st==='Play! Pokémon' && (cachedOfficialPlaySeries(card).length || playAutoMatch(card)))return true;
@@ -2847,6 +2865,13 @@ function stampEvidenceVerified(card,stamp){
 }
 function stampExistsForCard(card,stamp){
   const st=canonicalStamp(stamp);
+  if(isMee30CelebrationEnergy(card)){
+    if(st==='30° Anniversario'||st==='Altro')return true;
+    // MEE 009–016 are intrinsic 30th Celebration energies, not Pokémon Day
+    // and not Play! Pokémon Prize Pack cards. "Nessuno" is intentionally
+    // unavailable so the edition cannot be accidentally stripped.
+    return false;
+  }
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
 }
@@ -2858,6 +2883,12 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
     const ok=stampExistsForCard(card,st);
     o.disabled=!ok;
     if(ok && st!=='None' && st!=='Altro')available.push(st);
+  }
+  if(isMee30CelebrationEnergy(card)){
+    sel.value='30° Anniversario';
+    const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
+    if(ps)ps.value='';
+    if(card){card.playSeries=''; if(!edit)card.stamp='30° Anniversario';}
   }
   // Never keep an unsupported edition selected. During the first async
   // hydration in the edit modal we may preserve it briefly until the
@@ -2898,6 +2929,13 @@ function migrateFinishStamp(c){
   }
 
   c.stamp=canonicalStamp(c.stamp||'None');
+  if(isMee30CelebrationEnergy(c)){
+    c.stamp='30° Anniversario';
+    c.playSeries='';
+    // Every 30th Celebration card is foil, including Basic Energy.
+    // Correct only the impossible legacy Normal selection; preserve manual/unknown choices.
+    if(canonicalVariant(c.variant||'Normal')==='Normal')c.variant='Holo';
+  }
   return c;
 }
 
@@ -3193,6 +3231,12 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   if(!card)return new Set(['Speciale / Altro','Non so']);
   const stamp=canonicalStamp(stampOverride ?? card?.stamp ?? 'None');
   const series=normalizedPlaySeries(seriesOverride ?? card?.playSeries ?? '');
+  if(isMee30CelebrationEnergy(card)){
+    // Pokémon states that every 30th Celebration card is foil, including Basic Energy.
+    // Cardmarket has not yet published per-card MEE009–016 prices, so finish evidence
+    // is limited to the physical foil fact; no Prize Pack finish is allowed to leak in.
+    return new Set(['Holo','Speciale / Altro','Non so']);
+  }
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
   const pool=it.length?it:d;
@@ -3427,6 +3471,8 @@ function tcgdexBaseCMIds(card){
 function staticPlayCandidates(index,card,series){
   const ps=String(normalizedPlaySeries(series)||'');
   if(!ps)return [];
+  // V2.1.28: never match MEE009–016 to Prize Pack by generic Basic Energy name.
+  if(isMee30CelebrationEnergy(card))return [];
 
   const out=[];
 
@@ -3545,6 +3591,11 @@ for(const id of baseIds){
 let officialPlayAvailabilityToken=0;
 async function officialPlaySeriesForCard(card){
   if(!card)return [];
+  if(isMee30CelebrationEnergy(card)){
+    card._cardoryxOfficialPlayProductsBySeries={};
+    cacheOfficialPlaySeries(card,[]);
+    return [];
+  }
   const index=await loadCardoryxPlayIndex();
   const found=[];
   const productsBySeries={};
@@ -5104,6 +5155,11 @@ function applyPlayAutoSeries(card,edit=false){
   if(!card)return;
   const series=playAutoSeries(card),el=document.getElementById(edit?'editPlaySeries':'playSeries');
   if(!el)return;
+  if(isMee30CelebrationEnergy(card)){
+    el.value='';
+    [...el.options].forEach(o=>{o.disabled=!!o.value;});
+    return;
+  }
   // Se il catalogo verificato conosce le Prize Pack Series compatibili,
   // impedisce di scegliere serie che non appartengono a quella carta.
   // Per carte non ancora catalogate lascia invece tutte le opzioni disponibili.
