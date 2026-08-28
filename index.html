@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.14 Prize Pack Series 1–9 Resolver</title>
+<title>Cardoryx V2.1.15 Smart Basic Energy Resolver</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -399,11 +399,17 @@
   <button class="btn big" type="button" onclick="runManualCollectorSearch()">🔎 Identifica carta</button>
   <div id="searchMsg" class="footer-note"></div>
   <div id="results"></div>
-  <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base / ricerca manuale</button></div>
+  <div style="margin-top:12px"><button class="btn alt big" type="button" onclick="toggleManualEnergy()">⚡ Energia Base</button></div>
   <div id="manualEnergyPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
-    <div style="font-weight:800;margin-bottom:4px">Energie Base MEE</div>
-    <div class="small" style="margin-bottom:10px">Scegli direttamente l’Energia solo se il codice non è leggibile.</div>
-    <div id="meeEnergyGrid" class="grid"></div>
+    <div style="font-weight:800;margin-bottom:4px">Trova rapidamente l’Energia Base</div>
+    <div class="small" style="margin-bottom:10px">Se leggi un codice come <b>SVE 010</b> o <b>MEE 002</b>, inseriscilo direttamente. Altrimenti scegli il tipo.</div>
+    <div class="row" style="align-items:end;margin-bottom:10px">
+      <div><div class="label">Codice energia</div><input id="energyCodeInput" autocomplete="off" autocapitalize="characters" placeholder="es. SVE 010"></div>
+      <div><button class="btn" type="button" onclick="lookupBasicEnergyCode()">Trova</button></div>
+    </div>
+    <div class="label">Tipo</div>
+    <div id="energyTypeGrid" class="grid"></div>
+    <div id="energyTypeChoices" class="hidden" style="margin-top:12px"></div>
   </div>
 </div>
 
@@ -1938,173 +1944,239 @@ async function readBasicEnergyIdentity(img){
   return {isBasic,code,type,headerText,footerText};
 }
 
-const MEE_BASIC_ENERGIES={
-  '001':{type:'Erba',name:'Energia base Erba'},
-  '002':{type:'Fuoco',name:'Energia base Fuoco'},
-  '003':{type:'Acqua',name:'Energia base Acqua'},
-  '004':{type:'Lampo',name:'Energia base Lampo'},
-  '005':{type:'Psico',name:'Energia base Psico'},
-  '006':{type:'Lotta',name:'Energia base Lotta'},
-  '007':{type:'Oscurità',name:'Energia base Oscurità'},
-  '008':{type:'Metallo',name:'Energia base Metallo'}
-};
+const ENERGY_TYPE_ORDER=[
+  {key:'Erba',emoji:'🌿',en:'Grass'},
+  {key:'Fuoco',emoji:'🔥',en:'Fire'},
+  {key:'Acqua',emoji:'💧',en:'Water'},
+  {key:'Lampo',emoji:'⚡',en:'Lightning'},
+  {key:'Psico',emoji:'🔮',en:'Psychic'},
+  {key:'Lotta',emoji:'👊',en:'Fighting'},
+  {key:'Oscurità',emoji:'🌑',en:'Darkness'},
+  {key:'Metallo',emoji:'⚙️',en:'Metal'}
+];
+const HISTORIC_FAIRY_ENERGY={key:'Folletto',emoji:'✨',en:'Fairy'};
+const ENERGY_TYPE_BY_INDEX=Object.fromEntries(ENERGY_TYPE_ORDER.map((x,i)=>[i+1,x]));
+const ENERGY_ENGLISH_BY_IT=Object.fromEntries([...ENERGY_TYPE_ORDER,HISTORIC_FAIRY_ENERGY].map(x=>[x.key,x.en]));
 
-function meeOfficialPage(num){
-  const n=String(parseInt(String(num),10));
-  return `https://www.pokemon.com/it/gcc/archivio-carte/series/mee/${n}/`;
+function codedEnergyInfo(setCode,num){
+  const set=String(setCode||'').toUpperCase();
+  const n=Number(num);
+  if(!Number.isInteger(n)||n<1)return null;
+  let total=0,block=0;
+  if(set==='SVE' && n<=24){total=24;block=Math.floor((n-1)/8)}
+  else if(set==='MEE' && n<=16){total=16;block=Math.floor((n-1)/8)}
+  else return null;
+  const type=ENERGY_TYPE_BY_INDEX[((n-1)%8)+1];
+  return {set,num:String(n).padStart(3,'0'),total,block,type:type.key,en:type.en,name:`Energia base ${type.key}`};
 }
 
-function meeOfficialImageCandidates(num){
+const MEE_BASIC_ENERGIES=Object.fromEntries(Array.from({length:16},(_,i)=>{
+  const x=codedEnergyInfo('MEE',i+1);return [x.num,{type:x.type,name:x.name}];
+}));
+const SVE_BASIC_ENERGIES=Object.fromEntries(Array.from({length:24},(_,i)=>{
+  const x=codedEnergyInfo('SVE',i+1);return [x.num,{type:x.type,name:x.name}];
+}));
+
+function energyOfficialPage(setCode,num){
+  const set=String(setCode||'').toUpperCase();
   const n=String(parseInt(String(num),10));
-  // Pokémon's current and legacy official card-image asset paths.
+  return `https://www.pokemon.com/it/gcc/archivio-carte/series/${set.toLowerCase()}/${n}/`;
+}
+function energyOfficialImageCandidates(setCode,num){
+  const set=String(setCode||'').toUpperCase();
+  const n=String(parseInt(String(num),10));
   return [
-    `https://www.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/MEE/MEE_IT_${n}.png`,
-    `https://assets.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/MEE/MEE_IT_${n}.png`,
-    `https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/MEE/MEE_IT_${n}.png`
+    `https://www.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/${set}/${set}_IT_${n}.png`,
+    `https://assets.pokemon.com/static-assets/content-assets/cms2-it-it/img/cards/web/${set}/${set}_IT_${n}.png`,
+    `https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/${set}/${set}_IT_${n}.png`
   ];
 }
-
-function meeImageUrl(num){
-  return meeOfficialImageCandidates(num)[0];
-}
-
-function setMeeImageFallback(img,num,index=0){
+function energyImageUrl(setCode,num){return energyOfficialImageCandidates(setCode,num)[0]}
+function setEnergyImageFallback(img,setCode,num,index=0){
   if(!img)return;
-  const list=meeOfficialImageCandidates(num);
-  const next=index+1;
-  if(next<list.length){
-    img.onerror=()=>setMeeImageFallback(img,num,next);
-    img.src=list[next];
-    return;
-  }
-  // Last fallback: keep the UI usable. A user's cropped photo can replace this
-  // as the catalog image when available.
-  img.onerror=null;
-  img.style.display='none';
+  const list=energyOfficialImageCandidates(setCode,num),next=index+1;
+  if(next<list.length){img.onerror=()=>setEnergyImageFallback(img,setCode,num,next);img.src=list[next];return;}
+  img.onerror=null;img.style.display='none';
   const holder=img.parentElement;
-  if(holder && !holder.querySelector('.mee-image-fallback')){
-    const d=document.createElement('div');
-    d.className='mee-image-fallback';
-    d.innerHTML='<div style="font-size:28px">⚡</div><div style="font-size:10px;font-weight:800">Immagine ufficiale non caricata</div>';
-    holder.appendChild(d);
+  if(holder&&!holder.querySelector('.mee-image-fallback')){
+    const d=document.createElement('div');d.className='mee-image-fallback';
+    d.innerHTML='<div style="font-size:28px">⚡</div><div style="font-size:10px;font-weight:800">Immagine non caricata</div>';holder.appendChild(d);
   }
 }
+// Backward-compatible helpers used by already working MEE image code.
+function meeOfficialPage(num){return energyOfficialPage('MEE',num)}
+function meeOfficialImageCandidates(num){return energyOfficialImageCandidates('MEE',num)}
+function meeImageUrl(num){return energyImageUrl('MEE',num)}
+function setMeeImageFallback(img,num,index=0){return setEnergyImageFallback(img,'MEE',num,index)}
 
-
-function meeNumberFromCard(c){
-  if(!c)return '';
-  if(String(c.id||'').startsWith('mee-'))return String(c.localId||c.number||'').padStart(3,'0');
-  if(String(c.set?.id||c.set||'').toLowerCase()==='mee')return String(c.localId||c.number||'').padStart(3,'0');
-  return '';
+function codedEnergyIdentityFromCard(c){
+  if(!c)return null;
+  const id=String(c.id||'').toLowerCase();
+  const sid=String(c.set?.id||c.set||'').toUpperCase();
+  let set='';
+  if(sid==='MEE'||id.startsWith('mee-'))set='MEE';
+  else if(sid==='SVE'||id.startsWith('sve-'))set='SVE';
+  if(!set)return null;
+  return codedEnergyInfo(set,c.localId||c.number||String(id).split('-').pop());
 }
+function meeNumberFromCard(c){const x=codedEnergyIdentityFromCard(c);return x?.set==='MEE'?x.num:''}
 function cardImgOnError(img,c){
-  const n=meeNumberFromCard(c);
-  if(n){
-    const idx=Number(img.dataset.meeFallbackIndex||0);
-    const list=meeOfficialImageCandidates(n);
-    const next=idx+1;
-    if(next<list.length){
-      img.dataset.meeFallbackIndex=String(next);
-      img.src=list[next];
-      return;
-    }
+  const x=codedEnergyIdentityFromCard(c);
+  if(x){
+    const idx=Number(img.dataset.energyFallbackIndex||0),list=energyOfficialImageCandidates(x.set,x.num),next=idx+1;
+    if(next<list.length){img.dataset.energyFallbackIndex=String(next);img.src=list[next];return;}
   }
   img.style.visibility='hidden';
 }
-
 function cardImageSrc(c,quality='low'){
   if(!c)return '';
   if(c._imageUrl)return c._imageUrl;
   const img=String(c.image||'');
-  if(!img && Array.isArray(c.imageCandidates) && c.imageCandidates.length)return c.imageCandidates[0];
+  if(!img&&Array.isArray(c.imageCandidates)&&c.imageCandidates.length)return c.imageCandidates[0];
   if(!img)return '';
   if(img.startsWith('data:')||img.startsWith('blob:')||/\.(?:jpg|jpeg|png|webp)(?:\?|$)/i.test(img))return img;
   return `${img}/${quality}.webp`;
 }
-
+function makeCodedBasicEnergy(identity){
+  const x=codedEnergyInfo(identity?.code?.set,identity?.code?.num);if(!x)return null;
+  return {
+    id:`${x.set.toLowerCase()}-${String(parseInt(x.num,10))}`,localId:x.num,number:x.num,name:x.name,
+    category:'Energy',energyType:'Basic',types:[x.type],type:x.type,rarity:'',variants:{normal:true},
+    set:{id:x.set.toLowerCase(),name:`Energie base ${x.set}`,cardCount:{total:x.total,official:x.total}},
+    _cardoryxLocal:true,_energyFamily:x.set,_energyBlock:x.block,
+    _imageUrl:energyImageUrl(x.set,x.num),_imageCandidates:energyOfficialImageCandidates(x.set,x.num),
+    _officialPage:energyOfficialPage(x.set,x.num),image:energyImageUrl(x.set,x.num),_printedCode:`${x.set} IT ${x.num}`,
+    _cardoryxEnglishPhrases:[`Basic ${x.en} Energy`],_cardoryxEnglishIdentityText:`Basic ${x.en} Energy`
+  };
+}
 function makeMeeBasicEnergy(identity){
   if(normText(identity?.code?.set)!=='mee')return null;
-  const num=String(identity?.code?.num||'').padStart(3,'0');
-  const e=MEE_BASIC_ENERGIES[num];
-  if(!e)return null;
-  return {
-    id:`mee-${num}`,
-    localId:num,
-    number:num,
-    name:e.name,
-    category:'Energy',
-    energyType:'Basic',
-    types:[e.type],
-    type:e.type,
-    rarity:'',
-    set:{id:'mee',name:'Energie base MEE',cardCount:{total:8,official:8}},
-    _cardoryxLocal:true,
-    _imageUrl:meeImageUrl(num),
-    _imageCandidates:meeOfficialImageCandidates(num),
-    _officialPage:meeOfficialPage(num),
-    image:meeImageUrl(num),
-    _printedCode:`MEE IT ${num}`
-  };
+  return makeCodedBasicEnergy(identity);
 }
 
 async function findBasicEnergyCandidates(identity){
-  // V5.9: MEE is deterministic. Never let a generic API result replace it.
-  const mee=makeMeeBasicEnergy(identity);
-  if(mee)return [mee];
-
+  // Printed SVE/MEE codes are deterministic. Do not let a generic API result
+  // replace an exact printed identity.
+  const coded=makeCodedBasicEnergy(identity);if(coded)return [coded];
   let cards=[];
-  if(identity?.code?.set && identity?.code?.num){
-    const setCode=identity.code.set.toLowerCase();
-    const n=String(parseInt(identity.code.num,10));
-    const directIds=[`${setCode}-${n}`,`${setCode}-${identity.code.num}`];
-    for(const id of directIds){
-      try{
-        const r=await fetch(`${API}/cards/${encodeURIComponent(id)}`);
-        if(r.ok){const c=await r.json(); if(c&&!c.error)cards.push(c)}
-      }catch(e){}
+  if(identity?.code?.set&&identity?.code?.num){
+    const setCode=identity.code.set.toLowerCase(),n=String(parseInt(identity.code.num,10));
+    for(const id of [`${setCode}-${n}`,`${setCode}-${identity.code.num}`]){
+      try{const r=await fetch(`${API}/cards/${encodeURIComponent(id)}`);if(r.ok){const c=await r.json();if(c&&!c.error)cards.push(c)}}catch(e){}
     }
   }
-
-  // Only use generic Energy search if exact printed code could not be resolved.
   if(!cards.length){
-    try{
-      const r=await apiCardsQuery({name:'Energia base'});
-      if(r?.length)cards.push(...r);
-    }catch(e){}
+    try{const r=await apiCardsQuery({name:'Energia base'});if(r?.length)cards.push(...r)}catch(e){}
   }
-
-  const seen=new Set();
-  cards=cards.filter(c=>{const k=c.id||`${c.name}|${c.number||c.localId}|${c.set?.id||''}`;if(seen.has(k))return false;seen.add(k);return true});
-  const scored=cards.map(c=>{
-    let score=0;
-    const cid=normText(c.id||''), setid=normText(c.set?.id||''), name=normText(c.name||'');
-    const num=String(parseInt(c.number||c.localId||'0',10));
+  const seen=new Set();cards=cards.filter(c=>{const k=c.id||`${c.name}|${c.number||c.localId}|${c.set?.id||''}`;if(seen.has(k))return false;seen.add(k);return true});
+  const scored=cards.map(c=>{let score=0;const cid=normText(c.id||''),setid=normText(c.set?.id||''),name=normText(c.name||'');const num=String(parseInt(c.number||c.localId||'0',10));
     if(identity?.code?.set){const ss=normText(identity.code.set);if(cid.includes(ss)||setid===ss)score+=20}
-    if(identity?.code?.num && num===String(parseInt(identity.code.num,10)))score+=15;
+    if(identity?.code?.num&&num===String(parseInt(identity.code.num,10)))score+=15;
     if(name.includes('energia')||name.includes('energy'))score+=2;
     if(identity?.type){const t=normText(identity.type);if(name.includes(t))score+=4;(c.types||[]).map(normText).includes(t)&&(score+=3)}
-    return {c,score};
-  }).sort((a,b)=>b.score-a.score);
+    return {c,score};}).sort((a,b)=>b.score-a.score);
   return scored.filter(x=>x.score>0).map(x=>x.c);
 }
 
+let selectedEnergyType='';
 function toggleManualEnergy(){
-  const p=document.getElementById('manualEnergyPanel');
-  p.classList.toggle('hidden');
-  if(!p.classList.contains('hidden'))renderMeeEnergyGrid();
+  const p=document.getElementById('manualEnergyPanel');p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden'))renderEnergyTypeGrid();
 }
-function meeEnergyEmoji(t){return ({Erba:'🌿',Fuoco:'🔥',Acqua:'💧',Lampo:'⚡',Psico:'🔮',Lotta:'👊',Oscurità:'🌑',Metallo:'⚙️'})[t]||'⚡'}
-function renderMeeEnergyGrid(){
-  const g=document.getElementById('meeEnergyGrid'); if(!g)return;
-  g.innerHTML=Object.entries(MEE_BASIC_ENERGIES).map(([num,e])=>`<div class="btn alt" style="min-height:170px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:flex-start"><div style="min-height:104px;display:flex;align-items:center;justify-content:center"><img src="${meeImageUrl(num)}" style="width:74px;height:104px;object-fit:contain;border-radius:8px" onerror="setMeeImageFallback(this,'${num}',0)" onclick="event.stopPropagation();openCardZoom(this.src)"></div><button type="button" style="border:0;background:transparent;font:inherit;padding:0;cursor:pointer" onclick="selectMeeEnergy('${num}')"><div><b>${meeEnergyEmoji(e.type)} ${e.type}</b></div><div class="small">MEE IT ${num}</div></button></div>`).join('');
+function meeEnergyEmoji(t){const x=[...ENERGY_TYPE_ORDER,HISTORIC_FAIRY_ENERGY].find(v=>v.key===t);return x?.emoji||'⚡'}
+function renderEnergyTypeGrid(){
+  const g=document.getElementById('energyTypeGrid');if(!g)return;
+  const all=[...ENERGY_TYPE_ORDER,HISTORIC_FAIRY_ENERGY];
+  g.innerHTML=all.map(x=>`<button type="button" class="btn alt" onclick="selectEnergyType('${x.key}')"><div style="font-size:22px">${x.emoji}</div><b>${x.key}</b></button>`).join('');
 }
-async function selectMeeEnergy(num){
-  num=String(num).padStart(3,'0');
-  const c=makeMeeBasicEnergy({code:{set:'MEE',num}}); if(!c)return;
-  // MEE uses a persistent reference image so it remains visible after reopening the app.
-  nameInput.value=c.name; numberInput.value=num; setTotalInput.value='8';
-  searchMsg.textContent=`Selezionata ${c.name} · MEE IT ${num}. Se hai fotografato la carta, puoi usare “Ritaglia / raddrizza” prima di salvarla.`;
+function energyNumberForType(type,block=0){
+  const idx=ENERGY_TYPE_ORDER.findIndex(x=>x.key===type);return idx<0?'':String(block*8+idx+1).padStart(3,'0');
+}
+function energyPlayFamilyForSeries(type,series){
+  const s=Number(series),idx=ENERGY_TYPE_ORDER.findIndex(x=>x.key===type);if(idx<0||s<1||s>9)return null;
+  if(s<=3)return {set:'',num:'',label:`Prize Pack Series ${s} · energia storica`};
+  if(s<=5){const n=String(idx+1).padStart(3,'0');return {set:'SVE',num:n,label:`SVE ${n}`};}
+  if(s<=7){const n=String(8+idx+1).padStart(3,'0');return {set:'SVE',num:n,label:`SVE ${n}`};}
+  const n=String(idx+1).padStart(3,'0');return {set:'MEE',num:n,label:`MEE ${n}`};
+}
+function renderEnergyTypeChoices(type){
+  const box=document.getElementById('energyTypeChoices');if(!box)return;
+  const historic=type==='Folletto';
+  const modern=!historic?[0,1,2].map(b=>({set:'SVE',num:energyNumberForType(type,b)})).concat([0,1].map(b=>({set:'MEE',num:energyNumberForType(type,b)}))):[];
+  box.classList.remove('hidden');
+  box.innerHTML=`<div style="font-weight:800;margin-bottom:6px">${meeEnergyEmoji(type)} Energia ${type}</div>
+    ${!historic?`<div class="small" style="margin-bottom:6px">Play! Pokémon: scegli direttamente la Series. Cardoryx determina codice/famiglia automaticamente.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px">${Array.from({length:9},(_,i)=>i+1).map(s=>`<button type="button" class="btn alt" onclick="selectPlayBasicEnergy('${type}','${s}')">Series ${s}</button>`).join('')}</div>`:''}
+    ${modern.length?`<div class="small" style="margin-bottom:6px">Stampe moderne con codice · tocca il design corretto</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:12px">${modern.map(x=>`<button type="button" class="btn alt" style="padding:7px;display:flex;align-items:center;gap:8px;text-align:left" onclick="selectCodedBasicEnergy('${x.set}','${x.num}')"><span style="width:42px;height:58px;display:flex;align-items:center;justify-content:center;flex:0 0 42px"><img src="${energyImageUrl(x.set,x.num)}" style="max-width:42px;max-height:58px;object-fit:contain;border-radius:4px" onerror="setEnergyImageFallback(this,'${x.set}','${x.num}',0)"></span><span><b>${x.set} ${x.num}</b><br><span class="small">${x.set==='SVE'?'Scarlatto/Violetto':'Megaevoluzione'}</span></span></button>`).join('')}</div>`:''}
+    <button type="button" class="btn alt big" onclick="searchHistoricBasicEnergy('${type}')">🕰️ Cerca stampe storiche / senza codice</button>`;
+}
+function selectEnergyType(type){selectedEnergyType=type;renderEnergyTypeChoices(type)}
+async function lookupBasicEnergyCode(){
+  const raw=String(document.getElementById('energyCodeInput')?.value||'').toUpperCase();
+  const m=raw.match(/\b(SVE|MEE)\s*(?:IT)?\s*0*(\d{1,3})\b/);
+  if(!m){searchMsg.textContent='Codice non riconosciuto. Usa per esempio SVE 010 oppure MEE 002.';return;}
+  await selectCodedBasicEnergy(m[1],String(parseInt(m[2],10)).padStart(3,'0'));
+}
+async function selectCodedBasicEnergy(setCode,num){
+  const local=makeCodedBasicEnergy({code:{set:setCode,num}});
+  if(!local){searchMsg.textContent='Codice Energia non disponibile nel catalogo supportato.';return;}
+  nameInput.value=local.name;numberInput.value=local.localId;setTotalInput.value=String(local.set.cardCount.total||'');
+  searchMsg.textContent=`Selezionata ${local.name} · ${local._printedCode}.`;
+
+  // Prefer the live TCGdex record when available: it can add exact artwork,
+  // language metadata and documented variants. The deterministic local card is
+  // retained as a safe fallback, so the Energy selector never depends on the API.
+  let live=null;
+  const ids=[`${String(setCode).toLowerCase()}-${parseInt(num,10)}`,`${String(setCode).toLowerCase()}-${String(num).padStart(3,'0')}`];
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
+    for(const id of ids){
+      try{const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});if(r.ok){const x=await r.json();if(x&&!x.error){live=x;break}}}catch(e){}
+    }
+    if(live)break;
+  }
+  if(live){
+    live={...local,...live,_energyFamily:local._energyFamily,_printedCode:local._printedCode};
+    live._cardoryxLocal=false;
+    await chooseCard(live);
+  }else await chooseCard(local);
+}
+async function selectMeeEnergy(num){return selectCodedBasicEnergy('MEE',String(num).padStart(3,'0'))}
+function renderMeeEnergyGrid(){renderEnergyTypeGrid()}
+function makePlayBasicEnergy(type,series){
+  const en=ENERGY_ENGLISH_BY_IT[type]||type;
+  const fam=energyPlayFamilyForSeries(type,series);
+  if(!fam)return null;
+  const coded=fam.set?makeCodedBasicEnergy({code:{set:fam.set,num:fam.num}}):null;
+  const base=coded||{id:`pps${series}-basic-${normText(en)}`,localId:'',number:'',name:`Energia base ${type}`,category:'Energy',energyType:'Basic',types:[type],type,rarity:'',set:{id:`pps${series}`,name:`Play! Pokémon Prize Pack Series ${series}`,cardCount:{total:0,official:0}},_cardoryxLocal:true};
+  base.name=`Energia base ${type}`;
+  base._cardoryxEnglishPhrases=[`Basic ${en} Energy`];base._cardoryxEnglishIdentityText=`Basic ${en} Energy`;
+  base._playSeriesPreset=String(series);base._stampPreset='Play! Pokémon';base._energyPlayFamily=fam;
+  return base;
+}
+async function selectPlayBasicEnergy(type,series){
+  const c=makePlayBasicEnergy(type,series);if(!c)return;
+  searchMsg.textContent=`Energia ${type} · Play! Pokémon Series ${series}${c._energyPlayFamily?.label?' · '+c._energyPlayFamily.label:''}.`;
   await chooseCard(c);
+  const stampEl=document.getElementById('stamp'),seriesEl=document.getElementById('playSeries');
+  if(stampEl)stampEl.value='Play! Pokémon';
+  syncPlaySeriesVisibility();
+  if(seriesEl)seriesEl.value=String(series);
+  c.stamp='Play! Pokémon';c.playSeries=String(series);
+  await refreshOfficialPlayAvailability(c,false,false);
+  if(seriesEl)seriesEl.value=String(series);
+  syncVariantAvailability(c,false);renderScanValue(c);
+}
+async function searchHistoricBasicEnergy(type){
+  searchMsg.textContent=`Cerco le stampe di Energia ${type}…`;results.innerHTML='';
+  const en=ENERGY_ENGLISH_BY_IT[type]||type;
+  let cards=[];
+  for(const q of [`Energia base ${type}`,`Basic ${en} Energy`]){
+    try{const r=await apiCardsQuery({name:q});if(r?.length)cards.push(...r)}catch(e){}
+  }
+  const seen=new Set();cards=cards.filter(c=>{if(!c?.id||seen.has(c.id))return false;seen.add(c.id);return true});
+  cards=cards.filter(c=>{const blob=normText(`${c.name||''} ${c.category||''} ${c.energyType||''}`);return blob.includes('energy')||blob.includes('energia')});
+  if(!cards.length){searchMsg.textContent='Nessuna stampa storica trovata automaticamente. Prova la ricerca standard con nome/set.';return;}
+  searchMsg.textContent=`Trovate ${cards.length} possibili stampe. Mostro le più pertinenti.`;
+  await renderFastCandidates(cards.slice(0,12),`Energia ${type}`);
 }
 async function runSmartOCR(){
   const f=scanQueue[queueIndex];
@@ -2409,16 +2481,16 @@ async function searchCards(opts={}){
   searchMsg.textContent='Cerco…';
 
   try{
-    // V6.0 manual MEE lookup: accepts MEE, MEE 001, MEE IT 001 or an Energy type/name.
+    // V2.1.15 manual coded Basic Energy lookup: SVE 001–024 and MEE 001–016.
     const rawManual=[name,num,total].filter(Boolean).join(' ');
-    const mm=rawManual.toUpperCase().match(/\bMEE(?:\s*IT)?\s*0*(\d{1,3})\b/);
+    const mm=rawManual.toUpperCase().match(/\b(SVE|MEE)(?:\s*IT)?\s*0*(\d{1,3})\b/);
     if(mm){
-      const n=String(parseInt(mm[1],10)).padStart(3,'0');
-      if(MEE_BASIC_ENERGIES[n]){ await selectMeeEnergy(n); return; }
+      const n=String(parseInt(mm[2],10)).padStart(3,'0');
+      if(codedEnergyInfo(mm[1],n)){ await selectCodedBasicEnergy(mm[1],n); return; }
     }
-    if(/^MEE$/i.test(name)||/^MEE$/i.test(num)){
-      document.getElementById('manualEnergyPanel').classList.remove('hidden'); renderMeeEnergyGrid();
-      searchMsg.textContent='Set MEE: scegli una delle 8 Energie Base.'; return;
+    if(/^(SVE|MEE)$/i.test(name)||/^(SVE|MEE)$/i.test(num)){
+      document.getElementById('manualEnergyPanel').classList.remove('hidden'); renderEnergyTypeGrid();
+      searchMsg.textContent='Scegli il tipo di Energia oppure inserisci il codice completo (es. SVE 010).'; return;
     }
     // SOLO TOTALE SET -> show matching sets first
     if(!name&&!num&&total){
@@ -3153,7 +3225,7 @@ function numOrNull(v){const n=Number(v);return Number.isFinite(n)&&n>0?n:null}
 async function loadCardoryxPlayIndex(){
   if(cardoryxPlayIndexPromise)return cardoryxPlayIndexPromise;
   cardoryxPlayIndexPromise=(async()=>{
-    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=213`,{cache:'no-store'});
+    const r=await fetch(`${CARDORYX_PLAY_INDEX_URL}?v=215`,{cache:'no-store'});
     if(!r.ok)throw new Error(`Indice Play HTTP ${r.status}`);
     const j=await r.json();
     if(!j||typeof j!=='object'||!j.byBaseProduct)throw new Error('Indice Play non valido');
@@ -3894,9 +3966,18 @@ async function chooseCard(s){
     if(brief._cardoryxLocal){
       selectedCard=brief;
       const category=inferCategory(brief),type=inferType(brief);
-      confirmInfo.textContent=`${brief.set?.name||'Energie base MEE'} · ${brief._printedCode||brief.localId}`;
-      confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}<span class="pill">MEE</span>`;
+      const family=brief._energyFamily||brief._energyPlayFamily?.set||'';
+      const infoBits=[brief.set?.name||'Energia base',brief._printedCode||brief._energyPlayFamily?.label||brief.localId||''].filter(Boolean);
+      confirmInfo.textContent=infoBits.join(' · ');
+      confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${family?`<span class="pill">${family}</span>`:''}`;
       applyQuickDefaultsToConfirm();
+      if(brief._stampPreset){document.getElementById('stamp').value=brief._stampPreset;syncPlaySeriesVisibility();}
+      if(brief._playSeriesPreset)document.getElementById('playSeries').value=brief._playSeriesPreset;
+      applyPlayAutoSeries(selectedCard,false);
+      await refreshOfficialPlayAvailability(selectedCard,false,false);
+      if(brief._playSeriesPreset)document.getElementById('playSeries').value=brief._playSeriesPreset;
+      syncVariantAvailability(selectedCard,false);
+      renderScanValue(selectedCard);
       setTimeout(()=>confirmCard.scrollIntoView({behavior:'smooth',block:'end'}),120);
       return;
     }
