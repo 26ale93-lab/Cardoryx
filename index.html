@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.35 Group Allocations</title>
+<title>Cardoryx V2.1.37 Legacy Deck Migration</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -564,6 +564,13 @@
 
     <div id="deckList" class="deck-list"></div>
 
+    <div id="legacyDeckMigration" class="card hidden" style="margin-top:12px;border:1px solid #f3d08a;background:#fffaf0">
+      <div class="section-title">♻️ Vecchie assegnazioni mazzo</div>
+      <div id="legacyDeckMigrationText" class="footer-note"></div>
+      <div class="spacer"></div>
+      <button class="btn alt big" type="button" onclick="migrateLegacyDeckAllocations()">Importa nei mazzi reali</button>
+    </div>
+
     <div class="deck-note" style="margin-top:12px">
       <b>Regole controllate:</b> 60 carte esatte, massimo 4 copie con lo stesso nome (Energie Base escluse), almeno 1 Pokémon Base.
       I limiti specifici stampati su singole carte non sono ancora verificati automaticamente.
@@ -869,6 +876,74 @@ function persistDecks(){
   renderHomeDashboard();
   try{renderCatalog()}catch(e){}
 }
+
+// V2.1.37 — one-time, user-confirmed migration of the old fixed Mazzo 1 / Mazzo 2 statuses.
+// Quantities are preserved exactly: legacy records become ordinary Disponibile stock, while
+// the same quantities are reserved inside real dynamic game decks. No card is deleted.
+function legacyDeckStatusSummary(){
+  const out={};
+  for(const c of db||[]){
+    const st=String(c?.status||'').trim();
+    if(!/^Mazzo\s+[12]$/i.test(st))continue;
+    const canonical=st.toLowerCase().endsWith('1')?'Mazzo 1':'Mazzo 2';
+    out[canonical]=(out[canonical]||0)+Math.max(1,Number(c?.qty)||1);
+  }
+  return out;
+}
+function renderLegacyDeckMigration(){
+  const box=ui('legacyDeckMigration'),txt=ui('legacyDeckMigrationText');
+  if(!box)return;
+  const summary=legacyDeckStatusSummary();
+  const rows=Object.entries(summary).filter(([,q])=>q>0);
+  if(!rows.length){box.classList.add('hidden');if(txt)txt.textContent='';return}
+  box.classList.remove('hidden');
+  const total=rows.reduce((a,[,q])=>a+q,0);
+  if(txt)txt.textContent=`Trovate ${total} copie ancora assegnate al vecchio sistema (${rows.map(([n,q])=>`${n}: ${q}`).join(' · ')}). Puoi convertirle in mazzi reali senza cambiare il totale del Catalogo.`;
+}
+function legacyTargetDeck(status){
+  const wanted=String(status||'').trim();
+  let d=(decks||[]).find(x=>deckType(x)==='game' && normText(x.name||'')===normText(wanted));
+  if(d)return d;
+  let name=wanted;
+  if((decks||[]).some(x=>normText(x.name||'')===normText(name) && deckType(x)!=='game'))name=`${wanted} (migrato)`;
+  d={id:deckId(),name,type:'game',createdAt:new Date().toISOString(),entries:[],migratedLegacy:true};
+  decks.push(d);
+  return d;
+}
+function migrateLegacyDeckAllocations(){
+  const summary=legacyDeckStatusSummary();
+  const rows=Object.entries(summary).filter(([,q])=>q>0);
+  if(!rows.length){alert('Non ci sono più assegnazioni legacy da migrare.');renderLegacyDeckMigration();return}
+  const total=rows.reduce((a,[,q])=>a+q,0);
+  const details=rows.map(([n,q])=>`${n}: ${q}`).join('\n');
+  if(!confirm(`Importare le vecchie assegnazioni nei mazzi reali?\n\n${details}\n\nTotale: ${total} copie. Le carte NON verranno eliminate e il totale del Catalogo resterà invariato.`))return;
+
+  const legacyRecords=[...(db||[])].filter(c=>/^Mazzo\s+[12]$/i.test(String(c?.status||'').trim()));
+  const toRemove=new Set();
+  for(const c of legacyRecords){
+    const status=String(c.status||'').trim().toLowerCase().endsWith('1')?'Mazzo 1':'Mazzo 2';
+    const d=legacyTargetDeck(status);
+    const q=Math.max(1,Number(c.qty)||1);
+    const identity=collectionIdentityKey(c);
+    let available=(db||[]).find(x=>x!==c && (x?.status||'Disponibile')==='Disponibile' && collectionIdentityKey(x)===identity);
+    if(available){
+      available.qty=Math.max(1,Number(available.qty)||1)+q;
+      toRemove.add(c);
+    }else{
+      c.status='Disponibile';
+      available=c;
+    }
+    const key=deckRecordKey(available);
+    let e=(d.entries||[]).find(x=>x.cardKey===key);
+    if(e)e.qty=Math.max(0,Number(e.qty)||0)+q;
+    else d.entries.push({cardKey:key,cardId:available.id||'',variant:available.variant||'Normale',qty:q});
+  }
+  if(toRemove.size)db=db.filter(c=>!toRemove.has(c));
+  localStorage.setItem('cardoryx_db',JSON.stringify(db));
+  localStorage.setItem(DECK_KEY,JSON.stringify(decks));
+  try{renderAll();renderSettings();renderDecks();renderHomeDashboard();renderLegacyDeckMigration()}catch(e){console.error('Legacy deck migration render:',e)}
+  alert(`Migrazione completata: ${total} copie trasferite nei mazzi reali. Nessuna carta è stata eliminata.`);
+}
 function deckId(){
   return 'deck_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
 }
@@ -950,6 +1025,7 @@ function validateDeck(d){
   return {valid,issues,total,counts};
 }
 function renderDecks(){
+  renderLegacyDeckMigration();
   const list=ui('deckList');
   if(!list)return;
   list.innerHTML=decks.length?decks.map(d=>{
