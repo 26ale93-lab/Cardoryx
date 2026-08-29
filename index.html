@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.1.0</title>
+<title>Cardoryx V1.1.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5408,6 +5408,55 @@ function renderCardoryxAdvice(c){
   return `<div class="cardoryx-advice"><div class="cardoryx-advice-head"><b>💡 Consiglio protezione</b><span class="advice-priority">${priority}</span></div>${rows.map(x=>`<div class="advice-row"><strong>${x[0]}</strong>${esc(x[1])}</div>`).join('')}</div>`;
 }
 
+// V1.1.2 — verified Italian retail observations shown only in Details.
+// Retail observations stay separate from Cardmarket and never affect collection value.
+// Each observation records the exact finish/language/condition/date used for the reference.
+const VERIFIED_RETAIL_REFERENCES = {
+  'ascesa eroica|032|Poké Ball Reverse Holo': {
+    language:'IT', condition:'NM/Mint', verified:'29/08/2026',
+    observations:[
+      {name:'CardGame-Club',price:0.80,condition:'NM',verified:'29/08/2026',url:'https://cardgame-club.it/1769706973-megaevoluzione-ascesa-eroica-asc-032-darumaka-di-n-comune-foil-reverse-poke-ball-it-near-mint.html'},
+      {name:'BSA Store',price:0.90,condition:'NM',verified:'29/08/2026',source:'user-verified'},
+      {name:'Card Passion',price:1.29,condition:'Mint',verified:'29/08/2026',url:'https://www.cardpassion.it/product/032-217-darumaka-di-n-poke-ball-reverse-ascesa-eroica/'}
+    ]
+  },
+  'ascended heroes|032|Poké Ball Reverse Holo': {
+    language:'IT', condition:'NM/Mint', verified:'29/08/2026',
+    observations:[
+      {name:'CardGame-Club',price:0.80,condition:'NM',verified:'29/08/2026',url:'https://cardgame-club.it/1769706973-megaevoluzione-ascesa-eroica-asc-032-darumaka-di-n-comune-foil-reverse-poke-ball-it-near-mint.html'},
+      {name:'BSA Store',price:0.90,condition:'NM',verified:'29/08/2026',source:'user-verified'},
+      {name:'Card Passion',price:1.29,condition:'Mint',verified:'29/08/2026',url:'https://www.cardpassion.it/product/032-217-darumaka-di-n-poke-ball-reverse-ascesa-eroica/'}
+    ]
+  }
+};
+function retailReferenceForCard(c){
+  if(!c)return null;
+  const setName=normText(c?.set?.name||c?.set||'');
+  const num=(String(c?.localId||'').replace(/^0+/,'')||String(c?.localId||''));
+  const finish=canonicalVariant(c?.variant||'Normal');
+  for(const [k,v] of Object.entries(VERIFIED_RETAIL_REFERENCES)){
+    const [ks,kn,kf]=k.split('|');
+    if(normText(ks)===setName && String(kn).replace(/^0+/,'')===num && kf===finish){
+      const observations=(v.observations||[]).filter(x=>Number.isFinite(Number(x.price)));
+      if(!observations.length)return null;
+      const prices=observations.map(x=>Number(x.price)).sort((a,b)=>a-b);
+      const mid=Math.floor(prices.length/2);
+      const typical=prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2;
+      return {...v,observations,min:prices[0],max:prices[prices.length-1],typical,count:prices.length};
+    }
+  }
+  return null;
+}
+function renderRetailReference(c){
+  const r=retailReferenceForCard(c);
+  if(!r)return '';
+  const offers=(r.observations||[]).map(s=>{
+    const label=`${esc(s.name)} · ${euro(s.price)}${s.condition?' · '+esc(s.condition):''}`;
+    return s.url?`<a class="mee-source-link" href="${esc(s.url)}" target="_blank" rel="noopener">${label} ↗</a>`:`<span class="small">${label}</span>`;
+  }).join('<br>');
+  return `<div class="detail-section"><h4>🏪 Riferimento negozi italiani</h4><div style="font-size:20px;font-weight:800;margin-bottom:4px">${euro(r.min)} – ${euro(r.max)}</div><div style="font-size:16px;font-weight:750;margin-bottom:4px">Prezzo tipico: ${euro(r.typical)}</div><div class="small">${r.count} offerte verificate · ${esc(r.language)} · ${esc(r.condition)} · ultimo controllo ${esc(r.verified)}</div><div class="small" style="margin-top:7px">Prezzi osservati per la stessa variante presso negozi italiani. Sono separati dal valore Cardmarket, non modificano il valore della collezione e possono cambiare nel tempo.</div>${offers?`<div style="margin-top:8px">${offers}</div>`:''}</div>`;
+}
+
 function openCardDetail(key){
   const c=findRecordByKey(key);
   if(!c)return;
@@ -5431,6 +5480,7 @@ function openCardDetail(key){
       </div>
     </div>
     ${renderCardoryxAdvice(c)}
+    ${renderRetailReference(c)}
     <div class="detail-section">
       <h4>Note personali</h4>
       <textarea id="detailNotes" placeholder="Es. acquistata al mercatino, da controllare, possibile grading...">${esc(c.notes||'')}</textarea>
