@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.53 Complete Ordered CSV</title>
+<title>Cardoryx V2.1.54 Complete Ordered CSV</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -637,6 +637,8 @@
       <div class="settings-stack">
         <div class="condition-intro" style="margin-bottom:10px"><b>Backup completo:</b> carte, quantità, varianti, condizioni, note, ID/immagini, prezzi e valori, mazzi e preferenze Scanner. Il CSV include anche valore unitario e totale.</div>
         <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV completo</button>
+        <button class="btn alt big" type="button" onclick="printInventory(true)">🖨️ Stampa inventario</button>
+        <button class="btn alt big" type="button" onclick="printInventory(false)">☑️ Stampa checklist</button>
         <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup completo JSON</button>
         <label class="btn alt big settings-file-label">📥 Ripristina backup JSON
           <input id="settingsImportFile" type="file" accept="application/json,.json" hidden>
@@ -5772,6 +5774,88 @@ async function exportCSV(){
   });
   const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');
   download('cardoryx-esportazione-completa.csv','\ufeff'+csv,'text/csv;charset=utf-8');
+}
+
+function printEsc(v){
+  return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function printMainType(c){
+  const cat=normText(c?.category||'');
+  if(cat==='allenatore'||cat==='trainer')return canonicalTrainerType(c)||'Allenatore';
+  if(cat==='energia'||cat==='energy')return csvEnergyType(c)||'Energia';
+  return c?.type||c?.category||'';
+}
+function printVariant(c){
+  const bits=[canonicalVariant(c?.variant||'Normal')];
+  const stamp=canonicalStamp(c?.stamp||'None');
+  if(stamp && stamp!=='None')bits.push(stamp);
+  const ps=normalizedPlaySeries(c?.playSeries||'');
+  if(stamp==='Play! Pokémon' && ps)bits.push(`Serie ${ps}`);
+  return bits.join(' · ');
+}
+function printOrderedCards(){
+  return [...db].sort((a,b)=>{
+    const setCmp=String(a?.set||'').localeCompare(String(b?.set||''),'it',{sensitivity:'base',numeric:true});
+    if(setCmp)return setCmp;
+    const numCmp=csvCollectorSortValue(a?.localId)-csvCollectorSortValue(b?.localId);
+    if(numCmp)return numCmp;
+    return canonicalVariant(a?.variant||'Normal').localeCompare(canonicalVariant(b?.variant||'Normal'),'it');
+  });
+}
+function printInventory(withPrices=true){
+  const cards=printOrderedCards();
+  if(!cards.length){alert('Nessuna carta da stampare.');return}
+  const totalCopies=cards.reduce((s,c)=>s+Math.max(1,Number(c?.qty)||1),0);
+  const totalValue=cards.reduce((s,c)=>{
+    const v=cardPriceInfo(c)?.value;
+    return s+(v==null?0:Number(v)*Math.max(1,Number(c?.qty)||1));
+  },0);
+  const groups=new Map();
+  for(const c of cards){
+    const k=String(c?.set||'Set non specificato');
+    if(!groups.has(k))groups.set(k,[]);
+    groups.get(k).push(c);
+  }
+  let body='';
+  for(const [setName,list] of groups){
+    const setId=list.find(c=>c?._cardoryxSetId)?._cardoryxSetId||'';
+    const total=list.map(c=>csvSetTotal(c)).find(Boolean)||'';
+    body+=`<section class="set"><h2>${printEsc(setName)}${setId?` <small>${printEsc(setId)}</small>`:''}${total?` <small>· ${printEsc(total)} carte set</small>`:''}</h2>`;
+    body+='<table><thead><tr><th>Numero</th><th>Nome</th><th>Tipo</th><th>Finitura / Edizione</th><th>Q.tà</th><th>Stato / Allocazione</th><th>Cond.</th>';
+    if(withPrices)body+='<th class="num">Val. unit.</th><th class="num">Totale</th>';
+    else body+='<th class="check">✓</th>';
+    body+='</tr></thead><tbody>';
+    for(const c of list){
+      const q=Math.max(1,Number(c?.qty)||1), info=cardPriceInfo(c), unit=info?.value;
+      const denom=csvSetTotal(c);
+      const number=`${c?.localId||''}${denom?'/'+denom:''}`;
+      body+=`<tr><td>${printEsc(number)}</td><td><b>${printEsc(c?.name||'')}</b></td><td>${printEsc(printMainType(c))}</td><td>${printEsc(printVariant(c))}</td><td class="num">${q}</td><td>${printEsc(csvAllocation(c))}</td><td>${printEsc(c?.condition||'')}</td>`;
+      if(withPrices){
+        body+=`<td class="num">${unit==null?'—':'€ '+Number(unit).toFixed(2)}</td><td class="num">${unit==null?'—':'€ '+(Number(unit)*q).toFixed(2)}</td>`;
+      }else body+='<td class="check">□</td>';
+      body+='</tr>';
+    }
+    body+='</tbody></table></section>';
+  }
+  const title=withPrices?'Inventario collezione':'Checklist collezione';
+  const summary=withPrices
+    ? `${cards.length} record · ${totalCopies} carte · Valore € ${totalValue.toFixed(2)}`
+    : `${cards.length} record · ${totalCopies} carte`;
+  const html=`<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Cardoryx - ${title}</title><style>
+  @page{size:A4 landscape;margin:9mm}
+  *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#111;margin:0;font-size:9px}
+  header{display:flex;justify-content:space-between;align-items:end;border-bottom:2px solid #111;padding-bottom:5px;margin-bottom:8px}
+  h1{font-size:18px;margin:0}header .meta{text-align:right;font-size:9px}.set{break-inside:auto;margin:0 0 10px}
+  h2{font-size:12px;margin:8px 0 3px;padding:3px 5px;background:#eee;border-left:4px solid #333}h2 small{font-size:8px;font-weight:500}
+  table{width:100%;border-collapse:collapse;table-layout:auto}thead{display:table-header-group}tr{break-inside:avoid}
+  th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:top}th{background:#f3f3f3;text-align:left;font-size:8px}
+  .num{text-align:right;white-space:nowrap}.check{text-align:center;width:24px;font-size:14px}
+  footer{margin-top:8px;border-top:1px solid #999;padding-top:4px;font-size:8px;color:#555}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body><header><div><h1>Cardoryx · ${title}</h1><div>${printEsc(summary)}</div></div><div class="meta">Generato ${new Date().toLocaleString('it-IT')}</div></header>${body}<footer>Cardoryx · ordinamento per Set → Numero carta → Finitura</footer><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`;
+  const w=window.open('','_blank');
+  if(!w){alert('Il browser ha bloccato la finestra di stampa. Consenti i popup per Cardoryx e riprova.');return}
+  w.document.open();w.document.write(html);w.document.close();
 }
 
 const settingsImportFile=document.getElementById('settingsImportFile');
