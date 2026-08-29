@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.61 Branded Prints</title>
+<title>Cardoryx V2.1.62 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -652,6 +652,12 @@
             <button class="btn alt" type="button" onclick="downloadCollectionPDF(false)">📥 Scarica PDF</button>
             <button class="btn alt" type="button" onclick="printInventory(false)">🖨️ Stampa</button>
           </div>
+        </div>
+        <div class="card" style="margin:0;padding:12px">
+          <div class="section-title" style="font-size:15px">🗂️ Esporta per tipo</div>
+          <div class="footer-note" style="margin-bottom:8px">PDF di una categoria oppure dell'intera collezione divisa per categorie.</div>
+          <select id="categoryPdfSelect" class="input" style="margin-bottom:8px"></select>
+          <button class="btn alt big" type="button" onclick="downloadCategoryPDF()">📥 Scarica PDF per tipo</button>
         </div>
         <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup completo JSON</button>
         <label class="btn alt big settings-file-label">📥 Ripristina backup JSON
@@ -5862,6 +5868,84 @@ async function pdfLogoData(){
 function pdfSafe(v){
   return String(v??'').replace(/[\u2013\u2014]/g,'-').replace(/\u00d7/g,'x');
 }
+
+function categoryExportGroups(){
+  const map=new Map();
+  for(const c of printOrderedCards()){
+    const raw=cardCategory(c)||'Altro';
+    const key=categoryFilterKey(raw)||normText(raw)||'altro';
+    if(!map.has(key))map.set(key,{key,label:raw,cards:[]});
+    map.get(key).cards.push(c);
+  }
+  return [...map.values()].sort((a,b)=>String(categoryDisplayLabel(a.label)).localeCompare(String(categoryDisplayLabel(b.label)),'it'));
+}
+function renderCategoryPdfSelect(){
+  const el=document.getElementById('categoryPdfSelect'); if(!el)return;
+  const groups=categoryExportGroups(), prev=el.value;
+  el.innerHTML='<option value="__all__">Tutte le categorie</option>'+groups.map(g=>{
+    const q=g.cards.reduce((s,c)=>s+Math.max(1,Number(c?.qty)||1),0);
+    return `<option value="${printEsc(g.key)}">${printEsc(categoryDisplayLabel(g.label))} (${q})</option>`;
+  }).join('');
+  if([...el.options].some(o=>o.value===prev))el.value=prev;
+}
+async function downloadCategoryPDF(){
+  renderCategoryPdfSelect();
+  const wanted=document.getElementById('categoryPdfSelect')?.value||'__all__';
+  const groups=categoryExportGroups().filter(g=>wanted==='__all__'||g.key===wanted);
+  if(!groups.length){alert('Nessuna carta da esportare.');return}
+  const btn=document.activeElement, oldText=btn?.textContent;
+  try{
+    if(btn){btn.disabled=true;btn.textContent='⏳ Creo PDF...'}
+    await ensurePdfLibraries();
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
+    const logo=await pdfLogoData();
+    const title=wanted==='__all__'?'Collezione per tipo':`Collezione - ${categoryDisplayLabel(groups[0].label)}`;
+    const copies=groups.reduce((s,g)=>s+g.cards.reduce((x,c)=>x+Math.max(1,Number(c?.qty)||1),0),0);
+    const header=()=>{
+      if(logo)try{doc.addImage(logo,'PNG',10,7,10,10)}catch(e){}
+      doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text('Cardoryx',logo?23:10,12);
+      doc.setFontSize(9);doc.setTextColor(80);doc.text(pdfSafe(title),logo?23:10,17);
+      doc.setDrawColor(60);doc.setLineWidth(.45);doc.line(10,20,287,20);doc.setTextColor(0);
+    };
+    const catTitle=(label,y)=>{doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(0);doc.text(pdfSafe(label),10,y)};
+    header(); doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(80);
+    doc.text(pdfSafe(`${copies} carte · ${groups.length} categorie`),10,25);doc.setTextColor(0);
+    let y=30;
+    for(const g of groups){
+      const qty=g.cards.reduce((s,c)=>s+Math.max(1,Number(c?.qty)||1),0);
+      const label=`${categoryDisplayLabel(g.label)} (${qty})`;
+      if(y+17>200){doc.addPage();header();y=27}
+      catTitle(label,y);
+      const rows=[...g.cards].sort((a,b)=>{
+        const sc=String(a?.set||'').localeCompare(String(b?.set||''),'it',{sensitivity:'base'});
+        if(sc)return sc;
+        const na=parseInt(String(a?.localId||'').match(/\d+/)?.[0]||'999999',10);
+        const nb=parseInt(String(b?.localId||'').match(/\d+/)?.[0]||'999999',10);
+        return na-nb||String(a?.name||'').localeCompare(String(b?.name||''),'it');
+      }).map(c=>[
+        pdfSafe(c?.localId||''),pdfSafe(c?.name||''),pdfSafe(c?.set||''),pdfSafe(printVariant(c)),
+        String(Math.max(1,Number(c?.qty)||1)),pdfSafe(csvAllocation(c)),pdfSafe(c?.condition||'')
+      ]);
+      const first=doc.internal.getCurrentPageInfo().pageNumber;
+      doc.autoTable({
+        startY:y+3, margin:{top:32,left:10,right:10,bottom:10},
+        head:[['Numero','Nome','Set','Finitura / Edizione','Q.tà','Stato / Allocazione','Cond.']],
+        body:rows,theme:'grid',
+        styles:{font:'helvetica',fontSize:7.2,cellPadding:1.5,valign:'middle',overflow:'linebreak'},
+        headStyles:{fontStyle:'bold',fillColor:[238,238,238],textColor:[20,20,20],lineColor:[170,170,170],lineWidth:.15},
+        bodyStyles:{lineColor:[190,190,190],lineWidth:.12},
+        columnStyles:{0:{cellWidth:18},1:{cellWidth:45},2:{cellWidth:43},3:{cellWidth:57},4:{cellWidth:11,halign:'right'},5:{cellWidth:70},6:{cellWidth:16}},
+        didDrawPage:()=>{const p=doc.internal.getCurrentPageInfo().pageNumber;header();if(p!==first)catTitle(`${label} (continua)`,27)}
+      });
+      y=(doc.lastAutoTable?.finalY||y+3)+8;
+    }
+    const stamp=new Date().toISOString().slice(0,10);
+    const suffix=wanted==='__all__'?'Tutte-categorie':String(groups[0].label||'Categoria').replace(/[^\w]+/g,'-');
+    doc.save(`Cardoryx-Per-tipo-${suffix}-${stamp}.pdf`);
+  }catch(e){console.error(e);alert('Non riesco a creare il PDF per tipo. Controlla la connessione e riprova.')}
+  finally{if(btn){btn.disabled=false;btn.textContent=oldText||'📥 Scarica PDF per tipo'}}
+}
 async function downloadCollectionPDF(withPrices=true){
   const cards=printOrderedCards();
   if(!cards.length){alert('Nessuna carta da esportare.');return}
@@ -6304,6 +6388,8 @@ document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scann
   }
 }));
 
+
+document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}catch(e){}});
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
