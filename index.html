@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V1.0 Branded Prints</title>
+<title>Cardoryx V1.1.0</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4244,6 +4244,19 @@ function verifiedStampPrice(card,variant,stamp){
 }
 
 const VERIFIED_VARIANT_PRICES = {
+  // V1.1.0 — Ascesa Eroica / Ascended Heroes additionals.
+  // Cardmarket publishes the Poké Ball parallel as a separate xASC product.
+  // Keep these mappings explicit: never infer V1/V2 semantics for another card.
+  'ascesa eroica|032|Poké Ball Reverse Holo': {
+    low:0.02, trend:0.11, avg7:0.11, avg30:0.16,
+    source:'Cardmarket · Ascesa Eroica: Supplementi · xASC 032 · Versione 2',
+    verified:'29/08/2026'
+  },
+  'ascended heroes|032|Poké Ball Reverse Holo': {
+    low:0.02, trend:0.11, avg7:0.11, avg30:0.16,
+    source:'Cardmarket · Ascended Heroes: Additionals · xASC 032 · Version 2',
+    verified:'29/08/2026'
+  },
   'evoluzioni prismatiche|057|Holo': {
     low:0.02, trend:0.13, avg7:0.11, avg30:0.08,
     source:'Cardmarket · Evoluzioni Prismatiche',
@@ -4690,7 +4703,10 @@ async function chooseCard(s){
       selectedCard=brief;
       const category=inferCategory(brief),type=inferType(brief);
       const family=brief._energyFamily||brief._energyPlayFamily?.set||'';
-      const infoBits=[brief.set?.name||'Energia base',brief._printedCode||brief._energyPlayFamily?.label||brief.localId||''].filter(Boolean);
+      const localNo=brief.localId||'';
+      const setTotal=csvSetTotal(brief);
+      const numberLabel=brief._printedCode||brief._energyPlayFamily?.label||(localNo?(localNo+(setTotal?'/'+setTotal:'')):'');
+      const infoBits=[brief.set?.name||'Energia base',numberLabel].filter(Boolean);
       confirmInfo.textContent=infoBits.join(' · ');
       confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${family?`<span class="pill">${family}</span>`:''}`;
       applyQuickDefaultsToConfirm();
@@ -4708,7 +4724,11 @@ async function chooseCard(s){
     selectedCard={...brief,...full};
     await enrichCardoryxEnglishIdentity(selectedCard);
     const category=inferCategory(full),type=inferType(full),stage=full.stage||'';
-    confirmInfo.textContent=`${full.set?.name||''} · ${full.localId||brief.localId}${full.rarity?' · '+full.rarity:''}`;
+    {
+      const localNo=full.localId||brief.localId||'';
+      const setTotal=csvSetTotal(full)||csvSetTotal(brief);
+      confirmInfo.textContent=`${full.set?.name||''} · ${localNo}${setTotal?'/'+setTotal:''}${full.rarity?' · '+full.rarity:''}`;
+    }
     confirmTags.innerHTML=`<span class="pill">${category}</span>${type?`<span class="pill">${type}</span>`:''}${stage?`<span class="pill">${stage}</span>`:''}`;
   }catch(e){
     selectedCard=brief;
