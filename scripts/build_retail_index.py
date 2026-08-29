@@ -2149,6 +2149,71 @@ def finalize_cards(cards):
 # RACCOLTA
 # ============================================================
 
+def test_cardgamecorner():
+
+    url = (
+        "https://www.cardgamecorner.com/it/prodotti/"
+        "428/3873/pokemon-carte-singole-"
+        "prismatic-evolutions-pokemaster-ball-reverse"
+    )
+
+    try:
+
+        html = http_get(
+            url
+        )
+
+        if not html:
+            raise RuntimeError(
+                "pagina vuota"
+            )
+
+        print()
+        print(
+            "Card Game Corner accessibile"
+        )
+
+        print(
+            "Byte ricevuti:",
+            len(html)
+        )
+
+        return {
+            "source":
+                "Card Game Corner",
+
+            "ok":
+                True,
+
+            "testOnly":
+                True,
+        }
+
+    except Exception as exc:
+
+        print()
+        print(
+            "Card Game Corner non disponibile:"
+        )
+
+        print(
+            str(exc)
+        )
+
+        return {
+            "source":
+                "Card Game Corner",
+
+            "ok":
+                False,
+
+            "error":
+                str(exc),
+
+            "testOnly":
+                True,
+        }
+        
 def collect_retail_data():
 
     cards = {}
@@ -2206,6 +2271,18 @@ def collect_retail_data():
         result
     )
 
+    # --------------------------------------------------------
+    # FONTE 3 — CARD GAME CORNER
+    # TEST ACCESSIBILITÀ
+    # --------------------------------------------------------
+
+    result = test_cardgamecorner()
+
+    source_stats.append(
+        result
+    )
+
+    
     # --------------------------------------------------------
     # FINALIZZAZIONE
     # --------------------------------------------------------
