@@ -899,11 +899,23 @@ def parse_cardpassion_title(
         match.group(2)
         .strip()
     )
+    
 
     set_name = (
         match.group(3)
         .strip()
     )
+       
+    # --------------------------------------------------------
+    # Normalizzazione nomi set sporchi provenienti dal catalogo
+    # --------------------------------------------------------
+
+    set_name = re.sub(
+        r"\s*\(\s*copia\s*\)\s*$",
+        "",
+        set_name,
+        flags=re.IGNORECASE,
+    ).strip()
 
     if not number:
         return None
