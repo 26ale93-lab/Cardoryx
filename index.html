@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.56 Branded Prints</title>
+<title>Cardoryx V2.1.57 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5850,7 +5850,7 @@ function printInventory(withPrices=true){
     ? `${cards.length} record · ${totalCopies} carte · Valore € ${totalValue.toFixed(2)}`
     : `${cards.length} record · ${totalCopies} carte`;
   const html=`<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Cardoryx - ${title}</title><style>
-  @page{size:A4 landscape;margin:9mm}
+  @page{size:A4 landscape;margin:13mm 9mm 9mm}
   *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#111;margin:0;font-size:9px}
   header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:8px}
   .brand{display:flex;align-items:center;gap:8px}.brand img{width:34px;height:34px;object-fit:contain;border-radius:8px}
@@ -5866,9 +5866,20 @@ function printInventory(withPrices=true){
   th:nth-child(4),td:nth-child(4){min-width:34mm}
   th:nth-child(6),td:nth-child(6){min-width:28mm}
   .num{text-align:right;white-space:nowrap}
+  .print-repeat-header{display:none}
   footer{margin-top:8px;border-top:1px solid #999;padding-top:4px;font-size:8px;color:#555}
-  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.set{orphans:3;widows:3}.set-small{break-inside:avoid-page!important;page-break-inside:avoid!important}.set:has(tbody tr:nth-child(-n+2):last-child){break-inside:avoid-page;page-break-inside:avoid}}
-  </style></head><body><header><div class="brand"><img src="${printEsc(printLogoUrl())}" alt="Cardoryx"><div><div class="wordmark">Cardoryx</div><div class="doc-title">${printEsc(title)}</div><div class="summary">${printEsc(summary)}</div></div></div><div class="meta">Generato ${new Date().toLocaleString('it-IT')}</div></header>${body}<footer>Cardoryx · ordinamento per Set → Numero carta → Finitura</footer><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`;
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;padding-top:0}
+    .print-repeat-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:9mm;align-items:center;gap:5px;border-bottom:1px solid #777;background:#fff;z-index:999}
+    .print-repeat-header img{width:6mm;height:6mm;object-fit:contain;border-radius:2px}
+    .print-repeat-header .repeat-wordmark{font-size:10px;font-weight:900;letter-spacing:-.2px}
+    .print-repeat-header .repeat-doc{font-size:8px;font-weight:700;color:#444}
+    header{margin-top:0}
+    .set{orphans:3;widows:3}
+    .set-small{break-inside:avoid-page!important;page-break-inside:avoid!important}
+    .set:has(tbody tr:nth-child(-n+2):last-child){break-inside:avoid-page;page-break-inside:avoid}
+  }
+  </style></head><body><div class="print-repeat-header"><img src="${printEsc(printLogoUrl())}" alt="Cardoryx"><div><div class="repeat-wordmark">Cardoryx</div><div class="repeat-doc">${printEsc(title)}</div></div></div><header><div class="brand"><img src="${printEsc(printLogoUrl())}" alt="Cardoryx"><div><div class="wordmark">Cardoryx</div><div class="doc-title">${printEsc(title)}</div><div class="summary">${printEsc(summary)}</div></div></div><div class="meta">Generato ${new Date().toLocaleString('it-IT')}</div></header>${body}<footer>Cardoryx · ordinamento per Set → Numero carta → Finitura</footer><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`;
   const w=window.open('','_blank');
   if(!w){alert('Il browser ha bloccato la finestra di stampa. Consenti i popup per Cardoryx e riprova.');return}
   w.document.open();w.document.write(html);w.document.close();
