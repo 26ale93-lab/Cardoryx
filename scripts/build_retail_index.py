@@ -9,6 +9,7 @@ import urllib.parse
 import urllib.request
 
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 
 
@@ -16,20 +17,18 @@ from pathlib import Path
 # CARDORYX — RETAIL PRICE INDEX BUILDER
 # ============================================================
 #
-# Retail V1.2
+# Fonti:
+# 1. Card Passion
+# 2. CarteMagic
 #
-# Fonte:
-# - Card Passion
-#
-# PRINCIPI:
-#
-# - completamente separato da Cardmarket
+# REGOLE:
+# - separato da Cardmarket
 # - nessun prezzo inventato
+# - lingua IT verificata
+# - condizione NM/Mint
+# - solo offerte acquistabili
 # - fail closed
-# - lingua verificata
-# - condizione verificata
-# - variante verificata
-# - una fonte non basta per statistiche affidabili
+# - statistiche affidabili solo con >= 3 negozi indipendenti
 #
 # ============================================================
 
@@ -39,19 +38,32 @@ SCHEMA_VERSION = 1
 MIN_OFFERS_FOR_STATS = 3
 MIN_STORES_FOR_STATS = 3
 
-OUTPUT_FILE = (
-    Path(__file__)
-    .resolve()
-    .parents[1]
-    / "data"
-    / "retail_prices.json"
-)
+ROOT = Path(__file__).resolve().parents[1]
+
+OUTPUT_FILE = ROOT / "data" / "retail_prices.json"
+
+HTTP_TIMEOUT = 30
+
+
+# ============================================================
+# CARD PASSION
+# ============================================================
 
 CARDPASSION_BASE_URL = "https://cardpassion.it"
 CARDPASSION_COLLECTION = "pokemon"
 CARDPASSION_PAGE_LIMIT = 250
 
-HTTP_TIMEOUT = 30
+
+# ============================================================
+# CARTEMAGIC
+# ============================================================
+
+CARTEMAGIC_BASE_URL = "https://www.cartemagic.com"
+CARTEMAGIC_CATEGORY_URL = (
+    "https://www.cartemagic.com/categoria/carte-pokemon/"
+)
+
+CARTEMAGIC_MAX_PAGES = 200
 
 
 # ============================================================
@@ -60,30 +72,38 @@ HTTP_TIMEOUT = 30
 
 USER_AGENT = (
     "Mozilla/5.0 "
-    "(compatible; CardoryxRetailIndex/1.2; "
-    "+https://github.com/)"
+    "(compatible; CardoryxRetailIndex/1.2)"
 )
 
 
-def http_get_json(url):
+def http_get(url):
 
-    request = urllib.request.Request(
+    req = urllib.request.Request(
         url,
         headers={
             "User-Agent": USER_AGENT,
-            "Accept": "application/json,text/plain,*/*",
+            "Accept": (
+                "text/html,application/xhtml+xml,"
+                "application/json,text/plain,*/*"
+            ),
         },
     )
 
     with urllib.request.urlopen(
-        request,
+        req,
         timeout=HTTP_TIMEOUT,
     ) as response:
 
-        raw = response.read()
+        return response.read().decode(
+            "utf-8",
+            errors="replace",
+        )
+
+
+def http_get_json(url):
 
     return json.loads(
-        raw.decode("utf-8")
+        http_get(url)
     )
 
 
@@ -93,9 +113,7 @@ def http_get_json(url):
 
 def strip_html(value):
 
-    text = str(
-        value or ""
-    )
+    text = str(value or "")
 
     text = re.sub(
         r"<[^>]+>",
@@ -103,17 +121,13 @@ def strip_html(value):
         text,
     )
 
-    text = html.unescape(
-        text
-    )
+    text = html.unescape(text)
 
-    text = re.sub(
+    return re.sub(
         r"\s+",
         " ",
         text,
-    )
-
-    return text.strip()
+    ).strip()
 
 
 def norm(value):
@@ -125,10 +139,7 @@ def norm(value):
 
     text = (
         text
-        .encode(
-            "ascii",
-            "ignore",
-        )
+        .encode("ascii", "ignore")
         .decode("ascii")
         .lower()
     )
@@ -169,31 +180,20 @@ def make_key(
     )
 
 
-# ============================================================
-# PAROLE / FRASI
-# ============================================================
-
 def phrase_in_text(
     phrase,
     text,
 ):
 
-    phrase_normalized = norm(
-        phrase
-    )
-
-    text_normalized = norm(
-        text
-    )
+    phrase_normalized = norm(phrase)
+    text_normalized = norm(text)
 
     if not phrase_normalized:
         return False
 
     pattern = (
         r"(?:^|\s)"
-        + re.escape(
-            phrase_normalized
-        )
+        + re.escape(phrase_normalized)
         + r"(?:$|\s)"
     )
 
@@ -227,9 +227,7 @@ def valid_price(value):
 
     try:
 
-        price = float(
-            value
-        )
+        price = float(value)
 
         return (
             price > 0
@@ -241,284 +239,54 @@ def valid_price(value):
         return False
 
 
-# ============================================================
-# LINGUA
-# ============================================================
+def parse_euro_price(value):
 
-FOREIGN_LANGUAGE_MARKERS = [
+    text = strip_html(value)
 
-    "lingua inglese",
-    "lingua giapponese",
-    "lingua cinese",
-    "lingua coreana",
-    "lingua francese",
-    "lingua tedesca",
-    "lingua spagnola",
-
-    "english language",
-    "japanese language",
-    "chinese language",
-    "korean language",
-    "french language",
-    "german language",
-    "spanish language",
-
-    "japanese",
-    "japan",
-    "giapponese",
-    "inglese",
-    "cinese",
-    "coreano",
-
-    "jpn",
-    "jap",
-    "eng",
-    "kor",
-]
-
-
-ITALIAN_LANGUAGE_MARKERS = [
-
-    "lingua italiana",
-    "lingua italiano",
-    "lingua ita",
-    "italiano",
-    "italiana",
-    "italian language",
-]
-
-
-# Set/prodotti notoriamente non italiani che erano entrati
-# erroneamente nel primo test.
-#
-# Questa è una protezione aggiuntiva.
-# La lingua deve comunque essere verificata.
-
-FOREIGN_SET_MARKERS = [
-
-    "blue sky stream",
-    "matchless fighter",
-    "silver lance",
-    "jet black spirit",
-    "eevee heroes",
-    "vmax climax",
-    "vstar universe",
-    "shiny star v",
-    "dark phantasma",
-    "lost abyss",
-    "paradigm trigger",
-    "incandescent arcana",
-    "space juggler",
-    "time gazer",
-    "battle region",
-    "star birth",
-    "fusion arts",
-    "towering perfection",
-]
-
-
-def detect_language(
-    title,
-    body,
-    tags,
-    set_name,
-):
-
-    combined = " ".join(
-        [
-            str(title or ""),
-            str(body or ""),
-            str(tags or ""),
-        ]
+    match = re.search(
+        r"(\d{1,5}(?:[.,]\d{1,2})?)\s*€",
+        text,
     )
 
-    # --------------------------------------------------------
-    # Prima escludiamo segnali espliciti di lingua straniera.
-    # --------------------------------------------------------
-
-    if contains_any_phrase(
-        combined,
-        FOREIGN_LANGUAGE_MARKERS,
-    ):
+    if not match:
         return None
 
-    if contains_any_phrase(
-        set_name,
-        FOREIGN_SET_MARKERS,
-    ):
-        return None
-
-    # --------------------------------------------------------
-    # Accettiamo IT solo con indicazione verificabile.
-    # --------------------------------------------------------
-
-    if contains_any_phrase(
-        combined,
-        ITALIAN_LANGUAGE_MARKERS,
-    ):
-        return "IT"
-
-    # --------------------------------------------------------
-    # FAIL CLOSED
-    #
-    # Nessuna indicazione sufficiente sulla lingua.
-    # --------------------------------------------------------
-
-    return None
-
-
-# ============================================================
-# CONDIZIONE
-# ============================================================
-
-BAD_CONDITION_MARKERS = [
-
-    "played",
-    "light played",
-    "lightly played",
-    "moderately played",
-    "heavily played",
-    "excellent",
-    "good",
-    "poor",
-    "damaged",
-    "danneggiata",
-    "danneggiato",
-]
-
-
-NM_MINT_MARKERS = [
-
-    "near mint",
-    "near-mint",
-    "nm",
-    "mint",
-    "pack fresh",
-    "pack-fresh",
-]
-
-
-def detect_condition(
-    title,
-    body,
-    tags,
-):
-
-    combined = " ".join(
-        [
-            str(title or ""),
-            str(body or ""),
-            str(tags or ""),
-        ]
+    raw = (
+        match.group(1)
+        .replace(".", "")
+        .replace(",", ".")
     )
 
-    # --------------------------------------------------------
-    # Una condizione inferiore a NM/Mint viene esclusa.
-    # --------------------------------------------------------
-
-    if contains_any_phrase(
-        combined,
-        BAD_CONDITION_MARKERS,
-    ):
+    try:
+        value = float(raw)
+    except Exception:
         return None
 
-    # --------------------------------------------------------
-    # NM e Mint vengono raccolte nello stesso bucket retail.
-    # --------------------------------------------------------
+    if not valid_price(value):
+        return None
 
-    if contains_any_phrase(
-        combined,
-        NM_MINT_MARKERS,
-    ):
-        return "NM/MINT"
-
-    # --------------------------------------------------------
-    # FAIL CLOSED
-    # --------------------------------------------------------
-
-    return None
-
-
-# ============================================================
-# PRODOTTI DA ESCLUDERE
-# ============================================================
-
-GRADED_MARKERS = [
-
-    "psa",
-    "bgs",
-    "cgc",
-    "graad",
-    "ace grading",
-    "graded",
-    "gradato",
-    "gradata",
-    "gradate",
-]
-
-
-SEALED_MARKERS = [
-
-    "display",
-    "booster box",
-    "collection box",
-    "premium collection",
-    "elite trainer box",
-    "etb",
-    "blister",
-    "bundle",
-    "bustina",
-    "bustine",
-    "mini tin",
-    "tin box",
-    "mazzo precostruito",
-    "mystery box",
-]
-
-
-def is_excluded_product(
-    title,
-    body,
-    tags,
-):
-
-    combined = " ".join(
-        [
-            str(title or ""),
-            str(body or ""),
-            str(tags or ""),
-        ]
+    return round(
+        value,
+        2,
     )
 
-    if contains_any_phrase(
-        combined,
-        GRADED_MARKERS,
-    ):
-        return True
-
-    if contains_any_phrase(
-        combined,
-        SEALED_MARKERS,
-    ):
-        return True
-
-    return False
-
 
 # ============================================================
-# NUMERO CARTA + TITOLO CARD PASSION
+# SET
 # ============================================================
 
-NUMBER_RE = re.compile(
-    r"^\s*"
-    r"([A-Za-z]*\d+[A-Za-z]*"
-    r"(?:\s*/\s*[A-Za-z]*\d+[A-Za-z]*)?)"
-    r"\s+"
-    r"(.+?)"
-    r"\s*\|\s*"
-    r"(.+?)"
-    r"\s*$"
-)
+def clean_set_name(value):
+
+    text = str(value or "").strip()
+
+    text = re.sub(
+        r"\s*\(\s*copia\s*\)\s*$",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    return text.strip()
 
 
 # ============================================================
@@ -527,25 +295,13 @@ NUMBER_RE = re.compile(
 
 def detect_variant(card_text):
 
-    text = norm(
-        card_text
-    )
-
-    # --------------------------------------------------------
-    # IMPORTANTISSIMO:
-    #
-    # Non-Holo deve essere verificata PRIMA di Holo.
-    # --------------------------------------------------------
+    text = norm(card_text)
 
     if (
         "non holo" in text
         or "nonholo" in text
     ):
         return "Normal"
-
-    # --------------------------------------------------------
-    # Varianti Reverse speciali.
-    # --------------------------------------------------------
 
     if (
         "master ball reverse holo" in text
@@ -571,26 +327,14 @@ def detect_variant(card_text):
     ):
         return "Energy Reverse Holo"
 
-    # --------------------------------------------------------
-    # Cosmo Holo distinta dalla Holo normale.
-    # --------------------------------------------------------
-
     if (
         "cosmo holo" in text
         or "cosmos holo" in text
     ):
         return "Cosmo Holo"
 
-    # --------------------------------------------------------
-    # Reverse standard.
-    # --------------------------------------------------------
-
     if "reverse" in text:
         return "Reverse Holo"
-
-    # --------------------------------------------------------
-    # Varianti artistiche / rarità speciali.
-    # --------------------------------------------------------
 
     if (
         "special illustration rare" in text
@@ -644,61 +388,14 @@ def detect_variant(card_text):
     if "gold" in text:
         return "Gold"
 
-    # --------------------------------------------------------
-    # Holo standard.
-    # --------------------------------------------------------
-
     if "holo" in text:
         return "Holo"
 
-    # --------------------------------------------------------
-    # Se non esiste alcuna indicazione di finitura speciale,
-    # trattiamo la carta come Normal.
-    #
-    # V / VMAX / VSTAR / EX / GX non sono finiture.
-    # --------------------------------------------------------
-
-    special_finish_markers = [
-
-        "reverse",
-        "holo",
-        "shiny",
-        "radiant",
-        "lucente",
-        "full art",
-        "fullart",
-        "illustration",
-        "illustrazione",
-        "alternate",
-        "alternative",
-        "secret",
-        "segreta",
-        "hyper rare",
-        "hyperrare",
-        "gold",
-        "master ball",
-        "masterball",
-        "poke ball",
-        "pokeball",
-        "energy reverse",
-        "energia reverse",
-    ]
-
-    if not any(
-        marker in text
-        for marker in special_finish_markers
-    ):
-        return "Normal"
-
-    # --------------------------------------------------------
-    # FAIL CLOSED
-    # --------------------------------------------------------
-
-    return None
+    return "Normal"
 
 
 # ============================================================
-# PULIZIA NOME CARTA
+# NOME CARTA
 # ============================================================
 
 VARIANT_REMOVALS = [
@@ -740,18 +437,13 @@ VARIANT_REMOVALS = [
     "Alternate Artwork",
 
     "Full Art",
-
     "Secret Rare",
     "Rara Segreta",
-
     "Hyper Rare",
-
     "Shiny Rare",
     "Shiny",
-
     "Radiant",
     "Lucente",
-
     "Holo",
 ]
 
@@ -772,20 +464,9 @@ def remove_whole_phrase(
     phrase,
 ):
 
-    # --------------------------------------------------------
-    # Evita il vecchio problema:
-    #
-    # "Gold" non deve rimuovere "Gold" da "Golduck".
-    #
-    # La frase viene rimossa solo se costituisce una parola
-    # o sequenza di parole completa.
-    # --------------------------------------------------------
-
     pattern = (
         r"(?<!\w)"
-        + re.escape(
-            phrase
-        )
+        + re.escape(phrase)
         + r"(?!\w)"
     )
 
@@ -797,64 +478,31 @@ def remove_whole_phrase(
     )
 
 
-def clean_card_name(
-    card_text,
-):
+def clean_card_name(card_text):
 
-    text = str(
-        card_text or ""
-    ).strip()
+    text = str(card_text or "").strip()
 
-    # --------------------------------------------------------
-    # Prima rimuoviamo le varianti più lunghe.
-    # --------------------------------------------------------
-
-    removals = sorted(
+    for phrase in sorted(
         VARIANT_REMOVALS,
         key=len,
         reverse=True,
-    )
-
-    for phrase in removals:
+    ):
 
         text = remove_whole_phrase(
             text,
             phrase,
         )
 
-    # --------------------------------------------------------
-    # Rimuoviamo rarità descrittive che non fanno parte
-    # dell'identità della carta.
-    # --------------------------------------------------------
-
-    rarity_removals = sorted(
+    for phrase in sorted(
         RARITY_REMOVALS,
         key=len,
         reverse=True,
-    )
-
-    for phrase in rarity_removals:
+    ):
 
         text = remove_whole_phrase(
             text,
             phrase,
         )
-
-    # --------------------------------------------------------
-    # Pulizia finale.
-    # --------------------------------------------------------
-
-    text = re.sub(
-        r"\(\s*\)",
-        " ",
-        text,
-    )
-
-    text = re.sub(
-        r"\[\s*\]",
-        " ",
-        text,
-    )
 
     text = re.sub(
         r"\s+",
@@ -862,174 +510,16 @@ def clean_card_name(
         text,
     )
 
-    text = text.strip(
+    return text.strip(
         " -–—|/"
     )
-
-    return text.strip()
-
-
-# ============================================================
-# PARSER TITOLO
-# ============================================================
-
-def parse_cardpassion_title(
-    title,
-):
-
-    title = str(
-        title or ""
-    ).strip()
-
-    if not title:
-        return None
-
-    match = NUMBER_RE.match(
-        title
-    )
-
-    if not match:
-        return None
-
-    number = norm_number(
-        match.group(1)
-    )
-
-    card_text = (
-        match.group(2)
-        .strip()
-    )
-    
-
-    set_name = (
-        match.group(3)
-        .strip()
-    )
-       
-    # --------------------------------------------------------
-    # Normalizzazione nomi set sporchi provenienti dal catalogo
-    # --------------------------------------------------------
-
-    set_name = re.sub(
-        r"\s*\(\s*copia\s*\)\s*$",
-        "",
-        set_name,
-        flags=re.IGNORECASE,
-    ).strip()
-
-    if not number:
-        return None
-
-    if not card_text:
-        return None
-
-    if not set_name:
-        return None
-
-    variant = detect_variant(
-        card_text
-    )
-
-    if not variant:
-        return None
-
-    card_name = clean_card_name(
-        card_text
-    )
-
-    if not card_name:
-        return None
-
-    return {
-        "number": number,
-        "name": card_name,
-        "set": set_name,
-        "variant": variant,
-    }
-
-
-# ============================================================
-# PREZZO SHOPIFY
-# ============================================================
-
-def extract_variant_price(
-    product,
-):
-
-    variants = product.get(
-        "variants"
-    )
-
-    if not isinstance(
-        variants,
-        list,
-    ):
-        return None
-
-    prices = []
-
-    for variant in variants:
-
-        if not isinstance(
-            variant,
-            dict,
-        ):
-            continue
-
-        # ----------------------------------------------------
-        # Deve essere acquistabile.
-        # ----------------------------------------------------
-
-        if variant.get(
-            "available"
-        ) is not True:
-
-            continue
-
-        price = variant.get(
-            "price"
-        )
-
-        if not valid_price(
-            price
-        ):
-            continue
-
-        prices.append(
-            round(
-                float(price),
-                2,
-            )
-        )
-
-    if not prices:
-        return None
-
-    unique_prices = sorted(
-        set(prices)
-    )
-
-    # --------------------------------------------------------
-    # Più prezzi diversi nello stesso prodotto:
-    # identità ambigua -> esclusione.
-    # --------------------------------------------------------
-
-    if len(
-        unique_prices
-    ) != 1:
-
-        return None
-
-    return unique_prices[0]
 
 
 # ============================================================
 # OFFERTE
 # ============================================================
 
-def normalize_offer(
-    offer,
-):
+def normalize_offer(offer):
 
     if not isinstance(
         offer,
@@ -1062,9 +552,7 @@ def normalize_offer(
         or ""
     ).strip()
 
-    price = offer.get(
-        "price"
-    )
+    price = offer.get("price")
 
     if not store:
         return None
@@ -1072,9 +560,7 @@ def normalize_offer(
     if not url:
         return None
 
-    if not valid_price(
-        price
-    ):
+    if not valid_price(price):
         return None
 
     if language != "IT":
@@ -1123,10 +609,6 @@ def normalize_offer(
     }
 
 
-# ============================================================
-# AGGIUNTA OFFERTA
-# ============================================================
-
 def add_offer(
     cards,
     *,
@@ -1138,6 +620,10 @@ def add_offer(
     condition,
     offer,
 ):
+
+    set_name = clean_set_name(
+        set_name
+    )
 
     key = make_key(
         set_name,
@@ -1182,17 +668,7 @@ def add_offer(
                 [],
         }
 
-    existing = cards[
-        key
-    ]["offers"]
-
-    # --------------------------------------------------------
-    # Una singola fonte deve contribuire al massimo
-    # UNA offerta alla stessa identità fisica.
-    #
-    # Se Card Passion ha due schede apparentemente riferite
-    # alla stessa identità, la seconda non aumenta il campione.
-    # --------------------------------------------------------
+    existing = cards[key]["offers"]
 
     same_store = any(
 
@@ -1220,9 +696,7 @@ def add_offer(
 # STATISTICHE
 # ============================================================
 
-def calculate_stats(
-    offers,
-):
+def calculate_stats(offers):
 
     valid_offers = [
 
@@ -1255,16 +729,12 @@ def calculate_stats(
 
     reliable = (
 
-        len(
-            prices
-        )
+        len(prices)
         >= MIN_OFFERS_FOR_STATS
 
         and
 
-        len(
-            stores
-        )
+        len(stores)
         >= MIN_STORES_FOR_STATS
     )
 
@@ -1325,12 +795,345 @@ def calculate_stats(
 
 
 # ============================================================
-# CARD PASSION — CATALOGO
+# CARD PASSION
 # ============================================================
+
+NUMBER_RE = re.compile(
+    r"^\s*"
+    r"([A-Za-z]*\d+[A-Za-z]*"
+    r"(?:\s*/\s*[A-Za-z]*\d+[A-Za-z]*)?)"
+    r"\s+"
+    r"(.+?)"
+    r"\s*\|\s*"
+    r"(.+?)"
+    r"\s*$"
+)
+
+
+def parse_cardpassion_title(title):
+
+    title = str(
+        title or ""
+    ).strip()
+
+    match = NUMBER_RE.match(
+        title
+    )
+
+    if not match:
+        return None
+
+    number = norm_number(
+        match.group(1)
+    )
+
+    card_text = (
+        match.group(2)
+        .strip()
+    )
+
+    set_name = clean_set_name(
+        match.group(3)
+    )
+
+    if not (
+        number
+        and card_text
+        and set_name
+    ):
+        return None
+
+    variant = detect_variant(
+        card_text
+    )
+
+    card_name = clean_card_name(
+        card_text
+    )
+
+    if not card_name:
+        return None
+
+    return {
+
+        "number":
+            number,
+
+        "name":
+            card_name,
+
+        "set":
+            set_name,
+
+        "variant":
+            variant,
+    }
+
+
+FOREIGN_LANGUAGE_MARKERS = [
+
+    "lingua inglese",
+    "lingua giapponese",
+    "lingua cinese",
+    "lingua coreana",
+    "lingua francese",
+    "lingua tedesca",
+    "lingua spagnola",
+
+    "japanese",
+    "giapponese",
+    "inglese",
+    "cinese",
+    "coreano",
+
+    "jpn",
+    "jap",
+    "eng",
+    "kor",
+]
+
+
+ITALIAN_LANGUAGE_MARKERS = [
+
+    "lingua italiana",
+    "lingua italiano",
+    "lingua ita",
+    "italiano",
+    "italiana",
+    "italian language",
+]
+
+
+FOREIGN_SET_MARKERS = [
+
+    "blue sky stream",
+    "matchless fighter",
+    "silver lance",
+    "jet black spirit",
+    "eevee heroes",
+    "vmax climax",
+    "vstar universe",
+    "shiny star v",
+    "dark phantasma",
+    "lost abyss",
+    "paradigm trigger",
+    "incandescent arcana",
+    "space juggler",
+    "time gazer",
+    "battle region",
+    "star birth",
+    "fusion arts",
+    "towering perfection",
+]
+
+
+BAD_CONDITION_MARKERS = [
+
+    "played",
+    "light played",
+    "lightly played",
+    "moderately played",
+    "heavily played",
+    "excellent",
+    "good",
+    "poor",
+    "damaged",
+    "danneggiata",
+    "danneggiato",
+]
+
+
+NM_MINT_MARKERS = [
+
+    "near mint",
+    "near-mint",
+    "nm",
+    "mint",
+    "pack fresh",
+    "pack-fresh",
+]
+
+
+GRADED_MARKERS = [
+
+    "psa",
+    "bgs",
+    "cgc",
+    "graad",
+    "ace grading",
+    "graded",
+    "gradato",
+    "gradata",
+    "gradate",
+]
+
+
+SEALED_MARKERS = [
+
+    "display",
+    "booster box",
+    "collection box",
+    "premium collection",
+    "elite trainer box",
+    "etb",
+    "blister",
+    "bundle",
+    "bustina",
+    "bustine",
+    "mini tin",
+    "tin box",
+    "mazzo precostruito",
+    "mystery box",
+]
+
+
+def cardpassion_language(
+    title,
+    body,
+    tags,
+    set_name,
+):
+
+    combined = " ".join(
+        [
+            title,
+            body,
+            tags,
+        ]
+    )
+
+    if contains_any_phrase(
+        combined,
+        FOREIGN_LANGUAGE_MARKERS,
+    ):
+        return None
+
+    if contains_any_phrase(
+        set_name,
+        FOREIGN_SET_MARKERS,
+    ):
+        return None
+
+    if contains_any_phrase(
+        combined,
+        ITALIAN_LANGUAGE_MARKERS,
+    ):
+        return "IT"
+
+    return None
+
+
+def cardpassion_condition(
+    title,
+    body,
+    tags,
+):
+
+    combined = " ".join(
+        [
+            title,
+            body,
+            tags,
+        ]
+    )
+
+    if contains_any_phrase(
+        combined,
+        BAD_CONDITION_MARKERS,
+    ):
+        return None
+
+    if contains_any_phrase(
+        combined,
+        NM_MINT_MARKERS,
+    ):
+        return "NM/MINT"
+
+    return None
+
+
+def cardpassion_excluded(
+    title,
+    body,
+    tags,
+):
+
+    combined = " ".join(
+        [
+            title,
+            body,
+            tags,
+        ]
+    )
+
+    if contains_any_phrase(
+        combined,
+        GRADED_MARKERS,
+    ):
+        return True
+
+    if contains_any_phrase(
+        combined,
+        SEALED_MARKERS,
+    ):
+        return True
+
+    return False
+
+
+def cardpassion_price(product):
+
+    variants = product.get(
+        "variants"
+    )
+
+    if not isinstance(
+        variants,
+        list,
+    ):
+        return None
+
+    prices = []
+
+    for variant in variants:
+
+        if not isinstance(
+            variant,
+            dict,
+        ):
+            continue
+
+        if variant.get(
+            "available"
+        ) is not True:
+            continue
+
+        price = variant.get(
+            "price"
+        )
+
+        if valid_price(price):
+
+            prices.append(
+                round(
+                    float(price),
+                    2,
+                )
+            )
+
+    prices = sorted(
+        set(prices)
+    )
+
+    if len(prices) != 1:
+        return None
+
+    return prices[0]
+
 
 def get_cardpassion_products():
 
-    products_all = []
+    all_products = []
 
     page = 1
 
@@ -1370,43 +1173,34 @@ def get_cardpassion_products():
             products,
             list,
         ):
-
             raise RuntimeError(
-                "Risposta Card Passion non valida: "
-                "campo products mancante"
+                "Card Passion: risposta non valida"
             )
 
         if not products:
             break
 
-        products_all.extend(
+        all_products.extend(
             products
         )
 
-        if len(
-            products
-        ) < CARDPASSION_PAGE_LIMIT:
-
+        if (
+            len(products)
+            < CARDPASSION_PAGE_LIMIT
+        ):
             break
 
         page += 1
 
         if page > 100:
-
             raise RuntimeError(
-                "Numero pagine Card Passion anomalo"
+                "Card Passion: troppe pagine"
             )
 
-    return products_all
+    return all_products
 
 
-# ============================================================
-# CARD PASSION — RACCOLTA
-# ============================================================
-
-def collect_cardpassion(
-    cards,
-):
+def collect_cardpassion(cards):
 
     print()
     print(
@@ -1415,23 +1209,7 @@ def collect_cardpassion(
 
     products = get_cardpassion_products()
 
-    print(
-        "Prodotti ricevuti:",
-        len(products),
-    )
-
-    checked_at = (
-        datetime.now(
-            timezone.utc
-        )
-        .isoformat(
-            timespec="seconds"
-        )
-        .replace(
-            "+00:00",
-            "Z",
-        )
-    )
+    checked_at = utc_now()
 
     counters = {
 
@@ -1463,9 +1241,7 @@ def collect_cardpassion(
         ).strip()
 
         body = strip_html(
-            product.get(
-                "body_html"
-            )
+            product.get("body_html")
         )
 
         tags = product.get(
@@ -1478,45 +1254,25 @@ def collect_cardpassion(
         ):
 
             tags_text = " ".join(
-                str(tag)
-                for tag in tags
+                str(x)
+                for x in tags
             )
 
         else:
-
             tags_text = str(
                 tags or ""
             )
 
-        if not title:
-            counters[
-                "invalidTitle"
-            ] += 1
-            continue
-
-        if not handle:
-            counters[
-                "invalidTitle"
-            ] += 1
-            continue
-
-        # ----------------------------------------------------
-        # Gradate, sealed ecc.
-        # ----------------------------------------------------
-
-        if is_excluded_product(
+        if cardpassion_excluded(
             title,
             body,
             tags_text,
         ):
+
             counters[
                 "excludedProduct"
             ] += 1
             continue
-
-        # ----------------------------------------------------
-        # Identità dal titolo.
-        # ----------------------------------------------------
 
         parsed = parse_cardpassion_title(
             title
@@ -1527,14 +1283,9 @@ def collect_cardpassion(
             counters[
                 "invalidTitle"
             ] += 1
-
             continue
 
-        # ----------------------------------------------------
-        # Lingua.
-        # ----------------------------------------------------
-
-        language = detect_language(
+        language = cardpassion_language(
             title,
             body,
             tags_text,
@@ -1546,14 +1297,9 @@ def collect_cardpassion(
             counters[
                 "languageUnknown"
             ] += 1
-
             continue
 
-        # ----------------------------------------------------
-        # Condizione.
-        # ----------------------------------------------------
-
-        condition = detect_condition(
+        condition = cardpassion_condition(
             title,
             body,
             tags_text,
@@ -1564,14 +1310,9 @@ def collect_cardpassion(
             counters[
                 "conditionUnknown"
             ] += 1
-
             continue
 
-        # ----------------------------------------------------
-        # Prezzo.
-        # ----------------------------------------------------
-
-        price = extract_variant_price(
+        price = cardpassion_price(
             product
         )
 
@@ -1580,13 +1321,11 @@ def collect_cardpassion(
             counters[
                 "priceUnavailable"
             ] += 1
-
             continue
 
-        product_url = (
+        url = (
             f"{CARDPASSION_BASE_URL}"
-            f"/products/"
-            f"{handle}"
+            f"/products/{handle}"
         )
 
         added = add_offer(
@@ -1606,10 +1345,10 @@ def collect_cardpassion(
                 parsed["variant"],
 
             language=
-                language,
+                "IT",
 
             condition=
-                condition,
+                "NM/MINT",
 
             offer={
 
@@ -1620,16 +1359,684 @@ def collect_cardpassion(
                     price,
 
                 "url":
-                    product_url,
+                    url,
 
                 "language":
-                    language,
+                    "IT",
 
                 "condition":
-                    condition,
+                    "NM/MINT",
 
                 "variant":
                     parsed["variant"],
+
+                "checkedAt":
+                    checked_at,
+
+                "sourceType":
+                    "retail-store",
+            },
+        )
+
+        if added:
+            counters["accepted"] += 1
+        else:
+            counters["duplicateStore"] += 1
+
+    if counters[
+        "accepted"
+    ] == 0:
+
+        raise RuntimeError(
+            "Card Passion non ha prodotto "
+            "offerte verificate"
+        )
+
+    return {
+
+        "source":
+            "Card Passion",
+
+        "products":
+            len(products),
+
+        **counters,
+
+        "ok":
+            True,
+    }
+
+
+# ============================================================
+# CARTEMAGIC — HTML
+# ============================================================
+
+class LinkParser(HTMLParser):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.links = []
+
+    def handle_starttag(
+        self,
+        tag,
+        attrs,
+    ):
+
+        if tag.lower() != "a":
+            return
+
+        attrs_dict = dict(
+            attrs
+        )
+
+        href = attrs_dict.get(
+            "href"
+        )
+
+        if href:
+            self.links.append(
+                href
+            )
+
+
+def extract_cartemagic_product_links(
+    page_html,
+):
+
+    parser = LinkParser()
+
+    parser.feed(
+        page_html
+    )
+
+    links = set()
+
+    for href in parser.links:
+
+        href = html.unescape(
+            href
+        )
+
+        absolute = urllib.parse.urljoin(
+            CARTEMAGIC_BASE_URL,
+            href,
+        )
+
+        if (
+            absolute.startswith(
+                f"{CARTEMAGIC_BASE_URL}/prodotto/"
+            )
+        ):
+
+            links.add(
+                absolute.split("#")[0]
+            )
+
+    return sorted(
+        links
+    )
+
+
+def cartemagic_page_url(page):
+
+    if page == 1:
+        return CARTEMAGIC_CATEGORY_URL
+
+    return (
+        f"{CARTEMAGIC_CATEGORY_URL}"
+        f"page/{page}/"
+    )
+
+
+def get_cartemagic_product_links():
+
+    all_links = set()
+
+    previous_count = 0
+
+    for page in range(
+        1,
+        CARTEMAGIC_MAX_PAGES + 1,
+    ):
+
+        url = cartemagic_page_url(
+            page
+        )
+
+        print(
+            f"CarteMagic catalogo pagina {page}..."
+        )
+
+        page_html = http_get(
+            url
+        )
+
+        links = extract_cartemagic_product_links(
+            page_html
+        )
+
+        if not links:
+            break
+
+        all_links.update(
+            links
+        )
+
+        if (
+            page > 1
+            and len(all_links)
+            == previous_count
+        ):
+            break
+
+        previous_count = len(
+            all_links
+        )
+
+        if "pagina successiva" not in norm(
+            page_html
+        ):
+
+            # Non usiamo questo come unica condizione:
+            # alcuni temi WooCommerce non mostrano questa frase.
+            pass
+
+    return sorted(
+        all_links
+    )
+
+
+# ============================================================
+# CARTEMAGIC — PARSER PRODOTTO
+# ============================================================
+
+CARTEMAGIC_TITLE_RE = re.compile(
+    r"<h1[^>]*>"
+    r"(.*?)"
+    r"</h1>",
+    re.IGNORECASE
+    | re.DOTALL,
+)
+
+
+def extract_field(
+    page_text,
+    field,
+):
+
+    patterns = [
+
+        rf"{re.escape(field)}\s*\|\s*([^\n\r|]+)",
+
+        rf"{re.escape(field)}\s*</[^>]+>\s*"
+        rf"<[^>]+>\s*([^<]+)",
+
+        rf"{re.escape(field)}"
+        rf".{{0,120}}?"
+        rf"(?:</[^>]+>\s*)+"
+        rf"([^<]+)",
+    ]
+
+    for pattern in patterns:
+
+        match = re.search(
+            pattern,
+            page_text,
+            re.IGNORECASE
+            | re.DOTALL,
+        )
+
+        if match:
+
+            value = strip_html(
+                match.group(1)
+            )
+
+            if value:
+                return value
+
+    return None
+
+
+def extract_cartemagic_title(
+    page_html,
+):
+
+    match = CARTEMAGIC_TITLE_RE.search(
+        page_html
+    )
+
+    if not match:
+        return None
+
+    return strip_html(
+        match.group(1)
+    )
+
+
+def extract_cartemagic_price(
+    page_html,
+):
+
+    # Limitiamo la ricerca alla parte iniziale
+    # per evitare prezzi di prodotti correlati.
+    head = page_html[:50000]
+
+    prices = re.findall(
+        r"(\d{1,5}(?:[.,]\d{1,2})?)\s*€",
+        strip_html(head),
+    )
+
+    parsed = []
+
+    for raw in prices:
+
+        try:
+
+            value = float(
+                raw
+                .replace(".", "")
+                .replace(",", ".")
+            )
+
+        except Exception:
+            continue
+
+        if valid_price(value):
+
+            parsed.append(
+                round(
+                    value,
+                    2,
+                )
+            )
+
+    if not parsed:
+        return None
+
+    # Il primo prezzo prodotto è normalmente
+    # quello mostrato nella scheda principale.
+    return parsed[0]
+
+
+def cartemagic_available(
+    page_html,
+):
+
+    text = norm(
+        strip_html(
+            page_html[:60000]
+        )
+    )
+
+    if "esaurito" in text:
+        return False
+
+    if (
+        "disponibile" in text
+        or "aggiungi al carrello" in text
+        or "acquista ora" in text
+    ):
+        return True
+
+    return False
+
+
+def parse_cartemagic_title(
+    title,
+):
+
+    if not title:
+        return None
+
+    title = (
+        str(title)
+        .replace("–", "-")
+        .replace("—", "-")
+        .strip()
+    )
+
+    match = re.match(
+        r"^(.+?)\s*-\s*"
+        r"([A-Za-z]*\d+[A-Za-z]*"
+        r"(?:\s*/\s*[A-Za-z]*\d+[A-Za-z]*)?)"
+        r"\s*$",
+        title,
+    )
+
+    if not match:
+        return None
+
+    card_text = (
+        match.group(1)
+        .strip()
+    )
+
+    number = norm_number(
+        match.group(2)
+    )
+
+    if not (
+        card_text
+        and number
+    ):
+        return None
+
+    variant = detect_variant(
+        card_text
+    )
+
+    name = clean_card_name(
+        card_text
+    )
+
+    if not name:
+        return None
+
+    return {
+
+        "name":
+            name,
+
+        "number":
+            number,
+
+        "variant":
+            variant,
+    }
+
+
+def parse_cartemagic_product(
+    url,
+):
+
+    page_html = http_get(
+        url
+    )
+
+    if not cartemagic_available(
+        page_html
+    ):
+        return None, "unavailable"
+
+    title = extract_cartemagic_title(
+        page_html
+    )
+
+    parsed_title = parse_cartemagic_title(
+        title
+    )
+
+    if not parsed_title:
+        return None, "invalidTitle"
+
+    text = strip_html(
+        page_html
+    )
+
+    language = extract_field(
+        text,
+        "Lingua",
+    )
+
+    condition = extract_field(
+        text,
+        "Info",
+    )
+
+    expansion = extract_field(
+        text,
+        "Espansione",
+    )
+
+    reverse = extract_field(
+        text,
+        "Carte Reverse",
+    )
+
+    if norm(language) != "it":
+        return None, "language"
+
+    if norm(condition) != "nm":
+        return None, "condition"
+
+    if not expansion:
+        return None, "set"
+
+    expansion = clean_set_name(
+        expansion
+    )
+
+    # Rimuove eventuale codice set finale:
+    # Paradox Rift (SV4) -> Paradox Rift
+    expansion = re.sub(
+        r"\s*\([A-Z0-9-]+\)\s*$",
+        "",
+        expansion,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    if not expansion:
+        return None, "set"
+
+    variant = parsed_title[
+        "variant"
+    ]
+
+    reverse_norm = norm(
+        reverse
+    )
+
+    # Se la pagina dichiara esplicitamente Reverse,
+    # ma il titolo non specifica una variante più precisa,
+    # assegniamo Reverse Holo.
+    if (
+        reverse_norm in {
+            "si",
+            "sì",
+            "yes",
+        }
+        and variant == "Normal"
+    ):
+
+        variant = "Reverse Holo"
+
+    if (
+        reverse_norm == "no"
+        and variant == "Reverse Holo"
+    ):
+
+        # Contraddizione tra titolo e attributo.
+        return None, "variantConflict"
+
+    price = extract_cartemagic_price(
+        page_html
+    )
+
+    if price is None:
+        return None, "price"
+
+    return {
+
+        "set":
+            expansion,
+
+        "number":
+            parsed_title["number"],
+
+        "name":
+            parsed_title["name"],
+
+        "variant":
+            variant,
+
+        "language":
+            "IT",
+
+        "condition":
+            "NM/MINT",
+
+        "price":
+            price,
+
+        "url":
+            url,
+
+    }, None
+
+
+def collect_cartemagic(cards):
+
+    print()
+    print(
+        "=== CARTEMAGIC ==="
+    )
+
+    links = get_cartemagic_product_links()
+
+    print(
+        "Prodotti individuati:",
+        len(links),
+    )
+
+    if not links:
+
+        raise RuntimeError(
+            "CarteMagic: nessun prodotto trovato"
+        )
+
+    checked_at = utc_now()
+
+    counters = {
+
+        "accepted": 0,
+        "unavailable": 0,
+        "invalidTitle": 0,
+        "languageRejected": 0,
+        "conditionRejected": 0,
+        "setUnknown": 0,
+        "variantConflict": 0,
+        "priceUnavailable": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+    }
+
+    for index, url in enumerate(
+        links,
+        start=1,
+    ):
+
+        if (
+            index == 1
+            or index % 100 == 0
+        ):
+
+            print(
+                f"CarteMagic scheda "
+                f"{index}/{len(links)}"
+            )
+
+        try:
+
+            product, reason = (
+                parse_cartemagic_product(
+                    url
+                )
+            )
+
+        except Exception as exc:
+
+            counters[
+                "errors"
+            ] += 1
+
+            print(
+                "Errore CarteMagic:",
+                url,
+                str(exc),
+            )
+
+            continue
+
+        if product is None:
+
+            mapping = {
+
+                "unavailable":
+                    "unavailable",
+
+                "invalidTitle":
+                    "invalidTitle",
+
+                "language":
+                    "languageRejected",
+
+                "condition":
+                    "conditionRejected",
+
+                "set":
+                    "setUnknown",
+
+                "variantConflict":
+                    "variantConflict",
+
+                "price":
+                    "priceUnavailable",
+            }
+
+            key = mapping.get(
+                reason
+            )
+
+            if key:
+                counters[key] += 1
+
+            continue
+
+        added = add_offer(
+
+            cards,
+
+            set_name=
+                product["set"],
+
+            number=
+                product["number"],
+
+            card_name=
+                product["name"],
+
+            variant=
+                product["variant"],
+
+            language=
+                "IT",
+
+            condition=
+                "NM/MINT",
+
+            offer={
+
+                "store":
+                    "CarteMagic",
+
+                "price":
+                    product["price"],
+
+                "url":
+                    product["url"],
+
+                "language":
+                    "IT",
+
+                "condition":
+                    "NM/MINT",
+
+                "variant":
+                    product["variant"],
 
                 "checkedAt":
                     checked_at,
@@ -1651,77 +2058,26 @@ def collect_cardpassion(
                 "duplicateStore"
             ] += 1
 
-    print()
-    print(
-        "Risultato Card Passion:"
-    )
-
-    print(
-        json.dumps(
-            counters,
-            indent=2,
-            ensure_ascii=False,
-        )
-    )
-
-    # --------------------------------------------------------
-    # Se la fonte improvvisamente non produce più
-    # nessuna carta verificata, NON sovrascriviamo
-    # l'indice precedente.
-    # --------------------------------------------------------
-
+    # Se il parser dovesse rompersi completamente,
+    # fermiamo il workflow.
     if counters[
         "accepted"
     ] == 0:
 
         raise RuntimeError(
-            "Card Passion non ha prodotto "
-            "nessuna offerta retail verificata. "
-            "Il file precedente NON verrà sovrascritto."
+            "CarteMagic non ha prodotto "
+            "nessuna offerta verificata"
         )
 
     return {
 
         "source":
-            "Card Passion",
+            "CarteMagic",
 
         "products":
-            len(products),
+            len(links),
 
-        "accepted":
-            counters[
-                "accepted"
-            ],
-
-        "excludedProduct":
-            counters[
-                "excludedProduct"
-            ],
-
-        "invalidTitle":
-            counters[
-                "invalidTitle"
-            ],
-
-        "languageUnknown":
-            counters[
-                "languageUnknown"
-            ],
-
-        "conditionUnknown":
-            counters[
-                "conditionUnknown"
-            ],
-
-        "priceUnavailable":
-            counters[
-                "priceUnavailable"
-            ],
-
-        "duplicateStore":
-            counters[
-                "duplicateStore"
-            ],
+        **counters,
 
         "ok":
             True,
@@ -1729,12 +2085,30 @@ def collect_cardpassion(
 
 
 # ============================================================
+# UTILITY
+# ============================================================
+
+def utc_now():
+
+    return (
+        datetime.now(
+            timezone.utc
+        )
+        .isoformat(
+            timespec="seconds"
+        )
+        .replace(
+            "+00:00",
+            "Z",
+        )
+    )
+
+
+# ============================================================
 # FINALIZZAZIONE
 # ============================================================
 
-def finalize_cards(
-    cards,
-):
+def finalize_cards(cards):
 
     for card in cards.values():
 
@@ -1772,18 +2146,17 @@ def finalize_cards(
 
 
 # ============================================================
-# RACCOLTA RETAIL
+# RACCOLTA
 # ============================================================
 
 def collect_retail_data():
 
     cards = {}
-
     source_stats = []
 
-    # ========================================================
-    # FONTE 1 — CARD PASSION
-    # ========================================================
+    # --------------------------------------------------------
+    # FONTE 1
+    # --------------------------------------------------------
 
     result = collect_cardpassion(
         cards
@@ -1793,21 +2166,17 @@ def collect_retail_data():
         result
     )
 
-    # ========================================================
-    # FUTURE FONTI
-    # ========================================================
-    #
-    # collect_cartemagic(cards)
-    # collect_altro_negozio(cards)
-    #
-    # Ogni fonte:
-    #
-    # - deve verificare variante
-    # - deve verificare lingua
-    # - deve verificare condizione
-    # - deve usare add_offer()
-    #
-    # ========================================================
+    # --------------------------------------------------------
+    # FONTE 2
+    # --------------------------------------------------------
+
+    result = collect_cartemagic(
+        cards
+    )
+
+    source_stats.append(
+        result
+    )
 
     finalize_cards(
         cards
@@ -1829,26 +2198,11 @@ def main():
         "=== CARDORYX RETAIL INDEX BUILDER ==="
     )
 
-    print()
-
-    print(
-        "Raccolta fonti retail..."
+    cards, source_stats = (
+        collect_retail_data()
     )
 
-    cards, source_stats = collect_retail_data()
-
-    generated = (
-        datetime.now(
-            timezone.utc
-        )
-        .isoformat(
-            timespec="seconds"
-        )
-        .replace(
-            "+00:00",
-            "Z",
-        )
-    )
+    generated = utc_now()
 
     reliable_cards = sum(
 
@@ -1930,15 +2284,11 @@ def main():
             cards,
     }
 
-    # ========================================================
-    # SICUREZZA
-    # ========================================================
-
     if not cards:
 
         raise RuntimeError(
             "Indice retail vuoto: "
-            "il file precedente NON verrà sovrascritto."
+            "il file precedente non verrà sovrascritto"
         )
 
     OUTPUT_FILE.parent.mkdir(
@@ -1962,7 +2312,7 @@ def main():
 
     print()
     print(
-        "Statistiche indice:"
+        "STATISTICHE:"
     )
 
     print(
@@ -1975,7 +2325,7 @@ def main():
 
     print()
     print(
-        "Fonti:"
+        "FONTI:"
     )
 
     print(
@@ -1988,13 +2338,8 @@ def main():
 
     print()
     print(
-        "File creato:",
+        "File:",
         OUTPUT_FILE,
-    )
-
-    print(
-        "Aggiornato:",
-        generated,
     )
 
     print()
