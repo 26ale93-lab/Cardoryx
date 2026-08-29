@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.52 Complete Ordered CSV</title>
+<title>Cardoryx V2.1.53 Complete Ordered CSV</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4760,7 +4760,7 @@ function saveSelected(){
       regulationMark:selectedCard.regulationMark||scanPriceCard?.regulationMark||'',
       _cardoryxRegulationMark:selectedCard.regulationMark||scanPriceCard?.regulationMark||'',
       _cardoryxSetId:selectedCard.set?.id||scanPriceCard?.set?.id||'',
-      _cardoryxSetTotal:Number(selectedCard.set?.cardCount?.official||scanPriceCard?.set?.cardCount?.official||0)||'',
+      _cardoryxSetTotal:Number(String(setTotalInput?.value||'').replace(/\D/g,''))||Number(selectedCard.set?.cardCount?.official||scanPriceCard?.set?.cardCount?.official||0)||'',
       _cardoryxReleaseDate:selectedCard.set?.releaseDate||scanPriceCard?.set?.releaseDate||'',
       _cardoryxEnglishPhrases:(selectedCard._cardoryxEnglishPhrases||scanPriceCard?._cardoryxEnglishPhrases||[]),
       _cardoryxEnglishIdentityText:(selectedCard._cardoryxEnglishIdentityText||scanPriceCard?._cardoryxEnglishIdentityText||''),
@@ -5690,9 +5690,34 @@ function csvImageUrl(c){
   const url=candidates.find(v=>typeof v==='string' && /^https?:\/\//i.test(v.trim()));
   return url?url.trim():'';
 }
-function csvSetTotal(c){
-  const direct=Number(c?._cardoryxSetTotal||c?.set?.cardCount?.official||0);
-  return Number.isFinite(direct)&&direct>0?direct:'';
+function csvSetTotal(c,setTotalsById=null){
+  const direct=Number(c?._cardoryxSetTotal||0);
+  if(Number.isFinite(direct)&&direct>0)return direct;
+  const sid=String(c?._cardoryxSetId||c?.set?.id||'').trim();
+  const hydrated=Number(setTotalsById?.get?.(sid)||0);
+  if(Number.isFinite(hydrated)&&hydrated>0)return hydrated;
+  const embedded=Number(c?.set?.cardCount?.official||0);
+  return Number.isFinite(embedded)&&embedded>0?embedded:'';
+}
+function csvEnergyType(c){
+  // Main category is authoritative: stale energyType values on old Pokémon /
+  // Trainer records must never leak into the CSV.
+  if(normText(c?.category||'')!=='energia' && normText(c?.category||'')!=='energy')return '';
+  return energyKind(c)||'Speciale';
+}
+async function csvSetTotals(){
+  const out=new Map();
+  // Existing records may predate _cardoryxSetTotal. Fetch the set catalogue once
+  // at export time, without changing card identity/pricing/deck data.
+  try{
+    const sets=await fetchAllSets();
+    for(const s of sets||[]){
+      const id=String(s?.id||'').trim();
+      const total=setTotalValue(s);
+      if(id && total>0)out.set(id,total);
+    }
+  }catch(e){console.warn('CSV set totals:',e)}
+  return out;
 }
 function csvAllocation(c){
   if((c?.status||'Disponibile')!=='Disponibile')return c?.status||'';
@@ -5711,8 +5736,21 @@ function csvCollectorSortValue(v){
   const m=String(v||'').match(/\d+/);
   return m?Number(m[0]):Number.MAX_SAFE_INTEGER;
 }
-function exportCSV(){
+async function exportCSV(){
   const h=['Nome','Set','ID Set','Numero','Totale Set','ID TCGdex','Categoria','Tipo','Tipo Allenatore','Tipo Energia','Evoluzione','Rarita','Marchio regolamentazione','Codice stampato','Finitura','Stamp / Edizione','Prize Pack Series','Quantita','Stato','Allocazione / Mazzo','Condizione','Posizione','Note','Data aggiunta','Valore unitario EUR','Valore totale EUR','Fonte valore','Finitura verificata','Aggiornamento valore','ID prodotto Cardmarket','Cardmarket trend','Cardmarket minimo','Cardmarket media 1gg','Cardmarket media 7gg','Cardmarket media 30gg','Immagine'];
+  const totals=await csvSetTotals();
+
+  // Safe metadata backfill: only fill a missing collector denominator when the
+  // official set catalogue gives one. Never overwrite an existing value.
+  let totalsChanged=false;
+  for(const c of db){
+    if(Number(c?._cardoryxSetTotal||0)>0)continue;
+    const sid=String(c?._cardoryxSetId||c?.set?.id||'').trim();
+    const total=Number(totals.get(sid)||0);
+    if(total>0){c._cardoryxSetTotal=total;totalsChanged=true}
+  }
+  if(totalsChanged)localStorage.setItem('cardoryx_db',JSON.stringify(db));
+
   const ordered=[...db].sort((a,b)=>{
     const setCmp=String(a?.set||'').localeCompare(String(b?.set||''),'it',{sensitivity:'base',numeric:true});
     if(setCmp)return setCmp;
@@ -5730,7 +5768,7 @@ function exportCSV(){
   });
   const rows=ordered.map(c=>{
     const info=cardPriceInfo(c),unit=info.value,qty=Math.max(1,Number(c.qty)||1),cm=c?.pricing?.cardmarket||{};
-    return [c.name,c.set,c._cardoryxSetId||'',c.localId,csvSetTotal(c),c.tcgdexId||c.id||'',c.category,c.type,canonicalTrainerType(c)||'',c.energyType||'',c.stage,c.rarity,c.regulationMark||c._cardoryxRegulationMark||'',c.printedCode||'',canonicalVariant(c.variant||'Normal'),canonicalStamp(c.stamp||'None'),normalizedPlaySeries(c.playSeries||''),qty,c.status,csvAllocation(c),c.condition,cardCategory(c),c.notes||'',c.addedAt||'',unit==null?'':unit,unit==null?'':unit*qty,info.source||'Cardmarket',info.exact?'SI':'NO',info.updated||c.priceUpdatedAt||'',cm.idProduct||'',cm.trend||'',cm.low||'',cm.avg1||'',cm.avg7||'',cm.avg30||'',csvImageUrl(c)];
+    return [c.name,c.set,c._cardoryxSetId||'',c.localId,csvSetTotal(c,totals),c.tcgdexId||c.id||'',c.category,c.type,canonicalTrainerType(c)||'',csvEnergyType(c),c.stage,c.rarity,c.regulationMark||c._cardoryxRegulationMark||'',c.printedCode||'',canonicalVariant(c.variant||'Normal'),canonicalStamp(c.stamp||'None'),normalizedPlaySeries(c.playSeries||''),qty,c.status,csvAllocation(c),c.condition,cardCategory(c),c.notes||'',c.addedAt||'',unit==null?'':unit,unit==null?'':unit*qty,info.source||'Cardmarket',info.exact?'SI':'NO',info.updated||c.priceUpdatedAt||'',cm.idProduct||'',cm.trend||'',cm.low||'',cm.avg1||'',cm.avg7||'',cm.avg30||'',csvImageUrl(c)];
   });
   const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');
   download('cardoryx-esportazione-completa.csv','\ufeff'+csv,'text/csv;charset=utf-8');
