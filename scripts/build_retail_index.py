@@ -2296,10 +2296,28 @@ def cardgamecorner_parse_price(raw):
 
 def cardgamecorner_nm_it_price(page_html):
 
-    text = strip_html(page_html)
+    raw = str(page_html or "")
 
+    # Card Game Corner mostra la lingua principalmente
+    # nell'attributo ALT dell'immagine della bandiera.
+    # strip_html() eliminerebbe quel dato, quindi prima
+    # trasformiamo gli ALT delle immagini in testo visibile.
+    raw = re.sub(
+        r"<img\b[^>]*\balt\s*=\s*[\"']([^\"']+)[\"'][^>]*>",
+        r" \1 ",
+        raw,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    text = strip_html(raw)
+
+    # Esempio reale:
+    # Italiano NM Unl. Common Reverse Holo EUR 3,90
+    #
+    # Cerchiamo soltanto la combinazione esatta Italiano + NM
+    # e prendiamo il primo prezzo EUR appartenente a quella riga.
     match = re.search(
-        r"(?:^|\s)Italiano\s+NM(?:\s|\b).{0,160}?"
+        r"(?:^|\s)Italiano\s+NM\b.{0,220}?"
         r"EUR\s*([0-9]{1,5}(?:[.,][0-9]{1,2})?)",
         text,
         flags=re.IGNORECASE,
