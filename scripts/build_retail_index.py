@@ -2149,71 +2149,351 @@ def finalize_cards(cards):
 # RACCOLTA
 # ============================================================
 
-def test_cardgamecorner():
+def absolute_url(base_url, href):
 
-    url = (
-        "https://www.cardgamecorner.com/it/prodotti/"
-        "428/3873/pokemon-carte-singole-"
-        "prismatic-evolutions-pokemaster-ball-reverse"
+    return urllib.parse.urljoin(
+        base_url,
+        html.unescape(str(href or "").strip()),
     )
 
-    try:
 
-        html = http_get(
-            url
+CARDGAMECORNER_SEED_URLS = [
+    "https://www.cardgamecorner.com/it/prodotti/428/3873/"
+    "pokemon-carte-singole-prismatic-evolutions-pokemaster-ball-reverse"
+]
+
+CARDGAMECORNER_MAX_LIST_PAGES = 20
+CARDGAMECORNER_MAX_PRODUCTS = 500
+
+
+def cardgamecorner_extract_links(page_html, base_url):
+
+    hrefs = re.findall(
+        r"href\s*=\s*[\"']([^\"']+)[\"']",
+        str(page_html or ""),
+        flags=re.IGNORECASE,
+    )
+
+    product_links = []
+    list_links = []
+
+    for href in hrefs:
+
+        url = absolute_url(base_url, href)
+        parsed = urllib.parse.urlparse(url)
+
+        if parsed.netloc and "cardgamecorner.com" not in parsed.netloc.lower():
+            continue
+
+        path = parsed.path.lower()
+
+        if "/it/info-prodotto/" in path:
+            product_links.append(url)
+        elif "/it/prodotti/" in path:
+            list_links.append(url)
+
+    return (
+        list(dict.fromkeys(product_links)),
+        list(dict.fromkeys(list_links)),
+    )
+
+
+def cardgamecorner_collect_product_links(seed_url):
+
+    seed_parsed = urllib.parse.urlparse(seed_url)
+    seed_parts = [part for part in seed_parsed.path.split("/") if part]
+
+    category_id = seed_parts[3] if len(seed_parts) >= 4 else ""
+
+    queue = [seed_url]
+    visited = set()
+    products = []
+
+    while queue:
+
+        if len(visited) >= CARDGAMECORNER_MAX_LIST_PAGES:
+            break
+
+        url = queue.pop(0)
+
+        if url in visited:
+            continue
+
+        visited.add(url)
+        page_html = http_get(url)
+
+        product_links, list_links = cardgamecorner_extract_links(
+            page_html,
+            url,
         )
 
-        if not html:
-            raise RuntimeError(
-                "pagina vuota"
+        for product_url in product_links:
+            if product_url not in products:
+                products.append(product_url)
+
+            if len(products) >= CARDGAMECORNER_MAX_PRODUCTS:
+                return products
+
+        for list_url in list_links:
+
+            parsed = urllib.parse.urlparse(list_url)
+            parts = [part for part in parsed.path.split("/") if part]
+
+            if (
+                len(parts) < 4
+                or parts[0].lower() != "it"
+                or parts[1].lower() != "prodotti"
+                or parts[3] != category_id
+            ):
+                continue
+
+            if list_url not in visited and list_url not in queue:
+                queue.append(list_url)
+
+    return products
+
+
+def cardgamecorner_extract_title(page_html):
+
+    for tag in ("h1", "h2"):
+
+        match = re.search(
+            rf"<{tag}[^>]*>(.*?)</{tag}>",
+            str(page_html or ""),
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+
+        if match:
+
+            title = strip_html(match.group(1))
+
+            if title:
+                return title
+
+    return None
+
+
+def cardgamecorner_parse_price(raw):
+
+    raw = str(raw or "").strip().replace(" ", "")
+
+    if not raw:
+        return None
+
+    if "," in raw:
+        raw = raw.replace(".", "").replace(",", ".")
+
+    try:
+        value = float(raw)
+    except Exception:
+        return None
+
+    if not valid_price(value):
+        return None
+
+    return round(value, 2)
+
+
+def cardgamecorner_nm_it_price(page_html):
+
+    text = strip_html(page_html)
+
+    match = re.search(
+        r"(?:^|\s)Italiano\s+NM(?:\s|\b).{0,160}?"
+        r"EUR\s*([0-9]{1,5}(?:[.,][0-9]{1,2})?)",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    return cardgamecorner_parse_price(match.group(1))
+
+
+def cardgamecorner_product_identity(page_html):
+
+    title = cardgamecorner_extract_title(page_html)
+
+    if not title:
+        return None
+
+    variant = detect_variant(title)
+    card_name = clean_card_name(title)
+
+    if not card_name:
+        return None
+
+    return {
+        "name": card_name,
+        "variant": variant,
+    }
+
+
+def resolve_cardgamecorner_identity(cards, card_name, variant):
+
+    unique = {}
+
+    for card in cards.values():
+
+        if norm(card.get("name")) != norm(card_name):
+            continue
+
+        if norm(card.get("variant")) != norm(variant):
+            continue
+
+        if card.get("language") != "IT":
+            continue
+
+        if card.get("condition") != "NM/MINT":
+            continue
+
+        identity = (
+            norm(card.get("set")),
+            norm_number(card.get("number")),
+            norm(card.get("variant")),
+        )
+
+        unique[identity] = card
+
+    if len(unique) != 1:
+        return None
+
+    return next(iter(unique.values()))
+
+
+def parse_cardgamecorner_product(url, cards):
+
+    page_html = http_get(url)
+
+    identity = cardgamecorner_product_identity(page_html)
+
+    if not identity:
+        return None, "invalidTitle"
+
+    price = cardgamecorner_nm_it_price(page_html)
+
+    if price is None:
+        return None, "noItalianNM"
+
+    resolved = resolve_cardgamecorner_identity(
+        cards,
+        identity["name"],
+        identity["variant"],
+    )
+
+    if not resolved:
+        return None, "identityAmbiguous"
+
+    return {
+        "set": resolved["set"],
+        "number": resolved["number"],
+        "name": resolved["name"],
+        "variant": resolved["variant"],
+        "language": "IT",
+        "condition": "NM/MINT",
+        "price": price,
+        "url": url,
+    }, None
+
+
+def collect_cardgamecorner(cards):
+
+    print()
+    print("=== CARD GAME CORNER ===")
+
+    product_links = []
+
+    for seed_url in CARDGAMECORNER_SEED_URLS:
+
+        for link in cardgamecorner_collect_product_links(seed_url):
+
+            if link not in product_links:
+                product_links.append(link)
+
+    print("Prodotti individuati:", len(product_links))
+
+    if not product_links:
+        raise RuntimeError(
+            "Card Game Corner: nessun prodotto trovato"
+        )
+
+    checked_at = utc_now()
+
+    counters = {
+        "accepted": 0,
+        "invalidTitle": 0,
+        "noItalianNM": 0,
+        "identityAmbiguous": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+    }
+
+    for index, url in enumerate(product_links, start=1):
+
+        if index == 1 or index % 50 == 0:
+            print(
+                f"Card Game Corner scheda {index}/{len(product_links)}"
             )
 
-        print()
-        print(
-            "Card Game Corner accessibile"
+        try:
+            product, reason = parse_cardgamecorner_product(
+                url,
+                cards,
+            )
+        except Exception as exc:
+            counters["errors"] += 1
+            print("Errore Card Game Corner:", url, str(exc))
+            continue
+
+        if product is None:
+
+            if reason in counters:
+                counters[reason] += 1
+
+            continue
+
+        added = add_offer(
+            cards,
+            set_name=product["set"],
+            number=product["number"],
+            card_name=product["name"],
+            variant=product["variant"],
+            language="IT",
+            condition="NM/MINT",
+            offer={
+                "store": "Card Game Corner",
+                "price": product["price"],
+                "url": product["url"],
+                "language": "IT",
+                "condition": "NM/MINT",
+                "variant": product["variant"],
+                "checkedAt": checked_at,
+                "sourceType": "retail-store",
+            },
         )
 
-        print(
-            "Byte ricevuti:",
-            len(html)
-        )
+        if added:
+            counters["accepted"] += 1
+        else:
+            counters["duplicateStore"] += 1
 
-        return {
-            "source":
-                "Card Game Corner",
+    result = {
+        "source": "Card Game Corner",
+        "ok": True,
+        "products": len(product_links),
+    }
 
-            "ok":
-                True,
+    result.update(counters)
 
-            "testOnly":
-                True,
-        }
+    print(
+        "Card Game Corner accettate:",
+        counters["accepted"],
+    )
 
-    except Exception as exc:
+    return result
 
-        print()
-        print(
-            "Card Game Corner non disponibile:"
-        )
 
-        print(
-            str(exc)
-        )
-
-        return {
-            "source":
-                "Card Game Corner",
-
-            "ok":
-                False,
-
-            "error":
-                str(exc),
-
-            "testOnly":
-                True,
-        }
-        
 def collect_retail_data():
 
     cards = {}
@@ -2273,10 +2553,35 @@ def collect_retail_data():
 
     # --------------------------------------------------------
     # FONTE 3 — CARD GAME CORNER
-    # TEST ACCESSIBILITÀ
     # --------------------------------------------------------
 
-    result = test_cardgamecorner()
+    try:
+
+        result = collect_cardgamecorner(
+            cards
+        )
+
+    except Exception as exc:
+
+        print()
+        print(
+            "Card Game Corner non disponibile:"
+        )
+
+        print(
+            str(exc)
+        )
+
+        result = {
+            "source":
+                "Card Game Corner",
+            "ok":
+                False,
+            "error":
+                str(exc),
+            "accepted":
+                0,
+        }
 
     source_stats.append(
         result
