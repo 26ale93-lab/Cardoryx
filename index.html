@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.63 Branded Prints</title>
+<title>Cardoryx V2.1.64 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5881,7 +5881,13 @@ function categoryExportGroups(){
     if(!map.has(key))map.set(key,{key,label:raw,cards:[]});
     map.get(key).cards.push(c);
   }
-  return [...map.values()].sort((a,b)=>String(categoryDisplayLabel(a.label)).localeCompare(String(categoryDisplayLabel(b.label)),'it'));
+  const order=['protette','erba','fuoco','acqua','lampo','elettro','psico','lotta','oscurita','metallo','drago','incolore','aiuto','strumenti','stadio','oggettipokemon','energiebase','energiespeciali','energiespeciali'];
+  const rank=g=>{
+    const k=normText(g.label);
+    const i=order.indexOf(k);
+    return i<0?999:i;
+  };
+  return [...map.values()].sort((a,b)=>rank(a)-rank(b)||String(pdfCategoryLabel(a.label)).localeCompare(String(pdfCategoryLabel(b.label)),'it'));
 }
 function renderCategoryPdfSelect(){
   const el=document.getElementById('categoryPdfSelect'); if(!el)return;
