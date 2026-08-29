@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.65 Branded Prints</title>
+<title>Cardoryx V2.1.66 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -508,6 +508,8 @@
           <option value="recent">Più recenti</option>
           <option value="qty">Quantità maggiore</option>
           <option value="set">Espansione</option>
+          <option value="valueAsc">Valore crescente</option>
+          <option value="valueDesc">Valore decrescente</option>
         </select>
         <button class="btn alt" type="button" onclick="clearCatalogFilters()">Pulisci filtri</button>
       </div>
@@ -5390,7 +5392,7 @@ function openCardDetail(key){
     <div class="detail-card">
       <div>${img?`<img class="card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.display='none'" title="Tocca per ingrandire">`:''}</div>
       <div>
-        <div class="detail-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}</div>
+        <div class="detail-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}${csvSetTotal(c)?'/'+esc(csvSetTotal(c)):''}</div>
         <div class="detail-sub">${esc(c.rarity||'Rarità non indicata')}</div>${c.officialPage?`<div style="margin-top:6px"><a class="mee-source-link" href="${esc(c.officialPage)}" target="_blank" rel="noopener">Apri nell’archivio Pokémon ↗</a></div>`:''}
         <div class="detail-badges">
           <span class="collection-badge">${esc(cardCategory(c))}</span>
@@ -5646,6 +5648,16 @@ function renderCatalog(){
   if(sort==='recent')groups.sort((a,b)=>String(b.representative.addedAt||'').localeCompare(String(a.representative.addedAt||'')));
   else if(sort==='qty')groups.sort((a,b)=>b.qty-a.qty);
   else if(sort==='set')groups.sort((a,b)=>String(a.representative.set||'').localeCompare(String(b.representative.set||''),'it'));
+  else if(sort==='valueAsc'||sort==='valueDesc'){
+    groups.sort((a,b)=>{
+      const av=cardUnitPrice(a.representative),bv=cardUnitPrice(b.representative);
+      const aMissing=av==null||!Number.isFinite(Number(av)),bMissing=bv==null||!Number.isFinite(Number(bv));
+      if(aMissing&&bMissing)return String(a.representative.name||'').localeCompare(String(b.representative.name||''),'it');
+      if(aMissing)return 1;
+      if(bMissing)return -1;
+      return sort==='valueAsc'?Number(av)-Number(bv):Number(bv)-Number(av);
+    });
+  }
   else groups.sort((a,b)=>String(a.representative.name||'').localeCompare(String(b.representative.name||''),'it'));
   const visibleTotal=groups.reduce((a,g)=>a+g.qty,0);
   if(!groups.length){el.innerHTML=`<div class="catalog-empty"><div class="emoji">📚</div><b>Nessuna carta trovata</b><div class="small" style="margin-top:5px">Modifica i filtri oppure aggiungi una carta dallo Scanner.</div></div>`;return}
@@ -5656,7 +5668,7 @@ function renderCatalog(){
     <div>${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
       <div class="qty-control"><button type="button" onclick="changeGroupQty('${gkey}',-1)">−</button><strong>×${g.qty}</strong><button type="button" onclick="changeGroupQty('${gkey}',1)">+</button></div></div>
     <div class="collection-card-main"><h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
-      <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}<br>${esc(c.rarity||'Rarità non indicata')}</div>
+      <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}${csvSetTotal(c)?'/'+esc(csvSetTotal(c)):''}<br>${esc(c.rarity||'Rarità non indicata')}</div>
       ${cardPriceHtml({...c,qty:g.qty})}
       <div class="collection-badges"><span class="collection-badge">${esc(cardCategory(c))}</span><span class="collection-badge">${esc(c.variant||'Normale')}</span><span class="collection-badge">${esc(c.condition||'NM')}</span>${groupAllocationHtml(g)}${protectionCatalogBadge(c,g)}</div>
       <div class="collection-actions"><button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button><button class="btn alt" onclick="openGroupEditModal('${gkey}')">✏️ Modifica</button></div>
