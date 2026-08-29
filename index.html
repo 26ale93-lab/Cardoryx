@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.64 Branded Prints</title>
+<title>Cardoryx V2.1.65 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5313,6 +5313,7 @@ function findRecordByKey(key){
 
 
 function clearCatalogFilters(){
+  clearHomeCategoryFilter();
   ['catalogSearch','typeFilter','statusFilter','variantFilter','conditionFilter'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.value='';
@@ -5631,9 +5632,13 @@ function renderCatalog(){
     const c=g.representative;
     const blob=`${c.name||''} ${c.set||''} ${c.localId||''} ${c.rarity||''} ${c.variant||''} ${c.notes||''}`.toLowerCase();
     const category=cardCategory(c);
-    const categoryOk=homeTf
-      ? categoryFilterKey(category)===categoryFilterKey(homeTf)
-      : (!tf || categoryFilterKey(category)===categoryFilterKey(tf));
+    const requestedCategory=homeTf||tf;
+    const requestedKey=categoryFilterKey(requestedCategory);
+    const categoryOk=requestedKey==='protette'
+      ? g.records.some(r=>(r.status||'Disponibile')==='Protetta')
+      : (homeTf
+          ? categoryFilterKey(category)===requestedKey
+          : (!tf || categoryFilterKey(category)===requestedKey));
     return (!q||blob.includes(q)) && categoryOk &&
       (!sf||g.records.some(r=>(r.status||'Disponibile')===sf)) &&
       (!vf||(c.variant||'Normale')===vf) && (!cf||(c.condition||'NM')===cf);
