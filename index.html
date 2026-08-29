@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.47 Trainer Resolver</title>
+<title>Cardoryx V2.1.48 Safe Trainer Fallback</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -860,6 +860,37 @@ function energyKind(c){
   if(isEnergy)return 'Speciale';
   return '';
 }
+// Verified catalog fallbacks.
+// These are used ONLY when TCGdex/local saved metadata does not expose trainerType.
+// They never override a valid trainerType returned by the API.
+const VERIFIED_TRAINER_TYPE_FALLBACKS=[
+  {
+    trainerType:'Oggetto Pokémon',
+    names:['memoria nucleare','core memory'],
+    localIds:['70','070'],
+    sets:['equilibrio perfetto','perfect order']
+  }
+];
+
+function verifiedTrainerTypeFallback(c){
+  const name=normText(c?.name||'');
+  const local=String(c?.localId||'').replace(/^0+/,'')||'0';
+  const setName=normText(
+    (typeof c?.set==='string'?c.set:c?.set?.name) ||
+    c?.setName ||
+    c?._cardoryxSetName ||
+    ''
+  );
+
+  for(const row of VERIFIED_TRAINER_TYPE_FALLBACKS){
+    const nameOk=row.names.some(v=>normText(v)===name);
+    const localOk=row.localIds.some(v=>(String(v).replace(/^0+/,'')||'0')===local);
+    const setOk=!row.sets?.length || row.sets.some(v=>normText(v)===setName);
+    if(nameOk && localOk && setOk)return row.trainerType;
+  }
+  return '';
+}
+
 function canonicalTrainerType(c){
   // normText() intentionally produces compact tokens: "Pokémon Tool" -> "pokemontool".
   const raw=normText(c?.trainerType||c?.trainer_type||c?.trainer?.type||'');
@@ -874,7 +905,7 @@ function canonicalTrainerType(c){
   if(raw==='item'||raw==='strumento'||raw==='strumenti'||
      source.includes('traineritem')||source.includes('strumento'))return 'Strumento';
 
-  return '';
+  return verifiedTrainerTypeFallback(c);
 }
 function trainerCategory(c){
   const t=canonicalTrainerType(c);
