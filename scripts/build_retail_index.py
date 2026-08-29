@@ -2157,13 +2157,32 @@ def absolute_url(base_url, href):
     )
 
 
-CARDGAMECORNER_SEED_URLS = [
-    "https://www.cardgamecorner.com/it/prodotti/428/3873/"
-    "pokemon-carte-singole-prismatic-evolutions-pokemaster-ball-reverse"
+# ============================================================
+# CARD GAME CORNER
+# ============================================================
+
+# Ogni seed descrive una categoria reale di Card Game Corner.
+# Non contiene prezzi e non identifica singole carte:
+# serve soltanto a collegare la categoria del negozio al set TCGdex.
+CARDGAMECORNER_SEEDS = [
+    {
+        "url": (
+            "https://www.cardgamecorner.com/it/prodotti/428/3873/"
+            "pokemon-carte-singole-prismatic-evolutions-pokemaster-ball-reverse"
+        ),
+        "setEn": "Prismatic Evolutions",
+        "setIt": "Evoluzioni Prismatiche",
+    },
 ]
 
 CARDGAMECORNER_MAX_LIST_PAGES = 20
 CARDGAMECORNER_MAX_PRODUCTS = 500
+
+TCGDEX_EN = "https://api.tcgdex.net/v2/en"
+TCGDEX_IT = "https://api.tcgdex.net/v2/it"
+
+_TCGDEX_SET_LIST_CACHE = {}
+_TCGDEX_SET_DETAIL_CACHE = {}
 
 
 def cardgamecorner_extract_links(page_html, base_url):
@@ -2198,12 +2217,27 @@ def cardgamecorner_extract_links(page_html, base_url):
     )
 
 
+def cardgamecorner_category_id(url):
+
+    parsed = urllib.parse.urlparse(str(url or ""))
+    parts = [part for part in parsed.path.split("/") if part]
+
+    if (
+        len(parts) >= 4
+        and parts[0].lower() == "it"
+        and parts[1].lower() in {
+            "prodotti",
+            "info-prodotto",
+        }
+    ):
+        return parts[3]
+
+    return ""
+
+
 def cardgamecorner_collect_product_links(seed_url):
 
-    seed_parsed = urllib.parse.urlparse(seed_url)
-    seed_parts = [part for part in seed_parsed.path.split("/") if part]
-
-    category_id = seed_parts[3] if len(seed_parts) >= 4 else ""
+    category_id = cardgamecorner_category_id(seed_url)
 
     queue = [seed_url]
     visited = set()
@@ -2228,6 +2262,13 @@ def cardgamecorner_collect_product_links(seed_url):
         )
 
         for product_url in product_links:
+
+            if (
+                cardgamecorner_category_id(product_url)
+                != category_id
+            ):
+                continue
+
             if product_url not in products:
                 products.append(product_url)
 
@@ -2236,18 +2277,16 @@ def cardgamecorner_collect_product_links(seed_url):
 
         for list_url in list_links:
 
-            parsed = urllib.parse.urlparse(list_url)
-            parts = [part for part in parsed.path.split("/") if part]
-
             if (
-                len(parts) < 4
-                or parts[0].lower() != "it"
-                or parts[1].lower() != "prodotti"
-                or parts[3] != category_id
+                cardgamecorner_category_id(list_url)
+                != category_id
             ):
                 continue
 
-            if list_url not in visited and list_url not in queue:
+            if (
+                list_url not in visited
+                and list_url not in queue
+            ):
                 queue.append(list_url)
 
     return products
@@ -2300,8 +2339,6 @@ def cardgamecorner_nm_it_price(page_html):
 
     # Card Game Corner mostra la lingua principalmente
     # nell'attributo ALT dell'immagine della bandiera.
-    # strip_html() eliminerebbe quel dato, quindi prima
-    # trasformiamo gli ALT delle immagini in testo visibile.
     raw = re.sub(
         r"<img\b[^>]*\balt\s*=\s*[\"']([^\"']+)[\"'][^>]*>",
         r" \1 ",
@@ -2313,9 +2350,6 @@ def cardgamecorner_nm_it_price(page_html):
 
     # Esempio reale:
     # Italiano NM Unl. Common Reverse Holo EUR 3,90
-    #
-    # Cerchiamo soltanto la combinazione esatta Italiano + NM
-    # e prendiamo il primo prezzo EUR appartenente a quella riga.
     match = re.search(
         r"(?:^|\s)Italiano\s+NM\b.{0,220}?"
         r"EUR\s*([0-9]{1,5}(?:[.,][0-9]{1,2})?)",
@@ -2326,7 +2360,9 @@ def cardgamecorner_nm_it_price(page_html):
     if not match:
         return None
 
-    return cardgamecorner_parse_price(match.group(1))
+    return cardgamecorner_parse_price(
+        match.group(1)
+    )
 
 
 def cardgamecorner_product_identity(page_html):
@@ -2348,56 +2384,325 @@ def cardgamecorner_product_identity(page_html):
     }
 
 
-def resolve_cardgamecorner_identity(cards, card_name, variant):
+def tcgdex_sets(language):
 
-    unique = {}
+    language = str(language or "").lower()
 
-    for card in cards.values():
-
-        if norm(card.get("name")) != norm(card_name):
-            continue
-
-        if norm(card.get("variant")) != norm(variant):
-            continue
-
-        if card.get("language") != "IT":
-            continue
-
-        if card.get("condition") != "NM/MINT":
-            continue
-
-        identity = (
-            norm(card.get("set")),
-            norm_number(card.get("number")),
-            norm(card.get("variant")),
+    if language not in {"en", "it"}:
+        raise ValueError(
+            "Lingua TCGdex non supportata"
         )
 
-        unique[identity] = card
+    if language in _TCGDEX_SET_LIST_CACHE:
+        return _TCGDEX_SET_LIST_CACHE[language]
 
-    if len(unique) != 1:
+    base = (
+        TCGDEX_IT
+        if language == "it"
+        else TCGDEX_EN
+    )
+
+    data = http_get_json(
+        f"{base}/sets"
+    )
+
+    if not isinstance(data, list):
+        raise RuntimeError(
+            f"TCGdex {language}: lista set non valida"
+        )
+
+    _TCGDEX_SET_LIST_CACHE[language] = data
+
+    return data
+
+
+def tcgdex_find_set_id(set_en, set_it=""):
+
+    targets = [
+        ("en", set_en),
+        ("it", set_it),
+    ]
+
+    found_ids = set()
+
+    for language, target in targets:
+
+        if not str(target or "").strip():
+            continue
+
+        target_norm = norm(target)
+
+        for item in tcgdex_sets(language):
+
+            if not isinstance(item, dict):
+                continue
+
+            if norm(item.get("name")) != target_norm:
+                continue
+
+            set_id = str(
+                item.get("id")
+                or ""
+            ).strip()
+
+            if set_id:
+                found_ids.add(set_id)
+
+    if len(found_ids) != 1:
         return None
 
-    return next(iter(unique.values()))
+    return next(iter(found_ids))
 
 
-def parse_cardgamecorner_product(url, cards):
+def tcgdex_set_detail(language, set_id):
+
+    language = str(language or "").lower()
+    set_id = str(set_id or "").strip()
+
+    cache_key = (
+        language,
+        set_id,
+    )
+
+    if cache_key in _TCGDEX_SET_DETAIL_CACHE:
+        return _TCGDEX_SET_DETAIL_CACHE[
+            cache_key
+        ]
+
+    base = (
+        TCGDEX_IT
+        if language == "it"
+        else TCGDEX_EN
+    )
+
+    data = http_get_json(
+        f"{base}/sets/"
+        f"{urllib.parse.quote(set_id)}"
+    )
+
+    if not isinstance(data, dict):
+        raise RuntimeError(
+            f"TCGdex {language}: set non valido"
+        )
+
+    _TCGDEX_SET_DETAIL_CACHE[
+        cache_key
+    ] = data
+
+    return data
+
+
+def tcgdex_card_number(
+    local_id,
+    official_count,
+):
+
+    local_id = str(
+        local_id
+        or ""
+    ).strip()
+
+    if not local_id:
+        return None
+
+    if "/" in local_id:
+        return norm_number(local_id)
+
+    if local_id.isdigit():
+
+        width = len(
+            str(
+                official_count
+                or ""
+            )
+        )
+
+        if width > 0:
+            local_id = local_id.zfill(width)
+
+    if (
+        official_count
+        and str(official_count).isdigit()
+    ):
+        return (
+            f"{local_id}/"
+            f"{official_count}"
+        )
+
+    return norm_number(local_id)
+
+
+def tcgdex_resolve_card(
+    *,
+    set_id,
+    fallback_set_it,
+    card_name,
+):
+
+    # Prima proviamo il catalogo italiano:
+    # è la fonte migliore per confrontare i nomi
+    # presenti su Card Game Corner.
+    details = []
+
+    for language in ("it", "en"):
+
+        try:
+            detail = tcgdex_set_detail(
+                language,
+                set_id,
+            )
+        except Exception:
+            continue
+
+        if isinstance(detail, dict):
+            details.append(
+                (
+                    language,
+                    detail,
+                )
+            )
+
+    if not details:
+        return None
+
+    matches = {}
+
+    for language, detail in details:
+
+        cards = detail.get(
+            "cards"
+        )
+
+        if not isinstance(cards, list):
+            continue
+
+        official_count = (
+            detail.get(
+                "cardCount",
+                {},
+            ).get(
+                "official"
+            )
+        )
+
+        set_name = str(
+            detail.get("name")
+            or ""
+        ).strip()
+
+        for item in cards:
+
+            if not isinstance(item, dict):
+                continue
+
+            if (
+                norm(item.get("name"))
+                != norm(card_name)
+            ):
+                continue
+
+            local_id = str(
+                item.get("localId")
+                or ""
+            ).strip()
+
+            number = tcgdex_card_number(
+                local_id,
+                official_count,
+            )
+
+            if not number:
+                continue
+
+            card_id = str(
+                item.get("id")
+                or ""
+            ).strip()
+
+            key = (
+                card_id
+                or norm_number(number)
+            )
+
+            matches[key] = {
+                "number": number,
+                "tcgdexId": card_id,
+                "setLocalName": set_name,
+                "matchedLanguage": language,
+            }
+
+    if len(matches) != 1:
+        return None
+
+    resolved = next(
+        iter(matches.values())
+    )
+
+    # Preferiamo il nome italiano del set quando TCGdex
+    # lo espone; altrimenti usiamo la traduzione dichiarata
+    # nella configurazione della categoria.
+    italian_set_name = ""
+
+    try:
+        it_detail = tcgdex_set_detail(
+            "it",
+            set_id,
+        )
+
+        italian_set_name = str(
+            it_detail.get("name")
+            or ""
+        ).strip()
+
+    except Exception:
+        pass
+
+    resolved["set"] = (
+        italian_set_name
+        or fallback_set_it
+    )
+
+    if not resolved["set"]:
+        return None
+
+    return resolved
+
+
+def parse_cardgamecorner_product(
+    url,
+    seed,
+):
 
     page_html = http_get(url)
 
-    identity = cardgamecorner_product_identity(page_html)
+    identity = cardgamecorner_product_identity(
+        page_html
+    )
 
     if not identity:
         return None, "invalidTitle"
 
-    price = cardgamecorner_nm_it_price(page_html)
+    price = cardgamecorner_nm_it_price(
+        page_html
+    )
 
     if price is None:
         return None, "noItalianNM"
 
-    resolved = resolve_cardgamecorner_identity(
-        cards,
-        identity["name"],
-        identity["variant"],
+    set_id = seed.get(
+        "tcgdexSetId"
+    )
+
+    if not set_id:
+        return None, "setUnknown"
+
+    resolved = tcgdex_resolve_card(
+        set_id=set_id,
+        fallback_set_it=seed.get(
+            "setIt",
+            "",
+        ),
+        card_name=identity["name"],
     )
 
     if not resolved:
@@ -2406,32 +2711,107 @@ def parse_cardgamecorner_product(url, cards):
     return {
         "set": resolved["set"],
         "number": resolved["number"],
-        "name": resolved["name"],
-        "variant": resolved["variant"],
+        "name": identity["name"],
+        "variant": identity["variant"],
         "language": "IT",
         "condition": "NM/MINT",
         "price": price,
         "url": url,
+        "tcgdexId": resolved.get(
+            "tcgdexId",
+            "",
+        ),
     }, None
 
 
 def collect_cardgamecorner(cards):
 
     print()
-    print("=== CARD GAME CORNER ===")
+    print(
+        "=== CARD GAME CORNER ==="
+    )
 
-    product_links = []
+    prepared_seeds = []
 
-    for seed_url in CARDGAMECORNER_SEED_URLS:
+    for seed in CARDGAMECORNER_SEEDS:
 
-        for link in cardgamecorner_collect_product_links(seed_url):
+        seed = dict(seed)
 
-            if link not in product_links:
-                product_links.append(link)
+        set_id = tcgdex_find_set_id(
+            seed.get(
+                "setEn",
+                "",
+            ),
+            seed.get(
+                "setIt",
+                "",
+            ),
+        )
 
-    print("Prodotti individuati:", len(product_links))
+        if not set_id:
 
-    if not product_links:
+            print(
+                "Set TCGdex non identificato:",
+                seed.get(
+                    "setEn",
+                    "",
+                ),
+            )
+
+            continue
+
+        seed[
+            "tcgdexSetId"
+        ] = set_id
+
+        prepared_seeds.append(seed)
+
+        print(
+            "Set collegato:",
+            seed.get(
+                "setIt",
+            )
+            or seed.get(
+                "setEn",
+            ),
+            "->",
+            set_id,
+        )
+
+    if not prepared_seeds:
+        raise RuntimeError(
+            "Card Game Corner: "
+            "nessun set collegato a TCGdex"
+        )
+
+    product_entries = []
+
+    seen_urls = set()
+
+    for seed in prepared_seeds:
+
+        for link in cardgamecorner_collect_product_links(
+            seed["url"]
+        ):
+
+            if link in seen_urls:
+                continue
+
+            seen_urls.add(link)
+
+            product_entries.append(
+                (
+                    link,
+                    seed,
+                )
+            )
+
+    print(
+        "Prodotti individuati:",
+        len(product_entries),
+    )
+
+    if not product_entries:
         raise RuntimeError(
             "Card Game Corner: nessun prodotto trovato"
         )
@@ -2442,26 +2822,51 @@ def collect_cardgamecorner(cards):
         "accepted": 0,
         "invalidTitle": 0,
         "noItalianNM": 0,
+        "setUnknown": 0,
         "identityAmbiguous": 0,
         "duplicateStore": 0,
         "errors": 0,
     }
 
-    for index, url in enumerate(product_links, start=1):
+    for index, (
+        url,
+        seed,
+    ) in enumerate(
+        product_entries,
+        start=1,
+    ):
 
-        if index == 1 or index % 50 == 0:
+        if (
+            index == 1
+            or index % 50 == 0
+        ):
             print(
-                f"Card Game Corner scheda {index}/{len(product_links)}"
+                "Card Game Corner scheda "
+                f"{index}/"
+                f"{len(product_entries)}"
             )
 
         try:
-            product, reason = parse_cardgamecorner_product(
-                url,
-                cards,
+
+            product, reason = (
+                parse_cardgamecorner_product(
+                    url,
+                    seed,
+                )
             )
+
         except Exception as exc:
-            counters["errors"] += 1
-            print("Errore Card Game Corner:", url, str(exc))
+
+            counters[
+                "errors"
+            ] += 1
+
+            print(
+                "Errore Card Game Corner:",
+                url,
+                str(exc),
+            )
+
             continue
 
         if product is None:
@@ -2480,26 +2885,53 @@ def collect_cardgamecorner(cards):
             language="IT",
             condition="NM/MINT",
             offer={
-                "store": "Card Game Corner",
-                "price": product["price"],
-                "url": product["url"],
-                "language": "IT",
-                "condition": "NM/MINT",
-                "variant": product["variant"],
-                "checkedAt": checked_at,
-                "sourceType": "retail-store",
+                "store":
+                    "Card Game Corner",
+
+                "price":
+                    product["price"],
+
+                "url":
+                    product["url"],
+
+                "language":
+                    "IT",
+
+                "condition":
+                    "NM/MINT",
+
+                "variant":
+                    product["variant"],
+
+                "checkedAt":
+                    checked_at,
+
+                "sourceType":
+                    "retail-store",
             },
         )
 
         if added:
-            counters["accepted"] += 1
+            counters[
+                "accepted"
+            ] += 1
         else:
-            counters["duplicateStore"] += 1
+            counters[
+                "duplicateStore"
+            ] += 1
 
     result = {
-        "source": "Card Game Corner",
-        "ok": True,
-        "products": len(product_links),
+        "source":
+            "Card Game Corner",
+
+        "ok":
+            True,
+
+        "products":
+            len(product_entries),
+
+        "tcgdexIdentity":
+            True,
     }
 
     result.update(counters)
@@ -2507,6 +2939,11 @@ def collect_cardgamecorner(cards):
     print(
         "Card Game Corner accettate:",
         counters["accepted"],
+    )
+
+    print(
+        "Card Game Corner identità ambigue:",
+        counters["identityAmbiguous"],
     )
 
     return result
