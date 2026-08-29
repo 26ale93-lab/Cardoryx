@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.60 Branded Prints</title>
+<title>Cardoryx V2.1.61 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -663,7 +663,7 @@
     <div class="card danger-zone">
       <div class="danger-kicker">ZONA PROTETTA</div>
       <div class="section-title">🗑️ Azzera catalogo</div>
-      <div class="footer-note">Elimina tutte le carte salvate su questo dispositivo. Richiede una seconda conferma.</div>
+      <div class="footer-note">Elimina tutte le carte salvate su questo dispositivo. I mazzi restano, ma vengono svuotati. Richiede una seconda conferma.</div>
       <div class="spacer"></div>
       <button class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button>
     </div>
@@ -771,7 +771,7 @@
       </div>
       <button type="button" class="condition-close" onclick="closeResetModal()">×</button>
     </div>
-    <p class="condition-intro">Vuoi eliminare tutte le carte salvate? Questa operazione non può essere annullata senza un backup JSON.</p>
+    <p class="condition-intro">Vuoi eliminare tutte le carte salvate? I mazzi verranno mantenuti, ma tutte le carte assegnate ai mazzi saranno rimosse. Questa operazione non può essere annullata senza un backup JSON.</p>
     <div class="grid">
       <button class="btn alt" onclick="closeResetModal()">Annulla</button>
       <button class="btn red" onclick="confirmResetCatalog()">Sì, elimina tutto</button>
@@ -5201,9 +5201,19 @@ function renderSettings(){
 function openResetModal(){resetModal.classList.add('open');resetModal.setAttribute('aria-hidden','false')}
 function closeResetModal(){resetModal.classList.remove('open');resetModal.setAttribute('aria-hidden','true')}
 function confirmResetCatalog(){
+  // Azzera il catalogo senza lasciare allocazioni fantasma nei mazzi.
+  // I mazzi restano come contenitori, ma vengono svuotati.
   db=[];
+  decks=decks.map(d=>({...d,entries:[]}));
+  currentDeckId=null;
+
   ['cardoryx_db','cardoryx_v1','cardoryx_v2','cardoryx_v3'].forEach(k=>localStorage.removeItem(k));
-  persist();closeResetModal();showView('home');
+  localStorage.setItem(DECK_KEY,JSON.stringify(decks));
+
+  persist();
+  try{renderDecks()}catch(e){console.error('Cardoryx render decks after reset:',e)}
+  closeResetModal();
+  showView('home');
 }
 let activeHomeCategoryFilter='';
 
