@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.59 Branded Prints</title>
+<title>Cardoryx V2.1.60 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5873,6 +5873,11 @@ async function downloadCollectionPDF(withPrices=true){
       ? `${cards.length} record · ${totalCopies} carte · Valore EUR ${totalValue.toFixed(2)}`
       : `${cards.length} record · ${totalCopies} carte`;
 
+    const PAGE_TOP=27;
+    const PAGE_BOTTOM=200;
+    const SET_TITLE_H=5;
+    const MIN_TABLE_H=12;
+
     const drawHeader=()=>{
       if(logo)try{doc.addImage(logo,'PNG',10,7,10,10)}catch(e){}
       doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text('Cardoryx',logo?23:10,12);
@@ -5880,16 +5885,35 @@ async function downloadCollectionPDF(withPrices=true){
       doc.setDrawColor(60);doc.setLineWidth(.45);doc.line(10,20,287,20);
       doc.setTextColor(0);
     };
+
+    const drawSetTitle=(label,y)=>{
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(0);
+      doc.text(pdfSafe(label),10,y);
+    };
+
     const groups=new Map();
     for(const c of cards){
       const k=String(c?.set||'Set non specificato');
       if(!groups.has(k))groups.set(k,[]);
       groups.get(k).push(c);
     }
-    let firstTable=true;
+
+    drawHeader();
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(80);
+    doc.text(pdfSafe(summary),10,25);
+    doc.setTextColor(0);
+
+    let cursorY=30;
+
     for(const [setName,list] of groups){
       const setId=list.find(c=>c?._cardoryxSetId)?._cardoryxSetId||'';
       const total=list.map(c=>csvSetTotal(c)).find(Boolean)||'';
+      const setLabel=`${setName}${setId?'  '+setId:''}${total?' · '+total+' carte set':''}`;
+
       const rows=list.map(c=>{
         const q=Math.max(1,Number(c?.qty)||1),info=cardPriceInfo(c),unit=info?.value,den=csvSetTotal(c);
         const base=[
@@ -5904,14 +5928,26 @@ async function downloadCollectionPDF(withPrices=true){
         if(withPrices)base.push(unit==null?'—':`EUR ${Number(unit).toFixed(2)}`,unit==null?'—':`EUR ${(Number(unit)*q).toFixed(2)}`);
         return base;
       });
+
       const head=[withPrices
         ?['Numero','Nome','Tipo','Finitura / Edizione','Q.tà','Stato / Allocazione','Cond.','Val. unit.','Totale']
         :['Numero','Nome','Tipo','Finitura / Edizione','Q.tà','Stato / Allocazione','Cond.']];
-      const startY=firstTable?30:(doc.lastAutoTable?.finalY||26)+8;
-      if(firstTable){drawHeader();doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(80);doc.text(pdfSafe(summary),10,25);doc.setTextColor(0)}
+
+      // Il titolo del set deve restare insieme almeno all'intestazione e alla prima riga.
+      if(cursorY + SET_TITLE_H + MIN_TABLE_H > PAGE_BOTTOM){
+        doc.addPage();
+        drawHeader();
+        cursorY=PAGE_TOP;
+      }
+
+      drawSetTitle(setLabel,cursorY);
+      const tableStartY=cursorY+3;
+
+      let tableFirstPage=doc.internal.getCurrentPageInfo().pageNumber;
+
       doc.autoTable({
-        startY,
-        margin:{top:27,left:10,right:10,bottom:10},
+        startY:tableStartY,
+        margin:{top:32,left:10,right:10,bottom:10},
         head,
         body:rows,
         theme:'grid',
@@ -5921,18 +5957,20 @@ async function downloadCollectionPDF(withPrices=true){
         columnStyles:withPrices
           ?{0:{cellWidth:18},1:{cellWidth:39},2:{cellWidth:24},3:{cellWidth:52},4:{cellWidth:10,halign:'right'},5:{cellWidth:45},6:{cellWidth:12},7:{cellWidth:24,halign:'right'},8:{cellWidth:24,halign:'right'}}
           :{0:{cellWidth:20},1:{cellWidth:55},2:{cellWidth:30},3:{cellWidth:65},4:{cellWidth:12,halign:'right'},5:{cellWidth:70},6:{cellWidth:15}},
-        didDrawPage:()=>drawHeader(),
-        willDrawPage:(data)=>{
-          // Set title above each table; on continuation pages autoTable repeats column headers.
+        didDrawPage:(data)=>{
+          const pageNo=doc.internal.getCurrentPageInfo().pageNumber;
+          drawHeader();
+          // Se un set continua su una nuova pagina, ripeti anche il nome del set
+          // sopra l'intestazione della tabella.
+          if(pageNo!==tableFirstPage){
+            drawSetTitle(`${setLabel} (continua)`,27);
+          }
         }
       });
-      // Draw set label just above the table. If autoTable moved to a new page, use its page start.
-      const page=doc.internal.getCurrentPageInfo().pageNumber;
-      const y=Math.max(24,(doc.lastAutoTable?.startY||startY)-2);
-      doc.setPage(page);doc.setFont('helvetica','bold');doc.setFontSize(9);
-      doc.text(pdfSafe(`${setName}${setId?'  '+setId:''}${total?' · '+total+' carte set':''}`),10,y);
-      firstTable=false;
+
+      cursorY=(doc.lastAutoTable?.finalY||tableStartY)+8;
     }
+
     const stamp=new Date().toISOString().slice(0,10);
     const name=`Cardoryx-${withPrices?'Inventario':'Lista-collezione'}-${stamp}.pdf`;
     doc.save(name);
@@ -5943,6 +5981,7 @@ async function downloadCollectionPDF(withPrices=true){
     if(btn){btn.disabled=false;btn.textContent=oldText||'📥 Scarica PDF'}
   }
 }
+
 function printInventory(withPrices=true){
   const cards=printOrderedCards();
   if(!cards.length){alert('Nessuna carta da stampare.');return}
