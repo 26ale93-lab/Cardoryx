@@ -2170,9 +2170,37 @@ def collect_retail_data():
     # FONTE 2
     # --------------------------------------------------------
 
-    result = collect_cartemagic(
-        cards
-    )
+        try:
+
+        result = collect_cartemagic(
+            cards
+        )
+
+    except Exception as exc:
+
+        print()
+        print(
+            "CarteMagic non disponibile:"
+        )
+
+        print(
+            str(exc)
+        )
+
+        result = {
+
+            "source":
+                "CarteMagic",
+
+            "ok":
+                False,
+
+            "error":
+                str(exc),
+
+            "accepted":
+                0,
+        }
 
     source_stats.append(
         result
