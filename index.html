@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.49 Safe Trainer Display Fix</title>
+<title>Cardoryx V2.1.50 CSV Export Fix</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5684,11 +5684,16 @@ function exportJSON(){
   const stamp=new Date().toISOString().slice(0,10);
   download(`cardoryx-backup-completo-${stamp}.json`,JSON.stringify(buildFullBackup(),null,2),'application/json');
 }
+function csvImageUrl(c){
+  const candidates=[c?.originalImage,c?.image,...(Array.isArray(c?.imageCandidates)?c.imageCandidates:[])];
+  const url=candidates.find(v=>typeof v==='string' && /^https?:\/\//i.test(v.trim()));
+  return url?url.trim():'';
+}
 function exportCSV(){
   const h=['Nome','Set','Numero','ID TCGdex','Categoria','Tipo','Evoluzione','Rarita','Finitura','Stamp / Edizione','Prize Pack Series','Quantita','Stato','Condizione','Posizione','Note','Valore unitario EUR','Valore totale EUR','Fonte valore','Finitura verificata','Aggiornamento valore','Cardmarket trend','Cardmarket minimo','Cardmarket media 7gg','Cardmarket media 30gg','Immagine'];
   const rows=db.map(c=>{
     const info=cardPriceInfo(c),unit=info.value,qty=Math.max(1,Number(c.qty)||1),cm=c?.pricing?.cardmarket||{};
-    return [c.name,c.set,c.localId,c.tcgdexId||c.id||'',c.category,c.type,c.stage,c.rarity,canonicalVariant(c.variant||'Normal'),canonicalStamp(c.stamp||'None'),normalizedPlaySeries(c.playSeries||''),qty,c.status,c.condition,cardCategory(c),c.notes||'',unit==null?'':unit,unit==null?'':unit*qty,info.source||'Cardmarket',info.exact?'SI':'NO',info.updated||c.priceUpdatedAt||'',cm.trend||'',cm.low||'',cm.avg7||'',cm.avg30||'',cardImageSrc(c,'high')||cardImageSrc(c,'low')||''];
+    return [c.name,c.set,c.localId,c.tcgdexId||c.id||'',c.category,c.type,c.stage,c.rarity,canonicalVariant(c.variant||'Normal'),canonicalStamp(c.stamp||'None'),normalizedPlaySeries(c.playSeries||''),qty,c.status,c.condition,cardCategory(c),c.notes||'',unit==null?'':unit,unit==null?'':unit*qty,info.source||'Cardmarket',info.exact?'SI':'NO',info.updated||c.priceUpdatedAt||'',cm.trend||'',cm.low||'',cm.avg7||'',cm.avg30||'',csvImageUrl(c)];
   });
   const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');
   download('cardoryx-esportazione-completa.csv','\ufeff'+csv,'text/csv;charset=utf-8');
