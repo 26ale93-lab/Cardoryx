@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.58 Branded Prints</title>
+<title>Cardoryx V2.1.59 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -637,8 +637,22 @@
       <div class="settings-stack">
         <div class="condition-intro" style="margin-bottom:10px"><b>Backup completo:</b> carte, quantità, varianti, condizioni, note, ID/immagini, prezzi e valori, mazzi e preferenze Scanner. Il CSV include anche valore unitario e totale.</div>
         <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV completo</button>
-        <button class="btn alt big" type="button" onclick="printInventory(true)">🖨️ Stampa inventario</button>
-        <button class="btn alt big" type="button" onclick="printInventory(false)">📋 Stampa lista collezione</button>
+        <div class="card" style="margin:0;padding:12px">
+          <div class="section-title" style="font-size:15px">📄 Inventario collezione</div>
+          <div class="footer-note" style="margin-bottom:8px">Con prezzi, quantità, stato e allocazioni.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="btn alt" type="button" onclick="downloadCollectionPDF(true)">📥 Scarica PDF</button>
+            <button class="btn alt" type="button" onclick="printInventory(true)">🖨️ Stampa</button>
+          </div>
+        </div>
+        <div class="card" style="margin:0;padding:12px">
+          <div class="section-title" style="font-size:15px">📋 Lista collezione</div>
+          <div class="footer-note" style="margin-bottom:8px">Versione essenziale senza prezzi.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="btn alt" type="button" onclick="downloadCollectionPDF(false)">📥 Scarica PDF</button>
+            <button class="btn alt" type="button" onclick="printInventory(false)">🖨️ Stampa</button>
+          </div>
+        </div>
         <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup completo JSON</button>
         <label class="btn alt big settings-file-label">📥 Ripristina backup JSON
           <input id="settingsImportFile" type="file" accept="application/json,.json" hidden>
@@ -5809,6 +5823,125 @@ function printOrderedCards(){
 }
 function printLogoUrl(){
   try{return new URL('cardoryx-logo.png',location.href).href}catch(e){return 'cardoryx-logo.png'}
+}
+
+function loadExternalScript(src){
+  return new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){if(existing.dataset.loaded==='1')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return}
+    const s=document.createElement('script');s.src=src;s.async=true;
+    s.onload=()=>{s.dataset.loaded='1';resolve()};s.onerror=reject;document.head.appendChild(s);
+  });
+}
+async function ensurePdfLibraries(){
+  if(window.jspdf?.jsPDF && window.jspdf?.jsPDF?.API?.autoTable)return;
+  await loadExternalScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js');
+  await loadExternalScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js');
+  if(!window.jspdf?.jsPDF)throw new Error('jsPDF non disponibile');
+}
+async function pdfLogoData(){
+  try{
+    const r=await fetch(printLogoUrl(),{cache:'force-cache'});
+    if(!r.ok)return null;
+    const b=await r.blob();
+    return await new Promise((resolve,reject)=>{
+      const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(b);
+    });
+  }catch(e){return null}
+}
+function pdfSafe(v){
+  return String(v??'').replace(/[\u2013\u2014]/g,'-').replace(/\u00d7/g,'x');
+}
+async function downloadCollectionPDF(withPrices=true){
+  const cards=printOrderedCards();
+  if(!cards.length){alert('Nessuna carta da esportare.');return}
+  const btn=document.activeElement;
+  const oldText=btn?.textContent;
+  try{
+    if(btn){btn.disabled=true;btn.textContent='⏳ Creo PDF...'}
+    await ensurePdfLibraries();
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
+    const logo=await pdfLogoData();
+    const title=withPrices?'Inventario collezione':'Lista collezione';
+    const totalCopies=cards.reduce((s,c)=>s+Math.max(1,Number(c?.qty)||1),0);
+    const totalValue=cards.reduce((s,c)=>{
+      const v=cardPriceInfo(c)?.value;
+      return s+(v==null?0:Number(v)*Math.max(1,Number(c?.qty)||1));
+    },0);
+    const summary=withPrices
+      ? `${cards.length} record · ${totalCopies} carte · Valore EUR ${totalValue.toFixed(2)}`
+      : `${cards.length} record · ${totalCopies} carte`;
+
+    const drawHeader=()=>{
+      if(logo)try{doc.addImage(logo,'PNG',10,7,10,10)}catch(e){}
+      doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text('Cardoryx',logo?23:10,12);
+      doc.setFontSize(9);doc.setTextColor(80);doc.text(pdfSafe(title),logo?23:10,17);
+      doc.setDrawColor(60);doc.setLineWidth(.45);doc.line(10,20,287,20);
+      doc.setTextColor(0);
+    };
+    const groups=new Map();
+    for(const c of cards){
+      const k=String(c?.set||'Set non specificato');
+      if(!groups.has(k))groups.set(k,[]);
+      groups.get(k).push(c);
+    }
+    let firstTable=true;
+    for(const [setName,list] of groups){
+      const setId=list.find(c=>c?._cardoryxSetId)?._cardoryxSetId||'';
+      const total=list.map(c=>csvSetTotal(c)).find(Boolean)||'';
+      const rows=list.map(c=>{
+        const q=Math.max(1,Number(c?.qty)||1),info=cardPriceInfo(c),unit=info?.value,den=csvSetTotal(c);
+        const base=[
+          pdfSafe(`${c?.localId||''}${den?'/'+den:''}`),
+          pdfSafe(c?.name||''),
+          pdfSafe(printMainType(c)),
+          pdfSafe(printVariant(c)),
+          String(q),
+          pdfSafe(csvAllocation(c)),
+          pdfSafe(c?.condition||'')
+        ];
+        if(withPrices)base.push(unit==null?'—':`EUR ${Number(unit).toFixed(2)}`,unit==null?'—':`EUR ${(Number(unit)*q).toFixed(2)}`);
+        return base;
+      });
+      const head=[withPrices
+        ?['Numero','Nome','Tipo','Finitura / Edizione','Q.tà','Stato / Allocazione','Cond.','Val. unit.','Totale']
+        :['Numero','Nome','Tipo','Finitura / Edizione','Q.tà','Stato / Allocazione','Cond.']];
+      const startY=firstTable?30:(doc.lastAutoTable?.finalY||26)+8;
+      if(firstTable){drawHeader();doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(80);doc.text(pdfSafe(summary),10,25);doc.setTextColor(0)}
+      doc.autoTable({
+        startY,
+        margin:{top:27,left:10,right:10,bottom:10},
+        head,
+        body:rows,
+        theme:'grid',
+        styles:{font:'helvetica',fontSize:7.2,cellPadding:1.5,valign:'middle',overflow:'linebreak'},
+        headStyles:{fontStyle:'bold',fillColor:[238,238,238],textColor:[20,20,20],lineColor:[170,170,170],lineWidth:.15},
+        bodyStyles:{lineColor:[190,190,190],lineWidth:.12},
+        columnStyles:withPrices
+          ?{0:{cellWidth:18},1:{cellWidth:39},2:{cellWidth:24},3:{cellWidth:52},4:{cellWidth:10,halign:'right'},5:{cellWidth:45},6:{cellWidth:12},7:{cellWidth:24,halign:'right'},8:{cellWidth:24,halign:'right'}}
+          :{0:{cellWidth:20},1:{cellWidth:55},2:{cellWidth:30},3:{cellWidth:65},4:{cellWidth:12,halign:'right'},5:{cellWidth:70},6:{cellWidth:15}},
+        didDrawPage:()=>drawHeader(),
+        willDrawPage:(data)=>{
+          // Set title above each table; on continuation pages autoTable repeats column headers.
+        }
+      });
+      // Draw set label just above the table. If autoTable moved to a new page, use its page start.
+      const page=doc.internal.getCurrentPageInfo().pageNumber;
+      const y=Math.max(24,(doc.lastAutoTable?.startY||startY)-2);
+      doc.setPage(page);doc.setFont('helvetica','bold');doc.setFontSize(9);
+      doc.text(pdfSafe(`${setName}${setId?'  '+setId:''}${total?' · '+total+' carte set':''}`),10,y);
+      firstTable=false;
+    }
+    const stamp=new Date().toISOString().slice(0,10);
+    const name=`Cardoryx-${withPrices?'Inventario':'Lista-collezione'}-${stamp}.pdf`;
+    doc.save(name);
+  }catch(e){
+    console.error(e);
+    alert('Non riesco a creare il PDF. Controlla la connessione e riprova.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=oldText||'📥 Scarica PDF'}
+  }
 }
 function printInventory(withPrices=true){
   const cards=printOrderedCards();
