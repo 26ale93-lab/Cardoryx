@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.66 Branded Prints</title>
+<title>Cardoryx V2.1.67 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2418,7 +2418,14 @@ function cardImgOnError(img,c){
 function cardImageSrc(c,quality='low'){
   if(!c)return '';
   if(c._imageUrl)return c._imageUrl;
-  const img=String(c.image||'');
+
+  // Per le carte già identificate, l'immagine ufficiale è la copertina
+  // principale. La foto scattata dall'utente resta salvata in c.image e
+  // continua quindi a essere disponibile nei backup/dati.
+  const official=String(c.originalImage||'').trim();
+  const personal=String(c.image||'').trim();
+  const img=official||personal;
+
   if(!img&&Array.isArray(c.imageCandidates)&&c.imageCandidates.length)return c.imageCandidates[0];
   if(!img)return '';
   if(img.startsWith('data:')||img.startsWith('blob:')||/\.(?:jpg|jpeg|png|webp)(?:\?|$)/i.test(img))return img;
