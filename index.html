@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#111827" />
-<title>Cardoryx V2.1.62 Branded Prints</title>
+<title>Cardoryx V2.1.63 Branded Prints</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5869,6 +5869,10 @@ function pdfSafe(v){
   return String(v??'').replace(/[\u2013\u2014]/g,'-').replace(/\u00d7/g,'x');
 }
 
+function pdfCategoryLabel(v){
+  const s=String(categoryDisplayLabel(v)||v||'Altro');
+  return s.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu,'').replace(/^[^\p{L}\p{N}]+/gu,'').trim();
+}
 function categoryExportGroups(){
   const map=new Map();
   for(const c of printOrderedCards()){
@@ -5900,7 +5904,7 @@ async function downloadCategoryPDF(){
     const {jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
     const logo=await pdfLogoData();
-    const title=wanted==='__all__'?'Collezione per tipo':`Collezione - ${categoryDisplayLabel(groups[0].label)}`;
+    const title=wanted==='__all__'?'Collezione per tipo':`Collezione - ${pdfCategoryLabel(groups[0].label)}`;
     const copies=groups.reduce((s,g)=>s+g.cards.reduce((x,c)=>x+Math.max(1,Number(c?.qty)||1),0),0);
     const header=()=>{
       if(logo)try{doc.addImage(logo,'PNG',10,7,10,10)}catch(e){}
@@ -5914,7 +5918,7 @@ async function downloadCategoryPDF(){
     let y=30;
     for(const g of groups){
       const qty=g.cards.reduce((s,c)=>s+Math.max(1,Number(c?.qty)||1),0);
-      const label=`${categoryDisplayLabel(g.label)} (${qty})`;
+      const label=`${pdfCategoryLabel(g.label)} (${qty})`;
       if(y+17>200){doc.addPage();header();y=27}
       catTitle(label,y);
       const rows=[...g.cards].sort((a,b)=>{
@@ -5924,7 +5928,7 @@ async function downloadCategoryPDF(){
         const nb=parseInt(String(b?.localId||'').match(/\d+/)?.[0]||'999999',10);
         return na-nb||String(a?.name||'').localeCompare(String(b?.name||''),'it');
       }).map(c=>[
-        pdfSafe(c?.localId||''),pdfSafe(c?.name||''),pdfSafe(c?.set||''),pdfSafe(printVariant(c)),
+        pdfSafe(`${c?.localId||''}${csvSetTotal(c)?'/'+csvSetTotal(c):''}`),pdfSafe(c?.name||''),pdfSafe(c?.set||''),pdfSafe(printVariant(c)),
         String(Math.max(1,Number(c?.qty)||1)),pdfSafe(csvAllocation(c)),pdfSafe(c?.condition||'')
       ]);
       const first=doc.internal.getCurrentPageInfo().pageNumber;
