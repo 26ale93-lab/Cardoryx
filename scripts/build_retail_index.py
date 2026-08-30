@@ -340,6 +340,46 @@ def parse_euro_price(value):
     )
 
 
+def parse_plain_price(value):
+
+    text = str(value or "").strip()
+
+    if not text:
+        return None
+
+    text = (
+        text
+        .replace("€", "")
+        .replace("EUR", "")
+        .strip()
+    )
+
+    # Formati ammessi:
+    # 0.90
+    # 0,90
+    # 12
+    # 12.90
+    match = re.search(
+        r"^\s*(\d{1,5}(?:[.,]\d{1,2})?)\s*$",
+        text,
+    )
+
+    if not match:
+        return None
+
+    raw = match.group(1).replace(",", ".")
+
+    try:
+        price = float(raw)
+    except Exception:
+        return None
+
+    if not valid_price(price):
+        return None
+
+    return round(price, 2)
+
+
 # ============================================================
 # SET
 # ============================================================
@@ -2241,6 +2281,7 @@ CARDGAMECORNER_SEEDS = [
         ),
         "setEn": "Prismatic Evolutions",
         "setIt": "Evoluzioni Prismatiche",
+        "tcgdexSetId": "sv08.5",
     },
 ]
 
@@ -2850,23 +2891,44 @@ def collect_cardgamecorner(cards):
 
         seed = dict(seed)
 
-        try:
-            set_id = tcgdex_find_set_id(
-                seed.get("setEn", ""),
-                seed.get("setIt", ""),
-            )
-        except Exception as exc:
-            print(
-                "Card Game Corner / TCGdex non disponibile:",
-                exc,
-                flush=True,
-            )
-            continue
+        set_id = str(
+            seed.get("tcgdexSetId")
+            or ""
+        ).strip()
+
+        if not set_id:
+            try:
+                set_id = tcgdex_find_set_id(
+                    seed.get("setEn", ""),
+                    seed.get("setIt", ""),
+                )
+            except Exception as exc:
+                print(
+                    "Card Game Corner / TCGdex non disponibile:",
+                    exc,
+                    flush=True,
+                )
+                continue
 
         if not set_id:
             print(
                 "Set TCGdex non identificato:",
                 seed.get("setEn", ""),
+                flush=True,
+            )
+            continue
+
+        # Verifica che l'ID esplicito/dinamico esista davvero.
+        try:
+            tcgdex_set_detail(
+                "en",
+                set_id,
+            )
+        except Exception as exc:
+            print(
+                "Set TCGdex non raggiungibile:",
+                set_id,
+                exc,
                 flush=True,
             )
             continue
@@ -3191,7 +3253,7 @@ def bsa_available_price(product):
         if variant.get("available") is not True:
             continue
 
-        price = parse_price(
+        price = parse_plain_price(
             variant.get("price")
         )
 
@@ -3369,7 +3431,10 @@ def collect_bsa_store(cards):
 
     if stats["accepted"] <= 0:
         raise RuntimeError(
-            "BSA Store non ha prodotto nessuna offerta verificata"
+            "BSA Store non ha prodotto nessuna offerta verificata "
+            f"(prodotti={stats['products']}, "
+            f"invalidTitle={stats['invalidTitle']}, "
+            f"priceUnavailable={stats['priceUnavailable']})"
         )
 
     print()
