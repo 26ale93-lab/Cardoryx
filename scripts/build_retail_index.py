@@ -2780,7 +2780,7 @@ def federicstore_parse_block(block):
 
 
 # ============================================================
-# DANYSTORE — V20
+# DANYSTORE — V20.1
 # ============================================================
 
 def danystore_parse_title(title):
@@ -2824,7 +2824,7 @@ def collect_danystore(cards):
 
     try:
         for page in range(1, 80):
-            payload = fetch_json(DANYSTORE_COLLECTION_URL.format(page=page))
+            payload = http_get_json(DANYSTORE_COLLECTION_URL.format(page=page))
             products = payload.get("products") or []
             if not products:
                 break
