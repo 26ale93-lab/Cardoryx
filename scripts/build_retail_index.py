@@ -3830,7 +3830,7 @@ def mycomics_product_price(
     return prices[0]
 
 
-def mycomics_product_is_valid(
+def mycomics_availability_status(
     page_html,
 ):
 
@@ -3839,38 +3839,102 @@ def mycomics_product_is_valid(
         or ""
     )
 
-    text = strip_html(
+    raw_lower = raw.lower()
+
+    visible_text = strip_html(
         raw
     )
 
     normalized = norm(
-        text
+        visible_text
     )
 
-    if "prodotto in italiano" not in normalized:
-        return False
-
-    if "near mint" not in normalized:
-        return False
-
-    # Segnali forti WooCommerce di prodotto acquistabile.
-    raw_lower = raw.lower()
-
-    has_cart_button = (
-        "single_add_to_cart_button"
-        in raw_lower
-        or 'name="add-to-cart"'
-        in raw_lower
-        or "aggiungi al carrello"
+    language_ok = (
+        "prodotto in italiano"
+        in normalized
+        or "lingua italiano"
+        in normalized
+        or "lingua: italiano"
         in normalized
     )
 
-    if not has_cart_button:
-        return False
+    condition_ok = (
+        "near mint"
+        in normalized
+    )
 
-    # Non usiamo più la frase globale "non disponibile":
-    # può provenire da prodotti correlati presenti nella stessa pagina.
-    return True
+    in_stock_signals = [
+        "schema.org/instock",
+        '"availability":"https://schema.org/instock"',
+        '"availability": "https://schema.org/instock"',
+        "stock in-stock",
+        "single_add_to_cart_button",
+        'name="add-to-cart"',
+    ]
+
+    out_of_stock_signals = [
+        "schema.org/outofstock",
+        '"availability":"https://schema.org/outofstock"',
+        '"availability": "https://schema.org/outofstock"',
+        "stock out-of-stock",
+    ]
+
+    has_in_stock = any(
+        signal in raw_lower
+        for signal in in_stock_signals
+    )
+
+    has_out_of_stock = any(
+        signal in raw_lower
+        for signal in out_of_stock_signals
+    )
+
+    visible_add_to_cart = (
+        "aggiungi al carrello"
+        in normalized
+    )
+
+    visible_unavailable = (
+        "al momento il prodotto non e disponibile"
+        in normalized
+        or "prodotto non disponibile"
+        in normalized
+        or "esaurito"
+        in normalized
+    )
+
+    if not language_ok or not condition_ok:
+        status = "invalid-metadata"
+    elif has_in_stock or visible_add_to_cart:
+        status = "in-stock"
+    elif has_out_of_stock:
+        status = "out-of-stock"
+    elif visible_unavailable:
+        status = "unavailable-text-only"
+    else:
+        status = "unknown"
+
+    return {
+        "status": status,
+        "languageOk": language_ok,
+        "conditionOk": condition_ok,
+        "hasInStockSignal": has_in_stock,
+        "hasOutOfStockSignal": has_out_of_stock,
+        "visibleAddToCart": visible_add_to_cart,
+        "visibleUnavailable": visible_unavailable,
+    }
+
+
+def mycomics_product_is_valid(
+    page_html,
+):
+
+    return (
+        mycomics_availability_status(
+            page_html
+        )["status"]
+        == "in-stock"
+    )
 
 
 def collect_mycomics(
@@ -3892,6 +3956,12 @@ def collect_mycomics(
         "identityAmbiguous": 0,
         "matchedAsSecondStore": 0,
         "matchedAsThirdStore": 0,
+        "availabilityInStock": 0,
+        "availabilityOutOfStock": 0,
+        "availabilityTextOnly": 0,
+        "availabilityUnknown": 0,
+        "availabilityInvalidMetadata": 0,
+        "availabilityExamples": [],
         "errors": 0,
         "ok": True,
     }
@@ -4036,10 +4106,42 @@ def collect_mycomics(
             stats["errors"] += 1
             continue
 
-        if not mycomics_product_is_valid(
+        availability = mycomics_availability_status(
             product_html
-        ):
+        )
+
+        status = availability["status"]
+
+        if status == "in-stock":
+            stats["availabilityInStock"] += 1
+        elif status == "out-of-stock":
+            stats["availabilityOutOfStock"] += 1
             stats["unavailable"] += 1
+        elif status == "unavailable-text-only":
+            stats["availabilityTextOnly"] += 1
+            stats["unavailable"] += 1
+        elif status == "invalid-metadata":
+            stats["availabilityInvalidMetadata"] += 1
+            stats["unavailable"] += 1
+        else:
+            stats["availabilityUnknown"] += 1
+            stats["unavailable"] += 1
+
+        if len(stats["availabilityExamples"]) < 30:
+            stats["availabilityExamples"].append(
+                {
+                    "url": item["url"],
+                    "status": status,
+                    "languageOk": availability["languageOk"],
+                    "conditionOk": availability["conditionOk"],
+                    "hasInStockSignal": availability["hasInStockSignal"],
+                    "hasOutOfStockSignal": availability["hasOutOfStockSignal"],
+                    "visibleAddToCart": availability["visibleAddToCart"],
+                    "visibleUnavailable": availability["visibleUnavailable"],
+                }
+            )
+
+        if status != "in-stock":
             continue
 
         price = mycomics_product_price(
