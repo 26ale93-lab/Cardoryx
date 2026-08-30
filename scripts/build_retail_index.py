@@ -3317,6 +3317,7 @@ def collect_bsa_store(cards):
         "products": 0,
         "accepted": 0,
         "invalidTitle": 0,
+        "invalidTitleExamples": [],
         "priceUnavailable": 0,
         "duplicateStore": 0,
         "errors": 0,
@@ -3401,6 +3402,19 @@ def collect_bsa_store(cards):
 
             if not identity:
                 stats["invalidTitle"] += 1
+
+                if (
+                    len(
+                        stats["invalidTitleExamples"]
+                    )
+                    < 30
+                ):
+                    stats[
+                        "invalidTitleExamples"
+                    ].append(
+                        title
+                    )
+
                 continue
 
             price = bsa_available_price(
@@ -3664,20 +3678,9 @@ def mycomics_existing_candidate(
         ):
             continue
 
-        stores = {
-            norm(
-                offer.get("store")
-            )
-            for offer in card.get(
-                "offers",
-                [],
-            )
-            if offer.get("store")
-        }
-
-        if len(stores) < 2:
-            continue
-
+        # MyComics può diventare anche la seconda fonte:
+        # non limitiamo più il matching alle sole carte già
+        # presenti in 2 negozi.
         variant = str(
             card.get("variant")
             or ""
@@ -3694,6 +3697,8 @@ def mycomics_existing_candidate(
 
         else:
 
+            # Se MyComics non dichiara "Reverse", non colleghiamo
+            # mai una variante Reverse implicita.
             if "reverse" in norm(
                 variant
             ):
@@ -3703,6 +3708,7 @@ def mycomics_existing_candidate(
             card
         )
 
+    # Fail closed: una sola identità possibile.
     if len(candidates) != 1:
         return None
 
@@ -3713,6 +3719,61 @@ def mycomics_product_price(
     page_html,
 ):
 
+    raw = str(
+        page_html
+        or ""
+    )
+
+    # 1. JSON-LD / dati strutturati prodotto.
+    structured_patterns = [
+        r'"price"\s*:\s*"(?P<price>\d+(?:[.,]\d{1,2})?)"',
+        r'"price"\s*:\s*(?P<price>\d+(?:[.,]\d{1,2})?)',
+        r'property=["\']product:price:amount["\']'
+        r'[^>]*content=["\'](?P<price>\d+(?:[.,]\d{1,2})?)["\']',
+        r'name=["\']twitter:data1["\']'
+        r'[^>]*content=["\'](?P<price>\d+(?:[.,]\d{1,2})?)',
+    ]
+
+    for pattern in structured_patterns:
+
+        match = re.search(
+            pattern,
+            raw,
+            flags=re.IGNORECASE,
+        )
+
+        if not match:
+            continue
+
+        price = parse_plain_price(
+            match.group("price")
+        )
+
+        if price is not None:
+            return price
+
+    # 2. Solo il blocco principale del prodotto,
+    #    evitando prezzi di prodotti correlati.
+    summary = re.search(
+        r'<div\b[^>]*class=["\']'
+        r'[^"\']*\bsummary\b[^"\']*'
+        r'["\'][^>]*>'
+        r'(?P<body>.*?)'
+        r'</div>',
+        raw,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    if summary:
+
+        price = parse_euro_price(
+            summary.group("body")
+        )
+
+        if price is not None:
+            return price
+
+    # 3. Fallback conservativo.
     matches = re.findall(
         r'<(?:p|div|span)\b'
         r'[^>]*class=["\']'
@@ -3720,7 +3781,7 @@ def mycomics_product_price(
         r'["\'][^>]*>'
         r'(?P<body>.*?)'
         r'</(?:p|div|span)>',
-        page_html,
+        raw,
         flags=re.IGNORECASE | re.DOTALL,
     )
 
@@ -3751,8 +3812,13 @@ def mycomics_product_is_valid(
     page_html,
 ):
 
-    text = strip_html(
+    raw = str(
         page_html
+        or ""
+    )
+
+    text = strip_html(
+        raw
     )
 
     normalized = norm(
@@ -3765,18 +3831,23 @@ def mycomics_product_is_valid(
     if "near mint" not in normalized:
         return False
 
-    if (
-        "al momento il prodotto non e disponibile"
+    # Segnali forti WooCommerce di prodotto acquistabile.
+    raw_lower = raw.lower()
+
+    has_cart_button = (
+        "single_add_to_cart_button"
+        in raw_lower
+        or 'name="add-to-cart"'
+        in raw_lower
+        or "aggiungi al carrello"
         in normalized
-    ):
+    )
+
+    if not has_cart_button:
         return False
 
-    if not (
-        "aggiungi al carrello" in normalized
-        or "acquista" in normalized
-    ):
-        return False
-
+    # Non usiamo più la frase globale "non disponibile":
+    # può provenire da prodotti correlati presenti nella stessa pagina.
     return True
 
 
@@ -3797,6 +3868,8 @@ def collect_mycomics(
         "unavailable": 0,
         "priceUnavailable": 0,
         "identityAmbiguous": 0,
+        "matchedAsSecondStore": 0,
+        "matchedAsThirdStore": 0,
         "errors": 0,
         "ok": True,
     }
@@ -3957,6 +4030,17 @@ def collect_mycomics(
 
         card = item["candidate"]
 
+        stores_before = {
+            norm(
+                offer.get("store")
+            )
+            for offer in card.get(
+                "offers",
+                [],
+            )
+            if offer.get("store")
+        }
+
         added = add_offer(
             cards,
             set_name=card["set"],
@@ -3979,6 +4063,19 @@ def collect_mycomics(
 
         if added:
             stats["accepted"] += 1
+
+            if len(
+                stores_before
+            ) >= 2:
+                stats[
+                    "matchedAsThirdStore"
+                ] += 1
+            elif len(
+                stores_before
+            ) == 1:
+                stats[
+                    "matchedAsSecondStore"
+                ] += 1
 
     print(
         "MyComics:",
