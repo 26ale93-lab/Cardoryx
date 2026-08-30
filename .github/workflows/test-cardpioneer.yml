@@ -1,4 +1,4 @@
-name: Test approfondito CardPioneer
+name: test
 
 on:
   workflow_dispatch:
@@ -10,12 +10,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+
       - name: Analizza CardPioneer
         run: python scripts/test_cardpioneer.py
