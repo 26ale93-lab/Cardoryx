@@ -4212,6 +4212,310 @@ def collect_mycomics(
 
     return stats
 
+
+# ============================================================
+# GS-GAMEON — V17
+# ============================================================
+
+GS_GAMEON_COLLECTION_URL = (
+    "https://www.gs-gameon.com/collections/pokemon-single/products.json"
+    "?limit=250&page={page}"
+)
+
+
+def gs_gameon_variant(edition, rarity=""):
+
+    edition_n = norm(edition)
+    rarity_n = norm(rarity)
+
+    if "reverse holo" in edition_n:
+        return "Reverse Holo"
+
+    if edition_n not in ("regolare", "regular", ""):
+        return None
+
+    if (
+        "holo rare" in rarity_n
+        or rarity_n in ("holo", "rare holo")
+    ):
+        return "Holo"
+
+    return "Normal"
+
+
+def gs_gameon_parse_title(title):
+
+    value = str(title or "").strip()
+
+    m = re.match(
+        r"^(.*?)\s+-\s+(.*?)\s+\(([^()]*)\)\s+\[([^\]]+)\]\s*$",
+        value,
+        flags=re.IGNORECASE,
+    )
+
+    if not m:
+        return None
+
+    code = m.group(4).strip()
+
+    number_match = re.search(
+        r"(\d{1,3})\s*$",
+        code,
+    )
+
+    if not number_match:
+        return None
+
+    return {
+        "name": m.group(1).strip(),
+        "set": clean_set_name(m.group(2).strip()),
+        "rarity": m.group(3).strip(),
+        "localNumber": str(int(number_match.group(1))),
+        "code": code,
+    }
+
+
+def collect_gs_gameon(cards):
+
+    print()
+    print("=== GS-GAMEON ===", flush=True)
+
+    stats = {
+        "source": "GS-Gameon",
+        "products": 0,
+        "variants": 0,
+        "accepted": 0,
+        "invalidTitle": 0,
+        "languageRejected": 0,
+        "conditionRejected": 0,
+        "editionRejected": 0,
+        "unavailable": 0,
+        "identityAmbiguous": 0,
+        "priceUnavailable": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    # Exact identities already established by the other retail sources.
+    identity_index = {}
+
+    for key, card in cards.items():
+
+        number = norm_number(
+            card.get("number", "")
+        )
+
+        base = number.split("/")[0].lstrip("0") or "0"
+
+        identity_index.setdefault(
+            (
+                norm(card.get("set", "")),
+                base,
+            ),
+            [],
+        ).append((key, card))
+
+    checked_at = utc_now()
+
+    try:
+        for page in range(1, 41):
+
+            url = GS_GAMEON_COLLECTION_URL.format(
+                page=page
+            )
+
+            payload = fetch_json(url)
+
+            products = (
+                payload.get("products", [])
+                if isinstance(payload, dict)
+                else []
+            )
+
+            if not products:
+                break
+
+            for product in products:
+
+                stats["products"] += 1
+
+                parsed = gs_gameon_parse_title(
+                    product.get("title")
+                )
+
+                if not parsed:
+                    stats["invalidTitle"] += 1
+                    continue
+
+                target_set = norm(parsed["set"])
+                target_number = parsed["localNumber"]
+
+                candidates = identity_index.get(
+                    (
+                        target_set,
+                        target_number,
+                    ),
+                    [],
+                )
+
+                # Conservative reconciliation for GS labels such as
+                # "Evoluzioni Prismatiche: Supplementi".
+                if not candidates:
+
+                    compact_target = target_set.replace(
+                        " supplementi",
+                        ""
+                    ).replace(
+                        ":",
+                        " "
+                    )
+
+                    compact_target = " ".join(
+                        compact_target.split()
+                    )
+
+                    possible = []
+
+                    for (
+                        set_key,
+                        number_key,
+                    ), values in identity_index.items():
+
+                        if number_key != target_number:
+                            continue
+
+                        compact_set = set_key.replace(
+                            " supplementi",
+                            ""
+                        ).replace(
+                            ":",
+                            " "
+                        )
+
+                        compact_set = " ".join(
+                            compact_set.split()
+                        )
+
+                        if compact_set == compact_target:
+                            possible.extend(values)
+
+                    candidates = possible
+
+                for shop_variant in (
+                    product.get("variants", [])
+                    or []
+                ):
+
+                    stats["variants"] += 1
+
+                    if not shop_variant.get("available"):
+                        stats["unavailable"] += 1
+                        continue
+
+                    language = str(
+                        shop_variant.get("option1", "")
+                    ).strip()
+
+                    condition = str(
+                        shop_variant.get("option2", "")
+                    ).strip()
+
+                    edition = str(
+                        shop_variant.get("option3", "")
+                    ).strip()
+
+                    if norm(language) != "italiano":
+                        stats["languageRejected"] += 1
+                        continue
+
+                    if norm(condition) != "near mint":
+                        stats["conditionRejected"] += 1
+                        continue
+
+                    variant = gs_gameon_variant(
+                        edition,
+                        parsed["rarity"],
+                    )
+
+                    if variant is None:
+                        stats["editionRejected"] += 1
+                        continue
+
+                    matching = [
+                        (key, card)
+                        for key, card in candidates
+                        if card.get("variant") == variant
+                    ]
+
+                    if len(matching) != 1:
+                        stats["identityAmbiguous"] += 1
+                        continue
+
+                    key, card = matching[0]
+
+                    raw_price = shop_variant.get("price")
+
+                    try:
+                        price = float(raw_price)
+                    except (TypeError, ValueError):
+                        stats["priceUnavailable"] += 1
+                        continue
+
+                    # Shopify /products.json normally returns decimal EUR.
+                    # Integer cents are accepted only when clearly integer.
+                    if isinstance(raw_price, int):
+                        price = price / 100.0
+
+                    price = round(price, 2)
+
+                    if price <= 0:
+                        stats["priceUnavailable"] += 1
+                        continue
+
+                    offer = {
+                        "store": "GS-Gameon",
+                        "price": price,
+                        "url": (
+                            "https://www.gs-gameon.com/products/"
+                            + str(product.get("handle", ""))
+                        ),
+                        "language": "IT",
+                        "condition": "NM/MINT",
+                        "variant": variant,
+                        "checkedAt": checked_at,
+                        "sourceType": "retail-store",
+                    }
+
+                    stores_before = {
+                        norm(x.get("store"))
+                        for x in card.get("offers", [])
+                    }
+
+                    if norm("GS-Gameon") in stores_before:
+                        stats["duplicateStore"] += 1
+                        continue
+
+                    card.setdefault("offers", []).append(offer)
+                    stats["accepted"] += 1
+
+            if len(products) < 250:
+                break
+
+    except Exception as exc:
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    print(
+        "GS-Gameon:",
+        json.dumps(stats, ensure_ascii=False),
+        flush=True,
+    )
+
+    return stats
+
+
 def collect_retail_data():
 
     cards = {}
@@ -4297,7 +4601,33 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 4 — CARD GAME CORNER
+    # FONTE 4 — GS-GAMEON
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "GS-Gameon",
+            collect_gs_gameon,
+            cards,
+            hard_seconds=180,
+        )
+    except Exception as exc:
+        print(
+            "GS-Gameon non disponibile:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "GS-Gameon",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 5 — CARD GAME CORNER
     # --------------------------------------------------------
 
     try:
