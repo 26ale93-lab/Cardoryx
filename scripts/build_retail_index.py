@@ -81,9 +81,9 @@ USER_AGENT = (
 def http_get(
     url,
     *,
-    timeout=30,
-    attempts=4,
-    backoff_seconds=3,
+    timeout=25,
+    attempts=2,
+    backoff_seconds=2,
 ):
 
     last_error = None
@@ -2323,9 +2323,9 @@ def cardgamecorner_collect_product_links(seed_url):
         visited.add(url)
         page_html = http_get(
             url,
-            timeout=35,
-            attempts=4,
-            backoff_seconds=4,
+            timeout=25,
+            attempts=2,
+            backoff_seconds=2,
         )
 
         product_links, list_links = cardgamecorner_extract_links(
@@ -2747,9 +2747,9 @@ def parse_cardgamecorner_product(
 
     page_html = http_get(
         url,
-        timeout=35,
-        attempts=4,
-        backoff_seconds=4,
+        timeout=25,
+        attempts=2,
+        backoff_seconds=2,
     )
 
     identity = cardgamecorner_product_identity(
@@ -2809,18 +2809,17 @@ def collect_cardgamecorner(cards):
     )
 
     # Test di rete separato prima di iniziare il crawl.
-    # Se GitHub Actions ha un problema DNS/rete temporaneo,
-    # non abbandoniamo subito la fonte.
+    # Massimo 2 tentativi: evitiamo workflow troppo lunghi.
     probe_url = CARDGAMECORNER_SEEDS[0]["url"]
     probe_error = None
 
-    for probe_attempt in range(1, 4):
+    for probe_attempt in range(1, 3):
         try:
             http_get(
                 probe_url,
                 timeout=35,
-                attempts=3,
-                backoff_seconds=4,
+                attempts=2,
+                backoff_seconds=2,
             )
             probe_error = None
             break
@@ -2828,10 +2827,10 @@ def collect_cardgamecorner(cards):
             probe_error = exc
             print(
                 "Card Game Corner test rete "
-                f"{probe_attempt}/3 fallito: {exc}"
+                f"{probe_attempt}/2 fallito: {exc}"
             )
-            if probe_attempt < 3:
-                time.sleep(8 * probe_attempt)
+            if probe_attempt < 2:
+                time.sleep(4)
 
     if probe_error is not None:
         raise RuntimeError(
