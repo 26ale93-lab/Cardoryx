@@ -2780,7 +2780,7 @@ def federicstore_parse_block(block):
 
 
 # ============================================================
-# DANYSTORE — V20.1
+# DANYSTORE — V20.2
 # ============================================================
 
 def danystore_parse_title(title):
@@ -2886,14 +2886,30 @@ def collect_danystore(cards):
                     stats["identityAmbiguous"] += 1
                     continue
 
-                add_offer(
-                    card,
-                    store="DanyStore",
-                    price=next(iter(prices)),
-                    url=f"https://danystore.it/products/{handle}",
-                    checked_at=checked_at,
+                added = add_offer(
+                    cards,
+                    set_name=card.get("set", ""),
+                    number=card.get("number", ""),
+                    card_name=card.get("name", ""),
+                    variant=card.get("variant", ""),
+                    language="IT",
+                    condition="NM/MINT",
+                    offer={
+                        "store": "DanyStore",
+                        "price": next(iter(prices)),
+                        "url": f"https://danystore.it/products/{handle}",
+                        "language": "IT",
+                        "condition": "NM/MINT",
+                        "variant": card.get("variant", ""),
+                        "checkedAt": checked_at,
+                        "sourceType": "retail-store",
+                    },
                 )
-                stats["accepted"] += 1
+
+                if added:
+                    stats["accepted"] += 1
+                else:
+                    stats["duplicateStore"] += 1
 
     except Exception as exc:
         stats["ok"] = False
