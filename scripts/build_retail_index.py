@@ -2310,6 +2310,16 @@ DANYSTORE_COLLECTION_URL = (
     "?limit=250&page={page}"
 )
 
+
+CARDPIONEER_PRODUCTS_URL = (
+    "https://www.cardpioneer.it/api/prodotti.php"
+    "?categoria=carte&disponibili=1"
+)
+
+CARDPIONEER_CATALOG_URL = (
+    "https://www.cardpioneer.it/acquista.html#type=carte"
+)
+
 def warcard_variant(edition, rarity=""):
 
     edition_n = norm(edition)
@@ -2917,6 +2927,235 @@ def collect_danystore(cards):
         stats["error"] = str(exc)
 
     return stats
+
+# ============================================================
+# CARDPIONEER — V21
+# ============================================================
+
+def cardpioneer_number(value):
+    raw = str(value or "").strip().upper().replace(" ", "")
+    m = re.fullmatch(r"([A-Z]{0,4})(\d{1,3})/([A-Z]{0,4})(\d{1,3})", raw)
+    if not m:
+        return None
+
+    left_prefix, left_num, right_prefix, right_num = m.groups()
+
+    if left_prefix or right_prefix:
+        return f"{left_prefix}{int(left_num):02d}/{right_prefix}{int(right_num):02d}"
+
+    return f"{int(left_num):03d}/{int(right_num):03d}"
+
+
+def cardpioneer_parse_product(product):
+    if not isinstance(product, dict):
+        return None
+
+    if str(product.get("lingua") or "").strip().upper() != "ITA":
+        return None
+
+    if str(product.get("condizione") or "").strip().upper() != "NM":
+        return None
+
+    available = product.get("disponibile")
+    if available not in (1, True, "1"):
+        return None
+
+    set_name = str(product.get("set_name") or "").strip()
+    card_name = str(product.get("nome") or "").strip()
+    full_name = str(product.get("nome_completo") or "").strip()
+
+    if not set_name or not card_name or not full_name:
+        return None
+
+    # Numero collezionista: supporta sia 27/86 sia TG07/TG30.
+    num_match = re.search(
+        r"\b([A-Za-z]{0,4}\d{1,3}/[A-Za-z]{0,4}\d{1,3})\b",
+        full_name,
+    )
+    if not num_match:
+        return None
+
+    number = cardpioneer_number(num_match.group(1))
+    if not number:
+        return None
+
+    # La variante viene accettata solo quando CardPioneer la dichiara
+    # esplicitamente. Per Normal accettiamo soltanto Comune/Non Comune.
+    parts = re.split(r"\s+-\s+", full_name)
+    if len(parts) < 3 or norm(parts[-1]) != "nm":
+        return None
+
+    label = norm(parts[-2])
+
+    if label == "reverse":
+        variant = "Reverse Holo"
+    elif label == "holo":
+        variant = "Holo"
+    elif label in {"comune", "non comune", "common", "uncommon"}:
+        variant = "Normal"
+    else:
+        return None
+
+    try:
+        price = round(float(product.get("prezzo")), 2)
+    except Exception:
+        return None
+
+    if price <= 0:
+        return None
+
+    return {
+        "set": set_name,
+        "number": number,
+        "name": card_name,
+        "variant": variant,
+        "price": price,
+        "sku": str(product.get("sku") or "").strip(),
+    }
+
+
+def collect_cardpioneer(cards):
+    print("=== CARDPIONEER ===", flush=True)
+
+    stats = {
+        "source": "CardPioneer",
+        "products": 0,
+        "accepted": 0,
+        "languageRejected": 0,
+        "conditionRejected": 0,
+        "unavailable": 0,
+        "variantRejected": 0,
+        "identityAmbiguous": 0,
+        "priceUnavailable": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    # CardPioneer viene usato come fonte di incrocio: non crea identità nuove.
+    # Deve coincidere con una carta già definita da una fonte precedente per
+    # set + numero + nome + variante esatta.
+    identity_index = {}
+    for key, card in cards.items():
+        ident = (
+            norm(card.get("set", "")),
+            norm_number(card.get("number", "")),
+            norm(card.get("name", "")),
+            card.get("variant", ""),
+        )
+        identity_index.setdefault(ident, []).append((key, card))
+
+    checked_at = utc_now()
+
+    try:
+        payload = http_get_json(CARDPIONEER_PRODUCTS_URL)
+        products = payload if isinstance(payload, list) else (
+            payload.get("prodotti")
+            or payload.get("products")
+            or payload.get("data")
+            or []
+        )
+
+        if not isinstance(products, list):
+            raise RuntimeError("CardPioneer: catalogo JSON non riconosciuto")
+
+        stats["products"] = len(products)
+
+        for product in products:
+            if not isinstance(product, dict):
+                stats["identityAmbiguous"] += 1
+                continue
+
+            if str(product.get("lingua") or "").strip().upper() != "ITA":
+                stats["languageRejected"] += 1
+                continue
+
+            if str(product.get("condizione") or "").strip().upper() != "NM":
+                stats["conditionRejected"] += 1
+                continue
+
+            if product.get("disponibile") not in (1, True, "1"):
+                stats["unavailable"] += 1
+                continue
+
+            full_name = str(product.get("nome_completo") or "")
+            parts = re.split(r"\s+-\s+", full_name)
+            if len(parts) < 3 or norm(parts[-1]) != "nm":
+                stats["variantRejected"] += 1
+                continue
+
+            label = norm(parts[-2])
+            if label not in {
+                "reverse", "holo", "comune", "non comune", "common", "uncommon"
+            }:
+                stats["variantRejected"] += 1
+                continue
+
+            parsed = cardpioneer_parse_product(product)
+            if not parsed:
+                # A questo punto i motivi residui sono numero/prezzo/identità.
+                try:
+                    if float(product.get("prezzo")) <= 0:
+                        stats["priceUnavailable"] += 1
+                    else:
+                        stats["identityAmbiguous"] += 1
+                except Exception:
+                    stats["priceUnavailable"] += 1
+                continue
+
+            ident = (
+                norm(parsed["set"]),
+                norm_number(parsed["number"]),
+                norm(parsed["name"]),
+                parsed["variant"],
+            )
+            matches = identity_index.get(ident, [])
+
+            if len(matches) != 1:
+                stats["identityAmbiguous"] += 1
+                continue
+
+            _, card = matches[0]
+
+            if any(
+                offer.get("store") == "CardPioneer"
+                for offer in card.get("offers", [])
+            ):
+                stats["duplicateStore"] += 1
+                continue
+
+            added = add_offer(
+                cards,
+                set_name=card.get("set", ""),
+                number=card.get("number", ""),
+                card_name=card.get("name", ""),
+                variant=card.get("variant", ""),
+                language="IT",
+                condition="NM/MINT",
+                offer={
+                    "store": "CardPioneer",
+                    "price": parsed["price"],
+                    "url": CARDPIONEER_CATALOG_URL,
+                    "language": "IT",
+                    "condition": "NM/MINT",
+                    "variant": card.get("variant", ""),
+                    "checkedAt": checked_at,
+                    "sourceType": "retail-store",
+                },
+            )
+
+            if added:
+                stats["accepted"] += 1
+            else:
+                stats["duplicateStore"] += 1
+
+    except Exception as exc:
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    return stats
+
 
 def collect_federicstore(cards):
 
@@ -5458,7 +5697,29 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 7 — FEDERICSTORE
+    # FONTE 7 — CARDPIONEER
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "CardPioneer",
+            collect_cardpioneer,
+            cards,
+            hard_seconds=90,
+        )
+    except Exception as exc:
+        print("CardPioneer non disponibile:", str(exc), flush=True)
+        result = {
+            "source": "CardPioneer",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 8 — FEDERICSTORE
     # --------------------------------------------------------
 
     try:
@@ -5484,7 +5745,7 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 7 — CARD GAME CORNER
+    # FONTE 9 — CARD GAME CORNER
     # --------------------------------------------------------
 
     try:
