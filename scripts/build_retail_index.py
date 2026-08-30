@@ -20,8 +20,9 @@ from pathlib import Path
 #
 # Fonti:
 # 1. Card Passion
-# 2. CarteMagic
-# 3. BSA Store
+# 2. BSA Store
+# 3. Card Game Corner
+# CarteMagic: adapter conservato ma disattivato
 #
 # REGOLE:
 # - separato da Cardmarket
@@ -2324,9 +2325,9 @@ def cardgamecorner_collect_product_links(seed_url):
         visited.add(url)
         page_html = http_get(
             url,
-            timeout=25,
-            attempts=2,
-            backoff_seconds=2,
+            timeout=6,
+            attempts=1,
+            backoff_seconds=0,
         )
 
         product_links, list_links = cardgamecorner_extract_links(
@@ -2748,9 +2749,9 @@ def parse_cardgamecorner_product(
 
     page_html = http_get(
         url,
-        timeout=25,
-        attempts=2,
-        backoff_seconds=2,
+        timeout=6,
+        attempts=1,
+        backoff_seconds=0,
     )
 
     identity = cardgamecorner_product_identity(
@@ -2805,118 +2806,122 @@ def parse_cardgamecorner_product(
 def collect_cardgamecorner(cards):
 
     print()
-    print(
-        "=== CARD GAME CORNER ==="
-    )
+    print("=== CARD GAME CORNER ===", flush=True)
 
-    # Test di rete separato prima di iniziare il crawl.
-    # Massimo 2 tentativi: evitiamo workflow troppo lunghi.
+    source_started = time.monotonic()
+    HARD_LIMIT_SECONDS = 90
+
+    def time_left():
+        return HARD_LIMIT_SECONDS - (
+            time.monotonic() - source_started
+        )
+
+    def deadline_reached():
+        return time_left() <= 0
+
+    # Probe rapido: se il negozio non risponde in pochi secondi
+    # viene saltato senza rallentare tutto Cardoryx.
     probe_url = CARDGAMECORNER_SEEDS[0]["url"]
-    probe_error = None
 
-    for probe_attempt in range(1, 3):
-        try:
-            http_get(
-                probe_url,
-                timeout=35,
-                attempts=2,
-                backoff_seconds=2,
-            )
-            probe_error = None
-            break
-        except Exception as exc:
-            probe_error = exc
-            print(
-                "Card Game Corner test rete "
-                f"{probe_attempt}/2 fallito: {exc}"
-            )
-            if probe_attempt < 2:
-                time.sleep(4)
-
-    if probe_error is not None:
+    try:
+        http_get(
+            probe_url,
+            timeout=6,
+            attempts=1,
+            backoff_seconds=0,
+        )
+    except Exception as exc:
         raise RuntimeError(
-            "Card Game Corner non raggiungibile dopo retry: "
-            f"{probe_error}"
+            "Card Game Corner non raggiungibile rapidamente: "
+            f"{exc}"
+        )
+
+    if deadline_reached():
+        raise RuntimeError(
+            "Card Game Corner: limite tempo raggiunto dopo il probe"
         )
 
     prepared_seeds = []
 
     for seed in CARDGAMECORNER_SEEDS:
 
+        if deadline_reached():
+            break
+
         seed = dict(seed)
 
-        set_id = tcgdex_find_set_id(
-            seed.get(
-                "setEn",
-                "",
-            ),
-            seed.get(
-                "setIt",
-                "",
-            ),
-        )
-
-        if not set_id:
-
-            print(
-                "Set TCGdex non identificato:",
-                seed.get(
-                    "setEn",
-                    "",
-                ),
+        try:
+            set_id = tcgdex_find_set_id(
+                seed.get("setEn", ""),
+                seed.get("setIt", ""),
             )
-
+        except Exception as exc:
+            print(
+                "Card Game Corner / TCGdex non disponibile:",
+                exc,
+                flush=True,
+            )
             continue
 
-        seed[
-            "tcgdexSetId"
-        ] = set_id
+        if not set_id:
+            print(
+                "Set TCGdex non identificato:",
+                seed.get("setEn", ""),
+                flush=True,
+            )
+            continue
 
+        seed["tcgdexSetId"] = set_id
         prepared_seeds.append(seed)
 
         print(
             "Set collegato:",
-            seed.get(
-                "setIt",
-            )
-            or seed.get(
-                "setEn",
-            ),
+            seed.get("setIt") or seed.get("setEn"),
             "->",
             set_id,
+            flush=True,
         )
 
     if not prepared_seeds:
         raise RuntimeError(
-            "Card Game Corner: "
-            "nessun set collegato a TCGdex"
+            "Card Game Corner: nessun set collegato a TCGdex"
         )
 
     product_entries = []
-
     seen_urls = set()
 
     for seed in prepared_seeds:
 
-        for link in cardgamecorner_collect_product_links(
-            seed["url"]
-        ):
+        if deadline_reached():
+            break
+
+        try:
+            links = cardgamecorner_collect_product_links(
+                seed["url"]
+            )
+        except Exception as exc:
+            print(
+                "Card Game Corner: errore catalogo:",
+                exc,
+                flush=True,
+            )
+            continue
+
+        for link in links:
+
+            if deadline_reached():
+                break
 
             if link in seen_urls:
                 continue
 
             seen_urls.add(link)
-
-            product_entries.append(
-                (
-                    link,
-                    seed,
-                )
-            )
+            product_entries.append((link, seed))
 
     print(
         "Prodotti individuati:",
         len(product_entries),
+        flush=True,
     )
 
     if not product_entries:
@@ -2934,54 +2939,58 @@ def collect_cardgamecorner(cards):
         "identityAmbiguous": 0,
         "duplicateStore": 0,
         "errors": 0,
+        "skippedByTimeLimit": 0,
     }
 
-    for index, (
-        url,
-        seed,
-    ) in enumerate(
+    processed = 0
+
+    for index, (url, seed) in enumerate(
         product_entries,
         start=1,
     ):
 
-        if (
-            index == 1
-            or index % 50 == 0
-        ):
+        if deadline_reached():
+            counters["skippedByTimeLimit"] = (
+                len(product_entries) - processed
+            )
+            print(
+                "Card Game Corner: limite di 90s raggiunto. "
+                "Interrompo la fonte senza bloccare il workflow.",
+                flush=True,
+            )
+            break
+
+        if index == 1 or index % 25 == 0:
             print(
                 "Card Game Corner scheda "
-                f"{index}/"
-                f"{len(product_entries)}"
+                f"{index}/{len(product_entries)} "
+                f"— tempo residuo {max(0, int(time_left()))}s",
+                flush=True,
             )
 
         try:
-
-            product, reason = (
-                parse_cardgamecorner_product(
-                    url,
-                    seed,
-                )
-            )
-
-        except Exception as exc:
-
-            counters[
-                "errors"
-            ] += 1
-
-            print(
-                "Errore Card Game Corner:",
+            product, reason = parse_cardgamecorner_product(
                 url,
-                str(exc),
+                seed,
             )
+        except Exception as exc:
+            counters["errors"] += 1
+            processed += 1
 
+            # Non stampiamo centinaia di errori identici.
+            if counters["errors"] <= 5:
+                print(
+                    "Errore Card Game Corner:",
+                    str(exc),
+                    flush=True,
+                )
             continue
 
-        if product is None:
+        processed += 1
 
+        if product is None:
             if reason in counters:
                 counters[reason] += 1
-
             continue
 
         added = add_offer(
@@ -2993,53 +3002,29 @@ def collect_cardgamecorner(cards):
             language="IT",
             condition="NM/MINT",
             offer={
-                "store":
-                    "Card Game Corner",
-
-                "price":
-                    product["price"],
-
-                "url":
-                    product["url"],
-
-                "language":
-                    "IT",
-
-                "condition":
-                    "NM/MINT",
-
-                "variant":
-                    product["variant"],
-
-                "checkedAt":
-                    checked_at,
-
-                "sourceType":
-                    "retail-store",
+                "store": "Card Game Corner",
+                "price": product["price"],
+                "url": product["url"],
+                "language": "IT",
+                "condition": "NM/MINT",
+                "variant": product["variant"],
+                "checkedAt": checked_at,
+                "sourceType": "retail-store",
             },
         )
 
         if added:
-            counters[
-                "accepted"
-            ] += 1
+            counters["accepted"] += 1
         else:
-            counters[
-                "duplicateStore"
-            ] += 1
+            counters["duplicateStore"] += 1
 
     result = {
-        "source":
-            "Card Game Corner",
-
-        "ok":
-            True,
-
-        "products":
-            len(product_entries),
-
-        "tcgdexIdentity":
-            True,
+        "source": "Card Game Corner",
+        "ok": True,
+        "products": len(product_entries),
+        "processed": processed,
+        "tcgdexIdentity": True,
+        "timeLimitSeconds": HARD_LIMIT_SECONDS,
     }
 
     result.update(counters)
@@ -3047,15 +3032,14 @@ def collect_cardgamecorner(cards):
     print(
         "Card Game Corner accettate:",
         counters["accepted"],
-    )
-
-    print(
-        "Card Game Corner identità ambigue:",
-        counters["identityAmbiguous"],
+        "— processate:",
+        processed,
+        "— tempo:",
+        elapsed_label(source_started),
+        flush=True,
     )
 
     return result
-
 
 
 # ============================================================
@@ -3419,7 +3403,11 @@ def collect_retail_data():
             hard_seconds=180,
         )
     except Exception as exc:
-        print("Card Passion non disponibile:", str(exc), flush=True)
+        print(
+            "Card Passion non disponibile:",
+            str(exc),
+            flush=True,
+        )
         result = {
             "source": "Card Passion",
             "ok": False,
@@ -3430,29 +3418,7 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 2 — CARTEMAGIC
-    # --------------------------------------------------------
-
-    try:
-        result = run_source_timed(
-            "CarteMagic",
-            collect_cartemagic,
-            cards,
-            hard_seconds=45,
-        )
-    except Exception as exc:
-        print("CarteMagic non disponibile:", str(exc), flush=True)
-        result = {
-            "source": "CarteMagic",
-            "ok": False,
-            "error": str(exc),
-            "accepted": 0,
-        }
-
-    source_stats.append(result)
-
-    # --------------------------------------------------------
-    # FONTE 3 — BSA STORE
+    # FONTE 2 — BSA STORE
     # --------------------------------------------------------
 
     try:
@@ -3463,7 +3429,11 @@ def collect_retail_data():
             hard_seconds=180,
         )
     except Exception as exc:
-        print("BSA Store non disponibile:", str(exc), flush=True)
+        print(
+            "BSA Store non disponibile:",
+            str(exc),
+            flush=True,
+        )
         result = {
             "source": "BSA Store",
             "ok": False,
@@ -3474,13 +3444,58 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
+    # FONTE 3 — CARD GAME CORNER
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "Card Game Corner",
+            collect_cardgamecorner,
+            cards,
+            hard_seconds=95,
+        )
+    except Exception as exc:
+        print(
+            "Card Game Corner saltato:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "Card Game Corner",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+            "timeLimitSeconds": 90,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # CARTEMAGIC — DISATTIVATO
+    # --------------------------------------------------------
+    # Il codice dell'adapter resta nel file per eventuali test futuri,
+    # ma non viene eseguito automaticamente perché il sito blocca/
+    # rallenta GitHub Actions.
+
+    source_stats.append({
+        "source": "CarteMagic",
+        "ok": False,
+        "disabled": True,
+        "reason": "Disattivato: incompatibile con esecuzione automatica GitHub Actions",
+        "accepted": 0,
+    })
+
+    # --------------------------------------------------------
     # FINALIZZAZIONE
     # --------------------------------------------------------
 
     final_started = time.monotonic()
+
     finalize_cards(cards)
+
     print(
-        f"[TEMPO] Finalizzazione: {elapsed_label(final_started)}",
+        f"[TEMPO] Finalizzazione: "
+        f"{elapsed_label(final_started)}",
         flush=True,
     )
 
