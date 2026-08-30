@@ -2343,8 +2343,10 @@ def warcard_parse_title(title):
 
     code = m.group(4).strip()
 
+    # Il numero deve essere il segmento numerico dopo l'ultimo trattino.
+    # BRS-TG08 è Trainer Gallery TG08 e NON la carta base 008/172.
     number_match = re.search(
-        r"(\d{1,3})\s*$",
+        r"-(\d{1,3})\s*$",
         code,
     )
 
@@ -2526,7 +2528,11 @@ def collect_warcard(cards):
                     matching = [
                         (key, card)
                         for key, card in candidates
-                        if card.get("variant") == variant
+                        if (
+                            card.get("variant") == variant
+                            and norm(card.get("name", ""))
+                            == norm(parsed.get("name", ""))
+                        )
                     ]
 
                     if len(matching) != 1:
