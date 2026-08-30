@@ -2293,6 +2293,336 @@ def absolute_url(base_url, href):
     )
 
 
+
+# ============================================================
+# FEDERICSTORE
+# ============================================================
+
+FEDERICSTORE_BASE_URL = "https://federicstore.it"
+FEDERICSTORE_CATEGORY_URL = (
+    FEDERICSTORE_BASE_URL
+    + "/categoria/carte-singole-pokemon/"
+)
+FEDERICSTORE_MAX_PAGES = 120
+
+
+def federicstore_page_url(page):
+
+    if page <= 1:
+        return FEDERICSTORE_CATEGORY_URL
+
+    return (
+        FEDERICSTORE_CATEGORY_URL
+        + f"page/{page}/"
+    )
+
+
+def federicstore_parse_title(title):
+
+    raw = str(title or "").strip()
+
+    # Formato reale tipico:
+    # 001-165 Bulbasaur Comune Reverse (IT) – NEAR MINT
+    # 003-165 Venusaur ex (IT) – NEAR MINT
+    m = re.match(
+        r"^\s*(?P<num>\d{1,4})-(?P<tot>\d{1,4})\s+"
+        r"(?P<body>.+?)\s*"
+        r"\(\s*IT\s*\)\s*"
+        r"[-–—]\s*NEAR\s+MINT\s*$",
+        raw,
+        flags=re.IGNORECASE,
+    )
+
+    if not m:
+        return None
+
+    body = m.group("body").strip()
+
+    variant = detect_variant(body)
+    card_name = clean_card_name(body)
+
+    if not card_name:
+        return None
+
+    number = (
+        f"{int(m.group('num')):03d}/"
+        f"{int(m.group('tot')):03d}"
+    )
+
+    return {
+        "name": card_name,
+        "number": number,
+        "variant": variant,
+    }
+
+
+def federicstore_product_blocks(page_html):
+
+    html_text = str(page_html or "")
+
+    blocks = re.findall(
+        r"<li\b[^>]*class=[\"'][^\"']*\bproduct\b[^\"']*[\"'][^>]*>"
+        r".*?</li>",
+        html_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    # Fallback prudente per temi WooCommerce che usano <div>.
+    if not blocks:
+        blocks = re.findall(
+            r"<div\b[^>]*class=[\"'][^\"']*\bproduct\b[^\"']*[\"'][^>]*>"
+            r".*?</div>\s*</div>",
+            html_text,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+
+    return blocks
+
+
+def federicstore_parse_block(block):
+
+    raw = str(block or "")
+
+    href_match = re.search(
+        r'href=[\"\'](?P<url>https?://[^\"\']+/prodotto/[^\"\']+)[\"\']',
+        raw,
+        flags=re.IGNORECASE,
+    )
+
+    if not href_match:
+        href_match = re.search(
+            r'href=[\"\'](?P<url>/prodotto/[^\"\']+)[\"\']',
+            raw,
+            flags=re.IGNORECASE,
+        )
+
+    if not href_match:
+        return None
+
+    url = absolute_url(
+        FEDERICSTORE_BASE_URL,
+        href_match.group("url"),
+    )
+
+    title = None
+
+    for pattern in (
+        r"<h2\b[^>]*>(.*?)</h2>",
+        r"<h3\b[^>]*>(.*?)</h3>",
+        r'class=[\"\'][^\"\']*woocommerce-loop-product__title[^\"\']*[\"\'][^>]*>(.*?)</',
+    ):
+        m = re.search(
+            pattern,
+            raw,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        if m:
+            title = strip_html(m.group(1))
+            if title:
+                break
+
+    if not title:
+        # Ultimo fallback: attributo aria-label/title del link prodotto.
+        m = re.search(
+            r'(?:aria-label|title)=[\"\']([^\"\']+)[\"\']',
+            raw,
+            flags=re.IGNORECASE,
+        )
+        if m:
+            title = html.unescape(m.group(1)).strip()
+
+    if not title:
+        return None
+
+    visible = strip_html(raw)
+    visible_n = norm(visible)
+    raw_n = norm(raw)
+
+    out_of_stock = (
+        "esaurito" in visible_n
+        or "outofstock" in raw_n
+        or "out of stock" in visible_n
+    )
+
+    in_stock = (
+        "aggiungi" in visible_n
+        or "instock" in raw_n
+        or "disponibile" in visible_n
+    )
+
+    if out_of_stock or not in_stock:
+        available = False
+    else:
+        available = True
+
+    price = parse_euro_price(visible)
+
+    return {
+        "url": url,
+        "title": title,
+        "available": available,
+        "price": price,
+    }
+
+
+def collect_federicstore(cards):
+
+    print()
+    print("=== FEDERICSTORE ===", flush=True)
+
+    stats = {
+        "source": "Federicstore",
+        "pages": 0,
+        "products": 0,
+        "accepted": 0,
+        "invalidTitle": 0,
+        "unavailable": 0,
+        "identityAmbiguous": 0,
+        "priceUnavailable": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    # Identità già definite dalle fonti precedenti.
+    # Il set non viene indovinato: Federicstore viene accettato soltanto
+    # quando numero completo + nome + variante identificano UNA sola carta.
+    identity_index = {}
+
+    for key, card in cards.items():
+
+        identity_index.setdefault(
+            (
+                norm_number(card.get("number", "")),
+                norm(card.get("name", "")),
+                card.get("variant", ""),
+            ),
+            [],
+        ).append((key, card))
+
+    checked_at = utc_now()
+    seen_urls = set()
+
+    try:
+
+        for page in range(1, FEDERICSTORE_MAX_PAGES + 1):
+
+            url = federicstore_page_url(page)
+
+            print(
+                f"Federicstore pagina {page}...",
+                flush=True,
+            )
+
+            page_html = http_get(
+                url,
+                timeout=15,
+                attempts=2,
+                backoff_seconds=1,
+            )
+
+            blocks = federicstore_product_blocks(
+                page_html
+            )
+
+            if not blocks:
+                break
+
+            stats["pages"] += 1
+            new_on_page = 0
+
+            for block in blocks:
+
+                item = federicstore_parse_block(block)
+
+                if not item:
+                    continue
+
+                if item["url"] in seen_urls:
+                    continue
+
+                seen_urls.add(item["url"])
+                new_on_page += 1
+                stats["products"] += 1
+
+                parsed = federicstore_parse_title(
+                    item["title"]
+                )
+
+                if not parsed:
+                    stats["invalidTitle"] += 1
+                    continue
+
+                if not item["available"]:
+                    stats["unavailable"] += 1
+                    continue
+
+                if not valid_price(item["price"]):
+                    stats["priceUnavailable"] += 1
+                    continue
+
+                candidates = identity_index.get(
+                    (
+                        norm_number(parsed["number"]),
+                        norm(parsed["name"]),
+                        parsed["variant"],
+                    ),
+                    [],
+                )
+
+                if len(candidates) != 1:
+                    stats["identityAmbiguous"] += 1
+                    continue
+
+                key, card = candidates[0]
+
+                stores_before = {
+                    norm(x.get("store"))
+                    for x in card.get("offers", [])
+                }
+
+                if norm("Federicstore") in stores_before:
+                    stats["duplicateStore"] += 1
+                    continue
+
+                card.setdefault(
+                    "offers",
+                    [],
+                ).append({
+                    "store": "Federicstore",
+                    "price": round(float(item["price"]), 2),
+                    "url": item["url"],
+                    "language": "IT",
+                    "condition": "NM/MINT",
+                    "variant": parsed["variant"],
+                    "checkedAt": checked_at,
+                    "sourceType": "retail-store",
+                })
+
+                stats["accepted"] += 1
+
+            if new_on_page == 0:
+                break
+
+    except Exception as exc:
+
+        stats["errors"] += 1
+        stats["ok"] = False
+        stats["error"] = str(exc)
+
+    print(
+        "Federicstore:",
+        json.dumps(
+            stats,
+            ensure_ascii=False,
+        ),
+        flush=True,
+    )
+
+    return stats
+
+
+
 # ============================================================
 # CARD GAME CORNER
 # ============================================================
@@ -4627,7 +4957,33 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 5 — CARD GAME CORNER
+    # FONTE 5 — FEDERICSTORE
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "Federicstore",
+            collect_federicstore,
+            cards,
+            hard_seconds=180,
+        )
+    except Exception as exc:
+        print(
+            "Federicstore non disponibile:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "Federicstore",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 6 — CARD GAME CORNER
     # --------------------------------------------------------
 
     try:
@@ -4949,6 +5305,9 @@ def main():
 
             "failClosed":
                 True,
+
+            "crossSourceMatching":
+                "independent-any-3-stores",
         },
 
         "sources":
