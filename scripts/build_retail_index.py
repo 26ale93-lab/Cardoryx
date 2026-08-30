@@ -3056,6 +3056,79 @@ def collect_cardgamecorner(cards):
     return result
 
 
+
+# ============================================================
+# BSA STORE — TEST DI RAGGIUNGIBILITÀ
+# ============================================================
+
+BSA_STORE_COLLECTION_URL = (
+    "https://www.bsastore.it/collections/"
+    "pokemon-carte-singole-ita"
+)
+
+
+def collect_bsa_probe(cards):
+
+    print()
+    print("=== BSA STORE — PROBE ===")
+
+    page_html = http_get(
+        BSA_STORE_COLLECTION_URL,
+        timeout=20,
+        attempts=2,
+        backoff_seconds=2,
+    )
+
+    text_page = strip_html(page_html)
+
+    # Formato reale atteso, per esempio:
+    # POKEMON Bulbasaur 001/165 - ITA - Near Mint - ...
+    title_matches = re.findall(
+        r"POKEMON\s+.{1,120}?\s+"
+        r"[A-Z0-9]{0,4}\d{1,3}/[A-Z0-9]{0,4}\d{1,3}"
+        r"\s*-\s*ITA\s*-\s*Near Mint",
+        text_page,
+        flags=re.IGNORECASE,
+    )
+
+    price_matches = re.findall(
+        r"€\s*[0-9]{1,5}(?:[.,][0-9]{1,2})?",
+        text_page,
+        flags=re.IGNORECASE,
+    )
+
+    if not title_matches:
+        raise RuntimeError(
+            "BSA Store raggiungibile ma nessuna carta "
+            "ITA Near Mint con numero è stata riconosciuta"
+        )
+
+    print(
+        "BSA Store raggiungibile."
+    )
+    print(
+        "Carte riconosciute nella pagina test:",
+        len(title_matches),
+    )
+    print(
+        "Prezzi individuati nella pagina test:",
+        len(price_matches),
+    )
+
+    return {
+        "source": "BSA Store",
+        "ok": True,
+        "testOnly": True,
+        "collectionReachable": True,
+        "recognizedTitles":
+            len(title_matches),
+        "recognizedPrices":
+            len(price_matches),
+        "accepted": 0,
+    }
+
+
+
 def collect_retail_data():
 
     cards = {}
@@ -3114,12 +3187,12 @@ def collect_retail_data():
     )
 
     # --------------------------------------------------------
-    # FONTE 3 — CARD GAME CORNER
+    # FONTE 3 — BSA STORE (TEST)
     # --------------------------------------------------------
 
     try:
 
-        result = collect_cardgamecorner(
+        result = collect_bsa_probe(
             cards
         )
 
@@ -3127,7 +3200,7 @@ def collect_retail_data():
 
         print()
         print(
-            "Card Game Corner non disponibile:"
+            "BSA Store non disponibile:"
         )
 
         print(
@@ -3136,9 +3209,11 @@ def collect_retail_data():
 
         result = {
             "source":
-                "Card Game Corner",
+                "BSA Store",
             "ok":
                 False,
+            "testOnly":
+                True,
             "error":
                 str(exc),
             "accepted":
