@@ -2296,7 +2296,7 @@ def absolute_url(base_url, href):
 
 
 # ============================================================
-# WARCARD — V19
+# WARCARD — V19.1
 # ============================================================
 
 WARCARD_COLLECTION_URL = (
@@ -2304,6 +2304,11 @@ WARCARD_COLLECTION_URL = (
     "?limit=250&page={page}"
 )
 
+
+DANYSTORE_COLLECTION_URL = (
+    "https://danystore.it/collections/carte-singole/products.json"
+    "?limit=250&page={page}"
+)
 
 def warcard_variant(edition, rarity=""):
 
@@ -2772,6 +2777,130 @@ def federicstore_parse_block(block):
         "price": price,
     }
 
+
+
+# ============================================================
+# DANYSTORE — V20
+# ============================================================
+
+def danystore_parse_title(title):
+    raw = str(title or "").strip()
+    m = re.match(r"^\s*(\d{1,3})-(\d{1,3})\s+(.+?)\s+ITA\s+NM\s*$", raw, re.I)
+    if not m:
+        return None
+    return {
+        "number": f"{int(m.group(1)):03d}/{int(m.group(2)):03d}",
+        "body": m.group(3).strip(),
+    }
+
+
+def danystore_variant(body):
+    n = norm(body)
+    if "reverse pokeball" in n or "reverse poke ball" in n:
+        return "Poké Ball Reverse Holo"
+    if "master ball" in n:
+        return "Master Ball Reverse Holo"
+    if "reverse" in n:
+        return "Reverse Holo"
+    if re.search(r"\bholo\b", str(body), re.I):
+        return "Holo"
+    return "Normal"
+
+
+def collect_danystore(cards):
+    print("=== DANYSTORE ===", flush=True)
+    stats = {
+        "source": "DanyStore", "products": 0, "variants": 0,
+        "accepted": 0, "invalidTitle": 0, "unavailable": 0,
+        "identityAmbiguous": 0, "priceUnavailable": 0,
+        "duplicateStore": 0, "errors": 0, "ok": True,
+    }
+
+    by_number = {}
+    for key, card in cards.items():
+        by_number.setdefault(norm(card.get("number", "")), []).append((key, card))
+
+    checked_at = utc_now()
+
+    try:
+        for page in range(1, 80):
+            payload = fetch_json(DANYSTORE_COLLECTION_URL.format(page=page))
+            products = payload.get("products") or []
+            if not products:
+                break
+            stats["products"] += len(products)
+
+            for product in products:
+                parsed = danystore_parse_title(product.get("title"))
+                if not parsed:
+                    stats["invalidTitle"] += 1
+                    continue
+
+                variant = danystore_variant(parsed["body"])
+                body_n = norm(parsed["body"])
+                matches = []
+
+                for key, card in by_number.get(norm(parsed["number"]), []):
+                    if card.get("variant") != variant:
+                        continue
+                    name_n = norm(card.get("name", ""))
+                    # Nome obbligatorio: deve apparire all'inizio del titolo
+                    # dopo il numero. Evita incroci solo per numero/set.
+                    if name_n and (body_n == name_n or body_n.startswith(name_n + " ")):
+                        matches.append((key, card))
+
+                if len(matches) != 1:
+                    stats["identityAmbiguous"] += 1
+                    continue
+
+                key, card = matches[0]
+                variants = product.get("variants") or []
+                stats["variants"] += len(variants)
+
+                available = [v for v in variants if v.get("available") is True]
+                if not available:
+                    stats["unavailable"] += 1
+                    continue
+
+                prices = set()
+                for v in available:
+                    try:
+                        p = round(float(v.get("price")), 2)
+                        if p > 0:
+                            prices.add(p)
+                    except Exception:
+                        pass
+
+                # Se il prodotto ha più prezzi disponibili e non possiamo
+                # attribuire con certezza quale sia quello della carta, scarta.
+                if len(prices) != 1:
+                    stats["priceUnavailable"] += 1
+                    continue
+
+                if any(o.get("store") == "DanyStore" for o in card.get("offers", [])):
+                    stats["duplicateStore"] += 1
+                    continue
+
+                handle = product.get("handle")
+                if not handle:
+                    stats["identityAmbiguous"] += 1
+                    continue
+
+                add_offer(
+                    card,
+                    store="DanyStore",
+                    price=next(iter(prices)),
+                    url=f"https://danystore.it/products/{handle}",
+                    checked_at=checked_at,
+                )
+                stats["accepted"] += 1
+
+    except Exception as exc:
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    return stats
 
 def collect_federicstore(cards):
 
@@ -5291,7 +5420,29 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 6 — FEDERICSTORE
+    # FONTE 6 — DANYSTORE
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "DanyStore",
+            collect_danystore,
+            cards,
+            hard_seconds=180,
+        )
+    except Exception as exc:
+        print("DanyStore non disponibile:", str(exc), flush=True)
+        result = {
+            "source": "DanyStore",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 7 — FEDERICSTORE
     # --------------------------------------------------------
 
     try:
