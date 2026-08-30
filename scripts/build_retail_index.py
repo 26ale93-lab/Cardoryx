@@ -395,6 +395,33 @@ def clean_set_name(value):
         flags=re.IGNORECASE,
     )
 
+    # Alcuni negozi antepongono la serie al vero nome del set.
+    # Esempi:
+    # "Spada e Scudo - Astri Lucenti" -> "Astri Lucenti"
+    # "Scarlatto e Violetto - 151" -> "151"
+    # "Megaevoluzione - Ascesa Eroica" -> "Ascesa Eroica"
+    #
+    # Il prefisso viene tolto solo quando è seguito da " - ",
+    # quindi il set base "Scarlatto e Violetto" resta invariato.
+    series_prefixes = (
+        "Spada e Scudo",
+        "Scarlatto e Violetto",
+        "Sole e Luna",
+        "Nero e Bianco",
+        "XY",
+        "Megaevoluzione",
+    )
+
+    for prefix in series_prefixes:
+        marker = prefix + " - "
+        if text.casefold().startswith(marker.casefold()):
+            text = text[len(marker):].strip()
+            break
+
+    # BSA usa anche questa categoria per lo stesso set Gran Festa.
+    if text.casefold() == "gran festa - ristampa 2021":
+        text = "Gran Festa"
+
     return text.strip()
 
 
@@ -3660,6 +3687,13 @@ def main():
 
             "offers":
                 total_offers,
+
+            "multiStoreCards":
+                sum(
+                    1
+                    for card in cards.values()
+                    if card.get("stats", {}).get("stores", 0) >= 2
+                ),
         },
 
         "cards":
