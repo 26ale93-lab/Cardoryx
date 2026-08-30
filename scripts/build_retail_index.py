@@ -4218,7 +4218,7 @@ def collect_mycomics(
 # ============================================================
 
 GS_GAMEON_COLLECTION_URL = (
-    "https://www.gs-gameon.com/collections/pokemon-single/products.json"
+    "https://www.gs-gameon.com/collections/pok-mon-single/products.json"
     "?limit=250&page={page}"
 )
 
