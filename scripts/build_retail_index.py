@@ -21,6 +21,7 @@ from pathlib import Path
 # Fonti:
 # 1. Card Passion
 # 2. CarteMagic
+# 3. BSA Store
 #
 # REGOLE:
 # - separato da Cardmarket
@@ -3058,74 +3059,298 @@ def collect_cardgamecorner(cards):
 
 
 # ============================================================
-# BSA STORE — TEST DI RAGGIUNGIBILITÀ
+# BSA STORE — PRODUZIONE
 # ============================================================
 
-BSA_STORE_COLLECTION_URL = (
-    "https://www.bsastore.it/collections/"
-    "pokemon-carte-singole-ita"
-)
+BSA_STORE_BASE_URL = "https://www.bsastore.it"
+BSA_STORE_COLLECTION = "pokemon-carte-singole-ita"
+BSA_STORE_PAGE_LIMIT = 250
+BSA_STORE_MAX_PAGES = 40
 
 
-def collect_bsa_probe(cards):
+def bsa_products_url(page):
 
-    print()
-    print("=== BSA STORE — PROBE ===")
-
-    page_html = http_get(
-        BSA_STORE_COLLECTION_URL,
-        timeout=20,
-        attempts=2,
-        backoff_seconds=2,
+    return (
+        f"{BSA_STORE_BASE_URL}/collections/"
+        f"{BSA_STORE_COLLECTION}/products.json"
+        f"?limit={BSA_STORE_PAGE_LIMIT}&page={page}"
     )
 
-    text_page = strip_html(page_html)
 
-    # Formato reale atteso, per esempio:
-    # POKEMON Bulbasaur 001/165 - ITA - Near Mint - ...
-    title_matches = re.findall(
-        r"POKEMON\s+.{1,120}?\s+"
-        r"[A-Z0-9]{0,4}\d{1,3}/[A-Z0-9]{0,4}\d{1,3}"
-        r"\s*-\s*ITA\s*-\s*Near Mint",
-        text_page,
+def parse_bsa_title(title):
+
+    raw = str(title or "").strip()
+
+    # Formato tipico BSA:
+    # POKEMON Bulbasaur 001/165 - ITA - Near Mint -
+    # Scarlatto e Violetto - 151 - Carta Pokemon
+    #
+    # Varianti esplicite possono comparire dopo il numero:
+    # ... 018/165 Holo - ITA - Near Mint - ...
+
+    match = re.match(
+        r"^\s*(?:POKEMON\s+)?"
+        r"(?P<name>.+?)\s+"
+        r"(?P<number>[A-Z0-9]{0,6}\d{1,4}/[A-Z0-9]{0,6}\d{1,4})"
+        r"(?P<finish>.*?)"
+        r"\s*-\s*ITA\s*"
+        r"-\s*Near\s+Mint\s*"
+        r"-\s*(?P<set>.+?)"
+        r"\s*-\s*Carta\s+Pokemon\s*$",
+        raw,
         flags=re.IGNORECASE,
     )
 
-    price_matches = re.findall(
-        r"€\s*[0-9]{1,5}(?:[.,][0-9]{1,2})?",
-        text_page,
-        flags=re.IGNORECASE,
+    if not match:
+        return None
+
+    card_name = re.sub(
+        r"\s+",
+        " ",
+        match.group("name"),
+    ).strip()
+
+    number = norm_number(
+        match.group("number")
     )
 
-    if not title_matches:
-        raise RuntimeError(
-            "BSA Store raggiungibile ma nessuna carta "
-            "ITA Near Mint con numero è stata riconosciuta"
+    finish = re.sub(
+        r"\s+",
+        " ",
+        match.group("finish") or "",
+    ).strip(" -")
+
+    set_name = re.sub(
+        r"\s+",
+        " ",
+        match.group("set"),
+    ).strip()
+
+    # Alcuni set BSA hanno nomi composti con " - "
+    # (es. "Scarlatto e Violetto - 151").
+    set_name = clean_set_name(
+        set_name
+    )
+
+    variant_source = finish
+
+    if not variant_source:
+        variant = "Normal"
+    else:
+        variant = detect_variant(
+            variant_source
         )
 
-    print(
-        "BSA Store raggiungibile."
-    )
-    print(
-        "Carte riconosciute nella pagina test:",
-        len(title_matches),
-    )
-    print(
-        "Prezzi individuati nella pagina test:",
-        len(price_matches),
-    )
+        # Se BSA espone una finitura che non sappiamo
+        # classificare con certezza, non inventiamo "Normal".
+        if (
+            variant == "Normal"
+            and norm(variant_source)
+            not in {
+                "",
+                "normal",
+                "non holo",
+                "nonholo",
+            }
+        ):
+            return None
 
     return {
-        "source": "BSA Store",
-        "ok": True,
-        "testOnly": True,
-        "collectionReachable": True,
-        "recognizedTitles":
-            len(title_matches),
-        "recognizedPrices":
-            len(price_matches),
-        "accepted": 0,
+        "name": card_name,
+        "number": number,
+        "variant": variant,
+        "set": set_name,
+        "language": "IT",
+        "condition": "NM/MINT",
     }
+
+
+def bsa_available_price(product):
+
+    variants = product.get(
+        "variants",
+        [],
+    )
+
+    prices = []
+
+    for variant in variants:
+
+        if variant.get("available") is not True:
+            continue
+
+        price = parse_price(
+            variant.get("price")
+        )
+
+        if price is None:
+            continue
+
+        prices.append(
+            price
+        )
+
+    if not prices:
+        return None
+
+    distinct = sorted(
+        set(prices)
+    )
+
+    # Fail closed: se uno stesso prodotto presenta più
+    # prezzi disponibili, non sappiamo quale variante Shopify
+    # rappresenti esattamente la carta.
+    if len(distinct) != 1:
+        return None
+
+    return distinct[0]
+
+
+def collect_bsa_store(cards):
+
+    print()
+    print("=== BSA STORE ===")
+
+    stats = {
+        "source": "BSA Store",
+        "products": 0,
+        "accepted": 0,
+        "invalidTitle": 0,
+        "priceUnavailable": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    page = 1
+
+    while page <= BSA_STORE_MAX_PAGES:
+
+        url = bsa_products_url(
+            page
+        )
+
+        print(
+            f"BSA Store catalogo pagina {page}..."
+        )
+
+        try:
+
+            payload = http_get_json(
+                url
+            )
+
+        except Exception as exc:
+
+            # Se la prima pagina non è raggiungibile,
+            # la fonte viene marcata non disponibile.
+            if page == 1:
+                raise
+
+            print(
+                f"BSA Store: stop a pagina {page}: {exc}"
+            )
+            stats["errors"] += 1
+            break
+
+        products = payload.get(
+            "products",
+            [],
+        )
+
+        if not products:
+            break
+
+        stats["products"] += len(
+            products
+        )
+
+        checked_at = utc_now()
+
+        for product in products:
+
+            title = str(
+                product.get("title")
+                or ""
+            ).strip()
+
+            identity = parse_bsa_title(
+                title
+            )
+
+            if not identity:
+                stats["invalidTitle"] += 1
+                continue
+
+            price = bsa_available_price(
+                product
+            )
+
+            if price is None:
+                stats["priceUnavailable"] += 1
+                continue
+
+            handle = str(
+                product.get("handle")
+                or ""
+            ).strip()
+
+            if not handle:
+                stats["invalidTitle"] += 1
+                continue
+
+            product_url = (
+                f"{BSA_STORE_BASE_URL}/products/"
+                f"{urllib.parse.quote(handle, safe='-')}"
+            )
+
+            added = add_offer(
+                cards,
+                set_name=identity["set"],
+                number=identity["number"],
+                card_name=identity["name"],
+                variant=identity["variant"],
+                language="IT",
+                condition="NM/MINT",
+                offer={
+                    "store": "BSA Store",
+                    "price": price,
+                    "url": product_url,
+                    "language": "IT",
+                    "condition": "NM/MINT",
+                    "variant": identity["variant"],
+                    "checkedAt": checked_at,
+                    "sourceType": "retail-store",
+                },
+            )
+
+            if added:
+                stats["accepted"] += 1
+            else:
+                stats["duplicateStore"] += 1
+
+        # Shopify restituisce meno del limite nell'ultima pagina.
+        if len(products) < BSA_STORE_PAGE_LIMIT:
+            break
+
+        page += 1
+
+    if stats["accepted"] <= 0:
+        raise RuntimeError(
+            "BSA Store non ha prodotto nessuna offerta verificata"
+        )
+
+    print()
+    print(
+        "BSA Store — prodotti:",
+        stats["products"],
+    )
+    print(
+        "BSA Store — accettati:",
+        stats["accepted"],
+    )
+
+    return stats
 
 
 
@@ -3187,12 +3412,12 @@ def collect_retail_data():
     )
 
     # --------------------------------------------------------
-    # FONTE 3 — BSA STORE (TEST)
+    # FONTE 3 — BSA STORE
     # --------------------------------------------------------
 
     try:
 
-        result = collect_bsa_probe(
+        result = collect_bsa_store(
             cards
         )
 
@@ -3212,8 +3437,6 @@ def collect_retail_data():
                 "BSA Store",
             "ok":
                 False,
-            "testOnly":
-                True,
             "error":
                 str(exc),
             "accepted":
