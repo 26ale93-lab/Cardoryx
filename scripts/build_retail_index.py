@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import html
+import time
 import json
 import re
 import statistics
@@ -76,28 +77,94 @@ USER_AGENT = (
 )
 
 
-def http_get(url):
 
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": (
-                "text/html,application/xhtml+xml,"
-                "application/json,text/plain,*/*"
-            ),
-        },
+def http_get(
+    url,
+    *,
+    timeout=30,
+    attempts=4,
+    backoff_seconds=3,
+):
+
+    last_error = None
+
+    for attempt in range(
+        1,
+        attempts + 1,
+    ):
+
+        try:
+
+            request = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent":
+                        "Mozilla/5.0 "
+                        "(Cardoryx Retail Index; "
+                        "+https://github.com/)",
+                    "Accept":
+                        "text/html,application/xhtml+xml,"
+                        "application/json;q=0.9,*/*;q=0.8",
+                    "Accept-Language":
+                        "it-IT,it;q=0.9,en;q=0.7",
+                    "Connection":
+                        "close",
+                },
+            )
+
+            with urllib.request.urlopen(
+                request,
+                timeout=timeout,
+            ) as response:
+
+                return response.read().decode(
+                    "utf-8",
+                    errors="replace",
+                )
+
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            TimeoutError,
+            OSError,
+        ) as exc:
+
+            last_error = exc
+
+            # 403/404 non sono errori transitori utili da ritentare.
+            if isinstance(
+                exc,
+                urllib.error.HTTPError,
+            ) and exc.code in {
+                400,
+                401,
+                403,
+                404,
+            }:
+                raise
+
+            if attempt >= attempts:
+                break
+
+            wait = (
+                backoff_seconds
+                * attempt
+            )
+
+            print(
+                f"Rete temporaneamente non disponibile "
+                f"({attempt}/{attempts}) per {url}: "
+                f"{exc}"
+            )
+
+            time.sleep(wait)
+
+    if last_error:
+        raise last_error
+
+    raise RuntimeError(
+        f"Impossibile leggere {url}"
     )
-
-    with urllib.request.urlopen(
-        req,
-        timeout=HTTP_TIMEOUT,
-    ) as response:
-
-        return response.read().decode(
-            "utf-8",
-            errors="replace",
-        )
 
 
 def http_get_json(url):
@@ -2254,7 +2321,12 @@ def cardgamecorner_collect_product_links(seed_url):
             continue
 
         visited.add(url)
-        page_html = http_get(url)
+        page_html = http_get(
+            url,
+            timeout=35,
+            attempts=4,
+            backoff_seconds=4,
+        )
 
         product_links, list_links = cardgamecorner_extract_links(
             page_html,
@@ -2673,7 +2745,12 @@ def parse_cardgamecorner_product(
     seed,
 ):
 
-    page_html = http_get(url)
+    page_html = http_get(
+        url,
+        timeout=35,
+        attempts=4,
+        backoff_seconds=4,
+    )
 
     identity = cardgamecorner_product_identity(
         page_html
@@ -2730,6 +2807,37 @@ def collect_cardgamecorner(cards):
     print(
         "=== CARD GAME CORNER ==="
     )
+
+    # Test di rete separato prima di iniziare il crawl.
+    # Se GitHub Actions ha un problema DNS/rete temporaneo,
+    # non abbandoniamo subito la fonte.
+    probe_url = CARDGAMECORNER_SEEDS[0]["url"]
+    probe_error = None
+
+    for probe_attempt in range(1, 4):
+        try:
+            http_get(
+                probe_url,
+                timeout=35,
+                attempts=3,
+                backoff_seconds=4,
+            )
+            probe_error = None
+            break
+        except Exception as exc:
+            probe_error = exc
+            print(
+                "Card Game Corner test rete "
+                f"{probe_attempt}/3 fallito: {exc}"
+            )
+            if probe_attempt < 3:
+                time.sleep(8 * probe_attempt)
+
+    if probe_error is not None:
+        raise RuntimeError(
+            "Card Game Corner non raggiungibile dopo retry: "
+            f"{probe_error}"
+        )
 
     prepared_seeds = []
 
