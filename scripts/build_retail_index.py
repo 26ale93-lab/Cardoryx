@@ -3221,6 +3221,27 @@ def parse_bsa_title(title):
         match.group("finish") or "",
     ).strip(" -")
 
+    # V15 — BSA inserisce spesso la rarità dopo il numero.
+    # La rarità non è una finitura e non deve far scartare la carta.
+    finish = re.sub(
+        r"\b(?:"
+        r"Non\s+Comune|Comune|Rara\s+Doppia|"
+        r"Rara\s+Ultra|Rara\s+Illustrazione\s+Speciale|"
+        r"Rara\s+Illustrazione|Rara\s+Segreta|"
+        r"Rara\s+Iper|Rara\s+Allenatore|"
+        r"Rara\s+ACE\s+SPEC|Rara"
+        r")\b",
+        " ",
+        finish,
+        flags=re.IGNORECASE,
+    )
+
+    finish = re.sub(
+        r"\s+",
+        " ",
+        finish,
+    ).strip(" -")
+
     set_name = re.sub(
         r"\s+",
         " ",
@@ -3318,6 +3339,7 @@ def collect_bsa_store(cards):
         "accepted": 0,
         "invalidTitle": 0,
         "invalidTitleExamples": [],
+        "rarityLabelsSupported": True,
         "priceUnavailable": 0,
         "duplicateStore": 0,
         "errors": 0,
