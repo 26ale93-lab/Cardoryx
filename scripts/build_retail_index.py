@@ -3059,6 +3059,34 @@ def collect_cardgamecorner(cards):
 
 
 # ============================================================
+# DIAGNOSTICA TEMPI V8
+# ============================================================
+
+def elapsed_label(started):
+    return f"{time.monotonic() - started:.1f}s"
+
+
+def run_source_timed(label, func, cards, hard_seconds=None):
+    started = time.monotonic()
+    print()
+    print(f"[TEMPO] START {label}", flush=True)
+
+    result = func(cards)
+
+    elapsed = time.monotonic() - started
+    print(f"[TEMPO] END {label}: {elapsed:.1f}s", flush=True)
+
+    if hard_seconds is not None and elapsed > hard_seconds:
+        print(
+            f"[TEMPO] ATTENZIONE: {label} ha superato "
+            f"il limite diagnostico di {hard_seconds}s",
+            flush=True,
+        )
+
+    return result
+
+
+# ============================================================
 # BSA STORE — PRODUZIONE
 # ============================================================
 
@@ -3223,21 +3251,41 @@ def collect_bsa_store(cards):
     }
 
     page = 1
+    bsa_started = time.monotonic()
+    BSA_HARD_LIMIT_SECONDS = 180
 
     while page <= BSA_STORE_MAX_PAGES:
+
+        if time.monotonic() - bsa_started > BSA_HARD_LIMIT_SECONDS:
+            print(
+                "BSA Store: limite diagnostico di 180s raggiunto; "
+                "interrompo il crawl senza bloccare il workflow.",
+                flush=True,
+            )
+            stats["errors"] += 1
+            break
 
         url = bsa_products_url(
             page
         )
 
+        page_started = time.monotonic()
+
         print(
-            f"BSA Store catalogo pagina {page}..."
+            f"BSA Store catalogo pagina {page}...",
+            flush=True,
         )
 
         try:
 
             payload = http_get_json(
                 url
+            )
+
+            print(
+                f"[TEMPO] BSA pagina {page}: "
+                f"{elapsed_label(page_started)}",
+                flush=True,
             )
 
         except Exception as exc:
@@ -3363,104 +3411,85 @@ def collect_retail_data():
     # FONTE 1 — CARD PASSION
     # --------------------------------------------------------
 
-    result = collect_cardpassion(
-        cards
-    )
+    try:
+        result = run_source_timed(
+            "Card Passion",
+            collect_cardpassion,
+            cards,
+            hard_seconds=180,
+        )
+    except Exception as exc:
+        print("Card Passion non disponibile:", str(exc), flush=True)
+        result = {
+            "source": "Card Passion",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
 
-    source_stats.append(
-        result
-    )
+    source_stats.append(result)
 
     # --------------------------------------------------------
     # FONTE 2 — CARTEMAGIC
     # --------------------------------------------------------
 
     try:
-
-        result = collect_cartemagic(
-            cards
+        result = run_source_timed(
+            "CarteMagic",
+            collect_cartemagic,
+            cards,
+            hard_seconds=45,
         )
-
     except Exception as exc:
-
-        print()
-        print(
-            "CarteMagic non disponibile:"
-        )
-
-        print(
-            str(exc)
-        )
-
+        print("CarteMagic non disponibile:", str(exc), flush=True)
         result = {
-
-            "source":
-                "CarteMagic",
-
-            "ok":
-                False,
-
-            "error":
-                str(exc),
-
-            "accepted":
-                0,
+            "source": "CarteMagic",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
         }
 
-    source_stats.append(
-        result
-    )
+    source_stats.append(result)
 
     # --------------------------------------------------------
     # FONTE 3 — BSA STORE
     # --------------------------------------------------------
 
     try:
-
-        result = collect_bsa_store(
-            cards
+        result = run_source_timed(
+            "BSA Store",
+            collect_bsa_store,
+            cards,
+            hard_seconds=180,
         )
-
     except Exception as exc:
-
-        print()
-        print(
-            "BSA Store non disponibile:"
-        )
-
-        print(
-            str(exc)
-        )
-
+        print("BSA Store non disponibile:", str(exc), flush=True)
         result = {
-            "source":
-                "BSA Store",
-            "ok":
-                False,
-            "error":
-                str(exc),
-            "accepted":
-                0,
+            "source": "BSA Store",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
         }
 
-    source_stats.append(
-        result
-    )
+    source_stats.append(result)
 
-    
     # --------------------------------------------------------
     # FINALIZZAZIONE
     # --------------------------------------------------------
 
-    finalize_cards(
-        cards
+    final_started = time.monotonic()
+    finalize_cards(cards)
+    print(
+        f"[TEMPO] Finalizzazione: {elapsed_label(final_started)}",
+        flush=True,
     )
 
     return (
         cards,
         source_stats,
     )
-    
+
+
 # ============================================================
 # MAIN
 # ============================================================
