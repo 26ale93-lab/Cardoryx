@@ -3478,6 +3478,519 @@ def collect_bsa_store(cards):
 
 
 
+
+# ============================================================
+# MYCOMICS
+# ============================================================
+
+MYCOMICS_BASE_URL = "https://mycomics.it"
+
+MYCOMICS_SET_SEEDS = [
+    ("Astri Lucenti", "astri-lucenti"),
+    ("Colpo Fusione", "colpo-fusione"),
+    ("Gran Festa", "gran-festa"),
+    ("Pokémon GO", "pokemon-go"),
+]
+
+MYCOMICS_MAX_ARCHIVE_PAGES = 12
+MYCOMICS_HARD_LIMIT_SECONDS = 75
+
+
+def mycomics_archive_url(slug, page):
+
+    if page <= 1:
+        return (
+            f"{MYCOMICS_BASE_URL}"
+            f"/blog/espansione-pokemon/{slug}/"
+        )
+
+    return (
+        f"{MYCOMICS_BASE_URL}"
+        f"/blog/espansione-pokemon/{slug}/"
+        f"page/{page}/"
+    )
+
+
+def mycomics_shop_links(page_html):
+
+    results = []
+
+    pattern = re.compile(
+        r'<a\b[^>]*href=["\']'
+        r'(?P<url>https?://(?:www\.)?mycomics\.it'
+        r'(?:/it)?/shop/[^"\']+)'
+        r'["\'][^>]*>'
+        r'(?P<label>.*?)'
+        r'</a>',
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    seen = set()
+
+    for match in pattern.finditer(page_html):
+
+        url = html.unescape(
+            match.group("url")
+        ).strip()
+
+        label = strip_html(
+            match.group("label")
+        )
+
+        if not label:
+            continue
+
+        identity = (
+            norm(url),
+            norm(label),
+        )
+
+        if identity in seen:
+            continue
+
+        seen.add(identity)
+
+        results.append(
+            {
+                "url": url,
+                "label": label,
+            }
+        )
+
+    return results
+
+
+def mycomics_number_from_label(
+    label,
+    set_name,
+):
+
+    clean = strip_html(
+        label
+    )
+
+    normalized = norm(
+        clean
+    )
+
+    if "italiano" not in normalized:
+        return None
+
+    if "near mint" not in normalized:
+        return None
+
+    if norm(set_name) not in normalized:
+        return None
+
+    match = re.search(
+        r"(?<!\d)"
+        r"(\d{1,4}\s*/\s*\d{1,4})"
+        r"(?!\d)",
+        clean,
+    )
+
+    if not match:
+        return None
+
+    return norm_number(
+        match.group(1)
+    )
+
+
+def mycomics_explicit_variant(label):
+
+    normalized = norm(
+        label
+    )
+
+    if (
+        "master ball reverse" in normalized
+        or "masterball reverse" in normalized
+    ):
+        return "Master Ball Reverse Holo"
+
+    if (
+        "poke ball reverse" in normalized
+        or "pokeball reverse" in normalized
+    ):
+        return "Poké Ball Reverse Holo"
+
+    if (
+        "energy reverse" in normalized
+        or "energia reverse" in normalized
+    ):
+        return "Energy Reverse Holo"
+
+    if "reverse" in normalized:
+        return "Reverse Holo"
+
+    return None
+
+
+def mycomics_existing_candidate(
+    cards,
+    set_name,
+    number,
+    explicit_variant,
+):
+
+    candidates = []
+
+    for card in cards.values():
+
+        if norm(
+            card.get("set")
+        ) != norm(
+            clean_set_name(set_name)
+        ):
+            continue
+
+        if norm_number(
+            card.get("number")
+        ) != norm_number(
+            number
+        ):
+            continue
+
+        if norm(
+            card.get("language")
+        ) != "it":
+            continue
+
+        if norm(
+            card.get("condition")
+        ) != norm(
+            "NM/MINT"
+        ):
+            continue
+
+        stores = {
+            norm(
+                offer.get("store")
+            )
+            for offer in card.get(
+                "offers",
+                [],
+            )
+            if offer.get("store")
+        }
+
+        if len(stores) < 2:
+            continue
+
+        variant = str(
+            card.get("variant")
+            or ""
+        )
+
+        if explicit_variant:
+
+            if norm(
+                variant
+            ) != norm(
+                explicit_variant
+            ):
+                continue
+
+        else:
+
+            if "reverse" in norm(
+                variant
+            ):
+                continue
+
+        candidates.append(
+            card
+        )
+
+    if len(candidates) != 1:
+        return None
+
+    return candidates[0]
+
+
+def mycomics_product_price(
+    page_html,
+):
+
+    matches = re.findall(
+        r'<(?:p|div|span)\b'
+        r'[^>]*class=["\']'
+        r'[^"\']*\bprice\b[^"\']*'
+        r'["\'][^>]*>'
+        r'(?P<body>.*?)'
+        r'</(?:p|div|span)>',
+        page_html,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    prices = []
+
+    for body in matches:
+
+        price = parse_euro_price(
+            body
+        )
+
+        if price is not None:
+            prices.append(
+                price
+            )
+
+    prices = sorted(
+        set(prices)
+    )
+
+    if len(prices) != 1:
+        return None
+
+    return prices[0]
+
+
+def mycomics_product_is_valid(
+    page_html,
+):
+
+    text = strip_html(
+        page_html
+    )
+
+    normalized = norm(
+        text
+    )
+
+    if "prodotto in italiano" not in normalized:
+        return False
+
+    if "near mint" not in normalized:
+        return False
+
+    if (
+        "al momento il prodotto non e disponibile"
+        in normalized
+    ):
+        return False
+
+    if not (
+        "aggiungi al carrello" in normalized
+        or "acquista" in normalized
+    ):
+        return False
+
+    return True
+
+
+def collect_mycomics(
+    cards,
+):
+
+    print()
+    print("=== MYCOMICS ===")
+
+    stats = {
+        "source": "MyComics",
+        "archivePages": 0,
+        "links": 0,
+        "candidates": 0,
+        "processed": 0,
+        "accepted": 0,
+        "unavailable": 0,
+        "priceUnavailable": 0,
+        "identityAmbiguous": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    started = time.monotonic()
+    queued = {}
+
+    for set_name, slug in MYCOMICS_SET_SEEDS:
+
+        for page in range(
+            1,
+            MYCOMICS_MAX_ARCHIVE_PAGES + 1,
+        ):
+
+            if (
+                time.monotonic()
+                - started
+                > MYCOMICS_HARD_LIMIT_SECONDS
+            ):
+                stats["timeLimitReached"] = True
+                break
+
+            url = mycomics_archive_url(
+                slug,
+                page,
+            )
+
+            try:
+                page_html = http_get(
+                    url,
+                    timeout=6,
+                    attempts=1,
+                )
+            except urllib.error.HTTPError as exc:
+
+                if exc.code == 404 and page > 1:
+                    break
+
+                stats["errors"] += 1
+                break
+
+            except Exception as exc:
+
+                stats["errors"] += 1
+
+                print(
+                    f"MyComics {set_name}: "
+                    f"errore rete pagina {page}: {exc}",
+                    flush=True,
+                )
+                break
+
+            stats["archivePages"] += 1
+
+            links = mycomics_shop_links(
+                page_html
+            )
+
+            if not links:
+                break
+
+            stats["links"] += len(
+                links
+            )
+
+            for item in links:
+
+                number = mycomics_number_from_label(
+                    item["label"],
+                    set_name,
+                )
+
+                if not number:
+                    continue
+
+                explicit_variant = (
+                    mycomics_explicit_variant(
+                        item["label"]
+                    )
+                )
+
+                candidate = (
+                    mycomics_existing_candidate(
+                        cards,
+                        set_name,
+                        number,
+                        explicit_variant,
+                    )
+                )
+
+                if candidate is None:
+                    stats["identityAmbiguous"] += 1
+                    continue
+
+                key = make_key(
+                    candidate["set"],
+                    candidate["number"],
+                    candidate["variant"],
+                    candidate["language"],
+                    candidate["condition"],
+                )
+
+                if key in queued:
+                    continue
+
+                queued[key] = {
+                    "candidate": candidate,
+                    "url": item["url"],
+                }
+
+                stats["candidates"] += 1
+
+            if len(links) < 20:
+                break
+
+        if (
+            time.monotonic()
+            - started
+            > MYCOMICS_HARD_LIMIT_SECONDS
+        ):
+            break
+
+    for key, item in queued.items():
+
+        if (
+            time.monotonic()
+            - started
+            > MYCOMICS_HARD_LIMIT_SECONDS
+        ):
+            stats["timeLimitReached"] = True
+            break
+
+        stats["processed"] += 1
+
+        try:
+            product_html = http_get(
+                item["url"],
+                timeout=6,
+                attempts=1,
+            )
+        except Exception:
+            stats["errors"] += 1
+            continue
+
+        if not mycomics_product_is_valid(
+            product_html
+        ):
+            stats["unavailable"] += 1
+            continue
+
+        price = mycomics_product_price(
+            product_html
+        )
+
+        if price is None:
+            stats["priceUnavailable"] += 1
+            continue
+
+        card = item["candidate"]
+
+        added = add_offer(
+            cards,
+            set_name=card["set"],
+            number=card["number"],
+            card_name=card["name"],
+            variant=card["variant"],
+            language="IT",
+            condition="NM/MINT",
+            offer={
+                "store": "MyComics",
+                "price": price,
+                "url": item["url"],
+                "language": "IT",
+                "condition": "NM/MINT",
+                "variant": card["variant"],
+                "checkedAt": utc_now(),
+                "sourceType": "retail-store",
+            },
+        )
+
+        if added:
+            stats["accepted"] += 1
+
+    print(
+        "MyComics:",
+        json.dumps(
+            stats,
+            ensure_ascii=False,
+        ),
+        flush=True,
+    )
+
+    return stats
+
 def collect_retail_data():
 
     cards = {}
@@ -3536,7 +4049,34 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 3 — CARD GAME CORNER
+    # FONTE 3 — MYCOMICS
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "MyComics",
+            collect_mycomics,
+            cards,
+            hard_seconds=80,
+        )
+    except Exception as exc:
+        print(
+            "MyComics non disponibile:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "MyComics",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+            "timeLimitSeconds": 75,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 4 — CARD GAME CORNER
     # --------------------------------------------------------
 
     try:
@@ -3693,6 +4233,13 @@ def main():
                     1
                     for card in cards.values()
                     if card.get("stats", {}).get("stores", 0) >= 2
+                ),
+
+            "threeStoreCards":
+                sum(
+                    1
+                    for card in cards.values()
+                    if card.get("stats", {}).get("stores", 0) >= 3
                 ),
         },
 
