@@ -4325,7 +4325,7 @@ def collect_gs_gameon(cards):
                 page=page
             )
 
-            payload = fetch_json(url)
+            payload = http_get_json(url)
 
             products = (
                 payload.get("products", [])
