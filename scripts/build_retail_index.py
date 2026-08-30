@@ -2294,6 +2294,308 @@ def absolute_url(base_url, href):
 
 
 
+
+# ============================================================
+# WARCARD — V19
+# ============================================================
+
+WARCARD_COLLECTION_URL = (
+    "https://www.warcard.it/collections/pok-mon-single/products.json"
+    "?limit=250&page={page}"
+)
+
+
+def warcard_variant(edition, rarity=""):
+
+    edition_n = norm(edition)
+    rarity_n = norm(rarity)
+
+    if "reverse holo" in edition_n:
+        return "Reverse Holo"
+
+    if "normale" in edition_n or "normal" in edition_n or edition_n == "":
+        if (
+            "holo rare" in rarity_n
+            or rarity_n in ("holo", "rare holo")
+        ):
+            return "Holo"
+        return "Normal"
+
+    return None
+
+
+def warcard_parse_title(title):
+
+    value = str(title or "").strip()
+
+    # Esempi:
+    # Froakie - Caos Nascente (Common) [CRI-020]
+    # Heliolisk - Crepuscolo Mascherato (Common) [TWM-071]
+    # Mawile - Ascesa Eroica: Supplementi (Uncommon) [xASC-144]
+    m = re.match(
+        r"^(.*?)\s+-\s+(.*?)\s+\(([^()]*)\)\s+\[([^\]]+)\]\s*$",
+        value,
+        flags=re.IGNORECASE,
+    )
+
+    if not m:
+        return None
+
+    code = m.group(4).strip()
+
+    number_match = re.search(
+        r"(\d{1,3})\s*$",
+        code,
+    )
+
+    if not number_match:
+        return None
+
+    return {
+        "name": m.group(1).strip(),
+        "set": clean_set_name(m.group(2).strip()),
+        "rarity": m.group(3).strip(),
+        "localNumber": str(int(number_match.group(1))),
+        "code": code,
+    }
+
+
+def collect_warcard(cards):
+
+    print()
+    print("=== WARCARD ===", flush=True)
+
+    stats = {
+        "source": "Warcard",
+        "products": 0,
+        "variants": 0,
+        "accepted": 0,
+        "invalidTitle": 0,
+        "languageRejected": 0,
+        "conditionRejected": 0,
+        "editionRejected": 0,
+        "unavailable": 0,
+        "identityAmbiguous": 0,
+        "priceUnavailable": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    identity_index = {}
+
+    for key, card in cards.items():
+
+        number = norm_number(card.get("number", ""))
+
+        base = number.split("/")[0].lstrip("0") or "0"
+
+        identity_index.setdefault(
+            (
+                norm(card.get("set", "")),
+                base,
+            ),
+            [],
+        ).append((key, card))
+
+    checked_at = utc_now()
+
+    try:
+
+        for page in range(1, 61):
+
+            url = WARCARD_COLLECTION_URL.format(page=page)
+
+            payload = http_get_json(url)
+
+            products = (
+                payload.get("products", [])
+                if isinstance(payload, dict)
+                else []
+            )
+
+            if not products:
+                break
+
+            for product in products:
+
+                stats["products"] += 1
+
+                parsed = warcard_parse_title(
+                    product.get("title")
+                )
+
+                if not parsed:
+                    stats["invalidTitle"] += 1
+                    continue
+
+                target_set = norm(parsed["set"])
+                target_number = parsed["localNumber"]
+
+                candidates = identity_index.get(
+                    (
+                        target_set,
+                        target_number,
+                    ),
+                    [],
+                )
+
+                # Stessa riconciliazione conservativa già usata per GS:
+                # "...: Supplementi" deve poter coincidere col set base.
+                if not candidates:
+
+                    compact_target = target_set.replace(
+                        " supplementi",
+                        ""
+                    ).replace(
+                        ":",
+                        " "
+                    )
+
+                    compact_target = " ".join(
+                        compact_target.split()
+                    )
+
+                    possible = []
+
+                    for (
+                        set_key,
+                        number_key,
+                    ), values in identity_index.items():
+
+                        if number_key != target_number:
+                            continue
+
+                        compact_set = set_key.replace(
+                            " supplementi",
+                            ""
+                        ).replace(
+                            ":",
+                            " "
+                        )
+
+                        compact_set = " ".join(
+                            compact_set.split()
+                        )
+
+                        if compact_set == compact_target:
+                            possible.extend(values)
+
+                    candidates = possible
+
+                for shop_variant in (
+                    product.get("variants", [])
+                    or []
+                ):
+
+                    stats["variants"] += 1
+
+                    if not shop_variant.get("available"):
+                        stats["unavailable"] += 1
+                        continue
+
+                    language = str(
+                        shop_variant.get("option1", "")
+                    ).strip()
+
+                    condition = str(
+                        shop_variant.get("option2", "")
+                    ).strip()
+
+                    edition = str(
+                        shop_variant.get("option3", "")
+                    ).strip()
+
+                    if norm(language) != "italiano":
+                        stats["languageRejected"] += 1
+                        continue
+
+                    if norm(condition) != "near mint":
+                        stats["conditionRejected"] += 1
+                        continue
+
+                    variant = warcard_variant(
+                        edition,
+                        parsed["rarity"],
+                    )
+
+                    if variant is None:
+                        stats["editionRejected"] += 1
+                        continue
+
+                    matching = [
+                        (key, card)
+                        for key, card in candidates
+                        if card.get("variant") == variant
+                    ]
+
+                    if len(matching) != 1:
+                        stats["identityAmbiguous"] += 1
+                        continue
+
+                    key, card = matching[0]
+
+                    raw_price = shop_variant.get("price")
+
+                    try:
+                        price = float(raw_price)
+                    except (TypeError, ValueError):
+                        stats["priceUnavailable"] += 1
+                        continue
+
+                    if isinstance(raw_price, int):
+                        price = price / 100.0
+
+                    price = round(price, 2)
+
+                    if price <= 0:
+                        stats["priceUnavailable"] += 1
+                        continue
+
+                    stores_before = {
+                        norm(x.get("store"))
+                        for x in card.get("offers", [])
+                    }
+
+                    if norm("Warcard") in stores_before:
+                        stats["duplicateStore"] += 1
+                        continue
+
+                    card.setdefault("offers", []).append({
+                        "store": "Warcard",
+                        "price": price,
+                        "url": (
+                            "https://www.warcard.it/products/"
+                            + str(product.get("handle", ""))
+                        ),
+                        "language": "IT",
+                        "condition": "NM/MINT",
+                        "variant": variant,
+                        "checkedAt": checked_at,
+                        "sourceType": "retail-store",
+                    })
+
+                    stats["accepted"] += 1
+
+            if len(products) < 250:
+                break
+
+    except Exception as exc:
+
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    print(
+        "Warcard:",
+        json.dumps(stats, ensure_ascii=False),
+        flush=True,
+    )
+
+    return stats
+
+
+
 # ============================================================
 # FEDERICSTORE
 # ============================================================
@@ -4957,7 +5259,33 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 5 — FEDERICSTORE
+    # FONTE 5 — WARCARD
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "Warcard",
+            collect_warcard,
+            cards,
+            hard_seconds=180,
+        )
+    except Exception as exc:
+        print(
+            "Warcard non disponibile:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "Warcard",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 6 — FEDERICSTORE
     # --------------------------------------------------------
 
     try:
@@ -4983,7 +5311,7 @@ def collect_retail_data():
     source_stats.append(result)
 
     # --------------------------------------------------------
-    # FONTE 6 — CARD GAME CORNER
+    # FONTE 7 — CARD GAME CORNER
     # --------------------------------------------------------
 
     try:
