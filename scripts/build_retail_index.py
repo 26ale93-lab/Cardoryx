@@ -4137,6 +4137,185 @@ def collect_retail_data():
     )
 
 
+
+# ============================================================
+# DIAGNOSTICA RICONCILIAZIONE CARD PASSION <-> BSA
+# ============================================================
+
+def reconciliation_diagnostics(cards):
+
+    cp_entries = []
+    bsa_entries = []
+
+    for key, card in cards.items():
+
+        stores = {
+            norm(offer.get("store"))
+            for offer in card.get("offers", [])
+            if offer.get("store")
+        }
+
+        base = {
+            "key": key,
+            "set": card.get("set", ""),
+            "number": card.get("number", ""),
+            "name": card.get("name", ""),
+            "variant": card.get("variant", ""),
+        }
+
+        if norm("Card Passion") in stores:
+            cp_entries.append(base)
+
+        if norm("BSA Store") in stores:
+            bsa_entries.append(base)
+
+    def base_key(item):
+        return (
+            norm(item["set"]),
+            norm_number(item["number"]),
+        )
+
+    def name_number_key(item):
+        return (
+            norm(item["name"]),
+            norm_number(item["number"]),
+        )
+
+    cp_by_base = {}
+    bsa_by_base = {}
+    cp_by_name_number = {}
+    bsa_by_name_number = {}
+
+    for item in cp_entries:
+        cp_by_base.setdefault(base_key(item), []).append(item)
+        cp_by_name_number.setdefault(name_number_key(item), []).append(item)
+
+    for item in bsa_entries:
+        bsa_by_base.setdefault(base_key(item), []).append(item)
+        bsa_by_name_number.setdefault(name_number_key(item), []).append(item)
+
+    already_joined = 0
+
+    for card in cards.values():
+        stores = {
+            norm(offer.get("store"))
+            for offer in card.get("offers", [])
+            if offer.get("store")
+        }
+        if (
+            norm("Card Passion") in stores
+            and norm("BSA Store") in stores
+        ):
+            already_joined += 1
+
+    shared_bases = set(cp_by_base) & set(bsa_by_base)
+    variant_mismatches = []
+
+    for bk in sorted(shared_bases):
+
+        cp_items = cp_by_base[bk]
+        bsa_items = bsa_by_base[bk]
+
+        cp_keys = {item["key"] for item in cp_items}
+        bsa_keys = {item["key"] for item in bsa_items}
+
+        unresolved_cp = [
+            item for item in cp_items
+            if item["key"] not in bsa_keys
+        ]
+        unresolved_bsa = [
+            item for item in bsa_items
+            if item["key"] not in cp_keys
+        ]
+
+        if unresolved_cp or unresolved_bsa:
+            variant_mismatches.append({
+                "set": cp_items[0]["set"],
+                "number": cp_items[0]["number"],
+                "cardPassion": [
+                    {
+                        "name": x["name"],
+                        "variant": x["variant"],
+                    }
+                    for x in unresolved_cp
+                ],
+                "bsaStore": [
+                    {
+                        "name": x["name"],
+                        "variant": x["variant"],
+                    }
+                    for x in unresolved_bsa
+                ],
+            })
+
+    shared_name_numbers = (
+        set(cp_by_name_number)
+        & set(bsa_by_name_number)
+    )
+
+    set_mismatches = []
+    seen = set()
+
+    for nk in sorted(shared_name_numbers):
+
+        for cp in cp_by_name_number[nk]:
+            for bsa in bsa_by_name_number[nk]:
+
+                if norm(cp["set"]) == norm(bsa["set"]):
+                    continue
+
+                pair = (
+                    norm(cp["set"]),
+                    norm(bsa["set"]),
+                    norm_number(cp["number"]),
+                    norm(cp["name"]),
+                )
+
+                if pair in seen:
+                    continue
+
+                seen.add(pair)
+
+                set_mismatches.append({
+                    "name": cp["name"],
+                    "number": cp["number"],
+                    "cardPassionSet": cp["set"],
+                    "bsaSet": bsa["set"],
+                    "cardPassionVariant": cp["variant"],
+                    "bsaVariant": bsa["variant"],
+                })
+
+    cp_base_keys = set(cp_by_base)
+    bsa_base_keys = set(bsa_by_base)
+
+    result = {
+        "alreadyJoinedCards": already_joined,
+        "sharedSetNumberGroups": len(shared_bases),
+        "variantMismatchGroups": len(variant_mismatches),
+        "possibleSetNameMismatchGroups": len(set_mismatches),
+        "onlyCardPassionBaseIdentities":
+            len(cp_base_keys - bsa_base_keys),
+        "onlyBsaBaseIdentities":
+            len(bsa_base_keys - cp_base_keys),
+        "variantMismatchExamples":
+            variant_mismatches[:40],
+        "setNameMismatchExamples":
+            set_mismatches[:40],
+    }
+
+    print()
+    print("DIAGNOSTICA RICONCILIAZIONE:")
+    print(
+        json.dumps(
+            result,
+            ensure_ascii=False,
+            indent=2,
+        ),
+        flush=True,
+    )
+
+    return result
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -4179,6 +4358,10 @@ def main():
         for card in cards.values()
     )
 
+    reconciliation = reconciliation_diagnostics(
+        cards
+    )
+
     out = {
 
         "schema":
@@ -4189,6 +4372,9 @@ def main():
 
         "description":
             "Cardoryx Italian retail reference index",
+
+        "reconciliationDiagnostics":
+            reconciliation,
 
         "rules": {
 
