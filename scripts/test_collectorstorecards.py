@@ -1,124 +1,177 @@
 #!/usr/bin/env python3
-import json, re, time, unicodedata, urllib.request
-from collections import Counter, defaultdict
-from html import unescape
+import json
+import re
+import unicodedata
+import urllib.request
+from collections import Counter
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
 
-RETAIL = Path("data/retail_prices.json")
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/1.0)"
-TIMEOUT = 15
+BASE = "https://collectorstorecards.it"
+COLL = BASE + "/collections/carte-singole-pokemon"
+REPORT = Path("collectorstorecards_test_report.json")
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/2.0)"
+MAX_PAGES = 8
 
 def norm(s):
-    s=unicodedata.normalize("NFKD",str(s or ""))
-    s="".join(c for c in s if not unicodedata.combining(c))
-    s=unescape(s).lower().replace("’","'")
-    return re.sub(r"\s+"," ",re.sub(r"[^a-z0-9]+"," ",s)).strip()
+    s = unicodedata.normalize("NFKD", str(s or ""))
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = s.lower()
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
 
-def get(url):
-    req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept-Language":"it-IT,it;q=0.9"})
-    with urllib.request.urlopen(req,timeout=TIMEOUT) as r:
-        return r.read().decode("utf-8","replace"),r.geturl()
+def get_json(url):
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": UA, "Accept": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read().decode("utf-8", "replace"))
 
-def text(h):
-    h=re.sub(r"<script\b.*?</script>"," ",h,flags=re.I|re.S)
-    h=re.sub(r"<style\b.*?</style>"," ",h,flags=re.I|re.S)
-    return re.sub(r"\s+"," ",unescape(re.sub(r"<[^>]+>"," ",h))).strip()
+def parse_title(title):
+    t = str(title or "").strip()
+    num = None
+    m = re.search(r"\b([A-Za-z]*\d{1,3})\s*[/\-]\s*([A-Za-z]*\d{1,3})\b", t)
+    if m:
+        num = f"{m.group(1)}/{m.group(2)}"
 
-def parts(n):
-    m=re.match(r"^\s*([A-Za-z]*)(\d+)\s*[-/]\s*([A-Za-z]*)(\d+)\s*$",str(n or ""))
-    return (m.group(1).upper(),int(m.group(2)),m.group(3).upper(),int(m.group(4))) if m else None
+    language = "IT" if re.search(r"\bITA\b", t, re.I) else None
 
-def indexes():
-    d=json.loads(RETAIL.read_text(encoding="utf-8"))
-    exact=defaultdict(list); sets={}
-    for c in d.get("cards",{}).values():
-        p=parts(c.get("number"))
-        if p:
-            exact[(norm(c.get("set")),p,norm(c.get("name")),c.get("variant"))].append(c)
-        if c.get("set"): sets[norm(c["set"])]=c["set"]
-    return exact,sets
+    # set candidate = text between collector number and trailing ITA when title follows usual shop pattern
+    set_name = None
+    if m:
+        tail = t[m.end():]
+        tail = re.sub(r"\bITA\b.*$", "", tail, flags=re.I).strip(" -–—")
+        if tail:
+            set_name = tail.strip()
 
-def money(s):
-    m=re.search(r"€\s*([0-9]+(?:[.,][0-9]{1,2})?)",s)
-    return float(m.group(1).replace(",",".")) if m else None
+    name = t[:m.start()].strip(" -–—") if m else t
+    name = re.sub(r"^\s*Pok[eé]mon\s+", "", name, flags=re.I).strip()
 
-def finish_from_fields(rarity="", reverse=""):
-    nr=norm(rarity); nv=norm(reverse)
-    if nv in ("si","yes","true"): return "Reverse Holo"
-    if "reverse" in nr: return "Reverse Holo"
-    if "holo" in nr: return "Holo"
-    return "Normal"
+    return {
+        "name": name,
+        "number": num,
+        "setFromTitle": set_name,
+        "languageFromTitle": language,
+    }
 
-BASE="https://collectorstorecards.it"
-COLL=BASE+"/collections/carte-singole-pokemon"
-REPORT=Path("collectorstorecards_test_report.json")
-MAX_PAGES=12
+products = []
+stats = Counter()
+page_errors = []
 
-def main():
-    idx,sets=indexes(); st=Counter(); examples=[]
-    # Shopify products.json: test isolato, sola lettura.
-    products=[]
-    for page in range(1,MAX_PAGES+1):
-        u=f"{COLL}/products.json?limit=250&page={page}"
-        try:
-            h,_=get(u); obj=json.loads(h); batch=obj.get("products",[])
-            st["catalogPagesFetched"]+=1
-            if not batch: break
-            products+=batch
-            if len(batch)<250: break
-        except Exception:
-            st["catalogPageErrors"]+=1; break
-    st["products"]=len(products)
-    for p in products:
-        st["attempted"]+=1
-        handle=p.get("handle","")
-        u=f"{BASE}/products/{handle}"
-        try:
-            h,final=get(u); t=text(h); st["fetched"]+=1
-            title=p.get("title","")
-            if not re.search(r"\bITA\b",title,re.I) or not re.search(r"\bNear Mint\b",t,re.I):
-                st["prefilterRejected"]+=1; continue
-            if re.search(r"\bEsaurito\b",t,re.I):
-                st["unavailable"]+=1; continue
-            sm=re.search(r"\bSet:\s*(.+?)(?=\s+(?:Rarità|Numerazione|Lingua):)",t,re.I)
-            nm=re.search(r"\bNumerazione:\s*([A-Za-z]*\d+(?:\s*[/\-]\s*[A-Za-z]*\d+)?)",t,re.I)
-            rm=re.search(r"\bRarità:\s*(.+?)(?=\s+(?:Numerazione|Lingua):)",t,re.I)
-            if not(sm and nm and rm):
-                st["identityFieldsMissing"]+=1; continue
-            setname=sm.group(1).strip(); num=nm.group(1).replace(" ","").replace("-","/")
-            # Se la pagina mostra solo il numeratore, prova il denominatore dal titolo.
-            if "/" not in num:
-                tm=re.search(r"\b([A-Za-z]*\d+)\s*/\s*([A-Za-z]*\d+)\b",title)
-                if tm and norm(tm.group(1))==norm(num): num=f"{tm.group(1)}/{tm.group(2)}"
-            rarity=rm.group(1).strip()
-            variant=finish_from_fields(rarity,"")
-            # Rarità speciali non equivalgono automaticamente a Holo: fail closed.
-            if variant=="Normal" and any(x in norm(rarity) for x in ["illustration rare","ultra rare","double rare","special illustration","shiny rare"]):
-                st["variantAmbiguous"]+=1; continue
-            price=None
-            variants=p.get("variants",[])
-            available_prices={float(v["price"]) for v in variants if v.get("available") and v.get("price")}
-            if len(available_prices)==1: price=next(iter(available_prices))
-            if price is None:
-                st["priceUnavailable"]+=1; continue
-            name=re.sub(r"^\s*Pok[eé]mon\s+","",title,flags=re.I)
-            name=re.split(r"\s+[A-Za-z]*\d+\s*/\s*[A-Za-z]*\d+\s+",name,maxsplit=1)[0].strip()
-            pp=parts(num)
-            candidates=idx.get((norm(setname),pp,norm(name),variant),[]) if pp else []
-            st["usable"]+=1
-            if len(candidates)==1: st["exactMatches"]+=1
-            else: st["identityRejected"]+=1
-            if len(examples)<25:
-                examples.append({"title":title,"set":setname,"number":num,"rarity":rarity,"variant":variant,"price":price,"exactMatch":len(candidates)==1,"url":final})
-        except Exception:
-            st["errors"]+=1
-        time.sleep(.02)
-    report={"schema":1,"source":"Collector Store Cards","mode":"read-only diagnostic","ok":True,
-            "rules":{"cardmarketTouched":False,"retailPricesModified":False,"createsNewIdentity":False,
-                     "identity":"exact set + full number + exact name + exact variant","language":"Italiano","condition":"Near Mint","availability":"available only",
-                     "ambiguousRarity":"rejected"},
-            "stats":dict(st),"examples":examples}
-    REPORT.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
-    print(json.dumps(report["stats"],ensure_ascii=False,indent=2)); print("Report:",REPORT)
-if __name__=="__main__": main()
+for page in range(1, MAX_PAGES + 1):
+    url = f"{COLL}/products.json?limit=250&page={page}"
+    try:
+        obj = get_json(url)
+        batch = obj.get("products", [])
+        stats["catalogPagesFetched"] += 1
+        products.extend(batch)
+        if len(batch) < 250:
+            break
+    except Exception as e:
+        stats["catalogPageErrors"] += 1
+        page_errors.append({"page": page, "error": repr(e)})
+        break
+
+stats["products"] = len(products)
+examples = []
+
+for p in products:
+    title = p.get("title", "")
+    parsed = parse_title(title)
+    stats["productsInspected"] += 1
+
+    if parsed["languageFromTitle"] == "IT":
+        stats["italianFromTitle"] += 1
+    if parsed["number"]:
+        stats["numberFromTitle"] += 1
+    if parsed["setFromTitle"]:
+        stats["setCandidateFromTitle"] += 1
+
+    tags = p.get("tags") or []
+    if isinstance(tags, str):
+        tags = [x.strip() for x in tags.split(",") if x.strip()]
+    options = p.get("options") or []
+    variants = p.get("variants") or []
+
+    if tags:
+        stats["withTags"] += 1
+    if options:
+        stats["withOptions"] += 1
+    if variants:
+        stats["withVariants"] += 1
+
+    available_variants = [v for v in variants if v.get("available")]
+    if available_variants:
+        stats["productsWithAvailableVariant"] += 1
+
+    option_names = [o.get("name") for o in options if isinstance(o, dict)]
+    joined_meta = " | ".join(
+        [str(x) for x in tags]
+        + [str(x) for x in option_names]
+        + [str(p.get("product_type", "")), str(p.get("vendor", ""))]
+    )
+    nmeta = norm(joined_meta)
+    if "near mint" in nmeta or re.search(r"\bnm\b", nmeta):
+        stats["nearMintSignalInCatalogData"] += 1
+    if "reverse" in nmeta:
+        stats["reverseSignalInCatalogData"] += 1
+    if "holo" in nmeta:
+        stats["holoSignalInCatalogData"] += 1
+
+    # Count option names/values to understand whether variant identity is encoded in Shopify.
+    option_values = []
+    for v in variants[:20]:
+        for k in ("option1", "option2", "option3"):
+            val = v.get(k)
+            if val:
+                option_values.append(str(val))
+    nov = norm(" | ".join(option_values))
+    if "near mint" in nov or re.search(r"\bnm\b", nov):
+        stats["nearMintSignalInVariantOptions"] += 1
+    if "reverse" in nov:
+        stats["reverseSignalInVariantOptions"] += 1
+    if "holo" in nov:
+        stats["holoSignalInVariantOptions"] += 1
+    if "italiano" in nov or re.search(r"\bita\b", nov):
+        stats["italianSignalInVariantOptions"] += 1
+
+    if len(examples) < 30:
+        examples.append({
+            "title": title,
+            "handle": p.get("handle"),
+            "productType": p.get("product_type"),
+            "vendor": p.get("vendor"),
+            "tags": tags[:20],
+            "options": options,
+            "variantSample": [
+                {
+                    "available": v.get("available"),
+                    "price": v.get("price"),
+                    "sku": v.get("sku"),
+                    "option1": v.get("option1"),
+                    "option2": v.get("option2"),
+                    "option3": v.get("option3"),
+                }
+                for v in variants[:5]
+            ],
+            "parsed": parsed,
+        })
+
+report = {
+    "schema": 2,
+    "source": "Collector Store Cards",
+    "mode": "read-only diagnostic",
+    "rules": {
+        "cardmarketTouched": False,
+        "retailPricesModified": False,
+        "productPagesOpened": False,
+        "shopifyCatalogOnly": True,
+        "createsNewIdentity": False,
+    },
+    "stats": dict(stats),
+    "pageErrors": page_errors,
+    "examples": examples,
+}
+REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
+print("Report:", REPORT)
