@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# Cardoryx - test isolato LPPCollecting V4
+# READ-ONLY: non modifica retail_prices.json e non tocca Cardmarket.
+#
+# V4 non dipende dalla homepage per scoprire i set.
+# Usa un piccolo gruppo di ID reali verificati pubblicamente per controllare
+# parsing, disponibilità, lingua, condizione e matching Cardoryx.
+
 import json
 import re
 import time
@@ -10,14 +17,24 @@ from html import unescape
 from pathlib import Path
 
 BASE = "https://www.lppcollecting.it"
-HOME = BASE + "/pokemon/"
 SEARCH = BASE + "/pokemon/ricercacarte.php"
 RETAIL = Path("data/retail_prices.json")
 REPORT = Path("lppcollecting_test_report.json")
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/2.0)"
-TIMEOUT = 12
-MAX_SETS = 35
 
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/4.0)"
+TIMEOUT = 15
+
+# ID reali verificati su pagine pubbliche LPPCollecting.
+# Servono solo come campione diagnostico, non come mappa definitiva.
+TEST_SET_IDS = [
+    "103",      # Avventure Insieme
+    "102",      # Scintille Folgoranti
+    "1000009",  # Zenit Regale
+    "1001004",  # Detective Pikachu
+    "1001002",  # XY - Benvenuti a Kalos
+    "4",        # Base Set 2
+    "8",        # Neo Genesis
+]
 
 def norm(s):
     s = unicodedata.normalize("NFKD", str(s or ""))
@@ -26,22 +43,22 @@ def norm(s):
     s = re.sub(r"[^a-z0-9]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
-
 def get(url):
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": UA, "Accept-Language": "it-IT,it;q=0.9"},
+        headers={
+            "User-Agent": UA,
+            "Accept-Language": "it-IT,it;q=0.9",
+        },
     )
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return r.read().decode("utf-8", "replace")
-
 
 def plain(html):
     html = re.sub(r"<script\b.*?</script>", " ", html, flags=re.I | re.S)
     html = re.sub(r"<style\b.*?</style>", " ", html, flags=re.I | re.S)
     html = re.sub(r"<[^>]+>", " ", html)
     return re.sub(r"\s+", " ", unescape(html)).strip()
-
 
 def collector_parts(number):
     m = re.match(
@@ -57,132 +74,163 @@ def collector_parts(number):
         int(m.group(4)),
     )
 
-
-def rarity_variant(rarity):
+def rarity_variant(rarity, sku=""):
     r = norm(rarity)
-    if "reverse" in r:
+    s = norm(sku)
+
+    # LPP usa "RH" e spesso aggiunge "rh" anche nel codice.
+    if " rh" in f" {r}" or "reverse" in r or s.endswith("rh ita"):
         return "Reverse Holo"
-    if r in {"h", "holo", "olografica", "olografiche"}:
+
+    # H = Holo semplice. Le diciture di prima edizione restano escluse.
+    if r == "h":
         return "Holo"
+
     return None
 
+def extract_set_names(html):
+    text = plain(html)
+    marker = re.search(
+        r"([A-Za-zÀ-ÿ0-9&'’.\- ]{2,80})\s*/\s*"
+        r"([A-Za-zÀ-ÿ0-9&'’.\- ]{2,80})\s+"
+        r"carta\s+codice\s+numero\s+rarit",
+        text,
+        re.I,
+    )
+    if marker:
+        return marker.group(1).strip(), marker.group(2).strip()
 
-def discover_ids(html):
-    ids = []
-    for m in re.finditer(r"poke_idserie(?:=|%3D)(\d{1,12})", html, re.I):
-        sid = m.group(1)
-        if sid != "0" and sid not in ids:
-            ids.append(sid)
-    for m in re.finditer(r'''<option[^>]+value=["'](\d{1,12})["']''', html, re.I):
-        sid = m.group(1)
-        if sid != "0" and sid not in ids:
-            ids.append(sid)
-    return ids[:MAX_SETS]
+    # set solo italiano / senza slash
+    marker = re.search(
+        r"([A-Za-zÀ-ÿ0-9&'’.\- ]{2,100})\s+"
+        r"carta\s+codice\s+numero\s+rarit",
+        text,
+        re.I,
+    )
+    if marker:
+        return marker.group(1).strip(), ""
 
+    return "", ""
 
-def set_name(html):
-    text = plain(html[:180000])
-    patterns = [
-        r"in inglese\s+(.{2,120}?)\s+carta\s+codice\s+numero\s+rarit",
-        r"Ricerca Carte Singole.*?\s+(.{2,120}?)\s+carta\s+codice\s+numero\s+rarit",
-    ]
-    for pattern in patterns:
-        m = re.search(pattern, text, re.I)
-        if m:
-            return m.group(1).strip().split("/")[0].strip()
-    return ""
-
-
+# Parser di riga indipendente dalla presenza di immagini/input nel markup:
+# usa la sequenza nome -> SKU -> numero -> rarità -> condizione -> prezzo.
 ROW = re.compile(
-    r"(?P<name>[A-Za-zÀ-ÿ0-9'’.: -]+?)\s+"
-    r"(?P<sku>PO-[A-Z0-9-]+_(?P<lang>ita|eng))\s+"
+    r"(?P<name>[A-Za-zÀ-ÿ0-9'’.:() -]+?)\s+"
+    r"(?P<sku>PO-[A-Z0-9-]+(?:[A-Za-z0-9]+)?_(?P<lang>ita|eng))\s+"
     r"(?P<number>[A-Za-z]*\d+\s*/\s*[A-Za-z]*\d+)\s+"
-    r"(?P<rarity>[A-Za-z0-9*+ -]{1,30})\s+"
+    r"(?P<rarity>[A-Za-z0-9*+ .'-]{1,40})\s+"
     r"(?P<condition>mint/near mint|near mint|mint)\s+"
     r"€\s*(?P<price>\d+(?:[.,]\d{1,2})?)",
     re.I,
 )
 
-
 def parse_rows(html):
     text = plain(html)
+    matches = list(ROW.finditer(text))
     rows = []
-    for m in ROW.finditer(text):
+
+    for i, m in enumerate(matches):
         d = m.groupdict()
         d["price"] = float(d["price"].replace(",", "."))
-        tail = text[m.end():m.end() + 140]
+
+        next_start = matches[i + 1].start() if i + 1 < len(matches) else min(len(text), m.end() + 500)
+        tail = text[m.end():next_start]
+
         d["available"] = not bool(
-            re.match(r"\s*al momento\s+non disponibile", tail, re.I)
+            re.search(r"\bal momento\s+non disponibile\b", tail, re.I)
         )
         rows.append(d)
+
     return rows
 
-
-def main():
-    data = json.loads(RETAIL.read_text(encoding="utf-8"))
-    index = defaultdict(list)
+def build_index(data):
+    idx = defaultdict(list)
     for card in data.get("cards", {}).values():
         cp = collector_parts(card.get("number"))
-        if cp:
-            key = (
+        if not cp:
+            continue
+        idx[
+            (
                 norm(card.get("set")),
                 cp,
                 norm(card.get("name")),
                 card.get("variant"),
             )
-            index[key].append(card)
+        ].append(card)
+    return idx
+
+def main():
+    data = json.loads(RETAIL.read_text(encoding="utf-8"))
+    index = build_index(data)
 
     stats = Counter()
+    stats["testedSetIds"] = len(TEST_SET_IDS)
+
+    pages = []
     examples = []
     seen = set()
-    sets = []
 
-    set_ids = discover_ids(get(HOME))
-    stats["discoveredSetIds"] = len(set_ids)
+    for sid in TEST_SET_IDS:
+        url = SEARCH + "?" + urllib.parse.urlencode(
+            {
+                "poke_idrarita": "0",
+                "poke_idserie": sid,
+                "poke_ricerca": "",
+                "poke_tipocarta": "tutte",
+            }
+        )
 
-    for sid in set_ids:
+        page = {"id": sid, "url": url}
+
         try:
-            url = SEARCH + "?" + urllib.parse.urlencode(
-                {
-                    "poke_idrarita": "0",
-                    "poke_idserie": sid,
-                    "poke_ricerca": "",
-                    "poke_tipocarta": "tutte",
-                }
-            )
             html = get(url)
             rows = parse_rows(html)
+            set_it, set_en = extract_set_names(html)
+
+            page.update({
+                "setIt": set_it,
+                "setEn": set_en,
+                "rows": len(rows),
+            })
+
+            stats["pagesOk"] += 1
+            stats["rows"] += len(rows)
+
             if not rows:
+                stats["pagesWithoutRows"] += 1
+                pages.append(page)
                 continue
 
-            current_set = set_name(html)
-            stats["setPagesWithRows"] += 1
-            stats["rows"] += len(rows)
-            sets.append({"id": sid, "set": current_set, "rows": len(rows)})
-
             for row in rows:
+                stats["variantsSeen"] += 1
+
                 if row["lang"].lower() != "ita":
                     stats["languageRejected"] += 1
                     continue
-                if not row["available"]:
-                    stats["unavailable"] += 1
-                    continue
+
                 if row["price"] <= 0:
                     stats["priceRejected"] += 1
                     continue
 
-                variant = rarity_variant(row["rarity"])
+                if not row["available"]:
+                    stats["unavailable"] += 1
+                    continue
+
+                variant = rarity_variant(row["rarity"], row["sku"])
                 if not variant:
                     stats["variantAmbiguous"] += 1
                     continue
 
                 cp = collector_parts(row["number"])
-                if not cp or not current_set:
+                if not cp or not set_it:
                     stats["identityRejected"] += 1
                     continue
 
-                key = (norm(current_set), cp, norm(row["name"]), variant)
-                candidates = index.get(key, [])
+                candidates = index.get(
+                    (norm(set_it), cp, norm(row["name"]), variant),
+                    [],
+                )
+
                 if len(candidates) != 1:
                     stats["identityRejected"] += 1
                     continue
@@ -194,6 +242,7 @@ def main():
                     norm(card["name"]),
                     variant,
                 )
+
                 if identity in seen:
                     stats["duplicateIdentity"] += 1
                     continue
@@ -206,54 +255,75 @@ def main():
                     for offer in card.get("offers", [])
                     if offer.get("store")
                 }
-                becomes_reliable = (
+
+                gain = (
                     not card.get("stats", {}).get("reliable")
                     and len(stores | {"LPPCollecting"}) >= 3
                 )
-                if becomes_reliable:
+
+                if gain:
                     stats["newReliablePotential"] += 1
 
-                if len(examples) < 50:
-                    examples.append(
-                        {
-                            "set": card["set"],
-                            "number": card["number"],
-                            "name": card["name"],
-                            "variant": variant,
-                            "price": row["price"],
-                            "rarityRaw": row["rarity"],
-                            "existingStores": sorted(stores),
-                            "newReliablePotential": becomes_reliable,
-                            "sourceUrl": url,
-                        }
-                    )
-            time.sleep(0.03)
+                if len(examples) < 60:
+                    examples.append({
+                        "set": card["set"],
+                        "number": card["number"],
+                        "name": card["name"],
+                        "variant": variant,
+                        "price": row["price"],
+                        "rarityRaw": row["rarity"],
+                        "sku": row["sku"],
+                        "existingStores": sorted(stores),
+                        "newReliablePotential": gain,
+                        "sourceUrl": url,
+                    })
+
+            pages.append(page)
+            time.sleep(0.05)
+
         except Exception as e:
             stats["errors"] += 1
-            if len(examples) < 50:
-                examples.append({"setId": sid, "error": str(e)})
+            page["error"] = str(e)
+            pages.append(page)
 
     report = {
-        "schema": 2,
+        "schema": 4,
         "source": "LPPCollecting",
         "mode": "read-only diagnostic",
         "rules": {
+            "scope": "verified public set-id sample",
             "language": "ITA only",
-            "condition": "mint/near mint / near mint / mint",
-            "availability": "reject explicit al momento non disponibile",
+            "condition": "near mint / mint-near mint / mint",
+            "availability": "reject explicit 'al momento non disponibile'",
             "variantsAccepted": ["Holo", "Reverse Holo"],
-            "identity": "exact set + full collector number + exact normalized name + exact variant",
+            "identity": "exact Italian set + full collector number + exact normalized name + exact variant",
+            "createsNewIdentity": False,
             "cardmarketTouched": False,
             "retailPricesModified": False,
         },
         "stats": dict(stats),
-        "sets": sets,
+        "pages": pages,
         "examples": examples,
     }
-    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
-    print("Report:", REPORT)
 
+    REPORT.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
+    print("Pages:")
+    for page in pages:
+        print(
+            page.get("id"),
+            "|",
+            page.get("setIt", ""),
+            "| rows:",
+            page.get("rows", 0),
+            "| error:",
+            page.get("error", ""),
+        )
+    print("Report:", REPORT)
 
 if __name__ == "__main__":
     main()
