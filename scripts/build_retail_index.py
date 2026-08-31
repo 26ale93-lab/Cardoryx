@@ -2056,6 +2056,8 @@ def collect_cartemagic(cards):
         "setUnknown": 0,
         "variantConflict": 0,
         "priceUnavailable": 0,
+        "anomalousPriceRejected": 0,
+        "anomalousPriceRejectedExamples": [],
         "duplicateStore": 0,
         "errors": 0,
     }
@@ -4505,6 +4507,14 @@ BSA_STORE_COLLECTION = "pokemon-carte-singole-ita"
 BSA_STORE_PAGE_LIMIT = 250
 BSA_STORE_MAX_PAGES = 40
 
+# Prezzi sorgente BSA dimostrati anomali per Colpo Fusione.
+# Fail closed: l'offerta viene scartata, mai corretta o sostituita.
+# 1184.00 = valore attuale osservato; 1181.00 = valore presente in snapshot precedenti.
+BSA_STORE_REJECTED_FUSION_STRIKE_PRICES = {
+    1181.0,
+    1184.0,
+}
+
 
 def bsa_products_url(page):
 
@@ -4784,6 +4794,32 @@ def collect_bsa_store(cards):
                 stats["priceUnavailable"] += 1
                 continue
 
+            # BSA espone attualmente un cluster di prezzi 1184.00 EUR
+            # su numerose carte di Colpo Fusione, confermato anche sulla
+            # pagina prodotto. Il test isolato ha dimostrato che il dato
+            # sorgente è anomalo. Non tentiamo alcuna conversione (es.
+            # 11.84): l'offerta BSA viene semplicemente esclusa.
+            #
+            # Il controllo è volutamente ristretto a Colpo Fusione per
+            # non scartare eventuali carte costose di altri set che
+            # possano legittimamente avere lo stesso prezzo.
+            if (
+                norm(identity["set"]) == norm("Colpo Fusione")
+                and round(float(price), 2)
+                in BSA_STORE_REJECTED_FUSION_STRIKE_PRICES
+            ):
+                stats["anomalousPriceRejected"] += 1
+
+                if len(stats["anomalousPriceRejectedExamples"]) < 30:
+                    stats["anomalousPriceRejectedExamples"].append({
+                        "title": title,
+                        "number": identity["number"],
+                        "variant": identity["variant"],
+                        "price": price,
+                    })
+
+                continue
+
             handle = str(
                 product.get("handle")
                 or ""
@@ -4845,6 +4881,10 @@ def collect_bsa_store(cards):
     print(
         "BSA Store — accettati:",
         stats["accepted"],
+    )
+    print(
+        "BSA Store — prezzi anomali Colpo Fusione esclusi:",
+        stats["anomalousPriceRejected"],
     )
 
     return stats
