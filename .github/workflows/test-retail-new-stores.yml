@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Run Collector Store Cards V3
+      - name: Run Collector Store Cards V4
         run: python scripts/test_collectorstorecards.py
 
       - name: Upload report
