@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V8
+# Cardoryx - Centro del Fumetto V9
 # TEST ISOLATO READ-ONLY
-# Mapping set conservativo usando SOLO alias gia auditati nel progetto Cardoryx.
+# Legge i campi strutturati WooCommerce/JSON-LD verificati nel V6.
 # NON modifica retail_prices.json. NON tocca Cardmarket. NON crea identita.
 
 import json
@@ -18,7 +18,7 @@ SITEMAP_INDEX = BASE + "/sitemap_index.xml"
 RETAIL = Path("data/retail_prices.json")
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/8.0)"
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/9.0)"
 TIMEOUT = 12
 MAX_SITEMAPS = 120
 MAX_PRODUCTS = 400
@@ -26,6 +26,24 @@ MAX_RUNTIME_SECONDS = 540
 SLEEP_SECONDS = 0.05
 POKEMON_SINGLE_PATH = "/pokemon/pokemon-single/"
 
+# Solo alias di set esplicitamente verificabili tra nomenclatura inglese del negozio
+# e nomenclatura italiana gia presente in Cardoryx. In V7 non aggiungiamo alias:
+# prima misuriamo esattamente quali set restano fuori.
+SET_ALIASES = {
+    "brilliant stars": "Astri Lucenti",
+    "silver tempest": "Tempesta Argentata",
+    "crown zenith": "Zenit Regale",
+    "lost origin": "Origine Perduta",
+    "fusion strike": "Colpo Fusione",
+    "chilling reign": "Regno Glaciale",
+    "astral radiance": "Lucentezza Siderale",
+    "darkness ablaze": "Fiamme Oscure",
+    "evolving skies": "Evoluzioni Eteree",
+    "battle styles": "Stili di Lotta",
+    "celebrations": "Gran Festa",
+    "pokemon tcg pokemon go": "Pokémon GO",
+    "pokemon go": "Pokémon GO",
+}
 
 def norm(s):
     s = unicodedata.normalize("NFKD", str(s or ""))
@@ -33,26 +51,6 @@ def norm(s):
     s = unescape(s).lower().replace("’", "'")
     s = re.sub(r"[^a-z0-9]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
-
-
-# Alias gia presenti/auditati in altri collector Cardoryx.
-# Nessun alias viene appreso automaticamente dal Centro del Fumetto.
-SET_ALIASES = {
-    norm("Brilliant Stars"): "Astri Lucenti",
-    norm("Silver Tempest"): "Tempesta Argentata",
-    norm("Crown Zenith"): "Zenit Regale",
-    norm("Lost Origin"): "Origine Perduta",
-    norm("Fusion Strike"): "Colpo Fusione",
-    norm("Chilling Reign"): "Regno Glaciale",
-    norm("Astral Radiance"): "Lucentezza Siderale",
-    norm("Darkness Ablaze"): "Fiamme Oscure",
-    norm("Evolving Skies"): "Evoluzioni Eteree",
-    norm("Battle Styles"): "Stili di Lotta",
-    norm("Celebrations"): "Gran Festa",
-    norm("Pokémon TCG: Pokémon GO"): "Pokémon GO",
-    norm("Pokémon GO"): "Pokémon GO",
-}
-
 
 def get(url):
     req = urllib.request.Request(url, headers={
@@ -64,10 +62,8 @@ def get(url):
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return r.read().decode("utf-8", "replace"), r.geturl(), getattr(r, "status", None)
 
-
 def sitemap_urls(xml):
     return [unescape(x.strip()) for x in re.findall(r"<loc>(.*?)</loc>", xml, re.I | re.S)]
-
 
 def plain(html):
     x = re.sub(r"<script\b.*?</script>", " ", html, flags=re.I | re.S)
@@ -75,9 +71,9 @@ def plain(html):
     x = re.sub(r"<[^>]+>", " ", x)
     return re.sub(r"\s+", " ", unescape(x)).strip()
 
-
 def collector_parts(v):
-    # Compatibile con: 2/102, 72/70, TG01, GG16, SWSH001, SM001, 065.
+    # Conservativo ma compatibile con numerazioni reali viste nel V6:
+    # 2/102, 72/70, TG01, GG16, 065.
     s = str(v or "").strip().upper().replace(" ", "")
     m = re.fullmatch(r"([A-Z]{0,4})(\d{1,4})(?:/([A-Z]{0,4})(\d{1,4}))?", s)
     if not m:
@@ -89,38 +85,34 @@ def collector_parts(v):
         int(m.group(4)) if m.group(4) else None,
     )
 
+def short_number_key(v):
+    p = collector_parts(v)
+    if not p:
+        return None
+    # TG01 != 01; GG25 != 25; SWSH123 != 123; SM123 != 123.
+    return (p[0], p[1])
 
 def iter_cards(data):
     cards = data.get("cards", {})
     return cards if isinstance(cards, list) else cards.values()
 
-
 def build_indexes(data):
     exact = defaultdict(list)
     by_set_number_name = defaultdict(list)
-    by_number_name = defaultdict(list)
+    by_set_short_number_name = defaultdict(list)
     known_sets = set()
-    display_sets = defaultdict(Counter)
-
     for c in iter_cards(data):
         cp = collector_parts(c.get("number"))
-        if not cp:
+        sp = short_number_key(c.get("number"))
+        if not cp or not sp:
             continue
         sk = norm(c.get("set"))
         nk = norm(c.get("name"))
         known_sets.add(sk)
-        display_sets[sk][str(c.get("set") or "")] += 1
         exact[(sk, cp, nk, c.get("variant"))].append(c)
         by_set_number_name[(sk, cp, nk)].append(c)
-        by_number_name[(cp, nk)].append(c)
-
-    canonical_set_names = {
-        sk: counts.most_common(1)[0][0]
-        for sk, counts in display_sets.items()
-        if counts
-    }
-    return exact, by_set_number_name, by_number_name, known_sets, canonical_set_names
-
+        by_set_short_number_name[(sk, sp, nk)].append(c)
+    return exact, by_set_number_name, by_set_short_number_name, known_sets
 
 def store_count(card):
     return len({
@@ -128,7 +120,6 @@ def store_count(card):
         for o in card.get("offers", [])
         if o.get("store")
     })
-
 
 def jsonld_objects(html):
     out = []
@@ -151,7 +142,6 @@ def jsonld_objects(html):
                 stack.extend(x)
     return out
 
-
 def structured_properties(html):
     props = {}
     product_objs = []
@@ -167,14 +157,12 @@ def structured_properties(html):
                 props[norm(name)] = str(value).strip()
     return props, product_objs
 
-
 def first_prop(props, *names):
     for name in names:
         v = props.get(norm(name))
         if v:
             return v
     return ""
-
 
 def product_price_availability(product_objs, html):
     prices = []
@@ -206,6 +194,7 @@ def product_price_availability(product_objs, html):
         else:
             inspect_offer(offers)
 
+    # Fallback SOLO a meta prodotto specifici, non al primo euro della pagina.
     if not prices:
         for pat in (
             r'property=["\']product:price:amount["\'][^>]*content=["\']([0-9]+(?:[.,][0-9]{1,2})?)',
@@ -221,16 +210,17 @@ def product_price_availability(product_objs, html):
                 except ValueError:
                     pass
 
+    # Meta availability verificato nel V6.
     if availability is None:
         if re.search(r'(?:schema\.org/OutOfStock|product:availability["\'][^>]*content=["\']outofstock)', html, re.I):
             availability = False
         elif re.search(r'(?:schema\.org/InStock|product:availability["\'][^>]*content=["\']instock)', html, re.I):
             availability = True
 
+    # Più prezzi diversi = ambiguo, non scegliamo.
     unique = sorted(set(round(x, 2) for x in prices))
     price = unique[0] if len(unique) == 1 else None
     return price, availability, unique
-
 
 def variant_from_structured(foiling, reverse):
     nf = norm(foiling)
@@ -238,21 +228,25 @@ def variant_from_structured(foiling, reverse):
 
     if nr in {"si", "yes", "true", "1"}:
         return "Reverse Holo", "reverseHolo=yes"
+
     if "reverse" in nf:
         return "Reverse Holo", "foiling=reverse"
+
     if "holo" in nf and "reverse" not in nf:
         return "Holo", "foiling=holo"
-    if nf in {"normale", "normal", "non foil", "non holo"} and nr in {"no", "false", "0", ""}:
-        return "Normal", "foiling=normale"
-    return None, "unconfirmed"
 
+    # Il V6 ha verificato il valore strutturato "Foiling: Normale".
+    # Non usiamo la rarita per dedurre la variante.
+    if nf in {"normale", "normal", "non foil", "non holo"} and nr in {"no", "false", "0", ""}:
+        return None, "foilingNormaleNotVariantSafe"
+
+    return None, "unconfirmed"
 
 def clean_name(title):
     s = str(title or "").strip()
     s = re.sub(r"\s*[–—-]\s*Near Mint\s*,?\s*Italiano\s*$", "", s, flags=re.I)
     s = re.sub(r"^\s*Carta\s+Pok[eé]mon\s+", "", s, flags=re.I)
     return s.strip()
-
 
 def parse_page(html, url):
     props, product_objs = structured_properties(html)
@@ -294,7 +288,6 @@ def parse_page(html, url):
         "available": available,
     }
 
-
 def discover():
     index_xml, _, _ = get(SITEMAP_INDEX)
     sms = [u for u in sitemap_urls(index_xml) if "product-sitemap" in u.lower()]
@@ -319,11 +312,10 @@ def discover():
             smstats.append({"url": sm, "error": repr(e)})
     return urls, smstats
 
-
 def main():
     started = time.monotonic()
     retail = json.loads(RETAIL.read_text(encoding="utf-8"))
-    exact, loose, by_number_name, known_sets, canonical_set_names = build_indexes(retail)
+    exact, loose, short_index, known_sets = build_indexes(retail)
 
     urls, smstats = discover()
     eligible = sorted(
@@ -338,11 +330,7 @@ def main():
     exact_examples = []
     potential_examples = []
     rejected_examples = []
-    alias_examples = []
-    unmapped_suggestions = defaultdict(Counter)
-    unmapped_suggestion_examples = []
     unknown_sets = Counter()
-    mapped_sets = Counter()
     rarities = Counter()
     variant_signals = Counter()
     number_formats = Counter()
@@ -364,17 +352,13 @@ def main():
             variant_signals[p["variantSignal"]] += 1
 
             if norm(p["language"]) != "italiano":
-                st["languageRejected"] += 1
-                continue
+                st["languageRejected"] += 1; continue
             if norm(p["condition"]) != "near mint":
-                st["conditionRejected"] += 1
-                continue
+                st["conditionRejected"] += 1; continue
             if p["available"] is False:
-                st["unavailable"] += 1
-                continue
+                st["unavailable"] += 1; continue
             if p["available"] is None:
-                st["availabilityUnconfirmed"] += 1
-                continue
+                st["availabilityUnconfirmed"] += 1; continue
             if p["price"] is None:
                 if len(p["priceCandidates"]) > 1:
                     st["priceAmbiguous"] += 1
@@ -393,58 +377,46 @@ def main():
             number_formats[prefix] += 1
 
             if not p["set"]:
-                st["setUnavailable"] += 1
-                continue
+                st["setUnavailable"] += 1; continue
             if not p["variant"]:
                 st["variantUnconfirmed"] += 1
+                sp = short_number_key(p["number"])
+                if sp and p["set"]:
+                    shop_set = norm(p["set"])
+                    mapped_set = norm(SET_ALIASES.get(shop_set, p["set"]))
+                    candidates = short_index.get((mapped_set, sp, norm(p["name"])), [])
+                    physical = {
+                        (norm(c.get("set")), collector_parts(c.get("number")), norm(c.get("name")))
+                        for c in candidates
+                    }
+                    if len(physical) == 1 and candidates:
+                        st["abbreviatedNumberUniqueIdentity"] += 1
+                        variants = sorted({str(c.get("variant")) for c in candidates})
+                        if len(variants) == 1:
+                            st["uniqueIdentitySingleCardoryxVariant"] += 1
+                        else:
+                            st["uniqueIdentityMultipleCardoryxVariants"] += 1
+                        if len(rejected_examples) < 150:
+                            rejected_examples.append({
+                                "reason": "diagnosticUniqueShortNumber",
+                                "shop": p,
+                                "cardoryxNumbers": sorted({str(c.get("number")) for c in candidates}),
+                                "cardoryxVariants": variants,
+                                "diagnosticOnly": True,
+                            })
+                    elif len(physical) > 1:
+                        st["abbreviatedNumberAmbiguousIdentity"] += 1
+                    else:
+                        st["abbreviatedNumberNoIdentity"] += 1
                 continue
 
             st["usableBeforeIdentity"] += 1
 
             shop_set = norm(p["set"])
-            alias_target = SET_ALIASES.get(shop_set)
-            if alias_target:
-                mapped_set = norm(alias_target)
-                st["setAliasApplied"] += 1
-                mapped_sets[f"{p['set']} -> {alias_target}"] += 1
-                if len(alias_examples) < 100:
-                    alias_examples.append({
-                        "shopSet": p["set"],
-                        "cardoryxSet": alias_target,
-                        "number": p["number"],
-                        "name": p["name"],
-                    })
-            else:
-                mapped_set = shop_set
-
+            mapped_set = norm(SET_ALIASES.get(shop_set, p["set"]))
             if mapped_set not in known_sets:
                 st["setNotExactCardoryx"] += 1
                 unknown_sets[p["set"]] += 1
-
-                # SOLO DIAGNOSTICA: numero + nome senza usare il set del negozio.
-                # Se tutte le identita trovate convergono su un solo set Cardoryx,
-                # registriamo un suggerimento, ma la carta resta rifiutata.
-                candidates = by_number_name.get((cp, norm(p["name"])), [])
-                candidate_sets = {norm(c.get("set")) for c in candidates if c.get("set")}
-                if len(candidate_sets) == 1:
-                    suggested_key = next(iter(candidate_sets))
-                    suggested_name = canonical_set_names.get(suggested_key, suggested_key)
-                    st["unmappedSetUniqueCandidate"] += 1
-                    unmapped_suggestions[p["set"]][suggested_name] += 1
-                    if len(unmapped_suggestion_examples) < 100:
-                        unmapped_suggestion_examples.append({
-                            "shopSet": p["set"],
-                            "suggestedCardoryxSet": suggested_name,
-                            "number": p["number"],
-                            "name": p["name"],
-                            "variant": p["variant"],
-                            "candidateCards": len(candidates),
-                            "accepted": False,
-                        })
-                elif len(candidate_sets) > 1:
-                    st["unmappedSetCandidateAmbiguous"] += 1
-                else:
-                    st["unmappedSetNoCandidate"] += 1
                 continue
 
             key = (mapped_set, cp, norm(p["name"]), p["variant"])
@@ -480,6 +452,7 @@ def main():
             elif len(matches) > 1:
                 st["identityAmbiguous"] += 1
             else:
+                # Diagnostica sicura: stessa identita senza variante.
                 lm = loose.get((mapped_set, cp, norm(p["name"])), [])
                 if len(lm) == 1:
                     st["sameCardDifferentVariant"] += 1
@@ -493,8 +466,6 @@ def main():
                     st["variantIdentityAmbiguous"] += 1
                 else:
                     st["identityRejected"] += 1
-                    if len(rejected_examples) < 50:
-                        rejected_examples.append({"reason": "identityRejected", "shop": p})
 
         except Exception as e:
             st["errors"] += 1
@@ -504,25 +475,10 @@ def main():
 
         time.sleep(SLEEP_SECONDS)
 
-    suggestion_summary = []
-    for shop_set, counts in sorted(
-        unmapped_suggestions.items(),
-        key=lambda item: (-sum(item[1].values()), item[0].lower())
-    ):
-        total = sum(counts.values())
-        top = counts.most_common()
-        suggestion_summary.append({
-            "shopSet": shop_set,
-            "uniqueCandidateCards": total,
-            "candidateCardoryxSets": top,
-            "singleSuggestedSet": top[0][0] if len(top) == 1 else None,
-            "safeToReviewForNextAlias": len(top) == 1,
-        })
-
     report = {
-        "schema": 8,
+        "schema": 9,
         "source": "Centro del Fumetto",
-        "mode": "read-only trusted-set-alias + exact-identity diagnostic",
+        "mode": "read-only number-format + variant-safety diagnostic",
         "rules": {
             "catalogPath": POKEMON_SINGLE_PATH,
             "urlPrefilter": "near-mint + italiano",
@@ -535,40 +491,31 @@ def main():
             "condition": "Near Mint exact",
             "availability": "JSON-LD/meta InStock required",
             "price": "single unambiguous product price only",
-            "setRule": "exact Cardoryx set or explicit alias already audited elsewhere in Cardoryx",
-            "unmappedSetRule": "number+name may suggest a set for diagnostics only; never auto-accept",
-            "variantRule": "foiling/reverse structured fields only; rarity never used to infer variant",
-            "identityRule": "exact mapped set + collector number + exact normalized name + exact variant",
+            "setRule": "exact normalized set only; no new aliases in V7",
+            "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only and is NOT accepted as Cardoryx Normal",
+            "identityRule": "accepted match remains exact set + full collector number + exact normalized name + explicit safe variant; short-number matches are diagnostic only",
             "createsNewIdentity": False,
             "cardmarketTouched": False,
             "retailPricesModified": False,
         },
-        "trustedSetAliases": SET_ALIASES,
         "limits": {
             "maxProductsFetched": MAX_PRODUCTS,
             "maxRuntimeSeconds": MAX_RUNTIME_SECONDS,
         },
         "stats": dict(st),
-        "mappedSetUsage": mapped_sets.most_common(50),
         "topUnmappedSets": unknown_sets.most_common(50),
-        "unmappedSetSuggestions": suggestion_summary[:50],
         "numberFormats": number_formats.most_common(30),
         "variantSignals": variant_signals.most_common(30),
         "raritiesSeen": rarities.most_common(60),
         "newReliablePotentialExamples": potential_examples,
         "exactExamples": exact_examples,
-        "aliasExamples": alias_examples,
-        "unmappedSuggestionExamples": unmapped_suggestion_examples,
         "rejectedExamples": rejected_examples,
         "sitemaps": smstats,
     }
 
     REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report["stats"], ensure_ascii=False, indent=2), flush=True)
-    print("Mapped set usage:", report["mappedSetUsage"][:15], flush=True)
-    print("Top unmapped sets:", report["topUnmappedSets"][:15], flush=True)
     print("Report:", REPORT, flush=True)
-
 
 if __name__ == "__main__":
     main()
