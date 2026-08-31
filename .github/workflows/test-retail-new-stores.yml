@@ -1,0 +1,30 @@
+name: Test retail nuovi negozi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-retail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Test Centro del Fumetto
+        run: python scripts/test_centrodelfumetto.py
+      - name: Test Collector Store Cards
+        run: python scripts/test_collectorstorecards.py
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: retail-dual-test-reports
+          path: |
+            centrodelfumetto_test_report.json
+            collectorstorecards_test_report.json
