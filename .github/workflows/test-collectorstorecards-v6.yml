@@ -1,0 +1,67 @@
+name: Test Collector Store Cards V6
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collector-v6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Collector Store Cards V6 diagnostic
+        run: python scripts/test_collectorstorecards.py
+
+      - name: Verify V6 report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/collector_store_cards_v6_report.json")
+          if not path.exists():
+              raise SystemExit("V6 report not generated")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+
+          if report.get("schema") != 6:
+              raise SystemExit(f"Wrong schema: {report.get('schema')}")
+
+          rules = report.get("rules", {})
+          required = {
+              "retailPricesModified": False,
+              "cardmarketTouched": False,
+              "newIdentitiesCreated": False,
+              "broadRarityToVariantMapping": False,
+              "exactExistingIdentityOnly": True,
+              "duplicateStoreRejected": True,
+          }
+
+          for key, expected in required.items():
+              if rules.get(key) is not expected:
+                  raise SystemExit(
+                      f"Safety rule failed: {key}={rules.get(key)!r}, expected {expected!r}"
+                  )
+
+          print("Collector V6 report verified")
+          print(json.dumps(report.get("stats", {}), ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload Collector V6 report
+        uses: actions/upload-artifact@v4
+        with:
+          name: collector-store-cards-v6-report
+          path: data/collector_store_cards_v6_report.json
+          if-no-files-found: error
+          retention-days: 14
