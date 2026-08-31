@@ -9,7 +9,7 @@ permissions:
 jobs:
   test-lppcollecting:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
 
     steps:
       - name: Checkout repository
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Run LPPCollecting diagnostic
+      - name: Run LPPCollecting HTTP diagnostic
         run: python scripts/test_lppcollecting.py
 
       - name: Validate report
@@ -43,12 +43,13 @@ jobs:
           assert rules.get("retailPricesModified") is False
 
           print("Validazione OK")
-          print(json.dumps(data.get("stats", {}), ensure_ascii=False, indent=2))
           PY
 
-      - name: Upload diagnostic report
+      - name: Upload diagnostic files
         uses: actions/upload-artifact@v4
         with:
-          name: lppcollecting-test-report
-          path: lppcollecting_test_report.json
+          name: lppcollecting-http-diagnostic
+          path: |
+            lppcollecting_test_report.json
+            lppcollecting_response_snippet.txt
           if-no-files-found: error
