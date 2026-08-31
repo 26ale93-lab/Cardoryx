@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V9
+# Cardoryx - Centro del Fumetto V10
 # TEST ISOLATO READ-ONLY
 # Legge i campi strutturati WooCommerce/JSON-LD verificati nel V6.
 # NON modifica retail_prices.json. NON tocca Cardmarket. NON crea identita.
@@ -18,7 +18,7 @@ SITEMAP_INDEX = BASE + "/sitemap_index.xml"
 RETAIL = Path("data/retail_prices.json")
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/9.0)"
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/10.0)"
 TIMEOUT = 12
 MAX_SITEMAPS = 120
 MAX_PRODUCTS = 400
@@ -334,6 +334,8 @@ def main():
     rarities = Counter()
     variant_signals = Counter()
     number_formats = Counter()
+    rarity_variant_audit = Counter()
+    unique_identity_examples = []
 
     for i, u in enumerate(eligible, 1):
         if time.monotonic() - started >= MAX_RUNTIME_SECONDS:
@@ -390,20 +392,47 @@ def main():
                         for c in candidates
                     }
                     if len(physical) == 1 and candidates:
-                        st["abbreviatedNumberUniqueIdentity"] += 1
+                        st["uniqueIdentityBySetNameNumber"] += 1
                         variants = sorted({str(c.get("variant")) for c in candidates})
+                        cardoryx_numbers = sorted({str(c.get("number")) for c in candidates})
+
+                        shop_exact = collector_parts(p["number"])
+                        exact_same = any(collector_parts(c.get("number")) == shop_exact for c in candidates)
+
+                        if exact_same:
+                            st["uniqueIdentityFullNumberExact"] += 1
+                            number_mode = "fullNumberExact"
+                        else:
+                            st["uniqueIdentityAbbreviatedNumber"] += 1
+                            number_mode = "abbreviatedNumber"
+
                         if len(variants) == 1:
                             st["uniqueIdentitySingleCardoryxVariant"] += 1
+                            unique_variant = variants[0]
                         else:
                             st["uniqueIdentityMultipleCardoryxVariants"] += 1
+                            unique_variant = None
+
+                        # Rarità rimane SOLO informativa: nessuna mappa rarity -> variant.
+                        rarity_key = norm(p.get("rarity"))
+                        if unique_variant:
+                            st["singleVariantDiagnostic"] += 1
+                            audit_key = f'{p.get("rarity") or "(missing)"} -> {unique_variant}'
+                            rarity_variant_audit[audit_key] += 1
+
+                        item = {
+                            "reason": "diagnosticUniqueIdentity",
+                            "numberMode": number_mode,
+                            "shop": p,
+                            "cardoryxNumbers": cardoryx_numbers,
+                            "cardoryxVariants": variants,
+                            "singleCardoryxVariant": unique_variant,
+                            "rarityUsedForAcceptance": False,
+                            "diagnosticOnly": True,
+                        }
+                        unique_identity_examples.append(item)
                         if len(rejected_examples) < 150:
-                            rejected_examples.append({
-                                "reason": "diagnosticUniqueShortNumber",
-                                "shop": p,
-                                "cardoryxNumbers": sorted({str(c.get("number")) for c in candidates}),
-                                "cardoryxVariants": variants,
-                                "diagnosticOnly": True,
-                            })
+                            rejected_examples.append(item)
                     elif len(physical) > 1:
                         st["abbreviatedNumberAmbiguousIdentity"] += 1
                     else:
@@ -476,9 +505,9 @@ def main():
         time.sleep(SLEEP_SECONDS)
 
     report = {
-        "schema": 9,
+        "schema": 10,
         "source": "Centro del Fumetto",
-        "mode": "read-only number-format + variant-safety diagnostic",
+        "mode": "read-only unique-identity + number-form + variant audit",
         "rules": {
             "catalogPath": POKEMON_SINGLE_PATH,
             "urlPrefilter": "near-mint + italiano",
@@ -492,8 +521,8 @@ def main():
             "availability": "JSON-LD/meta InStock required",
             "price": "single unambiguous product price only",
             "setRule": "exact normalized set only; no new aliases in V7",
-            "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only and is NOT accepted as Cardoryx Normal",
-            "identityRule": "accepted match remains exact set + full collector number + exact normalized name + explicit safe variant; short-number matches are diagnostic only",
+            "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only; unique Cardoryx variant is recorded but never accepted automatically",
+            "identityRule": "V10 classifies unique set+name+number identities as full-number-exact or abbreviated-number; both remain diagnostic unless an explicit safe variant exists",
             "createsNewIdentity": False,
             "cardmarketTouched": False,
             "retailPricesModified": False,
@@ -507,6 +536,8 @@ def main():
         "numberFormats": number_formats.most_common(30),
         "variantSignals": variant_signals.most_common(30),
         "raritiesSeen": rarities.most_common(60),
+        "rarityToSingleCardoryxVariantAudit": rarity_variant_audit.most_common(100),
+        "uniqueIdentityExamples": unique_identity_examples,
         "newReliablePotentialExamples": potential_examples,
         "exactExamples": exact_examples,
         "rejectedExamples": rejected_examples,
