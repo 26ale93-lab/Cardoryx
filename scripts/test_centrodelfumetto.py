@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V14
+# Cardoryx - Centro del Fumetto V15
 # TEST ISOLATO READ-ONLY
 # Legge i campi strutturati WooCommerce/JSON-LD verificati nel V6.
 # NON modifica retail_prices.json. NON tocca Cardmarket. NON crea identita.
@@ -18,12 +18,12 @@ SITEMAP_INDEX = BASE + "/sitemap_index.xml"
 RETAIL = Path("data/retail_prices.json")
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/14.0)"
-TIMEOUT = 12
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/15.0)"
+TIMEOUT = 8
 MAX_SITEMAPS = 120
 MAX_PRODUCTS = 400
-MAX_RUNTIME_SECONDS = 540
-SLEEP_SECONDS = 0.05
+MAX_RUNTIME_SECONDS = 840
+SLEEP_SECONDS = 0.0
 POKEMON_SINGLE_PATH = "/pokemon/pokemon-single/"
 
 # Solo alias di set esplicitamente verificabili tra nomenclatura inglese del negozio
@@ -266,6 +266,7 @@ def parse_page(html, url):
     rarity = first_prop(props, "pa_ct_rarita")
     foiling = first_prop(props, "pa_ct_foiling")
     reverse = first_prop(props, "pa_ct_reverse_holo")
+    first_edition = first_prop(props, "pa_ct_first_edition")
 
     price, available, price_candidates = product_price_availability(product_objs, html)
     variant, variant_signal = variant_from_structured(foiling, reverse)
@@ -281,6 +282,7 @@ def parse_page(html, url):
         "rarity": rarity,
         "foiling": foiling,
         "reverseHolo": reverse,
+        "firstEdition": first_edition,
         "variant": variant,
         "variantSignal": variant_signal,
         "price": price,
@@ -359,6 +361,8 @@ def main():
     variant_signals = Counter()
     number_formats = Counter()
     rarity_variant_audit = Counter()
+    structured_signal_audit = Counter()
+    explicit_variant_examples = []
     unique_identity_examples = []
     centro_identity_candidates = []
 
@@ -377,6 +381,15 @@ def main():
 
             rarities[p["rarity"] or "(missing)"] += 1
             variant_signals[p["variantSignal"]] += 1
+            structured_signal_audit[(
+                p.get("rarity") or "(missing)",
+                p.get("foiling") or "(missing)",
+                p.get("reverseHolo") or "(missing)",
+                p.get("firstEdition") or "(missing)",
+                p.get("variantSignal") or "(missing)",
+            )] += 1
+            if p.get("variant") and len(explicit_variant_examples) < 50:
+                explicit_variant_examples.append(p.copy())
 
             if norm(p["language"]) != "italiano":
                 st["languageRejected"] += 1; continue
@@ -618,6 +631,8 @@ def main():
         })
 
     st["uniquePhysicalIdentities"] = len(groups)
+    st["crawlCompleted"] = int(st["attempted"] == len(eligible) and not st["runtimeLimitReached"])
+    st["crawlRemaining"] = max(0, len(eligible) - st["attempted"])
     physical_audit.sort(key=lambda x: (
         not x["wouldReachThreeStores"],
         not x["safeCentroOfferDiagnostic"],
@@ -628,23 +643,23 @@ def main():
 
 
     report = {
-        "schema": 14,
+        "schema": 15,
         "source": "Centro del Fumetto",
-        "mode": "Centro-only physical-identity + duplicate + retail-gain diagnostic",
+        "mode": "Centro-only complete crawl + structured-variant evidence + duplicate + retail-gain diagnostic",
         "rules": {
             "catalogPath": POKEMON_SINGLE_PATH,
             "urlPrefilter": "near-mint + italiano",
             "structuredFields": [
                 "pa_ct_espansione", "pa_ct_condizione", "pa_ct_lingua",
                 "pa_ct_numero_collezione", "pa_ct_rarita",
-                "pa_ct_foiling", "pa_ct_reverse_holo"
+                "pa_ct_foiling", "pa_ct_reverse_holo", "pa_ct_first_edition"
             ],
             "language": "Italiano exact",
             "condition": "Near Mint exact",
             "availability": "JSON-LD/meta InStock required",
             "price": "single unambiguous product price only",
             "setRule": "exact Cardoryx set or existing trusted aliases only; no new aliases learned automatically",
-            "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only; unique Cardoryx variant is recorded but never accepted automatically",
+            "variantRule": "only explicit structured Reverse/Holo signals may establish variant; Foiling=Normale and rarity never establish Normal/Full Art/special variants; unique Cardoryx variant remains diagnostic only",
             "identityRule": "Centro -> existing Cardoryx identity only; no external identity bridge; no new identities created",
             "createsNewIdentity": False,
             "duplicateStoreRule": "same physical identity counts Centro once; conflicting duplicate prices/structured fields are rejected, never auto-selected",
@@ -659,6 +674,11 @@ def main():
         "topUnmappedSets": unknown_sets.most_common(50),
         "numberFormats": number_formats.most_common(30),
         "variantSignals": variant_signals.most_common(30),
+        "structuredVariantSignalAudit": [
+            {"rarity": k[0], "foiling": k[1], "reverseHolo": k[2], "firstEdition": k[3], "variantSignal": k[4], "count": v}
+            for k, v in structured_signal_audit.most_common(100)
+        ],
+        "explicitStructuredVariantExamples": explicit_variant_examples,
         "raritiesSeen": rarities.most_common(60),
         "rarityToSingleCardoryxVariantAudit": rarity_variant_audit.most_common(100),
         "uniqueIdentityExamples": unique_identity_examples,
