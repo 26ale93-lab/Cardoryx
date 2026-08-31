@@ -4688,6 +4688,8 @@ def collect_bsa_store(cards):
         "invalidTitleExamples": [],
         "rarityLabelsSupported": True,
         "priceUnavailable": 0,
+        "anomalousPriceRejected": 0,
+        "anomalousPriceRejectedExamples": [],
         "duplicateStore": 0,
         "errors": 0,
         "ok": True,
