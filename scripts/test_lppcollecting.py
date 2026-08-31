@@ -236,7 +236,7 @@ def main():
     report = {
         "schema": 2,
         "source": "LPPCollecting",
-        "mode": "read-only diagnostic fast sample",
+        "mode": "read-only diagnostic",
         "rules": {
             "language": "ITA only",
             "condition": "mint/near mint / near mint / mint",
