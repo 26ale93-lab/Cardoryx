@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V11
+# Cardoryx - Centro del Fumetto V12
 # TEST ISOLATO READ-ONLY
 # Legge i campi strutturati WooCommerce/JSON-LD verificati nel V6.
 # NON modifica retail_prices.json. NON tocca Cardmarket. NON crea identita.
@@ -19,7 +19,7 @@ RETAIL = Path("data/retail_prices.json")
 CARDMARKET = Path("data/cardmarket_play_index.json")
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/11.0)"
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/12.0)"
 TIMEOUT = 12
 MAX_SITEMAPS = 120
 MAX_PRODUCTS = 400
@@ -372,10 +372,90 @@ def build_cardmarket_identity_indexes(data):
             by_full_name[(cp, nk)].append(r)
     return records, by_short_name, by_full_name
 
+
+def safe_shape(value, depth=0, max_depth=4, max_items=8):
+    """
+    Descrive soltanto la STRUTTURA del JSON.
+    Non restituisce prezzi/valori numerici Cardmarket.
+    Le stringhe sono sostituite dal loro tipo/lunghezza.
+    """
+    if depth >= max_depth:
+        return {"type": type(value).__name__}
+    if isinstance(value, dict):
+        keys = list(value.keys())
+        sample = {}
+        for k in keys[:max_items]:
+            sample[str(k)] = safe_shape(value[k], depth + 1, max_depth, max_items)
+        return {
+            "type": "dict",
+            "keyCount": len(keys),
+            "keys": [str(k) for k in keys[:50]],
+            "sampleShape": sample,
+        }
+    if isinstance(value, list):
+        return {
+            "type": "list",
+            "length": len(value),
+            "itemShapes": [
+                safe_shape(v, depth + 1, max_depth, max_items)
+                for v in value[:min(max_items, len(value))]
+            ],
+        }
+    if isinstance(value, str):
+        return {"type": "str", "length": len(value)}
+    if value is None:
+        return {"type": "null"}
+    if isinstance(value, bool):
+        return {"type": "bool"}
+    if isinstance(value, (int, float)):
+        return {"type": type(value).__name__}
+    return {"type": type(value).__name__}
+
+def collect_key_paths(value, path="$", depth=0, max_depth=7, out=None):
+    if out is None:
+        out = Counter()
+    if depth > max_depth:
+        return out
+    if isinstance(value, dict):
+        for k, v in value.items():
+            p = f"{path}.{k}"
+            out[p] += 1
+            collect_key_paths(v, p, depth + 1, max_depth, out)
+    elif isinstance(value, list):
+        # Campiona per evitare report enormi.
+        for v in value[:50]:
+            collect_key_paths(v, path + "[]", depth + 1, max_depth, out)
+    return out
+
+def cardmarket_schema_diagnostic(data):
+    paths = collect_key_paths(data)
+    interesting_tokens = (
+        "name", "card", "product", "number", "local", "collector",
+        "set", "expansion", "series", "variant", "finish", "foil",
+        "id", "tcgdex", "price", "trend", "avg"
+    )
+    interesting = []
+    for p, count in paths.most_common():
+        lp = p.lower()
+        if any(t in lp for t in interesting_tokens):
+            interesting.append({"path": p, "sampleCount": count})
+        if len(interesting) >= 150:
+            break
+    return {
+        "fileExists": CARDMARKET.exists(),
+        "rootType": type(data).__name__,
+        "safeRootShape": safe_shape(data),
+        "interestingKeyPaths": interesting,
+        "identityRecordsDetectedByV11Parser": len(cardmarket_identity_records(data)),
+        "valuesRedacted": True,
+        "cardmarketModified": False,
+    }
+
 def main():
     started = time.monotonic()
     retail = json.loads(RETAIL.read_text(encoding="utf-8"))
     cardmarket = json.loads(CARDMARKET.read_text(encoding="utf-8")) if CARDMARKET.exists() else {}
+    cardmarket_schema = cardmarket_schema_diagnostic(cardmarket)
     cm_records, cm_short, cm_full = build_cardmarket_identity_indexes(cardmarket)
     exact, loose, short_index, known_sets = build_indexes(retail)
 
@@ -626,9 +706,9 @@ def main():
         time.sleep(SLEEP_SECONDS)
 
     report = {
-        "schema": 11,
+        "schema": 12,
         "source": "Centro del Fumetto",
-        "mode": "read-only Centro + Cardmarket identity cross-check diagnostic",
+        "mode": "read-only Cardmarket schema diagnostic + Centro baseline",
         "rules": {
             "catalogPath": POKEMON_SINGLE_PATH,
             "urlPrefilter": "near-mint + italiano",
@@ -641,9 +721,9 @@ def main():
             "condition": "Near Mint exact",
             "availability": "JSON-LD/meta InStock required",
             "price": "single unambiguous product price only",
-            "setRule": "exact normalized set only; no new aliases in V7",
+            "setRule": "exact Cardoryx set or existing trusted aliases only; no new aliases learned automatically",
             "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only; unique Cardoryx variant is recorded but never accepted automatically",
-            "identityRule": "V10 classifies unique set+name+number identities as full-number-exact or abbreviated-number; both remain diagnostic unless an explicit safe variant exists",
+            "identityRule": "V12 keeps Centro identity matching diagnostic and inspects Cardmarket JSON schema read-only; no Cardmarket value is used for retail acceptance",
             "createsNewIdentity": False,
             "cardmarketTouched": False,
             "cardmarketReadOnlyIdentityCrosscheck": True,
@@ -661,6 +741,7 @@ def main():
         "raritiesSeen": rarities.most_common(60),
         "rarityToSingleCardoryxVariantAudit": rarity_variant_audit.most_common(100),
         "uniqueIdentityExamples": unique_identity_examples,
+        "cardmarketSchemaDiagnostic": cardmarket_schema,
         "cardmarketIdentityRecordsDetected": len(cm_records),
         "cardmarketSchemaExamples": cardmarket_schema_examples,
         "cardmarketCrosscheckExamples": cardmarket_crosscheck_examples,
