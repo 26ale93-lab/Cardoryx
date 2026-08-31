@@ -1,4 +1,4 @@
-name: Test Collector Store Cards
+name: Test Centro del Fumetto
 
 on:
   workflow_dispatch:
@@ -7,20 +7,33 @@ permissions:
   contents: read
 
 jobs:
-  test-collector-store-cards:
+  test-centro-del-fumetto:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Run Collector Store Cards V5
-        run: python scripts/test_collectorstorecards.py
-      - name: Upload report
+
+      - name: Test isolato Centro del Fumetto
+        run: python scripts/test_centrodelfumetto.py
+
+      - name: Mostra report
+        if: always()
+        run: |
+          if [ -f centro_fumetto_test_report.json ]; then
+            cat centro_fumetto_test_report.json
+          fi
+
+      - name: Carica report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: collectorstorecards-test-report
-          path: collectorstorecards_test_report.json
+          name: centro-fumetto-test-report
+          path: centro_fumetto_test_report.json
+          if-no-files-found: warn
