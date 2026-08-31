@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V3
+# Cardoryx - Centro del Fumetto V4
 # TEST ISOLATO READ-ONLY
+#
 # Obiettivo:
-# - leggere le sitemap reali
-# - individuare gli URL prodotto effettivi
-# - salvare campioni utili per correggere definitivamente la discovery
+# - leggere le sitemap prodotto reali
+# - salvare campioni degli URL grezzi senza filtri di percorso
+# - individuare quali URL sembrano riferiti a Pokemon
+#
 # NON modifica retail_prices.json
 # NON tocca Cardmarket
-# NON integra alcuna offerta
+# NON crea offerte
+# NON esegue matching
 
 import json
 import re
@@ -15,6 +18,7 @@ import urllib.request
 from collections import Counter
 from html import unescape
 from pathlib import Path
+from urllib.parse import urlparse
 
 BASE = "https://www.centrodelfumetto.it"
 START_SITEMAPS = [
@@ -23,17 +27,22 @@ START_SITEMAPS = [
 ]
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/3.0)"
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/4.0)"
 TIMEOUT = 20
 MAX_SITEMAPS = 120
-SAMPLE_LIMIT = 120
+
+RAW_SAMPLE_LIMIT = 250
+POKEMON_SAMPLE_LIMIT = 200
 
 POKEMON_HINTS = [
     "pokemon",
     "pokémon",
     "carta-pokemon",
-    "pokemon-world",
-    "card-universe",
+    "carta-pok",
+    "pikachu",
+    "charizard",
+    "mew",
+    "eevee",
 ]
 
 def get(url):
@@ -63,39 +72,31 @@ def looks_like_sitemap(url):
     low = url.lower()
     return low.endswith(".xml") or "sitemap" in low
 
-def looks_like_product(url):
+def looks_like_product_sitemap(url):
     low = url.lower()
-    return "/shop/" in low
+    return "product-sitemap" in low
 
 def pokemon_score(url):
     low = unescape(url).lower()
     return sum(1 for hint in POKEMON_HINTS if hint in low)
 
-def classify_path(url):
-    low = url.lower()
-
-    if "/shop/" not in low:
-        return "not-shop"
-
-    path = re.sub(r"^https?://[^/]+", "", low)
-
-    if "pokemon" in path or "pokémon" in path:
-        return "shop-pokemon-hint"
-
-    if "card-universe" in path:
-        return "shop-card-universe"
-
-    return "shop-other"
+def path_signature(url):
+    path = urlparse(url).path.strip("/")
+    if not path:
+        return "/"
+    parts = [p for p in path.split("/") if p]
+    if len(parts) == 1:
+        return "/" + parts[0]
+    return "/" + "/".join(parts[:2])
 
 def main():
     queue = list(START_SITEMAPS)
     seen_maps = set()
-    all_urls = []
-    product_urls = []
 
     sitemap_stats = []
-    path_classes = Counter()
-    host_paths = Counter()
+    all_urls = []
+    product_sitemap_urls = []
+    signatures = Counter()
 
     while queue and len(seen_maps) < MAX_SITEMAPS:
         sm = queue.pop(0)
@@ -113,7 +114,13 @@ def main():
                 "finalUrl": final,
                 "status": status,
                 "locs": len(locs),
+                "productSitemap": looks_like_product_sitemap(final) or looks_like_product_sitemap(sm),
             })
+
+            current_is_product_sitemap = (
+                looks_like_product_sitemap(final)
+                or looks_like_product_sitemap(sm)
+            )
 
             for u in locs:
                 if looks_like_sitemap(u):
@@ -123,14 +130,9 @@ def main():
 
                 all_urls.append(u)
 
-                if looks_like_product(u):
-                    product_urls.append(u)
-                    path_classes[classify_path(u)] += 1
-
-                    path = re.sub(r"^https?://[^/]+", "", u.lower())
-                    parts = [p for p in path.split("/") if p]
-                    if parts:
-                        host_paths["/" + "/".join(parts[:3])] += 1
+                if current_is_product_sitemap:
+                    product_sitemap_urls.append(u)
+                    signatures[path_signature(u)] += 1
 
         except Exception as exc:
             sitemap_stats.append({
@@ -138,48 +140,43 @@ def main():
                 "error": repr(exc),
             })
 
-    # De-duplica mantenendo l'ordine
+    # De-duplica mantenendo ordine
     all_urls = list(dict.fromkeys(all_urls))
-    product_urls = list(dict.fromkeys(product_urls))
+    product_sitemap_urls = list(dict.fromkeys(product_sitemap_urls))
 
-    scored = sorted(
-        product_urls,
+    pokemon_candidates = [
+        u for u in product_sitemap_urls
+        if pokemon_score(u) > 0
+    ]
+
+    pokemon_candidates = sorted(
+        pokemon_candidates,
         key=lambda u: (-pokemon_score(u), u.lower())
     )
 
-    pokemon_candidate_urls = [
-        u for u in scored if pokemon_score(u) > 0
-    ]
-
-    # Campioni:
-    # 1) URL con segnali Pokemon
-    # 2) URL shop generici, per capire la struttura se i segnali non sono nel path
-    pokemon_samples = pokemon_candidate_urls[:SAMPLE_LIMIT]
-    generic_shop_samples = product_urls[:SAMPLE_LIMIT]
-
     report = {
-        "schema": 3,
+        "schema": 4,
         "source": "Centro del Fumetto",
-        "mode": "read-only URL discovery diagnostic",
+        "mode": "read-only raw product URL discovery",
         "rules": {
             "cardmarketTouched": False,
             "retailPricesModified": False,
             "createsNewIdentity": False,
             "productPagesFetched": False,
             "matchingPerformed": False,
+            "pathFilterApplied": False,
         },
         "stats": {
             "sitemapsFetched": sum(1 for x in sitemap_stats if x.get("status") == 200),
             "sitemapErrors": sum(1 for x in sitemap_stats if "error" in x),
             "allUrls": len(all_urls),
-            "shopUrls": len(product_urls),
-            "pokemonCandidateUrls": len(pokemon_candidate_urls),
+            "productSitemapUrls": len(product_sitemap_urls),
+            "pokemonHintUrls": len(pokemon_candidates),
         },
-        "pathClasses": dict(path_classes),
-        "topPathPrefixes": host_paths.most_common(40),
+        "topPathSignatures": signatures.most_common(60),
         "sitemaps": sitemap_stats,
-        "pokemonUrlSamples": pokemon_samples,
-        "genericShopUrlSamples": generic_shop_samples,
+        "rawProductUrlSamples": product_sitemap_urls[:RAW_SAMPLE_LIMIT],
+        "pokemonHintSamples": pokemon_candidates[:POKEMON_SAMPLE_LIMIT],
     }
 
     REPORT.write_text(
@@ -188,12 +185,17 @@ def main():
     )
 
     print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
-    print("\nTop path prefixes:")
-    for prefix, count in report["topPathPrefixes"][:20]:
-        print(f"{count:6d}  {prefix}")
 
-    print("\nPokemon URL samples:")
-    for u in pokemon_samples[:30]:
+    print("\nTop path signatures:")
+    for sig, count in report["topPathSignatures"][:30]:
+        print(f"{count:6d}  {sig}")
+
+    print("\nRaw product URL samples:")
+    for u in report["rawProductUrlSamples"][:50]:
+        print(u)
+
+    print("\nPokemon-hint URL samples:")
+    for u in report["pokemonHintSamples"][:50]:
         print(u)
 
     print("\nReport:", REPORT)
