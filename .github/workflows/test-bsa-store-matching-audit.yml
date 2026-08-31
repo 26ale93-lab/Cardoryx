@@ -1,0 +1,68 @@
+name: Test BSA Store Matching Audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bsa-matching-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run BSA conservative matching audit
+        run: python scripts/test_bsa_store.py
+
+      - name: Verify audit report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/bsa_store_matching_audit.json")
+          if not path.exists():
+              raise SystemExit("BSA matching audit report not generated")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+
+          if report.get("schema") != 1:
+              raise SystemExit(f"Wrong schema: {report.get('schema')}")
+
+          rules = report.get("rules", {})
+          expected = {
+              "retailPricesModified": False,
+              "cardmarketTouched": False,
+              "newIdentitiesCreated": False,
+              "exactExistingIdentityOnly": True,
+              "explicitVariantRequired": True,
+              "duplicateStoreRejected": True,
+              "knownFusionStrikeAnomalyRejected": True,
+          }
+
+          for key, value in expected.items():
+              if rules.get(key) is not value:
+                  raise SystemExit(
+                      f"Safety rule failed: {key}={rules.get(key)!r}, expected {value!r}"
+                  )
+
+          print("BSA matching audit verified")
+          print(json.dumps(report.get("stats", {}), ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload BSA matching audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bsa-store-matching-audit
+          path: data/bsa_store_matching_audit.json
+          if-no-files-found: error
+          retention-days: 14
