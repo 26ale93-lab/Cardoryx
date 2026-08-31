@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V12
+# Cardoryx - Centro del Fumetto V14
 # TEST ISOLATO READ-ONLY
 # Legge i campi strutturati WooCommerce/JSON-LD verificati nel V6.
 # NON modifica retail_prices.json. NON tocca Cardmarket. NON crea identita.
@@ -16,10 +16,9 @@ from pathlib import Path
 BASE = "https://www.centrodelfumetto.it"
 SITEMAP_INDEX = BASE + "/sitemap_index.xml"
 RETAIL = Path("data/retail_prices.json")
-CARDMARKET = Path("data/cardmarket_play_index.json")
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/12.0)"
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/14.0)"
 TIMEOUT = 12
 MAX_SITEMAPS = 120
 MAX_PRODUCTS = 400
@@ -314,218 +313,32 @@ def discover():
     return urls, smstats
 
 
-def walk_dicts(obj):
-    if isinstance(obj, dict):
-        yield obj
-        for v in obj.values():
-            yield from walk_dicts(v)
-    elif isinstance(obj, list):
-        for v in obj:
-            yield from walk_dicts(v)
 
-def first_nonempty(d, keys):
-    for k in keys:
-        v = d.get(k)
-        if isinstance(v, (str, int, float)) and str(v).strip():
-            return str(v).strip()
-    return ""
-
-def cardmarket_identity_records(data):
-    """
-    V11 è volutamente schema-tolerant e READ-ONLY.
-    Usa solo record Cardmarket che espongono abbastanza identità:
-    nome + numero e, quando presente, set/variant.
-    Prezzi e valori Cardmarket non partecipano mai al matching.
-    """
-    seen = set()
+def offer_summary(card):
     out = []
-    for d in walk_dicts(data):
-        name = first_nonempty(d, ("name","cardName","card_name","productName","product_name"))
-        number = first_nonempty(d, ("number","localId","local_id","collectorNumber","collector_number","cardNumber","card_number"))
-        setname = first_nonempty(d, ("set","setName","set_name","expansion","series"))
-        variant = first_nonempty(d, ("variant","finish","printing","foil","foiling"))
-        cid = first_nonempty(d, ("id","cardId","card_id","tcgdexId","tcgdex_id"))
-        cp = collector_parts(number)
-        if not name or not cp:
+    seen = set()
+    for o in card.get("offers", []):
+        store = str(o.get("store") or "").strip()
+        if not store:
             continue
-        key = (norm(name), cp, norm(setname), norm(variant), cid)
-        if key in seen:
+        k = norm(store)
+        if k in seen:
             continue
-        seen.add(key)
-        out.append({
-            "name": name, "number": number, "set": setname,
-            "variant": variant, "id": cid
-        })
+        seen.add(k)
+        out.append({"store": store, "price": o.get("price")})
     return out
 
-def build_cardmarket_identity_indexes(data):
-    records = cardmarket_identity_records(data)
-    by_short_name = defaultdict(list)
-    by_full_name = defaultdict(list)
-    for r in records:
-        sp = short_number_key(r["number"])
-        cp = collector_parts(r["number"])
-        nk = norm(r["name"])
-        if sp:
-            by_short_name[(sp, nk)].append(r)
-        if cp:
-            by_full_name[(cp, nk)].append(r)
-    return records, by_short_name, by_full_name
-
-
-def safe_shape(value, depth=0, max_depth=4, max_items=8):
-    """
-    Descrive soltanto la STRUTTURA del JSON.
-    Non restituisce prezzi/valori numerici Cardmarket.
-    Le stringhe sono sostituite dal loro tipo/lunghezza.
-    """
-    if depth >= max_depth:
-        return {"type": type(value).__name__}
-    if isinstance(value, dict):
-        keys = list(value.keys())
-        sample = {}
-        for k in keys[:max_items]:
-            sample[str(k)] = safe_shape(value[k], depth + 1, max_depth, max_items)
-        return {
-            "type": "dict",
-            "keyCount": len(keys),
-            "keys": [str(k) for k in keys[:50]],
-            "sampleShape": sample,
-        }
-    if isinstance(value, list):
-        return {
-            "type": "list",
-            "length": len(value),
-            "itemShapes": [
-                safe_shape(v, depth + 1, max_depth, max_items)
-                for v in value[:min(max_items, len(value))]
-            ],
-        }
-    if isinstance(value, str):
-        return {"type": "str", "length": len(value)}
-    if value is None:
-        return {"type": "null"}
-    if isinstance(value, bool):
-        return {"type": "bool"}
-    if isinstance(value, (int, float)):
-        return {"type": type(value).__name__}
-    return {"type": type(value).__name__}
-
-def collect_key_paths(value, path="$", depth=0, max_depth=7, out=None):
-    if out is None:
-        out = Counter()
-    if depth > max_depth:
-        return out
-    if isinstance(value, dict):
-        for k, v in value.items():
-            p = f"{path}.{k}"
-            out[p] += 1
-            collect_key_paths(v, p, depth + 1, max_depth, out)
-    elif isinstance(value, list):
-        # Campiona per evitare report enormi.
-        for v in value[:50]:
-            collect_key_paths(v, path + "[]", depth + 1, max_depth, out)
-    return out
-
-def cardmarket_schema_diagnostic(data):
-    paths = collect_key_paths(data)
-    interesting_tokens = (
-        "name", "card", "product", "number", "local", "collector",
-        "set", "expansion", "series", "variant", "finish", "foil",
-        "id", "tcgdex", "price", "trend", "avg"
+def physical_key(card):
+    return (
+        norm(card.get("set")),
+        collector_parts(card.get("number")),
+        norm(card.get("name")),
+        str(card.get("variant") or ""),
     )
-    interesting = []
-    for p, count in paths.most_common():
-        lp = p.lower()
-        if any(t in lp for t in interesting_tokens):
-            interesting.append({"path": p, "sampleCount": count})
-        if len(interesting) >= 150:
-            break
-    return {
-        "fileExists": CARDMARKET.exists(),
-        "rootType": type(data).__name__,
-        "safeRootShape": safe_shape(data),
-        "interestingKeyPaths": interesting,
-        "identityRecordsDetectedByLegacyParser": len(cardmarket_identity_records(data)),
-        "valuesRedacted": True,
-        "cardmarketModified": False,
-    }
-
-
-def cardmarket_v13_name_diagnostic(data, centro_names):
-    """READ-ONLY: campiona record Cardmarket per nome Centro senza leggere/esporre prezzi."""
-    expansions = data.get("expansions", {}) if isinstance(data, dict) else {}
-    records = {}
-
-    def add_record(d, origin):
-        if not isinstance(d, dict):
-            return
-        name = str(d.get("name") or d.get("nameKey") or "").strip()
-        if not name:
-            return
-        pid = str(d.get("idProduct") or (d.get("catalog") or {}).get("idProduct") or "")
-        key = (pid, norm(name), str(d.get("idExpansion") or ""), str(d.get("idMetacard") or ""))
-        if key in records:
-            records[key]["origins"].add(origin)
-            return
-        cat = d.get("catalog") if isinstance(d.get("catalog"), dict) else {}
-        expid = str(d.get("idExpansion") or cat.get("idExpansion") or "")
-        exp = expansions.get(expid, {}) if isinstance(expansions, dict) else {}
-        records[key] = {
-            "idProduct": d.get("idProduct") or cat.get("idProduct"),
-            "series": d.get("series"),
-            "idExpansion": d.get("idExpansion") or cat.get("idExpansion"),
-            "expansionProduct": exp.get("product") if isinstance(exp, dict) else None,
-            "idMetacard": d.get("idMetacard") or cat.get("idMetacard"),
-            "name": d.get("name"),
-            "nameKey": d.get("nameKey"),
-            "catalogName": cat.get("name"),
-            "categoryName": cat.get("categoryName"),
-            "dateAdded": cat.get("dateAdded"),
-            "origins": {origin},
-        }
-
-    bp = data.get("byBaseProduct", {}) if isinstance(data, dict) else {}
-    if isinstance(bp, dict):
-        for groups in bp.values():
-            if not isinstance(groups, dict):
-                continue
-            for lst in groups.values():
-                if isinstance(lst, list):
-                    for d in lst:
-                        add_record(d, "byBaseProduct")
-
-    prod = data.get("byProduct", {}) if isinstance(data, dict) else {}
-    if isinstance(prod, dict):
-        for d in prod.values():
-            add_record(d, "byProduct")
-
-    wanted = {norm(x) for x in centro_names if x}
-    matched = []
-    for r in records.values():
-        names = {norm(r.get("name")), norm(r.get("nameKey")), norm(r.get("catalogName"))}
-        if wanted.intersection(names):
-            q = dict(r)
-            q["origins"] = sorted(q["origins"])
-            matched.append(q)
-
-    matched.sort(key=lambda x: (norm(x.get("name")), str(x.get("idExpansion")), str(x.get("idProduct"))))
-    return {
-        "totalIdentityLikeRecordsScanned": len(records),
-        "centroDistinctNames": len(wanted),
-        "recordsMatchingCentroName": len(matched),
-        "distinctCentroNamesMatched": len({norm(r.get("name") or r.get("nameKey") or r.get("catalogName")) for r in matched}),
-        "examples": matched[:250],
-        "pricesReadOrExposed": False,
-        "cardmarketModified": False,
-    }
 
 def main():
     started = time.monotonic()
     retail = json.loads(RETAIL.read_text(encoding="utf-8"))
-    cardmarket = json.loads(CARDMARKET.read_text(encoding="utf-8")) if CARDMARKET.exists() else {}
-    cardmarket_schema = cardmarket_schema_diagnostic(cardmarket)
-    cm_records, cm_short, cm_full = build_cardmarket_identity_indexes(cardmarket)
     exact, loose, short_index, known_sets = build_indexes(retail)
 
     urls, smstats = discover()
@@ -547,8 +360,7 @@ def main():
     number_formats = Counter()
     rarity_variant_audit = Counter()
     unique_identity_examples = []
-    cardmarket_crosscheck_examples = []
-    cardmarket_schema_examples = cm_records[:20]
+    centro_identity_candidates = []
 
     for i, u in enumerate(eligible, 1):
         if time.monotonic() - started >= MAX_RUNTIME_SECONDS:
@@ -644,69 +456,21 @@ def main():
                             "diagnosticOnly": True,
                         }
                         unique_identity_examples.append(item)
+                        if unique_variant and len(candidates) == 1:
+                            c0 = candidates[0]
+                            centro_identity_candidates.append({
+                                "identityKey": physical_key(c0),
+                                "shop": p,
+                                "cardoryx": c0,
+                                "variantEstablishedByShopSignal": False,
+                                "variantOnlyKnownFromUniqueCardoryxIdentity": True,
+                            })
                         if len(rejected_examples) < 150:
                             rejected_examples.append(item)
                     elif len(physical) > 1:
                         st["abbreviatedNumberAmbiguousIdentity"] += 1
                     else:
                         st["abbreviatedNumberNoIdentity"] += 1
-
-                        # V11: Cardmarket è SOLO un ponte diagnostico d'identità.
-                        # Non usa prezzi, non scrive il file e non crea identità.
-                        cm_candidates = cm_short.get((sp, norm(p["name"])), [])
-                        cm_physical = {
-                            (norm(x.get("set")), collector_parts(x.get("number")), norm(x.get("name")))
-                            for x in cm_candidates
-                        }
-
-                        if len(cm_physical) == 1 and cm_candidates:
-                            st["cardmarketUniqueIdentityCandidate"] += 1
-                            cm_numbers = sorted({x.get("number") for x in cm_candidates if x.get("number")})
-                            cm_sets = sorted({x.get("set") for x in cm_candidates if x.get("set")})
-                            cm_variants = sorted({x.get("variant") for x in cm_candidates if x.get("variant")})
-
-                            # Verifica se l'identità risolta da Cardmarket può essere
-                            # confermata da una sola identità già esistente nel retail Cardoryx.
-                            confirmed = []
-                            for x in cm_candidates:
-                                cp2 = collector_parts(x.get("number"))
-                                if not cp2:
-                                    continue
-                                # Prima set Cardmarket se presente; altrimenti set Centro già mappato.
-                                possible_sets = []
-                                if x.get("set"):
-                                    possible_sets.append(norm(x.get("set")))
-                                possible_sets.append(mapped_set)
-                                for sk2 in dict.fromkeys(possible_sets):
-                                    confirmed.extend(loose.get((sk2, cp2, norm(p["name"])), []))
-
-                            uniq_confirmed = {}
-                            for c in confirmed:
-                                k = (norm(c.get("set")), collector_parts(c.get("number")),
-                                     norm(c.get("name")), str(c.get("variant")))
-                                uniq_confirmed[k] = c
-
-                            if len(uniq_confirmed) == 1:
-                                st["cardmarketBridgeConfirmedByCardoryx"] += 1
-                            elif len(uniq_confirmed) > 1:
-                                st["cardmarketBridgeAmbiguousInCardoryx"] += 1
-                            else:
-                                st["cardmarketBridgeNotConfirmedInCardoryx"] += 1
-
-                            if len(cardmarket_crosscheck_examples) < 150:
-                                cardmarket_crosscheck_examples.append({
-                                    "shop": p,
-                                    "cardmarketNumbers": cm_numbers,
-                                    "cardmarketSets": cm_sets,
-                                    "cardmarketVariantsInformationalOnly": cm_variants,
-                                    "cardoryxConfirmed": [card_summary(c) for c in uniq_confirmed.values()],
-                                    "diagnosticOnly": True,
-                                    "cardmarketPriceUsed": False,
-                                })
-                        elif len(cm_physical) > 1:
-                            st["cardmarketIdentityAmbiguous"] += 1
-                        else:
-                            st["cardmarketIdentityNotFound"] += 1
                 continue
 
             st["usableBeforeIdentity"] += 1
@@ -724,6 +488,13 @@ def main():
             if len(matches) == 1:
                 st["exactMatches"] += 1
                 c = matches[0]
+                centro_identity_candidates.append({
+                    "identityKey": physical_key(c),
+                    "shop": p,
+                    "cardoryx": c,
+                    "variantEstablishedByShopSignal": True,
+                    "variantOnlyKnownFromUniqueCardoryxIdentity": False,
+                })
                 n = store_count(c)
                 if n >= 3:
                     st["matchedAlreadyReliable"] += 1
@@ -774,12 +545,92 @@ def main():
 
         time.sleep(SLEEP_SECONDS)
 
-    cm_v13 = cardmarket_v13_name_diagnostic(cardmarket, [x.get("shop", {}).get("name") for x in unique_identity_examples])
+
+    groups = defaultdict(list)
+    for x in centro_identity_candidates:
+        groups[x["identityKey"]].append(x)
+
+    physical_audit = []
+    for _, group in groups.items():
+        c = group[0]["cardoryx"]
+        prices = sorted({round(float(x["shop"]["price"]), 2) for x in group if x["shop"].get("price") is not None})
+        urls_group = sorted({x["shop"].get("url") for x in group if x["shop"].get("url")})
+        structured_signatures = {
+            (
+                norm(x["shop"].get("set")), str(x["shop"].get("number") or ""),
+                norm(x["shop"].get("rarity")), norm(x["shop"].get("foiling")),
+                norm(x["shop"].get("reverseHolo")), norm(x["shop"].get("language")),
+                norm(x["shop"].get("condition"))
+            )
+            for x in group
+        }
+
+        if len(group) == 1:
+            duplicate_status = "single"
+            safe = True
+            st["safeSingleCentroOfferCandidates"] += 1
+        elif len(prices) == 1 and len(structured_signatures) == 1:
+            duplicate_status = "duplicateSamePriceCollapsedDiagnostic"
+            safe = True
+            st["duplicateSamePriceCollapsedDiagnostic"] += 1
+        else:
+            duplicate_status = "duplicateStoreOfferAmbiguous"
+            safe = False
+            st["duplicateDifferentPriceRejected"] += 1
+
+        if len(group) > 1:
+            st["duplicateIdentityGroups"] += 1
+
+        existing = offer_summary(c)
+        current = len(existing)
+        if current == 0: st["currentStoreCount0"] += 1
+        elif current == 1: st["currentStoreCount1"] += 1
+        elif current == 2: st["currentStoreCount2"] += 1
+        else: st["currentStoreCount3plus"] += 1
+
+        if current >= 3:
+            st["currentlyReliable"] += 1
+            if safe:
+                st["alreadyReliableWouldGainOffer"] += 1
+        else:
+            st["currentlyNotReliable"] += 1
+            if safe and current == 2:
+                st["potentialTwoToThreeStoreUpgrade"] += 1
+            elif safe:
+                st["noGainBecauseBelowThree"] += 1
+
+        physical_audit.append({
+            "cardoryx": {
+                "set": c.get("set"), "number": c.get("number"),
+                "name": c.get("name"), "variant": c.get("variant"),
+            },
+            "centroPages": len(group),
+            "centroPrices": prices,
+            "centroUrls": urls_group,
+            "duplicateStatus": duplicate_status,
+            "safeCentroOfferDiagnostic": safe,
+            "variantEstablishedByShopSignal": any(x["variantEstablishedByShopSignal"] for x in group),
+            "variantOnlyKnownFromUniqueCardoryxIdentity": all(x["variantOnlyKnownFromUniqueCardoryxIdentity"] for x in group),
+            "currentIndependentStores": current,
+            "existingOffers": existing,
+            "wouldReachThreeStores": bool(safe and current == 2),
+            "currentlyReliable": current >= 3,
+        })
+
+    st["uniquePhysicalIdentities"] = len(groups)
+    physical_audit.sort(key=lambda x: (
+        not x["wouldReachThreeStores"],
+        not x["safeCentroOfferDiagnostic"],
+        norm(x["cardoryx"]["set"]),
+        norm(x["cardoryx"]["name"]),
+        str(x["cardoryx"]["number"]),
+    ))
+
 
     report = {
-        "schema": 13,
+        "schema": 14,
         "source": "Centro del Fumetto",
-        "mode": "read-only Cardmarket targeted identity diagnostic + Centro baseline",
+        "mode": "Centro-only physical-identity + duplicate + retail-gain diagnostic",
         "rules": {
             "catalogPath": POKEMON_SINGLE_PATH,
             "urlPrefilter": "near-mint + italiano",
@@ -794,11 +645,10 @@ def main():
             "price": "single unambiguous product price only",
             "setRule": "exact Cardoryx set or existing trusted aliases only; no new aliases learned automatically",
             "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only; unique Cardoryx variant is recorded but never accepted automatically",
-            "identityRule": "V13 cross-checks Centro names against Cardmarket identity-like records read-only; IDs/expansion/catalog names only, never prices; no retail acceptance",
+            "identityRule": "Centro -> existing Cardoryx identity only; no external identity bridge; no new identities created",
             "createsNewIdentity": False,
-            "cardmarketTouched": False,
-            "cardmarketReadOnlyIdentityCrosscheck": True,
-            "cardmarketPriceUsedForRetailMatching": False,
+            "duplicateStoreRule": "same physical identity counts Centro once; conflicting duplicate prices/structured fields are rejected, never auto-selected",
+            "retailGainRule": "diagnostic only: measure current independent stores and safe 2-to-3 upgrades",
             "retailPricesModified": False,
         },
         "limits": {
@@ -812,11 +662,7 @@ def main():
         "raritiesSeen": rarities.most_common(60),
         "rarityToSingleCardoryxVariantAudit": rarity_variant_audit.most_common(100),
         "uniqueIdentityExamples": unique_identity_examples,
-        "cardmarketSchemaDiagnostic": cardmarket_schema,
-        "cardmarketV13TargetedNameDiagnostic": cm_v13,
-        "cardmarketIdentityRecordsDetected": len(cm_records),
-        "cardmarketSchemaExamples": cardmarket_schema_examples,
-        "cardmarketCrosscheckExamples": cardmarket_crosscheck_examples,
+        "physicalIdentityAudit": physical_audit,
         "newReliablePotentialExamples": potential_examples,
         "exactExamples": exact_examples,
         "rejectedExamples": rejected_examples,
