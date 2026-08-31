@@ -1,25 +1,19 @@
-name: Test BSA Store
-
+name: Test BSA Store V2
 on:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  test-bsa-store:
+  test-bsa-v2:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Configura Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Audit prezzi BSA Store
+      - name: Simula esclusione cluster BSA anomalo
         run: python scripts/test_bsa_store.py
-      - name: Carica report diagnostico
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: bsa-store-test-report
-          path: bsa_store_test_report.json
+          name: bsa-store-v2-report
+          path: bsa_store_v2_report.json
