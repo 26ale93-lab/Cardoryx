@@ -3166,103 +3166,300 @@ def collect_cardpioneer(cards):
 
 
 # ============================================================
-# TIMETWISTER GAMES — V22
+# TIMETWISTER GAMES — V23 / MATCHING V5 APPROVATO
 # ============================================================
 
-TIMETWISTER_SET_ALIASES = {
-    "brilliant stars": "Astri Lucenti",
-    "evolving skies": "Evoluzioni Eteree",
-    "fusion strike": "Colpo Fusione",
-    "darkness ablaze": "Fiamme Oscure",
-    "astral radiance": "Lucentezza Siderale",
-    "pokemon go": "Pokémon GO",
-    "celebrations": "Gran Festa",
-    "battle styles": "Stili di Lotta",
-    "crown zenith": "Zenit Regale",
-    "151": "151",
-    "twilight masquerade": "Crepuscolo Mascherato",
-    "mega evolution": "Megaevoluzione",
-    "ascended heroes": "Ascesa Eroica",
-    "lost origin": "Origine Perduta",
-    "chilling reign": "Regno Glaciale",
-    "shining fates": "Destino Splendente",
+# Mapping esplicito e auditato dei codici set TimeTwister verso i nomi
+# italiani usati da Cardoryx. Non viene appreso dinamicamente da collisioni.
+TIMETWISTER_SET_CODE_MAP = {
+    "ASR": "Lucentezza Siderale",
+    "BRS": "Astri Lucenti",
+    "CRZ": "Zenit Regale",
+    "DAA": "Fiamme Oscure",
+    "DRI": "Rivali Predestinati",
+    "FST": "Colpo Fusione",
+    "LOR": "Origine Perduta",
+    "PAL": "Evoluzioni a Paldea",
+    "PAR": "Paradosso Temporale",
+    "PRE": "Evoluzioni Prismatiche",
+    "SCR": "Corona Astrale",
+    "SFA": "Segreto Fiabesco",
+    "SIT": "Tempesta Argentata",
+    "SSP": "Scintille Folgoranti",
+    "SVI": "Scarlatto e Violetto",
+    "TEF": "CronoForze",
+    "TWM": "Crepuscolo Mascherato",
+    "XPRE": "Evoluzioni Prismatiche",
+    "XBLK": "Luce Nera",
 }
+
+# Seconda prova sul set: il testo dell'espansione nel titolo TimeTwister deve
+# essere compatibile con il codice. Se codice e label non concordano, fail closed.
+TIMETWISTER_SET_LABEL_HINTS = {
+    "ASR": {"astral radiance"},
+    "BRS": {"brilliant stars"},
+    "CRZ": {"crown zenith"},
+    "DAA": {"darkness ablaze"},
+    "DRI": {"destined rivals"},
+    "FST": {"fusion strike"},
+    "LOR": {"lost origin"},
+    "PAL": {"paldea evolved"},
+    "PAR": {"paradox rift"},
+    "PRE": {"prismatic evolutions"},
+    "SCR": {"stellar crown"},
+    "SFA": {"shrouded fable"},
+    "SIT": {"silver tempest"},
+    "SSP": {"surging sparks"},
+    "SVI": {"scarlet violet", "scarlet and violet"},
+    "TEF": {"temporal forces"},
+    "TWM": {"twilight masquerade"},
+    "XPRE": {"prismatic evolutions additionals"},
+    "XBLK": {"black bolt additionals"},
+}
+
+
+def timetwister_collector_left(value):
+    """Normalizza solo il numeratore, preservando namespace TG/GG/SV."""
+    left = norm_number(value).split("/", 1)[0].upper()
+    m = re.fullmatch(r"([A-Z]{0,3})(\d{1,4})", left)
+    if not m:
+        return left
+    prefix, digits = m.groups()
+    return prefix + str(int(digits))
+
 
 def timetwister_parse_title(title):
     title = str(title or "").strip()
-    m = re.fullmatch(r"(.+?)\s+-\s+(.+?)\s+\(([^()]*)\)\s+\[([A-Za-z0-9]+)-((?:TG|GG|SV)?\d{1,3})\]", title, flags=re.IGNORECASE)
+    m = re.fullmatch(
+        r"(.+?)\s+-\s+(.+?)\s+\(([^()]*)\)\s+"
+        r"\[([A-Za-z0-9]+)-((?:TG|GG|SV)?\d{1,4})\]",
+        title,
+        flags=re.IGNORECASE,
+    )
     if not m:
         return None
-    name, set_en, rarity, set_code, collector = m.groups()
-    return {"name": name.strip(), "setLabel": set_en.strip(), "rarity": rarity.strip(), "setCode": set_code.upper(), "collector": collector.upper()}
+
+    name, set_label, rarity, set_code, collector = m.groups()
+    return {
+        "name": name.strip(),
+        "setLabel": set_label.strip(),
+        "rarity": rarity.strip(),
+        "setCode": set_code.upper(),
+        "collector": timetwister_collector_left(collector),
+    }
+
 
 def timetwister_variant(value):
-    v = norm(value)
-    if v == "normal": return "Normal"
-    if v in {"reverse holo", "reverseholo"}: return "Reverse Holo"
-    if v == "holo": return "Holo"
+    value_n = norm(value)
+    if value_n == "normal":
+        return "Normal"
+    if value_n in {"reverse holo", "reverseholo"}:
+        return "Reverse Holo"
+    if value_n == "holo":
+        return "Holo"
     return None
 
+
+def timetwister_label_compatible(set_code, label):
+    hints = TIMETWISTER_SET_LABEL_HINTS.get(set_code)
+    if not hints:
+        return False
+    label_n = norm(label)
+    return any(norm(hint) in label_n for hint in hints)
+
+
 def collect_timetwister(cards):
-    print("=== TIMETWISTER GAMES ===", flush=True)
-    stats = {"source":"TimeTwister Games","pages":0,"products":0,"variants":0,"accepted":0,"invalidTitle":0,"setRejected":0,"languageRejected":0,"conditionRejected":0,"editionRejected":0,"unavailable":0,"priceUnavailable":0,"identityAmbiguous":0,"duplicateStore":0,"errors":0,"ok":True}
+    print()
+    print("=== TIMETWISTER GAMES — V23 ===", flush=True)
+
+    stats = {
+        "source": "TimeTwister Games",
+        "pages": 0,
+        "products": 0,
+        "variants": 0,
+        "accepted": 0,
+        "invalidTitle": 0,
+        "setRejected": 0,
+        "setLabelConflict": 0,
+        "languageRejected": 0,
+        "conditionRejected": 0,
+        "editionRejected": 0,
+        "unavailable": 0,
+        "priceUnavailable": 0,
+        "identityAmbiguous": 0,
+        "duplicateStore": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    # TimeTwister è solo una fonte di incrocio: NON crea identità nuove.
+    # Matching finale obbligatorio:
+    # set auditato + numeratore/namespace + nome esatto + variante esatta.
+    identity_index = {}
+    for key, card in cards.items():
+        ident = (
+            norm(card.get("set", "")),
+            timetwister_collector_left(card.get("number", "")),
+            norm(card.get("name", "")),
+            card.get("variant", ""),
+        )
+        identity_index.setdefault(ident, []).append((key, card))
+
     checked_at = utc_now()
+
     try:
         for page in range(1, 101):
-            payload = http_get_json(TIMETWISTER_COLLECTION_URL.format(page=page))
-            products = payload.get("products") if isinstance(payload, dict) else None
-            if not isinstance(products, list): raise RuntimeError("TimeTwister: catalogo Shopify non riconosciuto")
+            payload = http_get_json(
+                TIMETWISTER_COLLECTION_URL.format(page=page)
+            )
+            products = (
+                payload.get("products")
+                if isinstance(payload, dict)
+                else None
+            )
+
+            if not isinstance(products, list):
+                raise RuntimeError(
+                    "TimeTwister: catalogo Shopify non riconosciuto"
+                )
+
             stats["pages"] = page
-            if not products: break
+            if not products:
+                break
+
             stats["products"] += len(products)
+
             for product in products:
                 parsed = timetwister_parse_title(product.get("title"))
                 if not parsed:
-                    stats["invalidTitle"] += 1; continue
-                set_it = TIMETWISTER_SET_ALIASES.get(norm(parsed["setLabel"]))
+                    stats["invalidTitle"] += 1
+                    continue
+
+                set_it = TIMETWISTER_SET_CODE_MAP.get(parsed["setCode"])
                 if not set_it:
-                    stats["setRejected"] += 1; continue
+                    stats["setRejected"] += 1
+                    continue
+
+                if not timetwister_label_compatible(
+                    parsed["setCode"],
+                    parsed["setLabel"],
+                ):
+                    stats["setLabelConflict"] += 1
+                    continue
+
                 options = product.get("options") or []
-                pos = {norm(o.get("name")): i+1 for i,o in enumerate(options) if isinstance(o,dict)}
-                for v in product.get("variants") or []:
+                pos = {
+                    norm(option.get("name")): index + 1
+                    for index, option in enumerate(options)
+                    if isinstance(option, dict)
+                }
+
+                for shop_variant in product.get("variants") or []:
                     stats["variants"] += 1
-                    vals = {1:str(v.get("option1") or "").strip(),2:str(v.get("option2") or "").strip(),3:str(v.get("option3") or "").strip()}
-                    language=vals.get(pos.get("language"),""); condition=vals.get(pos.get("condition"),""); edition=vals.get(pos.get("edition"),"")
-                    if norm(language) not in {"italian","italiano","ita"}: stats["languageRejected"] += 1; continue
-                    if norm(condition) not in {"near mint","nm"}: stats["conditionRejected"] += 1; continue
-                    if v.get("available") is not True: stats["unavailable"] += 1; continue
+
+                    values = {
+                        1: str(shop_variant.get("option1") or "").strip(),
+                        2: str(shop_variant.get("option2") or "").strip(),
+                        3: str(shop_variant.get("option3") or "").strip(),
+                    }
+
+                    language = values.get(pos.get("language"), "")
+                    condition = values.get(pos.get("condition"), "")
+                    edition = values.get(pos.get("edition"), "")
+
+                    if norm(language) not in {"italian", "italiano", "ita"}:
+                        stats["languageRejected"] += 1
+                        continue
+
+                    if norm(condition) not in {"near mint", "nm"}:
+                        stats["conditionRejected"] += 1
+                        continue
+
+                    if shop_variant.get("available") is not True:
+                        stats["unavailable"] += 1
+                        continue
+
                     variant = timetwister_variant(edition)
-                    if not variant: stats["editionRejected"] += 1; continue
-                    try: price = round(float(v.get("price")),2)
-                    except Exception: stats["priceUnavailable"] += 1; continue
-                    if price <= 0: stats["priceUnavailable"] += 1; continue
-                    collector = parsed["collector"]
-                    candidates=[]
-                    for key,card in cards.items():
-                        if norm(card.get("set","")) != norm(set_it) or card.get("variant") != variant: continue
-                        left = norm_number(card.get("number","")).split("/",1)[0].upper()
-                        if left.startswith(("TG","GG","SV")): same = left == collector
-                        elif collector.startswith(("TG","GG","SV")): same = False
-                        else:
-                            try: same = int(left) == int(collector)
-                            except Exception: same = False
-                        if same: candidates.append((key,card))
-                    name_matches=[(k,c) for k,c in candidates if norm(c.get("name","")) == norm(parsed["name"])]
-                    if len(name_matches) == 1: candidates=name_matches
-                    elif len(candidates) != 1: stats["identityAmbiguous"] += 1; continue
-                    if len(candidates) != 1: stats["identityAmbiguous"] += 1; continue
-                    _,card=candidates[0]
-                    if any(o.get("store") == "TimeTwister Games" for o in card.get("offers",[])): stats["duplicateStore"] += 1; continue
-                    handle=str(product.get("handle") or "").strip()
-                    url=TIMETWISTER_BASE_URL+"/products/"+handle if handle else TIMETWISTER_BASE_URL
-                    added=add_offer(cards,set_name=card.get("set",""),number=card.get("number",""),card_name=card.get("name",""),variant=card.get("variant",""),language="IT",condition="NM/MINT",offer={"store":"TimeTwister Games","price":price,"url":url,"language":"IT","condition":"NM/MINT","variant":card.get("variant",""),"checkedAt":checked_at,"sourceType":"retail-store"})
-                    if added: stats["accepted"] += 1
-                    else: stats["duplicateStore"] += 1
-            if len(products) < 250: break
+                    if not variant:
+                        stats["editionRejected"] += 1
+                        continue
+
+                    try:
+                        price = round(float(shop_variant.get("price")), 2)
+                    except Exception:
+                        stats["priceUnavailable"] += 1
+                        continue
+
+                    if price <= 0:
+                        stats["priceUnavailable"] += 1
+                        continue
+
+                    ident = (
+                        norm(set_it),
+                        parsed["collector"],
+                        norm(parsed["name"]),
+                        variant,
+                    )
+                    candidates = identity_index.get(ident, [])
+
+                    # Fail closed: serve UNA sola identità già nota.
+                    if len(candidates) != 1:
+                        stats["identityAmbiguous"] += 1
+                        continue
+
+                    _, card = candidates[0]
+
+                    if any(
+                        offer.get("store") == "TimeTwister Games"
+                        for offer in card.get("offers", [])
+                    ):
+                        stats["duplicateStore"] += 1
+                        continue
+
+                    handle = str(product.get("handle") or "").strip()
+                    url = (
+                        TIMETWISTER_BASE_URL + "/products/" + handle
+                        if handle
+                        else TIMETWISTER_BASE_URL
+                    )
+
+                    added = add_offer(
+                        cards,
+                        set_name=card.get("set", ""),
+                        number=card.get("number", ""),
+                        card_name=card.get("name", ""),
+                        variant=card.get("variant", ""),
+                        language="IT",
+                        condition="NM/MINT",
+                        offer={
+                            "store": "TimeTwister Games",
+                            "price": price,
+                            "url": url,
+                            "language": "IT",
+                            "condition": "NM/MINT",
+                            "variant": card.get("variant", ""),
+                            "checkedAt": checked_at,
+                            "sourceType": "retail-store",
+                        },
+                    )
+
+                    if added:
+                        stats["accepted"] += 1
+                    else:
+                        stats["duplicateStore"] += 1
+
+            if len(products) < 250:
+                break
+
             time.sleep(0.25)
+
     except Exception as exc:
-        stats["ok"] = False; stats["errors"] += 1; stats["error"] = str(exc)
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
     return stats
+
 
 def collect_federicstore(cards):
 
