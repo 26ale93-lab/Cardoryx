@@ -1,0 +1,52 @@
+name: Test Antro
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-antro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run Antro diagnostic
+        run: python scripts/test_antro.py
+
+      - name: Validate report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("antro_test_report.json")
+          if not path.exists():
+              raise SystemExit("Report non creato")
+
+          data = json.loads(path.read_text(encoding="utf-8"))
+          assert data.get("source") == "L'Antro dei Fumetti"
+          assert data.get("mode") == "read-only diagnostic"
+
+          rules = data.get("rules", {})
+          assert rules.get("cardmarketTouched") is False
+          assert rules.get("retailPricesModified") is False
+
+          print("Validazione OK")
+          PY
+
+      - name: Upload diagnostic report
+        uses: actions/upload-artifact@v4
+        with:
+          name: antro-test-report
+          path: antro_test_report.json
+          if-no-files-found: error
