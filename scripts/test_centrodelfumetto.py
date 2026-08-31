@@ -446,8 +446,77 @@ def cardmarket_schema_diagnostic(data):
         "rootType": type(data).__name__,
         "safeRootShape": safe_shape(data),
         "interestingKeyPaths": interesting,
-        "identityRecordsDetectedByV11Parser": len(cardmarket_identity_records(data)),
+        "identityRecordsDetectedByLegacyParser": len(cardmarket_identity_records(data)),
         "valuesRedacted": True,
+        "cardmarketModified": False,
+    }
+
+
+def cardmarket_v13_name_diagnostic(data, centro_names):
+    """READ-ONLY: campiona record Cardmarket per nome Centro senza leggere/esporre prezzi."""
+    expansions = data.get("expansions", {}) if isinstance(data, dict) else {}
+    records = {}
+
+    def add_record(d, origin):
+        if not isinstance(d, dict):
+            return
+        name = str(d.get("name") or d.get("nameKey") or "").strip()
+        if not name:
+            return
+        pid = str(d.get("idProduct") or (d.get("catalog") or {}).get("idProduct") or "")
+        key = (pid, norm(name), str(d.get("idExpansion") or ""), str(d.get("idMetacard") or ""))
+        if key in records:
+            records[key]["origins"].add(origin)
+            return
+        cat = d.get("catalog") if isinstance(d.get("catalog"), dict) else {}
+        expid = str(d.get("idExpansion") or cat.get("idExpansion") or "")
+        exp = expansions.get(expid, {}) if isinstance(expansions, dict) else {}
+        records[key] = {
+            "idProduct": d.get("idProduct") or cat.get("idProduct"),
+            "series": d.get("series"),
+            "idExpansion": d.get("idExpansion") or cat.get("idExpansion"),
+            "expansionProduct": exp.get("product") if isinstance(exp, dict) else None,
+            "idMetacard": d.get("idMetacard") or cat.get("idMetacard"),
+            "name": d.get("name"),
+            "nameKey": d.get("nameKey"),
+            "catalogName": cat.get("name"),
+            "categoryName": cat.get("categoryName"),
+            "dateAdded": cat.get("dateAdded"),
+            "origins": {origin},
+        }
+
+    bp = data.get("byBaseProduct", {}) if isinstance(data, dict) else {}
+    if isinstance(bp, dict):
+        for groups in bp.values():
+            if not isinstance(groups, dict):
+                continue
+            for lst in groups.values():
+                if isinstance(lst, list):
+                    for d in lst:
+                        add_record(d, "byBaseProduct")
+
+    prod = data.get("byProduct", {}) if isinstance(data, dict) else {}
+    if isinstance(prod, dict):
+        for d in prod.values():
+            add_record(d, "byProduct")
+
+    wanted = {norm(x) for x in centro_names if x}
+    matched = []
+    for r in records.values():
+        names = {norm(r.get("name")), norm(r.get("nameKey")), norm(r.get("catalogName"))}
+        if wanted.intersection(names):
+            q = dict(r)
+            q["origins"] = sorted(q["origins"])
+            matched.append(q)
+
+    matched.sort(key=lambda x: (norm(x.get("name")), str(x.get("idExpansion")), str(x.get("idProduct"))))
+    return {
+        "totalIdentityLikeRecordsScanned": len(records),
+        "centroDistinctNames": len(wanted),
+        "recordsMatchingCentroName": len(matched),
+        "distinctCentroNamesMatched": len({norm(r.get("name") or r.get("nameKey") or r.get("catalogName")) for r in matched}),
+        "examples": matched[:250],
+        "pricesReadOrExposed": False,
         "cardmarketModified": False,
     }
 
@@ -705,10 +774,12 @@ def main():
 
         time.sleep(SLEEP_SECONDS)
 
+    cm_v13 = cardmarket_v13_name_diagnostic(cardmarket, [x.get("shop", {}).get("name") for x in unique_identity_examples])
+
     report = {
-        "schema": 12,
+        "schema": 13,
         "source": "Centro del Fumetto",
-        "mode": "read-only Cardmarket schema diagnostic + Centro baseline",
+        "mode": "read-only Cardmarket targeted identity diagnostic + Centro baseline",
         "rules": {
             "catalogPath": POKEMON_SINGLE_PATH,
             "urlPrefilter": "near-mint + italiano",
@@ -723,7 +794,7 @@ def main():
             "price": "single unambiguous product price only",
             "setRule": "exact Cardoryx set or existing trusted aliases only; no new aliases learned automatically",
             "variantRule": "rarity never maps to variant; Foiling=Normale is diagnostic only; unique Cardoryx variant is recorded but never accepted automatically",
-            "identityRule": "V12 keeps Centro identity matching diagnostic and inspects Cardmarket JSON schema read-only; no Cardmarket value is used for retail acceptance",
+            "identityRule": "V13 cross-checks Centro names against Cardmarket identity-like records read-only; IDs/expansion/catalog names only, never prices; no retail acceptance",
             "createsNewIdentity": False,
             "cardmarketTouched": False,
             "cardmarketReadOnlyIdentityCrosscheck": True,
@@ -742,6 +813,7 @@ def main():
         "rarityToSingleCardoryxVariantAudit": rarity_variant_audit.most_common(100),
         "uniqueIdentityExamples": unique_identity_examples,
         "cardmarketSchemaDiagnostic": cardmarket_schema,
+        "cardmarketV13TargetedNameDiagnostic": cm_v13,
         "cardmarketIdentityRecordsDetected": len(cm_records),
         "cardmarketSchemaExamples": cardmarket_schema_examples,
         "cardmarketCrosscheckExamples": cardmarket_crosscheck_examples,
