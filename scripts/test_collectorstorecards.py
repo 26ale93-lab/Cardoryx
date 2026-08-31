@@ -1,257 +1,231 @@
 #!/usr/bin/env python3
-# Cardoryx - Collector Store Cards V5
-# Test finale read-only prima dell'eventuale adapter di produzione.
-# Non modifica retail_prices.json. Non tocca Cardmarket.
+# Cardoryx — Collector Store Cards isolated diagnostic V6
+# Read-only test: does not modify retail_prices.json and never touches Cardmarket.
 
-import json, re, unicodedata, urllib.request
+import json
+import re
+import runpy
+import sys
 from collections import Counter, defaultdict
-from html import unescape
 from pathlib import Path
+from urllib.request import Request, urlopen
 
-BASE = "https://collectorstorecards.it"
-COLL = BASE + "/collections/carte-singole-pokemon"
-RETAIL = Path("data/retail_prices.json")
-REPORT = Path("collectorstorecards_test_report.json")
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/5.0)"
+ROOT = Path(__file__).resolve().parents[1]
+BUILDER = ROOT / "scripts" / "build_retail_index.py"
+RETAIL = ROOT / "data" / "retail_prices.json"
+REPORT = ROOT / "data" / "collector_store_cards_v6_report.json"
+
+if not BUILDER.exists():
+    raise SystemExit(f"Builder non trovato: {BUILDER}")
+if not RETAIL.exists():
+    raise SystemExit(f"Retail non trovato: {RETAIL}")
+
+ns = runpy.run_path(str(BUILDER))
 
 def norm(s):
-    s = unicodedata.normalize("NFKD", str(s or ""))
-    s = "".join(c for c in s if not unicodedata.combining(c))
-    s = unescape(s).lower().replace("’", "'")
-    s = re.sub(r"[^a-z0-9]+", " ", s)
-    return re.sub(r"\s+", " ", s).strip()
+    fn = ns.get("norm")
+    return fn(s) if callable(fn) else re.sub(r"[^a-z0-9]+", " ", str(s or "").lower()).strip()
 
-def plain(s):
-    s = re.sub(r"<[^>]+>", " ", str(s or ""))
-    return re.sub(r"\s+", " ", unescape(s)).strip()
+def fetch_json(url):
+    req = Request(url, headers={"User-Agent":"Mozilla/5.0 Cardoryx-Collector-V6"})
+    with urlopen(req, timeout=30) as r:
+        return json.load(r)
 
-def get_json(url):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.loads(r.read().decode("utf-8", "replace"))
+with RETAIL.open("r", encoding="utf-8") as f:
+    retail = json.load(f)
 
-def numkey(number):
-    m = re.match(r"^\s*([A-Za-z]*)(\d+)\s*[/\-]\s*([A-Za-z]*)(\d+)\s*$", str(number or ""))
-    if not m: return None
-    return (m.group(1).upper(), int(m.group(2)), m.group(3).upper(), int(m.group(4)))
+cards = retail.get("cards", {})
+existing = {}
+two_store = set()
 
-def parse_title(title):
-    t = str(title or "").strip()
-    m = re.search(r"\b([A-Za-z]*\d{1,3})\s*[/\-]\s*([A-Za-z]*\d{1,3})\b", t)
-    if not m: return None
-    before = re.sub(r"^\s*Pok[eé]mon\s+", "", t[:m.start()].strip(" -–—"), flags=re.I).strip()
-    tail = re.sub(r"\bITA\b.*$", "", t[m.end():], flags=re.I).strip(" -–—")
+for key, card in cards.items():
+    base = (
+        norm(card.get("set")),
+        str(card.get("number") or "").strip().lower(),
+        norm(card.get("name")),
+        norm(card.get("variant")),
+    )
+    existing.setdefault(base, []).append(key)
+    stats = card.get("stats") or {}
+    if stats.get("stores") == 2:
+        two_store.add(key)
 
-    variant = None
-    marker = None
-    patterns = [
-        (r"\breverse\s+master\s*ball\b", "Master Ball Reverse Holo", "Reverse Masterball"),
-        (r"\breverse\s+masterball\b", "Master Ball Reverse Holo", "Reverse Masterball"),
-        (r"\bmaster\s*ball\s+reverse\b", "Master Ball Reverse Holo", "Master Ball Reverse"),
-        (r"\bholo\s+reverse\b", "Reverse Holo", "Holo Reverse"),
-        (r"\breverse\s+holo\b", "Reverse Holo", "Reverse Holo"),
-        (r"\bholo\b", "Holo", "Holo"),
-    ]
+# Conservative title signals only. No rarity -> variant broad mapping.
+EXPLICIT_VARIANT_PATTERNS = [
+    ("Master Ball", re.compile(r"\bmaster\s*ball\b", re.I)),
+    ("Reverse Holo", re.compile(r"\breverse(?:\s*holo)?\b", re.I)),
+    ("Cosmo Holo", re.compile(r"\bcosmo(?:s)?\s*holo\b", re.I)),
+    ("Galaxy Holo", re.compile(r"\bgalaxy\s*holo\b", re.I)),
+    ("Holo", re.compile(r"\bholo\b", re.I)),
+    ("Full Art", re.compile(r"\bfull\s*art\b", re.I)),
+    ("Radiant", re.compile(r"\b(?:radiant|lucente)\b", re.I)),
+]
 
-    # Il marker può essere prima del numero o all'inizio della parte-set.
-    for pat, v, label in patterns:
-        if re.search(pat, before, re.I):
-            before = re.sub(pat, "", before, flags=re.I).strip(" -–—")
-            variant, marker = v, label
-            break
-        if re.search(r"^" + pat, tail, re.I):
-            tail = re.sub(r"^" + pat, "", tail, flags=re.I).strip(" -–—")
-            variant, marker = v, label
-            break
+def explicit_variant(title):
+    for label, rx in EXPLICIT_VARIANT_PATTERNS:
+        if rx.search(title or ""):
+            return label
+    return None
 
-    return {
-        "name": before,
-        "number": f"{m.group(1)}/{m.group(2)}",
-        "setFromTitle": tail,
-        "variant": variant,
-        "variantMarker": marker,
-        "language": "IT" if re.search(r"\bITA\b", t, re.I) else None,
-    }
+def extract_number(text):
+    m = re.search(r"\b(\d{1,3})\s*/\s*(\d{1,3})\b", text or "")
+    return f"{int(m.group(1)):03d}/{int(m.group(2)):03d}" if m else None
 
-def tag_set(tags):
-    vals=[]
-    if isinstance(tags, str):
-        tags=[x.strip() for x in tags.split(",") if x.strip()]
-    for x in tags or []:
-        m=re.match(r"^\s*(.+?)\s*\[([A-Za-z0-9]+)\]\s*$", str(x))
-        if m: vals.append((m.group(1).strip(), m.group(2).upper()))
-    return vals
+def title_name(title):
+    # only the leading card name before collector number
+    if not title:
+        return None
+    m = re.search(r"\b\d{1,3}\s*/\s*\d{1,3}\b", title)
+    head = title[:m.start()] if m else title
+    head = re.sub(r"(?i)\b(reverse(?: holo)?|cosmo(?:s)? holo|galaxy holo|holo|full art|master ball|radiant|lucente|ita|italiano|near mint|nm|mint)\b", " ", head)
+    head = re.sub(r"\s+", " ", head).strip(" -–—|")
+    return head or None
 
-def fields(body):
-    t=plain(body)
-    def f(label, following):
-        m=re.search(rf"\b{re.escape(label)}:\s*(.+?)(?=\s+(?:{following})\s*:|$)", t, re.I)
-        return m.group(1).strip() if m else ""
-    return {
-        "condition":f("Condizione","Set|Rarità|Numerazione|Lingua"),
-        "set":f("Set","Rarità|Numerazione|Lingua"),
-        "rarity":f("Rarità","Numerazione|Lingua"),
-        "number":f("Numerazione","Lingua"),
-        "language":f("Lingua","ZZZ"),
-        "text":t,
-    }
+stats = Counter()
+examples = defaultdict(list)
+safe_candidates = []
 
-def body_variant(rarity, text):
-    r=norm(rarity)
-    n=norm(text)
-    if "reverse holo" in r or "holo reverse" in r: return "Reverse Holo", "rarity"
-    if r in ("holo rare","rara holo"): return "Holo", "rarity"
-    if re.search(r"\breverse holo\b|\bholo reverse\b", n): return "Reverse Holo", "body"
-    return None, None
+page = 1
+while True:
+    url = f"https://collectorstorecards.it/collections/carte-singole-pokemon/products.json?limit=250&page={page}"
+    try:
+        payload = fetch_json(url)
+    except Exception as e:
+        stats["errors"] += 1
+        examples["errors"].append({"page":page,"error":str(e)})
+        break
 
-def main():
-    data=json.loads(RETAIL.read_text(encoding="utf-8"))
-    base=defaultdict(list)
-    exact=defaultdict(list)
-    for c in data.get("cards",{}).values():
-        nk=numkey(c.get("number"))
-        if not nk: continue
-        k=(norm(c.get("set")),nk,norm(c.get("name")))
-        base[k].append(c)
-        exact[k+(c.get("variant"),)].append(c)
+    products = payload.get("products") or []
+    if not products:
+        break
 
-    products=[]
-    stats=Counter()
-    for page in range(1,9):
-        batch=get_json(f"{COLL}/products.json?limit=250&page={page}").get("products",[])
-        stats["catalogPagesFetched"]+=1
-        products += batch
-        if len(batch)<250: break
-    stats["products"]=len(products)
-
-    accepted=[]
-    unique_diag=[]
-    conflicts=[]
-    masterball=[]
+    stats["catalogPagesFetched"] += 1
+    stats["products"] += len(products)
 
     for p in products:
-        stats["productsInspected"]+=1
-        pt=parse_title(p.get("title"))
-        if not pt or pt["language"]!="IT":
-            stats["titleRejected"]+=1; continue
-
-        ts=tag_set(p.get("tags"))
-        if len(ts)!=1:
-            stats["setTagRejected"]+=1; continue
-        setname,setcode=ts[0]
-
-        # Dopo aver rimosso un marker variante noto, titolo e tag devono concordare.
-        if norm(pt["setFromTitle"]) != norm(setname):
-            stats["setConflict"]+=1
-            if len(conflicts)<30:
-                conflicts.append({"title":p.get("title"),"titleSet":pt["setFromTitle"],"tagSet":setname})
+        title = p.get("title") or ""
+        variants = p.get("variants") or []
+        available = [v for v in variants if v.get("available") is True]
+        if not available:
+            stats["unavailable"] += 1
             continue
 
-        av=[v for v in p.get("variants",[]) if v.get("available")]
-        if not av:
-            stats["unavailable"]+=1; continue
-        prices={float(v["price"]) for v in av if v.get("price") not in (None,"")}
-        if len(prices)!=1:
-            stats["priceRejected"]+=1; continue
-        price=next(iter(prices))
+        text = " ".join([
+            title,
+            str(p.get("body_html") or ""),
+            " ".join(str(x) for x in p.get("tags") or []),
+        ])
 
-        bf=fields(p.get("body_html"))
-        if norm(bf["condition"])!="near mint":
-            stats["conditionRejected"]+=1; continue
-        stats["nearMintConfirmed"]+=1
-
-        nk=numkey(pt["number"])
-        if not nk:
-            stats["numberRejected"]+=1; continue
-
-        k=(norm(setname),nk,norm(pt["name"]))
-        candidates=base.get(k,[])
-        variants=sorted({c.get("variant") for c in candidates if c.get("variant")})
-
-        v=pt["variant"]
-        sig="title" if v else None
-        if not v:
-            v,sig=body_variant(bf["rarity"],bf["text"])
-
-        if pt["variant"]=="Master Ball Reverse Holo":
-            stats["masterBallTitleDetected"]+=1
-            if len(masterball)<30:
-                masterball.append({
-                    "title":p.get("title"),"name":pt["name"],"number":pt["number"],
-                    "set":setname,"candidateVariants":variants,
-                    "url":f"{BASE}/products/{p.get('handle')}"
-                })
-
-        if v:
-            stats["explicitVariantConfirmed"]+=1
-            matches=exact.get(k+(v,),[])
-            if len(matches)==1:
-                stats["safeExactMatches"]+=1
-                c=matches[0]
-                if bool((c.get("stats") or {}).get("reliable")):
-                    stats["safeAlreadyReliable"]+=1
-                else:
-                    stats["safeCurrentlyNotReliable"]+=1
-                if len(accepted)<60:
-                    accepted.append({
-                        "title":p.get("title"),"name":pt["name"],"number":pt["number"],
-                        "set":setname,"setCode":setcode,"variant":v,"signal":sig,
-                        "rarity":bf["rarity"],"price":price,
-                        "currentlyReliable":bool((c.get("stats") or {}).get("reliable")),
-                        "url":f"{BASE}/products/{p.get('handle')}"
-                    })
-            else:
-                stats["explicitVariantIdentityRejected"]+=1
+        if not re.search(r"\b(?:ITA|Italiano|Italian)\b", text, re.I):
+            stats["languageRejected"] += 1
+            continue
+        if not re.search(r"\b(?:Near\s*Mint|NM|Mint)\b", text, re.I):
+            stats["conditionRejected"] += 1
             continue
 
-        # Diagnostica delle rarità senza conversione automatica.
-        r=norm(bf["rarity"])
-        if r:
-            stats["rarityWithoutExplicitVariant"]+=1
-            if len(candidates)==1:
-                stats["uniqueExistingIdentityDiagnostic"]+=1
-                c=candidates[0]
-                if bool((c.get("stats") or {}).get("reliable")):
-                    stats["uniqueDiagnosticAlreadyReliable"]+=1
-                else:
-                    stats["uniqueDiagnosticCurrentlyNotReliable"]+=1
-                if len(unique_diag)<80:
-                    unique_diag.append({
-                        "title":p.get("title"),"name":pt["name"],"number":pt["number"],
-                        "set":setname,"rarity":bf["rarity"],"price":price,
-                        "cardoryxVariant":c.get("variant"),
-                        "currentlyReliable":bool((c.get("stats") or {}).get("reliable")),
-                        "url":f"{BASE}/products/{p.get('handle')}"
-                    })
-            elif len(candidates)>1:
-                stats["ambiguousExistingIdentity"]+=1
-            else:
-                stats["noExistingIdentity"]+=1
+        number = extract_number(text)
+        if not number:
+            stats["numberMissing"] += 1
+            continue
 
-    report={
-        "schema":5,
-        "source":"Collector Store Cards",
-        "mode":"final read-only diagnostic",
-        "ok":True,
-        "rules":{
-            "cardmarketTouched":False,
-            "retailPricesModified":False,
-            "createsNewIdentity":False,
-            "masterBallReverse":"recognized only when explicitly written in title",
-            "set":"Shopify set tag plus cleaned title agreement",
-            "condition":"Near Mint required",
-            "specialRarity":"diagnostic only; never converted automatically",
-            "productionEligible":"only safeExactMatches"
-        },
-        "stats":dict(stats),
-        "safeExactExamples":accepted,
-        "uniqueIdentityDiagnosticExamples":unique_diag,
-        "masterBallExamples":masterball,
-        "setConflicts":conflicts
-    }
-    REPORT.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
-    print(json.dumps(report["stats"],ensure_ascii=False,indent=2))
-    print("Report:",REPORT)
+        variant = explicit_variant(title + " " + text)
+        if not variant:
+            stats["rarityWithoutExplicitVariant"] += 1
+            continue
+        stats["explicitVariantConfirmed"] += 1
 
-if __name__=="__main__":
-    main()
+        name = title_name(title)
+        if not name:
+            stats["nameRejected"] += 1
+            continue
+
+        # Require a set label from text to match existing exact identity.
+        matched_keys = []
+        n_name = norm(name)
+        n_variant = norm(variant)
+        for base, keys in existing.items():
+            b_set, b_num, b_name, b_var = base
+            if b_num != number.lower():
+                continue
+            if b_name != n_name:
+                continue
+            if b_var != n_variant:
+                continue
+            # Conservative: existing set name must appear in product text.
+            if b_set and b_set not in norm(text):
+                continue
+            matched_keys.extend(keys)
+
+        if len(matched_keys) != 1:
+            stats["identityRejected"] += 1
+            if len(matched_keys) > 1:
+                stats["identityAmbiguous"] += 1
+            continue
+
+        key = matched_keys[0]
+        stores = {o.get("store") for o in (cards[key].get("offers") or [])}
+        if "Collector Store Cards" in stores:
+            stats["duplicateStore"] += 1
+            continue
+
+        price_vals = []
+        for v in available:
+            try:
+                price = float(v.get("price"))
+            except Exception:
+                continue
+            if 0 < price < 100000:
+                price_vals.append(price)
+
+        if len(set(price_vals)) != 1:
+            stats["priceAmbiguous"] += 1
+            continue
+
+        candidate = {
+            "cardKey": key,
+            "set": cards[key].get("set"),
+            "number": cards[key].get("number"),
+            "name": cards[key].get("name"),
+            "variant": cards[key].get("variant"),
+            "price": price_vals[0],
+            "url": "https://collectorstorecards.it/products/" + str(p.get("handle") or ""),
+            "currentStores": sorted(stores),
+            "wouldBecomeThirdStore": key in two_store,
+        }
+        safe_candidates.append(candidate)
+        stats["safeExactMatches"] += 1
+        if key in two_store:
+            stats["potentialTwoToThreeStoreUpgrade"] += 1
+        if cards[key].get("stats", {}).get("reliable") is True:
+            stats["safeAlreadyReliable"] += 1
+        else:
+            stats["safeCurrentlyNotReliable"] += 1
+
+    page += 1
+    if page > 40:
+        stats["pageSafetyStop"] += 1
+        break
+
+report = {
+    "schema": 6,
+    "source": "Collector Store Cards",
+    "mode": "read-only conservative exact-existing-identity diagnostic",
+    "rules": {
+        "retailPricesModified": False,
+        "cardmarketTouched": False,
+        "newIdentitiesCreated": False,
+        "broadRarityToVariantMapping": False,
+        "exactExistingIdentityOnly": True,
+        "duplicateStoreRejected": True,
+        "priority": "cards currently at exactly two stores",
+    },
+    "stats": dict(stats),
+    "safeCandidates": safe_candidates,
+}
+
+REPORT.parent.mkdir(parents=True, exist_ok=True)
+with REPORT.open("w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+
+print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
+print(f"Report: {REPORT}")
