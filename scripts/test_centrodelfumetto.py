@@ -1,49 +1,68 @@
 #!/usr/bin/env python3
-# Cardoryx - Centro del Fumetto V4
+# Cardoryx - Centro del Fumetto V5
 # TEST ISOLATO READ-ONLY
 #
 # Obiettivo:
-# - leggere le sitemap prodotto reali
-# - salvare campioni degli URL grezzi senza filtri di percorso
-# - individuare quali URL sembrano riferiti a Pokemon
+# - scoprire tutte le carte singole Pokemon
+# - prefiltrare URL Near Mint + Italiano
+# - aprire le pagine prodotto
+# - leggere set, numero, rarita/finish, disponibilita e prezzo
+# - confrontare SOLO con identita esistenti in data/retail_prices.json
+# - misurare possibili nuovi terzi negozi
 #
 # NON modifica retail_prices.json
 # NON tocca Cardmarket
-# NON crea offerte
-# NON esegue matching
+# NON crea nuove identita
 
 import json
 import re
+import time
+import unicodedata
 import urllib.request
-from collections import Counter
+from collections import Counter, defaultdict
 from html import unescape
 from pathlib import Path
-from urllib.parse import urlparse
 
 BASE = "https://www.centrodelfumetto.it"
-START_SITEMAPS = [
-    BASE + "/sitemap_index.xml",
-    BASE + "/product-sitemap.xml",
-]
+SITEMAP_INDEX = BASE + "/sitemap_index.xml"
+RETAIL = Path("data/retail_prices.json")
 REPORT = Path("centro_fumetto_test_report.json")
 
-UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/4.0)"
+UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/5.0)"
 TIMEOUT = 20
 MAX_SITEMAPS = 120
+MAX_PRODUCTS = 300
+SLEEP_SECONDS = 0.05
 
-RAW_SAMPLE_LIMIT = 250
-POKEMON_SAMPLE_LIMIT = 200
+POKEMON_SINGLE_PATH = "/pokemon/pokemon-single/"
 
-POKEMON_HINTS = [
-    "pokemon",
-    "pokémon",
-    "carta-pokemon",
-    "carta-pok",
-    "pikachu",
-    "charizard",
-    "mew",
-    "eevee",
-]
+LABELS = (
+    "Espansione",
+    "Condizione",
+    "Rarità",
+    "Rarita",
+    "Grading",
+    "First Edition",
+    "Foiling",
+    "Reverse Holo",
+    "Firmata",
+    "Alterata",
+    "Lingua",
+    "N° Collezione",
+    "N° collezione",
+    "Numero Collezione",
+    "Numero collezione",
+    "Costo Mana",
+    "Legale nei Tornei",
+    "Colore",
+)
+
+def norm(s):
+    s = unicodedata.normalize("NFKD", str(s or ""))
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = unescape(s).lower().replace("’", "'")
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
 
 def get(url):
     req = urllib.request.Request(
@@ -51,7 +70,7 @@ def get(url):
         headers={
             "User-Agent": UA,
             "Accept-Language": "it-IT,it;q=0.9",
-            "Accept": "application/xml,text/xml,text/html,*/*",
+            "Accept": "text/html,application/xhtml+xml,application/xml,text/xml,*/*",
             "Connection": "close",
         },
     )
@@ -68,71 +87,265 @@ def sitemap_urls(xml):
         for x in re.findall(r"<loc>(.*?)</loc>", xml, re.I | re.S)
     ]
 
-def looks_like_sitemap(url):
-    low = url.lower()
-    return low.endswith(".xml") or "sitemap" in low
+def plain(html):
+    html = re.sub(r"<script\b.*?</script>", " ", html, flags=re.I | re.S)
+    html = re.sub(r"<style\b.*?</style>", " ", html, flags=re.I | re.S)
+    html = re.sub(r"<[^>]+>", " ", html)
+    return re.sub(r"\s+", " ", unescape(html)).strip()
 
-def looks_like_product_sitemap(url):
-    low = url.lower()
-    return "product-sitemap" in low
+def collector_parts(v):
+    s = str(v or "").strip()
+    m = re.match(
+        r"^([A-Za-z]*)(\d{1,4})(?:\s*[/\-]\s*([A-Za-z]*)(\d{1,4}))?$",
+        s,
+    )
+    if not m:
+        return None
+    return (
+        m.group(1).upper(),
+        int(m.group(2)),
+        (m.group(3) or "").upper(),
+        int(m.group(4)) if m.group(4) else None,
+    )
 
-def pokemon_score(url):
-    low = unescape(url).lower()
-    return sum(1 for hint in POKEMON_HINTS if hint in low)
+def iter_cards(data):
+    cards = data.get("cards", {})
+    return cards if isinstance(cards, list) else cards.values()
 
-def path_signature(url):
-    path = urlparse(url).path.strip("/")
-    if not path:
-        return "/"
-    parts = [p for p in path.split("/") if p]
-    if len(parts) == 1:
-        return "/" + parts[0]
-    return "/" + "/".join(parts[:2])
+def build_indexes(data):
+    exact = defaultdict(list)
+    known_sets = set()
 
-def main():
-    queue = list(START_SITEMAPS)
-    seen_maps = set()
-
-    sitemap_stats = []
-    all_urls = []
-    product_sitemap_urls = []
-    signatures = Counter()
-
-    while queue and len(seen_maps) < MAX_SITEMAPS:
-        sm = queue.pop(0)
-        if sm in seen_maps:
+    for c in iter_cards(data):
+        cp = collector_parts(c.get("number"))
+        if not cp:
             continue
 
-        seen_maps.add(sm)
+        set_key = norm(c.get("set"))
+        known_sets.add(set_key)
 
+        exact[
+            (
+                set_key,
+                cp,
+                norm(c.get("name")),
+                c.get("variant"),
+            )
+        ].append(c)
+
+    return exact, known_sets
+
+def store_count(card):
+    return len({
+        norm(o.get("store"))
+        for o in card.get("offers", [])
+        if o.get("store")
+    })
+
+def field(text, label):
+    next_labels = "|".join(re.escape(x) for x in LABELS)
+    m = re.search(
+        re.escape(label)
+        + r"\s*:\s*(.*?)\s+(?=(?:"
+        + next_labels
+        + r")\s*:|$)",
+        text,
+        re.I,
+    )
+    return m.group(1).strip() if m else ""
+
+def money_from_html(html, text):
+    patterns = [
+        r'property=["\']product:price:amount["\'][^>]*content=["\']([0-9]+(?:[.,][0-9]{1,2})?)',
+        r'itemprop=["\']price["\'][^>]*content=["\']([0-9]+(?:[.,][0-9]{1,2})?)',
+        r'class=["\'][^"\']*\bprice\b[^"\']*["\'][^>]*>.*?([0-9]+(?:[.,][0-9]{1,2})?)\s*€',
+        r'€\s*([0-9]+(?:[.,][0-9]{1,2})?)',
+    ]
+
+    for i, pattern in enumerate(patterns):
+        hay = html if i < 3 else text
+        m = re.search(pattern, hay, re.I | re.S)
+        if m:
+            try:
+                return float(m.group(1).replace(",", "."))
+            except ValueError:
+                pass
+
+    return None
+
+def availability(html, text):
+    out_meta = bool(re.search(
+        r'(?:schema\.org/OutOfStock|availability["\']?\s*[:=]\s*["\']?out[_ -]?of[_ -]?stock)',
+        html,
+        re.I,
+    ))
+    in_meta = bool(re.search(
+        r'(?:schema\.org/InStock|availability["\']?\s*[:=]\s*["\']?in[_ -]?stock)',
+        html,
+        re.I,
+    ))
+    add_cart = bool(re.search(
+        r'(?:single_add_to_cart_button|add_to_cart_button|Aggiungi al carrello)',
+        html,
+        re.I,
+    ))
+    visible_out = bool(re.search(
+        r'\b(?:Esaurito|Non disponibile|Out of stock)\b',
+        text,
+        re.I,
+    ))
+
+    qty = None
+    qm = re.search(r"\b(\d+)\s+disponibil[ie]\b", text, re.I)
+    if qm:
+        qty = int(qm.group(1))
+
+    if out_meta or visible_out:
+        return False, qty, {
+            "outOfStockMeta": out_meta,
+            "visibleOut": visible_out,
+            "inStockMeta": in_meta,
+            "addToCart": add_cart,
+        }
+
+    if in_meta or add_cart or (qty is not None and qty > 0):
+        return True, qty, {
+            "outOfStockMeta": out_meta,
+            "visibleOut": visible_out,
+            "inStockMeta": in_meta,
+            "addToCart": add_cart,
+        }
+
+    return None, qty, {
+        "outOfStockMeta": out_meta,
+        "visibleOut": visible_out,
+        "inStockMeta": in_meta,
+        "addToCart": add_cart,
+    }
+
+def variant_from_fields(rarity, foiling, reverse):
+    nr = norm(rarity)
+    nf = norm(foiling)
+    nv = norm(reverse)
+
+    if nv in {"si", "yes", "true"}:
+        return "Reverse Holo", "reverse-field"
+
+    if "reverse holo" in nr or "reverse holo" in nf:
+        return "Reverse Holo", "explicit-reverse"
+
+    if "holo" in nr or "holo" in nf:
+        if "reverse" not in nr and "reverse" not in nf:
+            return "Holo", "explicit-holo"
+
+    # Accetta Normal solo con segnale esplicito di non foil/reverse.
+    if nv in {"no", "false"}:
+        if nf in {"", "no", "none", "non foil", "non holo"}:
+            if "holo" not in nr and "reverse" not in nr:
+                return "Normal", "explicit-normal"
+
+    return None, "variant-unconfirmed"
+
+def clean_title_name(title, number):
+    s = str(title or "").strip()
+    s = re.sub(r"^\s*Carta\s+Pok[eé]mon\s+", "", s, flags=re.I)
+
+    if number:
+        # Keep only the text before the exact collector number.
+        pos = s.lower().find(str(number).lower())
+        if pos > 0:
+            s = s[:pos].strip(" -–—")
+
+    # Conservative cleanup of condition/language tail if still present.
+    s = re.sub(
+        r"\s*[–—-]\s*(?:Near Mint|Mint|Played|Poor|Slightly Played|Moderately Played)\b.*$",
+        "",
+        s,
+        flags=re.I,
+    )
+    return s.strip()
+
+def parse_page(html, url):
+    text = plain(html)
+
+    h = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.I | re.S)
+    title = plain(h.group(1)) if h else ""
+
+    expansion = field(text, "Espansione")
+    condition = field(text, "Condizione")
+    language = field(text, "Lingua")
+    number = (
+        field(text, "N° Collezione")
+        or field(text, "N° collezione")
+        or field(text, "Numero Collezione")
+        or field(text, "Numero collezione")
+    )
+    rarity = field(text, "Rarità") or field(text, "Rarita")
+    foiling = field(text, "Foiling")
+    reverse = field(text, "Reverse Holo")
+
+    price = money_from_html(html, text)
+    available, qty, availability_signals = availability(html, text)
+    variant, variant_signal = variant_from_fields(rarity, foiling, reverse)
+
+    return {
+        "url": url,
+        "title": title,
+        "name": clean_title_name(title, number),
+        "set": expansion,
+        "condition": condition,
+        "language": language,
+        "number": number,
+        "rarity": rarity,
+        "foiling": foiling,
+        "reverseHolo": reverse,
+        "variant": variant,
+        "variantSignal": variant_signal,
+        "price": price,
+        "available": available,
+        "quantity": qty,
+        "availabilitySignals": availability_signals,
+    }
+
+def discover_pokemon_single_urls():
+    index_xml, _, _ = get(SITEMAP_INDEX)
+    sitemap_list = sitemap_urls(index_xml)
+
+    product_sitemaps = [
+        u for u in sitemap_list
+        if "product-sitemap" in u.lower()
+    ]
+
+    # Some installations expose product-sitemap.xml separately.
+    direct = BASE + "/product-sitemap.xml"
+    if direct not in product_sitemaps:
+        product_sitemaps.insert(0, direct)
+
+    seen = set()
+    urls = []
+    sitemap_stats = []
+
+    for sm in product_sitemaps[:MAX_SITEMAPS]:
         try:
             body, final, status = get(sm)
             locs = sitemap_urls(body)
-
             sitemap_stats.append({
                 "url": sm,
                 "finalUrl": final,
                 "status": status,
                 "locs": len(locs),
-                "productSitemap": looks_like_product_sitemap(final) or looks_like_product_sitemap(sm),
             })
 
-            current_is_product_sitemap = (
-                looks_like_product_sitemap(final)
-                or looks_like_product_sitemap(sm)
-            )
-
             for u in locs:
-                if looks_like_sitemap(u):
-                    if u not in seen_maps:
-                        queue.append(u)
+                low = u.lower()
+                if POKEMON_SINGLE_PATH not in low:
                     continue
 
-                all_urls.append(u)
+                if u in seen:
+                    continue
 
-                if current_is_product_sitemap:
-                    product_sitemap_urls.append(u)
-                    signatures[path_signature(u)] += 1
+                seen.add(u)
+                urls.append(u)
 
         except Exception as exc:
             sitemap_stats.append({
@@ -140,43 +353,185 @@ def main():
                 "error": repr(exc),
             })
 
-    # De-duplica mantenendo ordine
-    all_urls = list(dict.fromkeys(all_urls))
-    product_sitemap_urls = list(dict.fromkeys(product_sitemap_urls))
+    return urls, sitemap_stats
 
-    pokemon_candidates = [
-        u for u in product_sitemap_urls
-        if pokemon_score(u) > 0
-    ]
+def main():
+    retail = json.loads(RETAIL.read_text(encoding="utf-8"))
+    exact, known_sets = build_indexes(retail)
 
-    pokemon_candidates = sorted(
-        pokemon_candidates,
-        key=lambda u: (-pokemon_score(u), u.lower())
-    )
+    urls, sitemap_stats = discover_pokemon_single_urls()
+
+    stats = Counter()
+    stats["discoveredPokemonSingleUrls"] = len(urls)
+
+    prefiltered = []
+    for u in urls:
+        low = u.lower()
+
+        if "near-mint" not in low:
+            stats["urlConditionRejected"] += 1
+            continue
+
+        if "italiano" not in low:
+            stats["urlLanguageRejected"] += 1
+            continue
+
+        prefiltered.append(u)
+
+    stats["prefilteredNearMintItaliano"] = len(prefiltered)
+
+    exact_examples = []
+    rejected_examples = []
+    set_unknown = Counter()
+    variant_stats = Counter()
+    rarity_stats = Counter()
+
+    for url in prefiltered[:MAX_PRODUCTS]:
+        stats["attempted"] += 1
+
+        try:
+            html, final, status = get(url)
+            stats["fetched"] += 1
+
+            p = parse_page(html, final)
+            rarity_stats[p["rarity"] or "(missing)"] += 1
+            variant_stats[p["variantSignal"]] += 1
+
+            if norm(p["language"]) != "italiano":
+                stats["pageLanguageRejected"] += 1
+                continue
+
+            if norm(p["condition"]) != "near mint":
+                stats["pageConditionRejected"] += 1
+                continue
+
+            if p["available"] is False:
+                stats["unavailable"] += 1
+                continue
+
+            if p["available"] is None:
+                stats["availabilityUnconfirmed"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+                continue
+
+            if p["price"] is None or p["price"] <= 0:
+                stats["priceUnavailable"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+                continue
+
+            cp = collector_parts(p["number"])
+            if not cp:
+                stats["numberUnavailable"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+                continue
+
+            if not p["set"]:
+                stats["setUnavailable"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+                continue
+
+            if not p["variant"]:
+                stats["variantUnconfirmed"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+                continue
+
+            stats["usableBeforeIdentity"] += 1
+
+            set_key = norm(p["set"])
+            if set_key not in known_sets:
+                stats["setNotExactCardoryx"] += 1
+                set_unknown[p["set"]] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+                continue
+
+            key = (
+                set_key,
+                cp,
+                norm(p["name"]),
+                p["variant"],
+            )
+
+            matches = exact.get(key, [])
+
+            if len(matches) == 1:
+                stats["exactMatches"] += 1
+                card = matches[0]
+                stores = store_count(card)
+
+                if stores >= 3:
+                    stats["matchedAlreadyReliable"] += 1
+                elif stores == 2:
+                    stats["newReliablePotential"] += 1
+                else:
+                    stats["matchedCurrentlyNotReliable"] += 1
+
+                if len(exact_examples) < 60:
+                    exact_examples.append({
+                        "shop": p,
+                        "cardoryx": {
+                            "set": card.get("set"),
+                            "number": card.get("number"),
+                            "name": card.get("name"),
+                            "variant": card.get("variant"),
+                            "currentStores": stores,
+                            "currentlyReliable": stores >= 3,
+                        },
+                    })
+
+            elif len(matches) > 1:
+                stats["identityAmbiguous"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+
+            else:
+                stats["identityRejected"] += 1
+                if len(rejected_examples) < 40:
+                    rejected_examples.append(p)
+
+            time.sleep(SLEEP_SECONDS)
+
+        except Exception as exc:
+            stats["errors"] += 1
+            if len(rejected_examples) < 40:
+                rejected_examples.append({
+                    "url": url,
+                    "error": repr(exc),
+                })
 
     report = {
-        "schema": 4,
+        "schema": 5,
         "source": "Centro del Fumetto",
-        "mode": "read-only raw product URL discovery",
+        "mode": "read-only conservative matching diagnostic",
         "rules": {
+            "catalogPath": POKEMON_SINGLE_PATH,
+            "urlPrefilter": "near-mint + italiano",
+            "language": "Italiano exact on page",
+            "condition": "Near Mint exact on page",
+            "availability": "explicit in-stock signal required",
+            "setRule": "exact normalized shop expansion vs existing Cardoryx set; no aliases",
+            "numberRule": "standard collector number parser only",
+            "variantRule": "only explicit structured Holo / Reverse Holo / explicit Normal signals",
+            "identityRule": "exact set + collector number + exact normalized name + exact variant",
+            "createsNewIdentity": False,
             "cardmarketTouched": False,
             "retailPricesModified": False,
-            "createsNewIdentity": False,
-            "productPagesFetched": False,
-            "matchingPerformed": False,
-            "pathFilterApplied": False,
         },
-        "stats": {
-            "sitemapsFetched": sum(1 for x in sitemap_stats if x.get("status") == 200),
-            "sitemapErrors": sum(1 for x in sitemap_stats if "error" in x),
-            "allUrls": len(all_urls),
-            "productSitemapUrls": len(product_sitemap_urls),
-            "pokemonHintUrls": len(pokemon_candidates),
+        "limits": {
+            "maxProductsFetched": MAX_PRODUCTS,
         },
-        "topPathSignatures": signatures.most_common(60),
+        "stats": dict(stats),
         "sitemaps": sitemap_stats,
-        "rawProductUrlSamples": product_sitemap_urls[:RAW_SAMPLE_LIMIT],
-        "pokemonHintSamples": pokemon_candidates[:POKEMON_SAMPLE_LIMIT],
+        "topUnmappedSets": set_unknown.most_common(40),
+        "variantSignals": variant_stats.most_common(40),
+        "raritiesSeen": rarity_stats.most_common(60),
+        "exactExamples": exact_examples,
+        "rejectedExamples": rejected_examples,
     }
 
     REPORT.write_text(
@@ -185,19 +540,8 @@ def main():
     )
 
     print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
-
-    print("\nTop path signatures:")
-    for sig, count in report["topPathSignatures"][:30]:
-        print(f"{count:6d}  {sig}")
-
-    print("\nRaw product URL samples:")
-    for u in report["rawProductUrlSamples"][:50]:
-        print(u)
-
-    print("\nPokemon-hint URL samples:")
-    for u in report["pokemonHintSamples"][:50]:
-        print(u)
-
+    print("\nTop unmapped sets:", report["topUnmappedSets"][:15])
+    print("\nVariant signals:", report["variantSignals"][:15])
     print("\nReport:", REPORT)
 
 if __name__ == "__main__":
