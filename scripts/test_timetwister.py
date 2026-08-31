@@ -9,33 +9,63 @@ from collections import Counter, defaultdict
 BASE = "https://timetwistergames.it"
 COLLECTION_URL = BASE + "/collections/pok-mon-single/products.json?limit=250&page={page}"
 RETAIL_FILE = "data/retail_prices.json"
-REPORT_FILE = "timetwister_matching_report.json"
+REPORT_FILE = "timetwister_mapping_audit_v5.json"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Cardoryx TimeTwister diagnostic)",
+    "User-Agent": "Mozilla/5.0 (Cardoryx TimeTwister audit V5)",
     "Accept": "application/json,text/plain,*/*",
     "Accept-Language": "it-IT,it;q=0.9,en;q=0.7",
     "Connection": "close",
 }
 
-# Alias già usati in produzione V22.
-SET_ALIASES = {
-    "brilliant stars": "Astri Lucenti",
-    "evolving skies": "Evoluzioni Eteree",
-    "fusion strike": "Colpo Fusione",
-    "darkness ablaze": "Fiamme Oscure",
-    "astral radiance": "Lucentezza Siderale",
-    "pokemon go": "Pokémon GO",
-    "celebrations": "Gran Festa",
-    "battle styles": "Stili di Lotta",
-    "crown zenith": "Zenit Regale",
-    "151": "151",
-    "twilight masquerade": "Crepuscolo Mascherato",
-    "mega evolution": "Megaevoluzione",
-    "ascended heroes": "Ascesa Eroica",
-    "lost origin": "Origine Perduta",
-    "chilling reign": "Regno Glaciale",
-    "shining fates": "Destino Splendente",
+# Mapping esplicito e auditato. Non viene "imparato" da collisioni di carte.
+# XBLK era il caso pericoloso del test V4:
+# "Black Bolt: Additionals" NON è Avventure Insieme; in italiano è Luce Nera.
+TRUSTED_SET_CODE_MAP = {
+    "ASR": "Lucentezza Siderale",
+    "BRS": "Astri Lucenti",
+    "CRZ": "Zenit Regale",
+    "DAA": "Fiamme Oscure",
+    "DRI": "Rivali Predestinati",
+    "FST": "Colpo Fusione",
+    "LOR": "Origine Perduta",
+    "PAL": "Evoluzioni a Paldea",
+    "PAR": "Paradosso Temporale",
+    "PRE": "Evoluzioni Prismatiche",
+    "SCR": "Corona Astrale",
+    "SFA": "Segreto Fiabesco",
+    "SIT": "Tempesta Argentata",
+    "SSP": "Scintille Folgoranti",
+    "SVI": "Scarlatto e Violetto",
+    "TEF": "CronoForze",
+    "TWM": "Crepuscolo Mascherato",
+    "XPRE": "Evoluzioni Prismatiche",
+    "XBLK": "Luce Nera",
+}
+
+# Controllo aggiuntivo: il testo espansione TimeTwister deve essere compatibile
+# col codice. Serve a impedire che un codice corretto venga usato su un titolo
+# semanticamente incompatibile.
+TRUSTED_LABEL_HINTS = {
+    "ASR": {"astral radiance"},
+    "BRS": {"brilliant stars"},
+    "CRZ": {"crown zenith"},
+    "DAA": {"darkness ablaze"},
+    "DRI": {"destined rivals"},
+    "FST": {"fusion strike"},
+    "LOR": {"lost origin"},
+    "PAL": {"paldea evolved"},
+    "PAR": {"paradox rift"},
+    "PRE": {"prismatic evolutions"},
+    "SCR": {"stellar crown"},
+    "SFA": {"shrouded fable"},
+    "SIT": {"silver tempest"},
+    "SSP": {"surging sparks"},
+    "SVI": {"scarlet violet", "scarlet and violet"},
+    "TEF": {"temporal forces"},
+    "TWM": {"twilight masquerade"},
+    "XPRE": {"prismatic evolutions additionals"},
+    "XBLK": {"black bolt additionals"},
 }
 
 SUPPORTED_EDITIONS = {
@@ -68,9 +98,7 @@ def norm(value):
     return re.sub(r"\s+", " ", value).strip()
 
 def norm_number(value):
-    value = str(value or "").strip().upper()
-    value = value.replace(" ", "")
-    return value
+    return str(value or "").strip().upper().replace(" ", "")
 
 def collector_left(number):
     left = norm_number(number).split("/", 1)[0]
@@ -141,50 +169,39 @@ def usable_variants(product):
         out.append((cv, price, v))
     return out
 
-print("=== TIMETWISTER - TEST MATCHING V4 ===", flush=True)
-print("Nessuna modifica a Cardoryx, Cardmarket o retail.", flush=True)
+def label_compatible(code, label):
+    hints = TRUSTED_LABEL_HINTS.get(code)
+    if not hints:
+        return False
+    nl = norm(label)
+    return any(norm(h) in nl for h in hints)
 
-# ------------------------------------------------------------
-# 1. Carica indice retail attuale
-# ------------------------------------------------------------
+print("=== TIMETWISTER - AUDIT MAPPING V5 ===", flush=True)
+print("SOLO TEST: non modifica Cardmarket né retail_prices.json.", flush=True)
+
 with open(RETAIL_FILE, "r", encoding="utf-8") as f:
     retail = json.load(f)
 
 cards = retail.get("cards") or {}
 if not isinstance(cards, dict) or not cards:
-    raise SystemExit("ERRORE: data/retail_prices.json non contiene cards")
+    raise SystemExit("ERRORE: data/retail_prices.json privo di cards")
 
-print(f"Carte indice retail: {len(cards)}", flush=True)
-
-# Indici delle identità già conosciute da Cardoryx.
-# A) completo: set + collector + nome + variante
 identity_full = defaultdict(list)
-
-# B) senza set: collector + nome + variante.
-# Usato SOLO per imparare un codice set quando conduce a un unico set.
-identity_without_set = defaultdict(list)
-
 for key, card in cards.items():
-    set_name = str(card.get("set") or "").strip()
-    name = str(card.get("name") or "").strip()
-    variant = str(card.get("variant") or "").strip()
-    coll = collector_left(card.get("number"))
+    ident = (
+        norm(card.get("set")),
+        collector_left(card.get("number")),
+        norm(card.get("name")),
+        str(card.get("variant") or ""),
+    )
+    identity_full[ident].append((key, card))
 
-    full = (norm(set_name), coll, norm(name), variant)
-    identity_full[full].append((key, card))
-
-    loose = (coll, norm(name), variant)
-    identity_without_set[loose].append((key, card))
-
-# ------------------------------------------------------------
-# 2. Scarica catalogo TimeTwister
-# ------------------------------------------------------------
 products = []
 for page in range(1, 101):
     payload = fetch_json(COLLECTION_URL.format(page=page))
     batch = payload.get("products") if isinstance(payload, dict) else None
     if not isinstance(batch, list):
-        raise SystemExit(f"ERRORE: pagina {page} senza lista products")
+        raise SystemExit(f"ERRORE: pagina {page} senza products")
     print(f"Pagina {page}: {len(batch)} prodotti", flush=True)
     if not batch:
         break
@@ -193,151 +210,97 @@ for page in range(1, 101):
         break
     time.sleep(0.25)
 
-print(f"Prodotti TimeTwister: {len(products)}", flush=True)
+stats = Counter()
+matches = {}
+per_code = Counter()
+per_code_reliable = Counter()
+unknown_codes = Counter()
+label_conflicts = Counter()
+ambiguous_examples = []
+secret_examples = []
+xblk_examples = []
 
-parsed_products = []
 for product in products:
     parsed = parse_title(product.get("title"))
-    if parsed:
-        parsed_products.append((product, parsed))
+    if not parsed:
+        stats["invalidTitle"] += 1
+        continue
 
-# ------------------------------------------------------------
-# 3. Impara setCode -> set Cardoryx SENZA servizi esterni
-#
-# Voto ammesso solo se una variante IT+NM+disponibile trova, ignorando
-# temporaneamente il set, UNA SOLA identità Cardoryx per:
-# collector + nome esatto + variante esatta.
-#
-# Il codice viene accettato solo con:
-# - almeno 2 prove indipendenti
-# - 100% delle prove sullo stesso set
-#
-# Questo è diagnostico e fail-closed.
-# ------------------------------------------------------------
-code_votes = defaultdict(Counter)
-code_examples = defaultdict(list)
-
-for product, parsed in parsed_products:
-    for cv, price, shop_variant in usable_variants(product):
-        loose = (
-            parsed["collector"],
-            norm(parsed["name"]),
-            cv,
-        )
-        matches = identity_without_set.get(loose, [])
-        sets = {norm(card.get("set")): card.get("set") for _, card in matches}
-
-        if len(matches) == 1 and len(sets) == 1:
-            _, card = matches[0]
-            set_name = str(card.get("set") or "").strip()
-            code_votes[parsed["setCode"]][set_name] += 1
-            if len(code_examples[parsed["setCode"]]) < 5:
-                code_examples[parsed["setCode"]].append({
-                    "title": product.get("title"),
-                    "matchedSet": set_name,
-                    "variant": cv,
-                })
-
-learned_codes = {}
-rejected_codes = {}
-
-for code, counts in code_votes.items():
-    ranked = counts.most_common()
-    total = sum(counts.values())
-    if len(ranked) == 1 and ranked[0][1] >= 2:
-        learned_codes[code] = ranked[0][0]
-    else:
-        rejected_codes[code] = {
-            "votes": dict(counts),
-            "total": total,
-        }
-
-# Gli alias manuali hanno priorità.
-# Se un codice appreso contraddice un alias del titolo, il singolo prodotto
-# verrà scartato come conflitto.
-print(f"Codici set appresi con prove univoche: {len(learned_codes)}", flush=True)
-
-# ------------------------------------------------------------
-# 4. Confronta V22 attuale vs matching esteso
-# ------------------------------------------------------------
-stats = Counter()
-strict_matches = {}
-expanded_matches = {}
-examples_new = []
-conflicts = []
-
-for product, parsed in parsed_products:
     stats["parsedProducts"] += 1
+    code = parsed["setCode"]
+    target_set = TRUSTED_SET_CODE_MAP.get(code)
 
-    alias_set = SET_ALIASES.get(norm(parsed["setLabel"]))
-    learned_set = learned_codes.get(parsed["setCode"])
+    if not target_set:
+        unknown_codes[code] += 1
+        continue
 
-    if alias_set and learned_set and norm(alias_set) != norm(learned_set):
-        stats["setConflict"] += 1
-        if len(conflicts) < 30:
-            conflicts.append({
-                "title": product.get("title"),
-                "aliasSet": alias_set,
-                "learnedSet": learned_set,
-                "setCode": parsed["setCode"],
-            })
+    if not label_compatible(code, parsed["setLabel"]):
+        label_conflicts[(code, parsed["setLabel"])] += 1
         continue
 
     for cv, price, shop_variant in usable_variants(product):
         stats["usableVariants"] += 1
-
-        # -------- Metodo V22 attuale --------
-        if alias_set:
-            full = (
-                norm(alias_set),
-                parsed["collector"],
-                norm(parsed["name"]),
-                cv,
-            )
-            current = identity_full.get(full, [])
-            if len(current) == 1:
-                key, card = current[0]
-                strict_matches[key] = {
-                    "card": card,
-                    "price": price,
-                    "product": product,
-                    "parsed": parsed,
-                    "variant": cv,
-                }
-
-        # -------- Metodo esteso --------
-        target_set = alias_set or learned_set
-        if not target_set:
-            stats["noSetResolution"] += 1
-            continue
-
-        full = (
+        ident = (
             norm(target_set),
             parsed["collector"],
             norm(parsed["name"]),
             cv,
         )
-        matches = identity_full.get(full, [])
-
-        if len(matches) != 1:
+        found = identity_full.get(ident, [])
+        if len(found) != 1:
             stats["identityRejected"] += 1
+            if len(ambiguous_examples) < 30:
+                ambiguous_examples.append({
+                    "title": product.get("title"),
+                    "targetSet": target_set,
+                    "collector": parsed["collector"],
+                    "name": parsed["name"],
+                    "variant": cv,
+                    "matches": len(found),
+                })
             continue
 
-        key, card = matches[0]
-        expanded_matches[key] = {
+        key, card = found[0]
+
+        # massimo una offerta TimeTwister per identità
+        if key in matches:
+            stats["duplicateIdentity"] += 1
+            continue
+
+        matches[key] = {
             "card": card,
             "price": price,
-            "product": product,
-            "parsed": parsed,
-            "variant": cv,
-            "resolution": "alias" if alias_set else "learned-code",
+            "code": code,
+            "setLabel": parsed["setLabel"],
+            "url": BASE + "/products/" + str(product.get("handle") or ""),
         }
+        per_code[code] += 1
 
-# ------------------------------------------------------------
-# 5. Impatto sulle carte affidabili
-# Calcoliamo da zero escludendo TimeTwister già presente.
-# ------------------------------------------------------------
-def other_stores(card):
+        # Esempi carte oltre il totale set, per verificare che restino valide.
+        num = str(card.get("number") or "")
+        m = re.fullmatch(r"(\d{1,4})/(\d{1,4})", num)
+        if m and int(m.group(1)) > int(m.group(2)) and len(secret_examples) < 40:
+            secret_examples.append({
+                "set": card.get("set"),
+                "number": card.get("number"),
+                "name": card.get("name"),
+                "variant": card.get("variant"),
+                "price": price,
+                "code": code,
+            })
+
+        if code == "XBLK" and len(xblk_examples) < 40:
+            xblk_examples.append({
+                "set": card.get("set"),
+                "number": card.get("number"),
+                "name": card.get("name"),
+                "variant": card.get("variant"),
+                "price": price,
+                "setLabel": parsed["setLabel"],
+                "url": BASE + "/products/" + str(product.get("handle") or ""),
+            })
+
+def stores_without_timetwister(card):
     return {
         norm(o.get("store"))
         for o in (card.get("offers") or [])
@@ -345,114 +308,118 @@ def other_stores(card):
     }
 
 baseline_reliable = 0
-current_reliable = 0
-expanded_reliable = 0
-newly_reliable_current = []
-newly_reliable_expanded = []
+reliable_with_v5 = 0
+newly_reliable = []
+already_reliable_matches = 0
 
 for key, card in cards.items():
-    stores = other_stores(card)
-    base_count = len(stores)
-
-    if base_count >= 3:
+    stores = stores_without_timetwister(card)
+    if len(stores) >= 3:
         baseline_reliable += 1
+    if key in matches:
+        if len(stores) >= 3:
+            already_reliable_matches += 1
+        if len(stores) == 2:
+            newly_reliable.append(key)
+            per_code_reliable[matches[key]["code"]] += 1
+    if len(stores) + (1 if key in matches else 0) >= 3:
+        reliable_with_v5 += 1
 
-    with_current = base_count + (1 if key in strict_matches else 0)
-    with_expanded = base_count + (1 if key in expanded_matches else 0)
-
-    if with_current >= 3:
-        current_reliable += 1
-    if with_expanded >= 3:
-        expanded_reliable += 1
-
-    if base_count == 2 and key in strict_matches:
-        newly_reliable_current.append(key)
-
-    if base_count == 2 and key in expanded_matches:
-        newly_reliable_expanded.append(key)
-
-new_keys = sorted(set(expanded_matches) - set(strict_matches))
-
-for key in new_keys[:100]:
-    item = expanded_matches[key]
-    card = item["card"]
-    examples_new.append({
-        "set": card.get("set"),
-        "number": card.get("number"),
-        "name": card.get("name"),
-        "variant": card.get("variant"),
-        "price": item["price"],
-        "setCode": item["parsed"]["setCode"],
-        "setLabelTimeTwister": item["parsed"]["setLabel"],
-        "resolution": item["resolution"],
-        "storesWithoutTimeTwister": len(other_stores(card)),
-        "wouldBecomeReliable": len(other_stores(card)) == 2,
-        "url": BASE + "/products/" + str(item["product"].get("handle") or ""),
+new_reliable_examples = []
+for key in newly_reliable[:100]:
+    m = matches[key]
+    c = m["card"]
+    new_reliable_examples.append({
+        "set": c.get("set"),
+        "number": c.get("number"),
+        "name": c.get("name"),
+        "variant": c.get("variant"),
+        "timeTwisterPrice": m["price"],
+        "setCode": m["code"],
+        "setLabelTimeTwister": m["setLabel"],
+        "url": m["url"],
     })
 
 report = {
-    "testVersion": 4,
-    "method": "local retail identities + conservative learned set codes; no TCGdex",
+    "testVersion": 5,
     "safety": {
         "cardmarketModified": False,
         "retailModified": False,
-        "requiresItalian": True,
-        "requiresNearMint": True,
-        "requiresAvailable": True,
-        "requiresPositivePrice": True,
-        "requiresExactCollector": True,
-        "requiresExactName": True,
-        "requiresExactVariant": True,
-        "learnedCodeMinimumVotes": 2,
-        "learnedCodeMustBeUnanimous": True,
+        "setMappingMode": "explicit-audited-code-map",
+        "exactIdentity": "set+collector+name+variant",
+        "language": "Italian",
+        "condition": "Near Mint",
+        "availableOnly": True,
+        "positivePriceOnly": True,
+        "specialNumbersAllowed": True,
+    },
+    "importantCorrection": {
+        "V4WrongMapping": "XBLK -> Avventure Insieme",
+        "V5Mapping": "XBLK -> Luce Nera",
+        "reason": "TimeTwister label is Black Bolt: Additionals",
     },
     "stats": {
         "products": len(products),
         "parsedProducts": stats["parsedProducts"],
-        "usableVariants": stats["usableVariants"],
-        "strictV22Matches": len(strict_matches),
-        "expandedMatches": len(expanded_matches),
-        "additionalMatches": len(new_keys),
-        "learnedSetCodes": len(learned_codes),
-        "setConflicts": stats["setConflict"],
+        "usableVariantsOnTrustedCodes": stats["usableVariants"],
+        "acceptedMatches": len(matches),
         "identityRejected": stats["identityRejected"],
-        "noSetResolution": stats["noSetResolution"],
+        "invalidTitle": stats["invalidTitle"],
+        "duplicateIdentity": stats["duplicateIdentity"],
+        "unknownSetCodes": sum(unknown_codes.values()),
+        "labelConflicts": sum(label_conflicts.values()),
         "baselineReliableWithoutTimeTwister": baseline_reliable,
-        "reliableWithCurrentV22Matching": current_reliable,
-        "reliableWithExpandedMatching": expanded_reliable,
-        "currentV22NewReliable": len(newly_reliable_current),
-        "expandedNewReliable": len(newly_reliable_expanded),
-        "additionalReliableVsV22": expanded_reliable - current_reliable,
+        "reliableWithV5": reliable_with_v5,
+        "newReliableFromTimeTwisterV5": len(newly_reliable),
+        "alreadyReliableMatched": already_reliable_matches,
     },
-    "learnedSetCodes": dict(sorted(learned_codes.items())),
-    "rejectedSetCodes": dict(sorted(rejected_codes.items())),
-    "setCodeEvidenceExamples": dict(sorted(code_examples.items())),
-    "conflicts": conflicts,
-    "additionalMatchExamples": examples_new,
+    "trustedSetCodeMap": TRUSTED_SET_CODE_MAP,
+    "matchesPerCode": dict(sorted(per_code.items())),
+    "newReliablePerCode": dict(sorted(per_code_reliable.items())),
+    "unknownCodes": dict(sorted(unknown_codes.items())),
+    "labelConflicts": [
+        {"code": code, "label": label, "count": count}
+        for (code, label), count in sorted(label_conflicts.items())
+    ],
+    "xblkCorrectedExamples": xblk_examples,
+    "secretNumberExamples": secret_examples,
+    "newReliableExamples": new_reliable_examples,
+    "identityRejectedExamples": ambiguous_examples,
 }
 
 with open(REPORT_FILE, "w", encoding="utf-8") as f:
     json.dump(report, f, ensure_ascii=False, indent=2)
 
-print("\n=== CONFRONTO ===", flush=True)
+print("\n=== RISULTATO V5 ===", flush=True)
 for k, v in report["stats"].items():
     print(f"{k}: {v}", flush=True)
 
-print("\n=== CODICI SET APPRESI ===", flush=True)
-for code, set_name in sorted(learned_codes.items()):
-    print(f"{code}: {set_name}", flush=True)
+print("\n=== MATCH PER CODICE SET ===", flush=True)
+for code, count in sorted(per_code.items()):
+    print(f"{code}: {count}", flush=True)
 
-print("\n=== NUOVI MATCH POTENZIALI - PRIMI 40 ===", flush=True)
-for item in examples_new[:40]:
+print("\n=== NUOVE CARTE AFFIDABILI PER CODICE ===", flush=True)
+for code, count in sorted(per_code_reliable.items()):
+    print(f"{code}: {count}", flush=True)
+
+print("\n=== XBLK CORRETTO: DEVE ESSERE LUCE NERA ===", flush=True)
+if xblk_examples:
+    for item in xblk_examples[:20]:
+        print(json.dumps(item, ensure_ascii=False), flush=True)
+else:
+    print("Nessun match XBLK trovato.", flush=True)
+
+print("\n=== CARTE OLTRE IL TOTALE SET ===", flush=True)
+for item in secret_examples[:20]:
     print(json.dumps(item, ensure_ascii=False), flush=True)
 
-print("\n=== CONFLITTI SET - NON ACCETTATI ===", flush=True)
-if conflicts:
-    for item in conflicts[:20]:
-        print(json.dumps(item, ensure_ascii=False), flush=True)
+print("\n=== CONFLITTI LABEL/CODICE ===", flush=True)
+if label_conflicts:
+    for (code, label), count in sorted(label_conflicts.items()):
+        print(f"{code} | {label} | {count}", flush=True)
 else:
     print("0", flush=True)
 
 print(f"\nReport completo: {REPORT_FILE}", flush=True)
 print("SOLO TEST - NESSUNA MODIFICA A CARDMARKET O RETAIL", flush=True)
-print("=== FINE TEST TIMETWISTER V4 ===", flush=True)
+print("=== FINE AUDIT TIMETWISTER V5 ===", flush=True)
