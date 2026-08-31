@@ -15,8 +15,8 @@ SEARCH = BASE + "/pokemon/ricercacarte.php"
 RETAIL = Path("data/retail_prices.json")
 REPORT = Path("lppcollecting_test_report.json")
 UA = "Mozilla/5.0 (compatible; CardoryxRetailAudit/2.0)"
-TIMEOUT = 25
-MAX_SETS = 250
+TIMEOUT = 12
+MAX_SETS = 35
 
 
 def norm(s):
@@ -227,7 +227,7 @@ def main():
                             "sourceUrl": url,
                         }
                     )
-            time.sleep(0.10)
+            time.sleep(0.03)
         except Exception as e:
             stats["errors"] += 1
             if len(examples) < 50:
@@ -236,7 +236,7 @@ def main():
     report = {
         "schema": 2,
         "source": "LPPCollecting",
-        "mode": "read-only diagnostic",
+        "mode": "read-only diagnostic fast sample",
         "rules": {
             "language": "ITA only",
             "condition": "mint/near mint / near mint / mint",
