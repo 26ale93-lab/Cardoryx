@@ -1,0 +1,80 @@
+name: Deep Retail Audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-retail-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Deep Retail Audit
+        run: python scripts/test_retail_deep_audit.py
+
+      - name: Verify safety and report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/retail_deep_audit_report.json")
+          if not path.exists():
+              raise SystemExit("Deep Retail Audit report non generato")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+
+          if report.get("schema") != 1:
+              raise SystemExit(f"Schema errato: {report.get('schema')}")
+
+          rules = report.get("rules", {})
+          required = {
+              "retailPricesModified": False,
+              "cardmarketTouched": False,
+              "newIdentitiesCreated": False,
+              "productionDataModified": False,
+              "exactExistingIdentityPreferred": True,
+              "priorityTwoToThree": True,
+              "failClosed": True,
+              "disabledStoresNotAudited": True,
+          }
+
+          for key, expected in required.items():
+              if rules.get(key) is not expected:
+                  raise SystemExit(
+                      f"Safety rule failed: {key}={rules.get(key)!r}, expected {expected!r}"
+                  )
+
+          sources = report.get("sources", [])
+          if not sources:
+              raise SystemExit("Nessun adapter audit eseguito")
+
+          for source in sources:
+              if source.get("ok") is not True:
+                  raise SystemExit(
+                      f"Audit source failed: {source.get('source')} - {source.get('error')}"
+                  )
+
+          print("Deep Retail Audit verificato")
+          for source in sources:
+              print(source.get("source"), source.get("stats"))
+          PY
+
+      - name: Upload Deep Retail Audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: retail-deep-audit-report
+          path: data/retail_deep_audit_report.json
+          if-no-files-found: error
+          retention-days: 14
