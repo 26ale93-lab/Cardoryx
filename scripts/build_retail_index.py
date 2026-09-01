@@ -2058,9 +2058,6 @@ def collect_cartemagic(cards):
         "priceUnavailable": 0,
         "anomalousPriceRejected": 0,
         "anomalousPriceRejectedExamples": [],
-        "trainerGalleryParsed": 0,
-        "trainerGalleryAccepted": 0,
-        "trainerGalleryExistingIdentityRejected": 0,
         "duplicateStore": 0,
         "errors": 0,
     }
@@ -3169,8 +3166,6 @@ def collect_cardpioneer(cards):
 
             if added:
                 stats["accepted"] += 1
-                if identity.get("sourceSubset") == "Trainer Gallery":
-                    stats["trainerGalleryAccepted"] += 1
             else:
                 stats["duplicateStore"] += 1
 
@@ -4720,6 +4715,9 @@ def collect_bsa_store(cards):
         "priceUnavailable": 0,
         "anomalousPriceRejected": 0,
         "anomalousPriceRejectedExamples": [],
+        "trainerGalleryParsed": 0,
+        "trainerGalleryAccepted": 0,
+        "trainerGalleryExistingIdentityRejected": 0,
         "duplicateStore": 0,
         "errors": 0,
         "ok": True,
@@ -4912,6 +4910,8 @@ def collect_bsa_store(cards):
 
             if added:
                 stats["accepted"] += 1
+                if identity.get("sourceSubset") == "Trainer Gallery":
+                    stats["trainerGalleryAccepted"] += 1
             else:
                 stats["duplicateStore"] += 1
 
