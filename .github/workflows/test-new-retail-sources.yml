@@ -1,0 +1,85 @@
+name: Test New Retail Sources
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - diagnostic/new-retail-sources-20260901
+    paths:
+      - scripts/test_new_retail_sources.py
+      - .github/workflows/test-new-retail-sources.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit-new-retail-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run three independent read-only audits
+        run: python scripts/test_new_retail_sources.py
+
+      - name: Verify safety and report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/new_retail_sources_audit_report.json")
+          if not path.exists():
+              raise SystemExit("Report non generato")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+          if report.get("schema") != 1:
+              raise SystemExit("Schema report errato")
+
+          rules = report.get("rules", {})
+          required = {
+              "retailPricesModified": False,
+              "cardmarketTouched": False,
+              "newIdentitiesCreated": False,
+              "productionDataModified": False,
+              "exactExistingIdentityOnly": True,
+              "priorityTwoToThree": True,
+              "failClosed": True,
+              "sourcesRunConcurrently": True,
+          }
+          for key, expected in required.items():
+              if rules.get(key) is not expected:
+                  raise SystemExit(f"Safety rule failed: {key}")
+
+          sources = report.get("sources", [])
+          expected_sources = {
+              "Gemcard Infinity Collection",
+              "LPP Collecting",
+              "Nerd Fumetti",
+          }
+          if {source.get("source") for source in sources} != expected_sources:
+              raise SystemExit("Una o piu sorgenti non sono state eseguite")
+
+          if any(source.get("ok") is not True for source in sources):
+              failed = [source for source in sources if source.get("ok") is not True]
+              raise SystemExit(f"Adapter non completato: {failed}")
+
+          print("Audit sicuro e completo")
+          for source in sources:
+              print(source.get("source"), source.get("stats"))
+          PY
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: new-retail-sources-audit-report
+          path: data/new_retail_sources_audit_report.json
+          if-no-files-found: error
+          retention-days: 14
