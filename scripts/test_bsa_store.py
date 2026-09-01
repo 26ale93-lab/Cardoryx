@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# CARDORYX BSA DEEP AUDIT V3
-# Read-only: non modifica retail_prices.json e non usa Cardmarket.
+# CARDORYX — BSA DEEP AUDIT V4
+# Read-only diagnostic.
+# Focus:
+#   1) special BSA labels rejected by the production variant parser
+#   2) promo-style card numbers (SVP/SWSH/MEP/SVE/etc.)
+# Never modifies retail_prices.json and never touches Cardmarket.
 
 import json
 import re
@@ -13,7 +17,7 @@ BUILDER = ROOT / "scripts" / "build_retail_index.py"
 RETAIL = ROOT / "data" / "retail_prices.json"
 REPORT = ROOT / "data" / "bsa_store_matching_audit.json"
 
-print("=== CARDORYX - BSA DEEP MATCHING AUDIT V3 ===")
+print("=== CARDORYX - BSA DEEP MATCHING AUDIT V4 ===")
 
 if not BUILDER.exists():
     raise SystemExit(f"Builder non trovato: {BUILDER}")
@@ -41,36 +45,66 @@ http_get_json = ns["http_get_json"]
 
 PAGE_LIMIT = int(ns.get("BSA_STORE_PAGE_LIMIT") or 250)
 MAX_PAGES = int(ns.get("BSA_STORE_MAX_PAGES") or 40)
-ANOMALOUS = {round(float(x), 2) for x in (ns.get("BSA_STORE_REJECTED_FUSION_STRIKE_PRICES") or {1181.0, 1184.0})}
+ANOMALOUS = {
+    round(float(x), 2)
+    for x in (ns.get("BSA_STORE_REJECTED_FUSION_STRIKE_PRICES") or {1181.0, 1184.0})
+}
 
 with RETAIL.open("r", encoding="utf-8") as f:
     retail = json.load(f)
 
 cards = retail.get("cards") or {}
+if not isinstance(cards, dict):
+    raise SystemExit("Formato retail non valido")
 
-def card_stores(card):
+def stores_for(card):
     return {
         str(o.get("store") or "").strip()
         for o in (card.get("offers") or [])
         if str(o.get("store") or "").strip()
     }
 
+# ------------------------------------------------------------------
+# Existing Cardoryx indexes
+# ------------------------------------------------------------------
+
 exact = defaultdict(list)
-loose = defaultdict(list)
+same_card_any_variant = defaultdict(list)
+by_set_number = defaultdict(list)
+by_number_only = defaultdict(list)
 
 for key, card in cards.items():
-    exact[(
-        norm(card.get("set")),
-        norm_number(card.get("number")),
-        norm(card.get("name")),
-        norm(card.get("variant")),
-    )].append(key)
+    set_n = norm(card.get("set"))
+    num_n = norm_number(card.get("number"))
+    name_n = norm(card.get("name"))
+    var_n = norm(card.get("variant"))
 
-    loose[(
-        norm(card.get("set")),
-        norm_number(card.get("number")),
-        norm(card.get("name")),
-    )].append(key)
+    exact[(set_n, num_n, name_n, var_n)].append(key)
+    same_card_any_variant[(set_n, num_n, name_n)].append(key)
+    by_set_number[(set_n, num_n)].append(key)
+    by_number_only[num_n].append(key)
+
+# ------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------
+
+SEALED_WORDS = (
+    "box display", "collezione con", "collezione pokemon", "collezione premium",
+    "mazzo lotte", "mazzo ", "display ", "bustine", "bundle", "tin ",
+    "etb", "elite trainer", "raccoglitore", "poster "
+)
+
+SPECIAL_LABELS = [
+    "Trainer Gallery",
+    "Galleria di Galar",
+    "Illustrazione Speciale Alternativa Art",
+    "Illustrazione",
+    "Ultra",
+    "Segreta Oro",
+    "Oro",
+    "Segreta",
+    "Asso Tattico",
+]
 
 RARITY_RE = re.compile(
     r"\b(?:Non\s+Comune|Comune|Rara\s+Doppia|Rara\s+Ultra|"
@@ -80,7 +114,7 @@ RARITY_RE = re.compile(
     re.I,
 )
 
-RELAXED_RE = re.compile(
+STANDARD_RE = re.compile(
     r"^\s*(?:POKEMON\s+)?"
     r"(?P<name>.+?)\s+"
     r"(?P<number>[A-Z0-9]{0,6}\d{1,4}/[A-Z0-9]{0,6}\d{1,4})"
@@ -92,47 +126,101 @@ RELAXED_RE = re.compile(
     re.I,
 )
 
-def relaxed_parse(title):
-    m = RELAXED_RE.match(str(title or "").strip())
+# Promo patterns:
+#   "Eevee SVP 173 Illustrazione Rara - ITA - Near Mint - Promo Scarlatto e Violetto - Carta Pokemon"
+#   "Lucario V Astro SWSH291 - ITA - Near Mint - Promo Spada e Scudo - Carta Pokemon"
+PROMO_RE = re.compile(
+    r"^\s*(?P<name>.+?)\s+"
+    r"(?P<number>(?:SVP|SWSH|MEP|SVE)\s*\d{1,4})"
+    r"(?P<finish>.*?)"
+    r"\s*-\s*(?P<language>ITA|ITALIANO)\s*"
+    r"-\s*(?P<condition>Near\s+Mint|Mint|NM|Mint\s+Sigillata)\s*"
+    r"-\s*(?P<set>Promo(?:\s+Scarlatto\s+e\s+Violetto|\s+Spada\s+e\s+Scudo|\s+Megaevoluzione)?)"
+    r"\s*-\s*Carta\s+Pokemon\s*$",
+    re.I,
+)
+
+def clean_spaces(value):
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+def normalize_promo_number(value):
+    s = clean_spaces(value).upper().replace(" ", "")
+    m = re.match(r"^(SVP|SWSH|MEP|SVE)(\d{1,4})$", s)
     if not m:
-        return None
+        return norm_number(value)
+    return f"{m.group(1)}{int(m.group(2))}"
 
-    finish_raw = re.sub(r"\s+", " ", m.group("finish") or "").strip(" -")
-    finish_clean = re.sub(r"\s+", " ", RARITY_RE.sub(" ", finish_raw)).strip(" -")
+def strip_rarity(finish):
+    return clean_spaces(RARITY_RE.sub(" ", finish or "")).strip(" -")
 
-    if not finish_clean:
-        variant = "Normal"
-        evidence = "empty_after_rarity_removal"
-    else:
-        variant = detect_variant(finish_clean)
-        if variant == "Normal" and norm(finish_clean) not in {"normal", "non holo", "nonholo"}:
-            variant = None
-            evidence = "unknown_finish"
-        else:
-            evidence = "explicit_finish"
+def is_sealed(title):
+    t = norm(title)
+    return any(norm(word) in t for word in SEALED_WORDS)
 
-    return {
-        "name": re.sub(r"\s+", " ", m.group("name")).strip(),
-        "number": norm_number(m.group("number")),
-        "set": clean_set_name(re.sub(r"\s+", " ", m.group("set")).strip()),
-        "condition": re.sub(r"\s+", " ", m.group("condition")).strip(),
-        "language": re.sub(r"\s+", " ", m.group("language")).strip(),
-        "finishRaw": finish_raw,
-        "finishClean": finish_clean,
-        "variant": variant,
-        "variantEvidence": evidence,
+def source_variant_from_finish(finish):
+    """
+    Conservative diagnostic mapping.
+    Only map when the source label itself is an explicit known physical finish/variant.
+    Special rarity/subset labels are NOT auto-mapped.
+    """
+    f = clean_spaces(finish)
+    fn = norm(f)
+
+    # Explicit finishes Cardoryx production already understands.
+    v = detect_variant(f)
+    if v != "Normal":
+        return v, "production_detect_variant"
+
+    # Only explicit normal synonyms can become Normal.
+    if fn in {"normal", "non holo", "nonholo"}:
+        return "Normal", "explicit_normal"
+
+    # Everything else stays unresolved.
+    return None, "special_label_not_mapped"
+
+def exact_candidate(key, title, price, reason, extra=None):
+    card = cards[key]
+    stores = stores_for(card)
+
+    if "BSA Store" in stores:
+        return None, "already_present"
+
+    if price is None:
+        return None, "price_unavailable"
+
+    if (
+        norm(card.get("set")) == norm("Colpo Fusione")
+        and round(float(price), 2) in ANOMALOUS
+    ):
+        return None, "known_anomaly"
+
+    item = {
+        "reason": reason,
+        "cardKey": key,
+        "name": card.get("name"),
+        "set": card.get("set"),
+        "number": card.get("number"),
+        "variant": card.get("variant"),
+        "price": round(float(price), 2),
+        "currentStores": sorted(stores),
+        "wouldBecomeThirdStore": len(stores) == 2,
+        "title": title,
     }
+    if extra:
+        item.update(extra)
+    return item, None
 
 stats = Counter()
 safe = []
-diagnostic = []
-unknown_finishes = Counter()
-unknown_examples = []
-format_examples = []
+special_label_diagnostics = []
+promo_diagnostics = []
+special_label_counts = Counter()
+promo_number_prefixes = Counter()
 
 for page in range(1, MAX_PAGES + 1):
     payload = http_get_json(bsa_products_url(page))
     products = payload.get("products") or []
+
     if not products:
         break
 
@@ -142,155 +230,198 @@ for page in range(1, MAX_PAGES + 1):
     for product in products:
         title = str(product.get("title") or "").strip()
         price = bsa_available_price(product)
-        prod = parse_bsa_title(title)
 
-        if prod:
+        # Production-supported cards are not the target of V4.
+        if parse_bsa_title(title):
             stats["productionTitleAccepted"] += 1
-            ident = (
-                norm(prod.get("set")),
-                norm_number(prod.get("number")),
-                norm(prod.get("name")),
-                norm(prod.get("variant")),
-            )
-            matches = exact.get(ident, [])
-
-            if len(matches) == 1:
-                stats["productionExactExistingIdentity"] += 1
-                key = matches[0]
-                stores = card_stores(cards[key])
-
-                if "BSA Store" in stores:
-                    stats["alreadyPresentInRetail"] += 1
-                elif price is None:
-                    stats["productionExactPriceUnavailable"] += 1
-                elif (
-                    norm(prod.get("set")) == norm("Colpo Fusione")
-                    and round(float(price), 2) in ANOMALOUS
-                ):
-                    stats["knownFusionStrikeAnomalyRejected"] += 1
-                else:
-                    stats["productionExactMissingBsa"] += 1
-                    if len(stores) == 2:
-                        stats["potentialTwoToThreeStoreUpgrade"] += 1
-                    safe.append({
-                        "reason": "production_exact_identity_missing_BSA",
-                        "cardKey": key,
-                        "name": cards[key].get("name"),
-                        "set": cards[key].get("set"),
-                        "number": cards[key].get("number"),
-                        "variant": cards[key].get("variant"),
-                        "price": round(float(price), 2),
-                        "currentStores": sorted(stores),
-                        "wouldBecomeThirdStore": len(stores) == 2,
-                        "title": title,
-                    })
-            elif len(matches) > 1:
-                stats["productionIdentityAmbiguous"] += 1
-            else:
-                stats["productionIdentityNotExisting"] += 1
             continue
 
         stats["productionTitleRejected"] += 1
-        rp = relaxed_parse(title)
 
-        if not rp:
-            stats["relaxedFormatRejected"] += 1
-            if len(format_examples) < 80:
-                format_examples.append(title)
-            continue
+        # ----------------------------------------------------------
+        # A) Standard number but special finish/subset label
+        # ----------------------------------------------------------
+        sm = STANDARD_RE.match(title)
+        if sm:
+            stats["specialFormatAccepted"] += 1
 
-        stats["relaxedFormatAccepted"] += 1
+            name = clean_spaces(sm.group("name"))
+            number = norm_number(sm.group("number"))
+            set_name = clean_set_name(clean_spaces(sm.group("set")))
+            finish_raw = clean_spaces(sm.group("finish")).strip(" -")
+            finish_clean = strip_rarity(finish_raw)
 
-        if rp["variant"] is None:
-            stats["unknownExplicitFinish"] += 1
-            unknown_finishes[rp["finishClean"] or "<EMPTY>"] += 1
-            if len(unknown_examples) < 100:
-                unknown_examples.append({
-                    "title": title,
-                    "finishRaw": rp["finishRaw"],
-                    "finishClean": rp["finishClean"],
-                })
-            continue
+            special_label_counts[finish_clean or "<EMPTY>"] += 1
 
-        ident = (
-            norm(rp["set"]),
-            norm_number(rp["number"]),
-            norm(rp["name"]),
-            norm(rp["variant"]),
-        )
-        matches = exact.get(ident, [])
+            # First: can this source finish be mapped EXACTLY without inference?
+            variant, evidence = source_variant_from_finish(finish_clean)
 
-        if len(matches) == 1:
-            stats["deepExactExistingIdentity"] += 1
-            key = matches[0]
-            stores = card_stores(cards[key])
+            if variant is not None:
+                matches = exact.get(
+                    (norm(set_name), number, norm(name), norm(variant)),
+                    []
+                )
 
-            if "BSA Store" in stores:
-                stats["deepAlreadyPresentInRetail"] += 1
-                continue
-            if price is None:
-                stats["deepPriceUnavailable"] += 1
-                continue
-            if (
-                norm(rp["set"]) == norm("Colpo Fusione")
-                and round(float(price), 2) in ANOMALOUS
-            ):
-                stats["knownFusionStrikeAnomalyRejected"] += 1
-                continue
-
-            stats["safeDeepRecoveryCandidates"] += 1
-            if len(stores) == 2:
-                stats["deepPotentialTwoToThreeStoreUpgrade"] += 1
-
-            safe.append({
-                "reason": "production_reject_but_exact_existing_identity",
-                "cardKey": key,
-                "name": cards[key].get("name"),
-                "set": cards[key].get("set"),
-                "number": cards[key].get("number"),
-                "variant": cards[key].get("variant"),
-                "price": round(float(price), 2),
-                "conditionSource": rp["condition"],
-                "finishSource": rp["finishRaw"],
-                "currentStores": sorted(stores),
-                "wouldBecomeThirdStore": len(stores) == 2,
-                "title": title,
-            })
-
-        elif len(matches) > 1:
-            stats["deepIdentityAmbiguous"] += 1
-        else:
-            stats["deepExactIdentityRejected"] += 1
-            lm = loose.get((
-                norm(rp["set"]),
-                norm_number(rp["number"]),
-                norm(rp["name"]),
-            ), [])
-            if len(lm) == 1:
-                stats["singleDifferentVariantDiagnostic"] += 1
-                if len(diagnostic) < 100:
-                    key = lm[0]
-                    diagnostic.append({
-                        "accepted": False,
-                        "reason": "same_set_number_name_but_different_variant",
-                        "source": rp,
-                        "title": title,
-                        "cardoryx": {
-                            "cardKey": key,
-                            "variant": cards[key].get("variant"),
-                            "stores": sorted(card_stores(cards[key])),
+                if len(matches) == 1:
+                    item, reject = exact_candidate(
+                        matches[0], title, price,
+                        "V4_explicit_finish_exact_existing_identity",
+                        {
+                            "finishSource": finish_raw,
+                            "finishNormalized": finish_clean,
+                            "variantEvidence": evidence,
                         },
-                    })
-            elif len(lm) > 1:
-                stats["multipleVariantDiagnostic"] += 1
+                    )
+                    if item:
+                        safe.append(item)
+                        stats["safeSpecialFinishCandidates"] += 1
+                        if item["wouldBecomeThirdStore"]:
+                            stats["specialFinishPotentialTwoToThree"] += 1
+                    else:
+                        stats[f"specialExactRejected_{reject}"] += 1
+                elif len(matches) > 1:
+                    stats["specialExactAmbiguous"] += 1
+                else:
+                    stats["specialExplicitVariantNoExactIdentity"] += 1
+            else:
+                stats["specialLabelUnmapped"] += 1
 
-    if len(products) < PAGE_LIMIT:
-        break
+                # Diagnostic only: same set+number+name already in Cardoryx?
+                same = same_card_any_variant.get(
+                    (norm(set_name), number, norm(name)),
+                    []
+                )
+
+                if len(same) == 1:
+                    key = same[0]
+                    card = cards[key]
+                    stats["specialLabelSingleExistingCardDiagnostic"] += 1
+                    if len(special_label_diagnostics) < 200:
+                        special_label_diagnostics.append({
+                            "accepted": False,
+                            "reason": "special_label_requires_taxonomy_decision",
+                            "title": title,
+                            "source": {
+                                "name": name,
+                                "set": set_name,
+                                "number": number,
+                                "finishRaw": finish_raw,
+                                "finishNormalized": finish_clean,
+                            },
+                            "cardoryx": {
+                                "cardKey": key,
+                                "variant": card.get("variant"),
+                                "stores": sorted(stores_for(card)),
+                            },
+                        })
+                elif len(same) > 1:
+                    stats["specialLabelMultipleExistingVariantsDiagnostic"] += 1
+                else:
+                    stats["specialLabelNoExistingCard"] += 1
+
+            continue
+
+        # ----------------------------------------------------------
+        # B) Promo-style numbers
+        # ----------------------------------------------------------
+        pm = PROMO_RE.match(title)
+        if pm and not is_sealed(title):
+            stats["promoCardFormatAccepted"] += 1
+
+            name = clean_spaces(pm.group("name"))
+            number = normalize_promo_number(pm.group("number"))
+            finish_raw = clean_spaces(pm.group("finish")).strip(" -")
+            set_source = clean_spaces(pm.group("set"))
+            condition = clean_spaces(pm.group("condition"))
+
+            prefix = re.match(r"^[A-Z]+", number)
+            if prefix:
+                promo_number_prefixes[prefix.group(0)] += 1
+
+            variant, evidence = source_variant_from_finish(strip_rarity(finish_raw))
+
+            # Promo set naming may differ inside Cardoryx. We therefore NEVER
+            # infer set aliases. We first look for exact number+name candidates,
+            # then inspect whether exactly one current identity exists.
+            number_matches = [
+                key for key in by_number_only.get(number, [])
+                if norm(cards[key].get("name")) == norm(name)
+            ]
+
+            if len(number_matches) == 1:
+                key = number_matches[0]
+                card = cards[key]
+                stats["promoUniqueNumberNameDiagnostic"] += 1
+
+                # Safe only if variant is explicit and matches Cardoryx exactly.
+                if variant is not None and norm(card.get("variant")) == norm(variant):
+                    item, reject = exact_candidate(
+                        key, title, price,
+                        "V4_promo_unique_number_name_explicit_variant",
+                        {
+                            "promoNumberSource": pm.group("number"),
+                            "promoSetSource": set_source,
+                            "conditionSource": condition,
+                            "finishSource": finish_raw,
+                            "variantEvidence": evidence,
+                        },
+                    )
+                    if item:
+                        safe.append(item)
+                        stats["safePromoCandidates"] += 1
+                        if item["wouldBecomeThirdStore"]:
+                            stats["promoPotentialTwoToThree"] += 1
+                    else:
+                        stats[f"promoExactRejected_{reject}"] += 1
+                else:
+                    stats["promoVariantNotSafe"] += 1
+                    if len(promo_diagnostics) < 200:
+                        promo_diagnostics.append({
+                            "accepted": False,
+                            "reason": "promo_unique_number_name_but_variant_not_explicit_or_not_equal",
+                            "title": title,
+                            "source": {
+                                "number": number,
+                                "set": set_source,
+                                "finish": finish_raw,
+                                "condition": condition,
+                                "detectedVariant": variant,
+                            },
+                            "cardoryx": {
+                                "cardKey": key,
+                                "set": card.get("set"),
+                                "number": card.get("number"),
+                                "variant": card.get("variant"),
+                                "stores": sorted(stores_for(card)),
+                            },
+                        })
+
+            elif len(number_matches) > 1:
+                stats["promoNumberNameAmbiguous"] += 1
+            else:
+                stats["promoNoExistingNumberName"] += 1
+
+            continue
+
+        if is_sealed(title):
+            stats["sealedProductRejected"] += 1
+        else:
+            stats["otherRejectedFormat"] += 1
+
+# Dedupe safe candidates
+dedup = []
+seen = set()
+for item in safe:
+    token = (item["cardKey"], item["price"], item["reason"], item["title"])
+    if token not in seen:
+        seen.add(token)
+        dedup.append(item)
+safe = dedup
 
 report = {
     "schema": 2,
     "source": "BSA Store",
-    "mode": "read-only deep conservative availability audit V3",
+    "mode": "read-only deep conservative availability audit V4",
     "rules": {
         "retailPricesModified": False,
         "cardmarketTouched": False,
@@ -301,19 +432,25 @@ report = {
         "duplicateStoreRejected": True,
         "rarityNeverUsedAsVariant": True,
         "ambiguousVariantAccepted": False,
+        "specialLabelsNotAutoMapped": True,
+        "promoSetAliasNotInferred": True,
+        "sealedProductsRejected": True,
         "knownFusionStrikeAnomalyRejected": True,
-        "mintAndNmExplicitLabelsInspected": True,
+        "priority": "special BSA labels and promo-style card numbers",
     },
     "stats": dict(stats),
-    "topUnknownFinishes": unknown_finishes.most_common(80),
+    "topSpecialLabels": special_label_counts.most_common(100),
+    "promoNumberPrefixes": promo_number_prefixes.most_common(20),
     "safeCandidates": safe,
-    "diagnosticOnlyCandidates": diagnostic,
-    "unknownFinishExamples": unknown_examples,
-    "titleFormatRejectExamples": format_examples,
+    "specialLabelDiagnostics": special_label_diagnostics,
+    "promoDiagnostics": promo_diagnostics,
 }
 
 REPORT.parent.mkdir(parents=True, exist_ok=True)
-REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+REPORT.write_text(
+    json.dumps(report, ensure_ascii=False, indent=2),
+    encoding="utf-8",
+)
 
 print(json.dumps(report["stats"], ensure_ascii=False, indent=2))
 print(f"SAFE CANDIDATES: {len(safe)}")
