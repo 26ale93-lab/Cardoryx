@@ -2397,6 +2397,46 @@ def warcard_parse_title(title):
     }
 
 
+def warcard_catalog_suffix_name_match(
+    card_name,
+    parsed_name,
+    product_code,
+):
+    """Match circoscritto per suffissi catalografici Cardoryx.
+
+    Accetta, per esempio, ``Empoleon-ex PFL`` rispetto a ``Empoleon ex``
+    soltanto quando il prodotto Warcard ha codice ``PFL-...``. Non rimuove
+    sigle generiche e non modifica il nome o l'identita salvati.
+    """
+
+    card_name = str(card_name or "").strip()
+    parsed_name = str(parsed_name or "").strip()
+    product_code = str(product_code or "").strip()
+
+    if not card_name or not parsed_name or "-" not in product_code:
+        return False
+
+    code_prefix = product_code.split("-", 1)[0]
+
+    if code_prefix.startswith("x") and len(code_prefix) > 1:
+        code_prefix = code_prefix[1:]
+
+    parts = card_name.rsplit(None, 1)
+
+    if len(parts) != 2:
+        return False
+
+    base_name, suffix = parts
+
+    if not re.fullmatch(r"[A-Z0-9]{2,5}", suffix):
+        return False
+
+    if suffix != code_prefix.upper():
+        return False
+
+    return norm(base_name) == norm(parsed_name)
+
+
 def collect_warcard(cards):
 
     print()
@@ -2413,6 +2453,8 @@ def collect_warcard(cards):
         "editionRejected": 0,
         "unavailable": 0,
         "identityAmbiguous": 0,
+        "catalogSuffixMatched": 0,
+        "catalogSuffixAccepted": 0,
         "priceUnavailable": 0,
         "duplicateStore": 0,
         "errors": 0,
@@ -2477,6 +2519,12 @@ def collect_warcard(cards):
                     [],
                 )
 
+                reconciliation = (
+                    "exact-set"
+                    if candidates
+                    else "none"
+                )
+
                 # Stessa riconciliazione conservativa già usata per GS:
                 # "...: Supplementi" deve poter coincidere col set base.
                 if not candidates:
@@ -2519,6 +2567,9 @@ def collect_warcard(cards):
                             possible.extend(values)
 
                     candidates = possible
+
+                    if candidates:
+                        reconciliation = "supplementi-normalized"
 
                 for shop_variant in (
                     product.get("variants", [])
@@ -2570,6 +2621,31 @@ def collect_warcard(cards):
                         )
                     ]
 
+                    catalog_suffix_match = False
+
+                    if (
+                        not matching
+                        and reconciliation == "exact-set"
+                    ):
+
+                        suffix_matching = [
+                            (key, card)
+                            for key, card in candidates
+                            if (
+                                card.get("variant") == variant
+                                and warcard_catalog_suffix_name_match(
+                                    card.get("name", ""),
+                                    parsed.get("name", ""),
+                                    parsed.get("code", ""),
+                                )
+                            )
+                        ]
+
+                        if len(suffix_matching) == 1:
+                            matching = suffix_matching
+                            catalog_suffix_match = True
+                            stats["catalogSuffixMatched"] += 1
+
                     if len(matching) != 1:
                         stats["identityAmbiguous"] += 1
                         continue
@@ -2617,6 +2693,9 @@ def collect_warcard(cards):
                     })
 
                     stats["accepted"] += 1
+
+                    if catalog_suffix_match:
+                        stats["catalogSuffixAccepted"] += 1
 
             if len(products) < 250:
                 break
