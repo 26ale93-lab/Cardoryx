@@ -225,9 +225,9 @@ def add_exact_candidate(result, *, store, set_name, number, name, variant, price
         "impact": impact,
         "raw": raw,
     }
-    if len(result["candidates"]) < 400:
+    if len(result["candidates"]) < 2000:
         result["candidates"].append(candidate)
-    if len(existing_stores) == 2 and len(result["priorityTwoToThree"]) < 300:
+    if len(existing_stores) == 2 and len(result["priorityTwoToThree"]) < 2000:
         result["priorityTwoToThree"].append(candidate)
 
 
