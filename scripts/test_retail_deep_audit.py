@@ -185,7 +185,19 @@ def add_candidate(
     priority_candidates,
     safe_limit,
     priority_limit,
+    seen_candidates=None,
 ):
+    candidate_key = (
+        store,
+        card_key,
+        context.get("url"),
+    )
+    if seen_candidates is not None:
+        if candidate_key in seen_candidates:
+            stats["duplicateDiagnosticCandidate"] += 1
+            return
+        seen_candidates.add(candidate_key)
+
     stats["productionEligible"] += 1
     stores = store_names(card)
 
@@ -226,6 +238,43 @@ def normalized_price(raw_price, integer_is_cents=False):
 
     price = round(price, 2)
     return price if price > 0 else None
+
+
+def compact_physical_name(value):
+    """Confronto diagnostico che ignora solo separatori e punteggiatura."""
+    return "".join(
+        char for char in norm(value) if char.isalnum()
+    )
+
+
+def strip_confirmed_catalog_suffix(card_name, product_code):
+    """Rimuove il suffisso solo se coincide col codice set del prodotto.
+
+    Esempio circoscritto: ``Empoleon-ex PFL`` con codice ``PFL-070``.
+    Non rimuove sigle generiche e non modifica l'identita salvata.
+    """
+    name = str(card_name or "").strip()
+    code = str(product_code or "").strip()
+    if not name or not code or "-" not in code:
+        return None
+
+    code_prefix = code.split("-", 1)[0]
+    if code_prefix.startswith("x") and len(code_prefix) > 1:
+        code_prefix = code_prefix[1:]
+
+    parts = name.rsplit(None, 1)
+    if len(parts) != 2:
+        return None
+
+    base_name, suffix = parts
+    if not suffix.isalnum() or not suffix.isupper():
+        return None
+    if not 2 <= len(suffix) <= 5:
+        return None
+    if norm(suffix) != norm(code_prefix):
+        return None
+
+    return base_name
 
 
 def audit_card_passion():
@@ -448,6 +497,7 @@ def audit_gs_gameon():
     safe_candidates = []
     priority_candidates = []
     ambiguous_name_review = []
+    seen_candidates = set()
 
     def example(reason, payload):
         if len(rejection_examples[reason]) < 30:
@@ -594,6 +644,7 @@ def audit_gs_gameon():
                         priority_candidates=priority_candidates,
                         safe_limit=300,
                         priority_limit=150,
+                        seen_candidates=seen_candidates,
                     )
 
             if len(products) < 250:
@@ -632,6 +683,7 @@ def audit_warcard():
     safe_candidates = []
     priority_candidates = []
     name_mismatch_review = []
+    catalog_suffix_review = []
 
     def example(reason, payload):
         if len(rejection_examples[reason]) < 40:
@@ -744,6 +796,73 @@ def audit_warcard():
                             if len(name_mismatch_review) < 250:
                                 name_mismatch_review.append(review)
                             example("exactNameMismatch", review)
+
+                            catalog_matches = []
+                            for key, card in variant_candidates:
+                                base_name = strip_confirmed_catalog_suffix(
+                                    card.get("name", ""),
+                                    parsed.get("code", ""),
+                                )
+                                if (
+                                    base_name is not None
+                                    and compact_physical_name(base_name)
+                                    == compact_physical_name(
+                                        parsed.get("name", "")
+                                    )
+                                ):
+                                    catalog_matches.append((key, card))
+
+                            if len(catalog_matches) == 1:
+                                diagnostic_price = normalized_price(
+                                    shop_variant.get("price"),
+                                    integer_is_cents=True,
+                                )
+                                if diagnostic_price is None:
+                                    stats[
+                                        "catalogSuffixPriceUnavailable"
+                                    ] += 1
+                                else:
+                                    key, card = catalog_matches[0]
+                                    stores = store_names(card)
+                                    stats[
+                                        "catalogSuffixExactNameDiagnostic"
+                                    ] += 1
+                                    if "Warcard" in stores:
+                                        stats[
+                                            "catalogSuffixAlreadyPresent"
+                                        ] += 1
+                                    elif len(stores) == 2:
+                                        stats[
+                                            "catalogSuffixPotentialTwoToThree"
+                                        ] += 1
+                                    elif len(stores) == 1:
+                                        stats[
+                                            "catalogSuffixPotentialOneToTwo"
+                                        ] += 1
+                                    elif len(stores) >= 3:
+                                        stats[
+                                            "catalogSuffixAlreadyReliablePlusOne"
+                                        ] += 1
+
+                                    if len(catalog_suffix_review) < 600:
+                                        catalog_suffix_review.append(
+                                            {
+                                                **context,
+                                                "price": diagnostic_price,
+                                                "existingIdentity": compact_card(
+                                                    key, card
+                                                ),
+                                                "impact": impact_for(stores),
+                                                "status": "manual-review-only",
+                                                "reason": (
+                                                    "il suffisso finale del nome "
+                                                    "Cardoryx coincide col codice "
+                                                    "set Warcard; il nome restante "
+                                                    "coincide ignorando soltanto "
+                                                    "separatori e punteggiatura"
+                                                ),
+                                            }
+                                        )
                         else:
                             example(
                                 "identityAmbiguous",
@@ -793,6 +912,7 @@ def audit_warcard():
             "priorityTwoToThree": priority_candidates,
             "safeMissingStoreCandidates": safe_candidates,
             "exactNameMismatchReview": name_mismatch_review,
+            "catalogSuffixExactNameDiagnostic": catalog_suffix_review,
         }
 
     return {
@@ -804,6 +924,7 @@ def audit_warcard():
         "priorityTwoToThree": priority_candidates,
         "safeMissingStoreCandidates": safe_candidates,
         "exactNameMismatchReview": name_mismatch_review,
+        "catalogSuffixExactNameDiagnostic": catalog_suffix_review,
     }
 
 
@@ -845,7 +966,7 @@ report = {
     "schema": 1,
     "generatedAt": utc_now(),
     "name": "Cardoryx Deep Retail Audit",
-    "auditVersion": "warcard-deep-audit-v1-2026-09-01",
+    "auditVersion": "warcard-deep-audit-v2-2026-09-01",
     "mode": "read-only unified framework",
     "rules": {
         "retailPricesModified": False,
@@ -859,7 +980,9 @@ report = {
         "failClosed": True,
         "disabledStoresNotAudited": True,
         "warcardExactNormalizedNameRequired": True,
+        "warcardCatalogSuffixDiagnosticOnly": True,
         "gsPromoRegularRejected": True,
+        "gsDiagnosticCandidatesDeduplicated": True,
     },
     "activeStores": ACTIVE_STORES,
     "excludedStores": EXCLUDED_STORES,
