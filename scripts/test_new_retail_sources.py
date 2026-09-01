@@ -10,6 +10,7 @@ import hashlib
 import json
 import re
 import runpy
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -47,7 +48,7 @@ def utc_now():
     )
 
 
-def get_text(url):
+def _get_text_once(url):
     request = urllib.request.Request(
         url,
         headers={
@@ -89,6 +90,20 @@ def get_text(url):
             "bytes": 0,
             "error": repr(error),
         }
+
+
+def get_text(url):
+    first = _get_text_once(url)
+    if first.get("ok") or first.get("status") not in {403, 429, 500, 502, 503, 504}:
+        return first
+
+    # Un solo retry lento per errori HTTP potenzialmente transitori. Non usa
+    # proxy, cookie di sfida o tecniche di aggiramento delle protezioni.
+    time.sleep(4)
+    second = _get_text_once(url)
+    second["retryAttempted"] = True
+    second["firstStatus"] = first.get("status")
+    return second
 
 
 if not BUILDER.exists() or not RETAIL.exists():
@@ -364,7 +379,7 @@ def audit_gemcard():
             set_name, pages = future.result()
             for url, response in pages:
                 result["access"].append(
-                    {key: response.get(key) for key in ("ok", "status", "url", "server", "bytes", "error") if response.get(key) is not None}
+                    {key: response.get(key) for key in ("ok", "status", "url", "server", "bytes", "error", "retryAttempted", "firstStatus") if response.get(key) is not None}
                 )
                 result["stats"]["pagesAttempted"] += 1
                 if not response["ok"]:
@@ -473,7 +488,7 @@ def audit_lpp():
     )
     discovery = get_text(discovery_url)
     result["access"].append(
-        {key: discovery.get(key) for key in ("ok", "status", "url", "server", "bytes", "error") if discovery.get(key) is not None}
+        {key: discovery.get(key) for key in ("ok", "status", "url", "server", "bytes", "error", "retryAttempted", "firstStatus") if discovery.get(key) is not None}
     )
     result["stats"]["discoveryAttempted"] += 1
     if not discovery["ok"]:
@@ -512,7 +527,7 @@ def audit_lpp():
         for future in as_completed(futures):
             set_id, set_name, url, response = future.result()
             result["access"].append(
-                {key: response.get(key) for key in ("ok", "status", "url", "server", "bytes", "error") if response.get(key) is not None}
+                {key: response.get(key) for key in ("ok", "status", "url", "server", "bytes", "error", "retryAttempted", "firstStatus") if response.get(key) is not None}
             )
             result["stats"]["setPagesAttempted"] += 1
             if not response["ok"]:
@@ -640,7 +655,7 @@ def audit_nerd():
         for future in as_completed(futures):
             page, url, response = future.result()
             result["access"].append(
-                {key: response.get(key) for key in ("ok", "status", "url", "server", "bytes", "error") if response.get(key) is not None}
+                {key: response.get(key) for key in ("ok", "status", "url", "server", "bytes", "error", "retryAttempted", "firstStatus") if response.get(key) is not None}
             )
             result["stats"]["pagesAttempted"] += 1
             if not response["ok"]:
