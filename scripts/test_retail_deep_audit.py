@@ -64,6 +64,7 @@ REQUIRED_BUILDER_FUNCTIONS = [
     "gs_gameon_variant",
     "warcard_parse_title",
     "warcard_variant",
+    "warcard_catalog_suffix_name_match",
     "http_get_json",
 ]
 
@@ -185,7 +186,19 @@ def add_candidate(
     priority_candidates,
     safe_limit,
     priority_limit,
+    seen_candidates=None,
 ):
+    candidate_key = (
+        store,
+        card_key,
+        context.get("url"),
+    )
+    if seen_candidates is not None:
+        if candidate_key in seen_candidates:
+            stats["duplicateDiagnosticCandidate"] += 1
+            return
+        seen_candidates.add(candidate_key)
+
     stats["productionEligible"] += 1
     stores = store_names(card)
 
@@ -263,8 +276,17 @@ def audit_card_passion():
                 or product.get("url")
                 or product.get("link")
             )
+            body = strip_html(
+                str(product.get("body_html") or "")
+            )
+            raw_tags = product.get("tags")
+            tags_text = (
+                " ".join(str(tag) for tag in raw_tags)
+                if isinstance(raw_tags, list)
+                else str(raw_tags or "")
+            )
 
-            if ns["cardpassion_excluded"](product):
+            if ns["cardpassion_excluded"](title, body, tags_text):
                 stats["excluded"] += 1
                 example("excluded", {"title": title, "url": product_url})
                 continue
@@ -335,8 +357,17 @@ def audit_card_passion():
                 continue
 
             card_key, card = matching[0]
-            language = ns["cardpassion_language"](product)
-            condition = ns["cardpassion_condition"](product)
+            language = ns["cardpassion_language"](
+                title,
+                body,
+                tags_text,
+                parsed_set,
+            )
+            condition = ns["cardpassion_condition"](
+                title,
+                body,
+                tags_text,
+            )
             context.update(
                 {
                     "language": language,
@@ -344,7 +375,7 @@ def audit_card_passion():
                 }
             )
 
-            if norm(language) not in ("italiano", "ita"):
+            if language != "IT":
                 stats["languageRejected"] += 1
                 example("languageRejected", context)
                 if len(exact_identity_failed_metadata) < 150:
@@ -353,7 +384,7 @@ def audit_card_passion():
                     )
                 continue
 
-            if norm(condition) not in ("near mint", "near mint mint", "nm"):
+            if condition != "NM/MINT":
                 stats["conditionRejected"] += 1
                 example("conditionRejected", context)
                 if len(exact_identity_failed_metadata) < 150:
@@ -430,6 +461,7 @@ def audit_gs_gameon():
     safe_candidates = []
     priority_candidates = []
     ambiguous_name_review = []
+    seen_candidates = set()
 
     def example(reason, payload):
         if len(rejection_examples[reason]) < 30:
@@ -576,6 +608,7 @@ def audit_gs_gameon():
                         priority_candidates=priority_candidates,
                         safe_limit=300,
                         priority_limit=150,
+                        seen_candidates=seen_candidates,
                     )
 
             if len(products) < 250:
@@ -614,6 +647,8 @@ def audit_warcard():
     safe_candidates = []
     priority_candidates = []
     name_mismatch_review = []
+    catalog_suffix_review = []
+    catalog_suffix_production_review = []
 
     def example(reason, payload):
         if len(rejection_examples[reason]) < 40:
@@ -726,6 +761,99 @@ def audit_warcard():
                             if len(name_mismatch_review) < 250:
                                 name_mismatch_review.append(review)
                             example("exactNameMismatch", review)
+
+                            catalog_matches = []
+                            for key, card in variant_candidates:
+                                if ns[
+                                    "warcard_catalog_suffix_name_match"
+                                ](
+                                    card.get("name", ""),
+                                    parsed.get("name", ""),
+                                    parsed.get("code", ""),
+                                ):
+                                    catalog_matches.append((key, card))
+
+                            if len(catalog_matches) == 1:
+                                diagnostic_price = normalized_price(
+                                    shop_variant.get("price"),
+                                    integer_is_cents=True,
+                                )
+                                if diagnostic_price is None:
+                                    stats[
+                                        "catalogSuffixPriceUnavailable"
+                                    ] += 1
+                                else:
+                                    key, card = catalog_matches[0]
+                                    stores = store_names(card)
+                                    stats[
+                                        "catalogSuffixExactNameDiagnostic"
+                                    ] += 1
+                                    if "Warcard" in stores:
+                                        stats[
+                                            "catalogSuffixAlreadyPresent"
+                                        ] += 1
+                                    elif len(stores) == 2:
+                                        stats[
+                                            "catalogSuffixPotentialTwoToThree"
+                                        ] += 1
+                                    elif len(stores) == 1:
+                                        stats[
+                                            "catalogSuffixPotentialOneToTwo"
+                                        ] += 1
+                                    elif len(stores) >= 3:
+                                        stats[
+                                            "catalogSuffixAlreadyReliablePlusOne"
+                                        ] += 1
+
+                                    catalog_candidate = {
+                                        **context,
+                                        "price": diagnostic_price,
+                                        "existingIdentity": compact_card(
+                                            key, card
+                                        ),
+                                        "impact": impact_for(stores),
+                                        "productionRuleEligible": (
+                                            reconciliation == "exact-set"
+                                        ),
+                                        "status": "manual-review-only",
+                                        "reason": (
+                                            "il suffisso finale del nome "
+                                            "Cardoryx coincide col codice "
+                                            "set Warcard; il nome restante "
+                                            "coincide ignorando soltanto "
+                                            "separatori e punteggiatura"
+                                        ),
+                                    }
+
+                                    if len(catalog_suffix_review) < 600:
+                                        catalog_suffix_review.append(
+                                            catalog_candidate
+                                        )
+
+                                    if reconciliation == "exact-set":
+                                        stats[
+                                            "catalogSuffixProductionExactSetEligible"
+                                        ] += 1
+                                        if len(stores) == 2:
+                                            stats[
+                                                "catalogSuffixProductionPotentialTwoToThree"
+                                            ] += 1
+                                        elif len(stores) == 1:
+                                            stats[
+                                                "catalogSuffixProductionPotentialOneToTwo"
+                                            ] += 1
+                                        elif len(stores) >= 3:
+                                            stats[
+                                                "catalogSuffixProductionAlreadyReliablePlusOne"
+                                            ] += 1
+
+                                        if (
+                                            len(catalog_suffix_production_review)
+                                            < 600
+                                        ):
+                                            catalog_suffix_production_review.append(
+                                                catalog_candidate
+                                            )
                         else:
                             example(
                                 "identityAmbiguous",
@@ -775,6 +903,10 @@ def audit_warcard():
             "priorityTwoToThree": priority_candidates,
             "safeMissingStoreCandidates": safe_candidates,
             "exactNameMismatchReview": name_mismatch_review,
+            "catalogSuffixExactNameDiagnostic": catalog_suffix_review,
+            "catalogSuffixExactSetProductionCandidates": (
+                catalog_suffix_production_review
+            ),
         }
 
     return {
@@ -786,6 +918,10 @@ def audit_warcard():
         "priorityTwoToThree": priority_candidates,
         "safeMissingStoreCandidates": safe_candidates,
         "exactNameMismatchReview": name_mismatch_review,
+        "catalogSuffixExactNameDiagnostic": catalog_suffix_review,
+        "catalogSuffixExactSetProductionCandidates": (
+            catalog_suffix_production_review
+        ),
     }
 
 
@@ -827,7 +963,7 @@ report = {
     "schema": 1,
     "generatedAt": utc_now(),
     "name": "Cardoryx Deep Retail Audit",
-    "auditVersion": "warcard-deep-audit-v1-2026-09-01",
+    "auditVersion": "warcard-deep-audit-v3-2026-09-01",
     "mode": "read-only unified framework",
     "rules": {
         "retailPricesModified": False,
@@ -841,7 +977,10 @@ report = {
         "failClosed": True,
         "disabledStoresNotAudited": True,
         "warcardExactNormalizedNameRequired": True,
+        "warcardCatalogSuffixSupplementiDiagnosticOnly": True,
+        "warcardCatalogSuffixProductionExactSetOnly": True,
         "gsPromoRegularRejected": True,
+        "gsDiagnosticCandidatesDeduplicated": True,
     },
     "activeStores": ACTIVE_STORES,
     "excludedStores": EXCLUDED_STORES,
