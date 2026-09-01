@@ -2056,6 +2056,11 @@ def collect_cartemagic(cards):
         "setUnknown": 0,
         "variantConflict": 0,
         "priceUnavailable": 0,
+        "anomalousPriceRejected": 0,
+        "anomalousPriceRejectedExamples": [],
+        "trainerGalleryParsed": 0,
+        "trainerGalleryAccepted": 0,
+        "trainerGalleryExistingIdentityRejected": 0,
         "duplicateStore": 0,
         "errors": 0,
     }
@@ -2326,6 +2331,17 @@ TIMETWISTER_COLLECTION_URL = (
     "?limit=250&page={page}"
 )
 TIMETWISTER_BASE_URL = "https://timetwistergames.it"
+
+
+# ============================================================
+# COLLECTOR STORE CARDS
+# ============================================================
+
+COLLECTORSTORECARDS_BASE_URL = "https://collectorstorecards.it"
+COLLECTORSTORECARDS_COLLECTION_URL = (
+    "https://collectorstorecards.it/collections/carte-singole-pokemon/products.json"
+    "?limit=250&page={page}"
+)
 
 def warcard_variant(edition, rarity=""):
 
@@ -3153,6 +3169,8 @@ def collect_cardpioneer(cards):
 
             if added:
                 stats["accepted"] += 1
+                if identity.get("sourceSubset") == "Trainer Gallery":
+                    stats["trainerGalleryAccepted"] += 1
             else:
                 stats["duplicateStore"] += 1
 
@@ -4494,6 +4512,14 @@ BSA_STORE_COLLECTION = "pokemon-carte-singole-ita"
 BSA_STORE_PAGE_LIMIT = 250
 BSA_STORE_MAX_PAGES = 40
 
+# Prezzi sorgente BSA dimostrati anomali per Colpo Fusione.
+# Fail closed: l'offerta viene scartata, mai corretta o sostituita.
+# 1184.00 = valore attuale osservato; 1181.00 = valore presente in snapshot precedenti.
+BSA_STORE_REJECTED_FUSION_STRIKE_PRICES = {
+    1181.0,
+    1184.0,
+}
+
 
 def bsa_products_url(page):
 
@@ -4581,9 +4607,32 @@ def parse_bsa_title(title):
     )
 
     variant_source = finish
+    requires_existing_identity = False
+    source_subset = None
 
-    if not variant_source:
+    # V16 — Trainer Gallery è una sottoserie identificata dalla
+    # numerazione TGxx/TGxx, non una finitura alternativa.
+    # Regola volutamente stretta:
+    # - vale solo per numero TG.../TG...
+    # - il testo residuo deve essere ESATTAMENTE "Trainer Gallery"
+    # - non vale per "Trainer Gallery Oro Nera" o altre etichette
+    # - per questi casi è obbligatorio che l'identità esista già
+    #   in Cardoryx con stesso set, numero, nome e variante Normal.
+    if (
+        re.fullmatch(
+            r"TG\d{1,3}/TG\d{1,3}",
+            number,
+            flags=re.IGNORECASE,
+        )
+        and norm(variant_source) == "trainer gallery"
+    ):
         variant = "Normal"
+        requires_existing_identity = True
+        source_subset = "Trainer Gallery"
+
+    elif not variant_source:
+        variant = "Normal"
+
     else:
         variant = detect_variant(
             variant_source
@@ -4610,6 +4659,8 @@ def parse_bsa_title(title):
         "set": set_name,
         "language": "IT",
         "condition": "NM/MINT",
+        "requiresExistingIdentity": requires_existing_identity,
+        "sourceSubset": source_subset,
     }
 
 
@@ -4767,12 +4818,62 @@ def collect_bsa_store(cards):
 
                 continue
 
+            if identity.get("sourceSubset") == "Trainer Gallery":
+                stats["trainerGalleryParsed"] += 1
+
+            if identity.get("requiresExistingIdentity") is True:
+                expected_key = make_key(
+                    identity["set"],
+                    identity["number"],
+                    identity["variant"],
+                    "IT",
+                    "NM/MINT",
+                )
+
+                existing_card = cards.get(expected_key)
+
+                if (
+                    not isinstance(existing_card, dict)
+                    or norm(existing_card.get("name")) != norm(identity["name"])
+                    or norm(existing_card.get("set")) != norm(identity["set"])
+                    or norm_number(existing_card.get("number")) != norm_number(identity["number"])
+                    or norm(existing_card.get("variant")) != norm(identity["variant"])
+                ):
+                    stats["trainerGalleryExistingIdentityRejected"] += 1
+                    continue
+
             price = bsa_available_price(
                 product
             )
 
             if price is None:
                 stats["priceUnavailable"] += 1
+                continue
+
+            # BSA espone attualmente un cluster di prezzi 1184.00 EUR
+            # su numerose carte di Colpo Fusione, confermato anche sulla
+            # pagina prodotto. Il test isolato ha dimostrato che il dato
+            # sorgente è anomalo. Non tentiamo alcuna conversione (es.
+            # 11.84): l'offerta BSA viene semplicemente esclusa.
+            #
+            # Il controllo è volutamente ristretto a Colpo Fusione per
+            # non scartare eventuali carte costose di altri set che
+            # possano legittimamente avere lo stesso prezzo.
+            if (
+                norm(identity["set"]) == norm("Colpo Fusione")
+                and round(float(price), 2)
+                in BSA_STORE_REJECTED_FUSION_STRIKE_PRICES
+            ):
+                stats["anomalousPriceRejected"] += 1
+
+                if len(stats["anomalousPriceRejectedExamples"]) < 30:
+                    stats["anomalousPriceRejectedExamples"].append({
+                        "title": title,
+                        "number": identity["number"],
+                        "variant": identity["variant"],
+                        "price": price,
+                    })
+
                 continue
 
             handle = str(
@@ -4836,6 +4937,10 @@ def collect_bsa_store(cards):
     print(
         "BSA Store — accettati:",
         stats["accepted"],
+    )
+    print(
+        "BSA Store — prezzi anomali Colpo Fusione esclusi:",
+        stats["anomalousPriceRejected"],
     )
 
     return stats
@@ -5844,6 +5949,560 @@ def collect_gs_gameon(cards):
     return stats
 
 
+
+# ============================================================
+# COLLECTOR STORE CARDS — PRODUZIONE
+# ============================================================
+
+def collectorstorecards_parse_title(value):
+
+    title = str(value or "").strip()
+
+    match = re.search(
+        r"\b([A-Za-z]*\d{1,3})\s*[/\-]\s*([A-Za-z]*\d{1,3})\b",
+        title,
+    )
+
+    if not match:
+        return None
+
+    before = title[:match.start()].strip(" -–—")
+    before = re.sub(
+        r"^\s*Pok[eé]mon\s+",
+        "",
+        before,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    tail = title[match.end():]
+    tail = re.sub(
+        r"\bITA\b.*$",
+        "",
+        tail,
+        flags=re.IGNORECASE,
+    ).strip(" -–—")
+
+    variant = None
+
+    # Marker fisici espliciti nel titolo.
+    title_markers = (
+        (
+            r"\breverse\s+master\s*ball\b|\breverse\s+masterball\b",
+            "Master Ball Reverse Holo",
+        ),
+        (
+            r"\bholo\s+reverse\b|\breverse\s+holo\b",
+            "Reverse Holo",
+        ),
+        (
+            r"\bholo\b",
+            "Holo",
+        ),
+    )
+
+    for pattern, mapped in title_markers:
+
+        if re.search(
+            pattern,
+            before,
+            flags=re.IGNORECASE,
+        ):
+            before = re.sub(
+                pattern,
+                " ",
+                before,
+                flags=re.IGNORECASE,
+            ).strip(" -–— ")
+            variant = mapped
+            break
+
+        if re.search(
+            r"^(?:" + pattern + r")",
+            tail,
+            flags=re.IGNORECASE,
+        ):
+            tail = re.sub(
+                r"^(?:" + pattern + r")",
+                " ",
+                tail,
+                flags=re.IGNORECASE,
+            ).strip(" -–— ")
+            variant = mapped
+            break
+
+    return {
+        "name": before,
+        "number": (
+            f"{match.group(1)}/{match.group(2)}"
+        ),
+        "setFromTitle": tail,
+        "language": (
+            "IT"
+            if re.search(
+                r"\bITA\b",
+                title,
+                flags=re.IGNORECASE,
+            )
+            else None
+        ),
+        "titleVariant": variant,
+    }
+
+
+def collectorstorecards_set_tag(value):
+
+    tags = value or []
+
+    if isinstance(tags, str):
+        tags = [
+            item.strip()
+            for item in tags.split(",")
+            if item.strip()
+        ]
+
+    matches = []
+
+    for tag in tags:
+
+        match = re.match(
+            r"^\s*(.+?)\s*\[([A-Za-z0-9]+)\]\s*$",
+            str(tag or ""),
+        )
+
+        if match:
+            matches.append({
+                "set": match.group(1).strip(),
+                "code": match.group(2).upper(),
+            })
+
+    if len(matches) != 1:
+        return None
+
+    return matches[0]
+
+
+def collectorstorecards_body_fields(value):
+
+    text = strip_html(value)
+
+    def get_field(label, following):
+
+        match = re.search(
+            rf"\b{re.escape(label)}:\s*(.+?)"
+            rf"(?=\s+(?:{following})\s*:|$)",
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        return (
+            match.group(1).strip()
+            if match
+            else ""
+        )
+
+    return {
+        "condition":
+            get_field(
+                "Condizione",
+                "Set|Rarità|Numerazione|Lingua",
+            ),
+        "set":
+            get_field(
+                "Set",
+                "Rarità|Numerazione|Lingua",
+            ),
+        "rarity":
+            get_field(
+                "Rarità",
+                "Numerazione|Lingua",
+            ),
+        "number":
+            get_field(
+                "Numerazione",
+                "Lingua",
+            ),
+        "language":
+            get_field(
+                "Lingua",
+                "ZZZ_NEVER_MATCH",
+            ),
+        "text":
+            text,
+    }
+
+
+def collectorstorecards_explicit_variant(
+    parsed_title,
+    body_fields,
+):
+
+    # Titolo esplicito = segnale più forte.
+    variant = parsed_title.get(
+        "titleVariant"
+    )
+
+    if variant:
+        return variant
+
+    rarity = norm(
+        body_fields.get(
+            "rarity",
+            "",
+        )
+    )
+
+    body_text = norm(
+        body_fields.get(
+            "text",
+            "",
+        )
+    )
+
+    if (
+        "reverse holo" in rarity
+        or "holo reverse" in rarity
+    ):
+        return "Reverse Holo"
+
+    if rarity in {
+        "holo rare",
+        "rara holo",
+    }:
+        return "Holo"
+
+    if (
+        "reverse holo" in body_text
+        or "holo reverse" in body_text
+    ):
+        return "Reverse Holo"
+
+    # IMPORTANTE:
+    # Ultra Rare, Illustration Rare, SIR, Double Rare, Ace Rare ecc.
+    # NON vengono convertite automaticamente nella tassonomia Cardoryx.
+    return None
+
+
+def collect_collectorstorecards(cards):
+
+    print()
+    print(
+        "=== COLLECTOR STORE CARDS ===",
+        flush=True,
+    )
+
+    stats = {
+        "source": "Collector Store Cards",
+        "products": 0,
+        "available": 0,
+        "accepted": 0,
+        "titleRejected": 0,
+        "languageRejected": 0,
+        "setRejected": 0,
+        "setConflict": 0,
+        "conditionRejected": 0,
+        "variantRejected": 0,
+        "priceRejected": 0,
+        "identityRejected": 0,
+        "duplicateStore": 0,
+        "newReliablePotential": 0,
+        "alreadyReliablePotential": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    # L'adapter NON crea nuove identità.
+    # Può aggiungere un'offerta soltanto a una carta già stabilita
+    # dalle altre sorgenti retail del builder.
+    identity_index = {}
+
+    for key, card in cards.items():
+
+        identity_key = (
+            norm(card.get("set", "")),
+            norm_number(
+                card.get("number", "")
+            ),
+            norm(card.get("name", "")),
+            card.get("variant", ""),
+        )
+
+        identity_index.setdefault(
+            identity_key,
+            [],
+        ).append((key, card))
+
+    checked_at = utc_now()
+
+    try:
+
+        for page in range(1, 9):
+
+            payload = http_get_json(
+                COLLECTORSTORECARDS_COLLECTION_URL.format(
+                    page=page
+                )
+            )
+
+            products = (
+                payload.get("products", [])
+                if isinstance(payload, dict)
+                else []
+            )
+
+            if not products:
+                break
+
+            for product in products:
+
+                stats["products"] += 1
+
+                parsed = collectorstorecards_parse_title(
+                    product.get("title", "")
+                )
+
+                if not parsed:
+                    stats["titleRejected"] += 1
+                    continue
+
+                if parsed.get("language") != "IT":
+                    stats["languageRejected"] += 1
+                    continue
+
+                set_tag = collectorstorecards_set_tag(
+                    product.get("tags")
+                )
+
+                if not set_tag:
+                    stats["setRejected"] += 1
+                    continue
+
+                # Il set deve essere confermato sia dal titolo ripulito
+                # sia dal tag Shopify strutturato.
+                if norm(
+                    parsed.get(
+                        "setFromTitle",
+                        "",
+                    )
+                ) != norm(
+                    set_tag.get(
+                        "set",
+                        "",
+                    )
+                ):
+                    stats["setConflict"] += 1
+                    continue
+
+                available_variants = [
+                    item
+                    for item in (
+                        product.get("variants", [])
+                        or []
+                    )
+                    if item.get("available")
+                ]
+
+                if not available_variants:
+                    continue
+
+                stats["available"] += 1
+
+                raw_prices = []
+
+                for item in available_variants:
+
+                    raw_price = item.get("price")
+
+                    try:
+                        price = float(raw_price)
+                    except (
+                        TypeError,
+                        ValueError,
+                    ):
+                        continue
+
+                    if isinstance(
+                        raw_price,
+                        int,
+                    ):
+                        price = (
+                            price
+                            / 100.0
+                        )
+
+                    if valid_price(price):
+                        raw_prices.append(
+                            round(
+                                price,
+                                2,
+                            )
+                        )
+
+                prices = set(
+                    raw_prices
+                )
+
+                # Fail closed: un solo prezzo acquistabile inequivocabile.
+                if len(prices) != 1:
+                    stats["priceRejected"] += 1
+                    continue
+
+                price = next(
+                    iter(prices)
+                )
+
+                body_fields = collectorstorecards_body_fields(
+                    product.get(
+                        "body_html",
+                        "",
+                    )
+                )
+
+                if norm(
+                    body_fields.get(
+                        "condition",
+                        "",
+                    )
+                ) != "near mint":
+                    stats["conditionRejected"] += 1
+                    continue
+
+                variant = collectorstorecards_explicit_variant(
+                    parsed,
+                    body_fields,
+                )
+
+                if not variant:
+                    stats["variantRejected"] += 1
+                    continue
+
+                identity_key = (
+                    norm(
+                        set_tag.get(
+                            "set",
+                            "",
+                        )
+                    ),
+                    norm_number(
+                        parsed.get(
+                            "number",
+                            "",
+                        )
+                    ),
+                    norm(
+                        parsed.get(
+                            "name",
+                            "",
+                        )
+                    ),
+                    variant,
+                )
+
+                matching = identity_index.get(
+                    identity_key,
+                    [],
+                )
+
+                if len(matching) != 1:
+                    stats["identityRejected"] += 1
+                    continue
+
+                key, card = matching[0]
+
+                stores_before = {
+                    norm(
+                        offer.get(
+                            "store",
+                            "",
+                        )
+                    )
+                    for offer in card.get(
+                        "offers",
+                        []
+                    )
+                    if offer.get(
+                        "store"
+                    )
+                }
+
+                if norm(
+                    "Collector Store Cards"
+                ) in stores_before:
+                    stats["duplicateStore"] += 1
+                    continue
+
+                # Misura il possibile impatto prima dell'aggiunta.
+                if len(stores_before) >= MIN_STORES_FOR_STATS:
+                    stats["alreadyReliablePotential"] += 1
+                elif len(stores_before) == (
+                    MIN_STORES_FOR_STATS - 1
+                ):
+                    stats["newReliablePotential"] += 1
+
+                offer = {
+                    "store":
+                        "Collector Store Cards",
+                    "price":
+                        price,
+                    "url":
+                        (
+                            COLLECTORSTORECARDS_BASE_URL
+                            + "/products/"
+                            + str(
+                                product.get(
+                                    "handle",
+                                    "",
+                                )
+                            )
+                        ),
+                    "language":
+                        "IT",
+                    "condition":
+                        "NM/MINT",
+                    "variant":
+                        variant,
+                    "checkedAt":
+                        checked_at,
+                    "sourceType":
+                        "retail-store",
+                }
+
+                normalized_offer = normalize_offer(
+                    offer
+                )
+
+                if not normalized_offer:
+                    stats["identityRejected"] += 1
+                    continue
+
+                card.setdefault(
+                    "offers",
+                    [],
+                ).append(
+                    normalized_offer
+                )
+
+                stats["accepted"] += 1
+
+            if len(products) < 250:
+                break
+
+    except Exception as exc:
+
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    print(
+        "Collector Store Cards:",
+        json.dumps(
+            stats,
+            ensure_ascii=False,
+        ),
+        flush=True,
+    )
+
+    return stats
+
 def collect_retail_data():
 
     cards = {}
@@ -6083,6 +6742,33 @@ def collect_retail_data():
             "error": str(exc),
             "accepted": 0,
             "timeLimitSeconds": 90,
+        }
+
+    source_stats.append(result)
+
+
+    # --------------------------------------------------------
+    # FONTE 11 — COLLECTOR STORE CARDS
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "Collector Store Cards",
+            collect_collectorstorecards,
+            cards,
+            hard_seconds=90,
+        )
+    except Exception as exc:
+        print(
+            "Collector Store Cards non disponibile:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "Collector Store Cards",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
         }
 
     source_stats.append(result)
