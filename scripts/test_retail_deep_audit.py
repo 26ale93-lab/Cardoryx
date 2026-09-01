@@ -64,6 +64,7 @@ REQUIRED_BUILDER_FUNCTIONS = [
     "gs_gameon_variant",
     "warcard_parse_title",
     "warcard_variant",
+    "warcard_catalog_suffix_name_match",
     "http_get_json",
 ]
 
@@ -238,43 +239,6 @@ def normalized_price(raw_price, integer_is_cents=False):
 
     price = round(price, 2)
     return price if price > 0 else None
-
-
-def compact_physical_name(value):
-    """Confronto diagnostico che ignora solo separatori e punteggiatura."""
-    return "".join(
-        char for char in norm(value) if char.isalnum()
-    )
-
-
-def strip_confirmed_catalog_suffix(card_name, product_code):
-    """Rimuove il suffisso solo se coincide col codice set del prodotto.
-
-    Esempio circoscritto: ``Empoleon-ex PFL`` con codice ``PFL-070``.
-    Non rimuove sigle generiche e non modifica l'identita salvata.
-    """
-    name = str(card_name or "").strip()
-    code = str(product_code or "").strip()
-    if not name or not code or "-" not in code:
-        return None
-
-    code_prefix = code.split("-", 1)[0]
-    if code_prefix.startswith("x") and len(code_prefix) > 1:
-        code_prefix = code_prefix[1:]
-
-    parts = name.rsplit(None, 1)
-    if len(parts) != 2:
-        return None
-
-    base_name, suffix = parts
-    if not suffix.isalnum() or not suffix.isupper():
-        return None
-    if not 2 <= len(suffix) <= 5:
-        return None
-    if norm(suffix) != norm(code_prefix):
-        return None
-
-    return base_name
 
 
 def audit_card_passion():
@@ -684,6 +648,7 @@ def audit_warcard():
     priority_candidates = []
     name_mismatch_review = []
     catalog_suffix_review = []
+    catalog_suffix_production_review = []
 
     def example(reason, payload):
         if len(rejection_examples[reason]) < 40:
@@ -799,16 +764,12 @@ def audit_warcard():
 
                             catalog_matches = []
                             for key, card in variant_candidates:
-                                base_name = strip_confirmed_catalog_suffix(
+                                if ns[
+                                    "warcard_catalog_suffix_name_match"
+                                ](
                                     card.get("name", ""),
+                                    parsed.get("name", ""),
                                     parsed.get("code", ""),
-                                )
-                                if (
-                                    base_name is not None
-                                    and compact_physical_name(base_name)
-                                    == compact_physical_name(
-                                        parsed.get("name", "")
-                                    )
                                 ):
                                     catalog_matches.append((key, card))
 
@@ -844,25 +805,55 @@ def audit_warcard():
                                             "catalogSuffixAlreadyReliablePlusOne"
                                         ] += 1
 
+                                    catalog_candidate = {
+                                        **context,
+                                        "price": diagnostic_price,
+                                        "existingIdentity": compact_card(
+                                            key, card
+                                        ),
+                                        "impact": impact_for(stores),
+                                        "productionRuleEligible": (
+                                            reconciliation == "exact-set"
+                                        ),
+                                        "status": "manual-review-only",
+                                        "reason": (
+                                            "il suffisso finale del nome "
+                                            "Cardoryx coincide col codice "
+                                            "set Warcard; il nome restante "
+                                            "coincide ignorando soltanto "
+                                            "separatori e punteggiatura"
+                                        ),
+                                    }
+
                                     if len(catalog_suffix_review) < 600:
                                         catalog_suffix_review.append(
-                                            {
-                                                **context,
-                                                "price": diagnostic_price,
-                                                "existingIdentity": compact_card(
-                                                    key, card
-                                                ),
-                                                "impact": impact_for(stores),
-                                                "status": "manual-review-only",
-                                                "reason": (
-                                                    "il suffisso finale del nome "
-                                                    "Cardoryx coincide col codice "
-                                                    "set Warcard; il nome restante "
-                                                    "coincide ignorando soltanto "
-                                                    "separatori e punteggiatura"
-                                                ),
-                                            }
+                                            catalog_candidate
                                         )
+
+                                    if reconciliation == "exact-set":
+                                        stats[
+                                            "catalogSuffixProductionExactSetEligible"
+                                        ] += 1
+                                        if len(stores) == 2:
+                                            stats[
+                                                "catalogSuffixProductionPotentialTwoToThree"
+                                            ] += 1
+                                        elif len(stores) == 1:
+                                            stats[
+                                                "catalogSuffixProductionPotentialOneToTwo"
+                                            ] += 1
+                                        elif len(stores) >= 3:
+                                            stats[
+                                                "catalogSuffixProductionAlreadyReliablePlusOne"
+                                            ] += 1
+
+                                        if (
+                                            len(catalog_suffix_production_review)
+                                            < 600
+                                        ):
+                                            catalog_suffix_production_review.append(
+                                                catalog_candidate
+                                            )
                         else:
                             example(
                                 "identityAmbiguous",
@@ -913,6 +904,9 @@ def audit_warcard():
             "safeMissingStoreCandidates": safe_candidates,
             "exactNameMismatchReview": name_mismatch_review,
             "catalogSuffixExactNameDiagnostic": catalog_suffix_review,
+            "catalogSuffixExactSetProductionCandidates": (
+                catalog_suffix_production_review
+            ),
         }
 
     return {
@@ -925,6 +919,9 @@ def audit_warcard():
         "safeMissingStoreCandidates": safe_candidates,
         "exactNameMismatchReview": name_mismatch_review,
         "catalogSuffixExactNameDiagnostic": catalog_suffix_review,
+        "catalogSuffixExactSetProductionCandidates": (
+            catalog_suffix_production_review
+        ),
     }
 
 
@@ -966,7 +963,7 @@ report = {
     "schema": 1,
     "generatedAt": utc_now(),
     "name": "Cardoryx Deep Retail Audit",
-    "auditVersion": "warcard-deep-audit-v2-2026-09-01",
+    "auditVersion": "warcard-deep-audit-v3-2026-09-01",
     "mode": "read-only unified framework",
     "rules": {
         "retailPricesModified": False,
@@ -980,7 +977,8 @@ report = {
         "failClosed": True,
         "disabledStoresNotAudited": True,
         "warcardExactNormalizedNameRequired": True,
-        "warcardCatalogSuffixDiagnosticOnly": True,
+        "warcardCatalogSuffixSupplementiDiagnosticOnly": True,
+        "warcardCatalogSuffixProductionExactSetOnly": True,
         "gsPromoRegularRejected": True,
         "gsDiagnosticCandidatesDeduplicated": True,
     },
