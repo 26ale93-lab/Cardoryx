@@ -1,0 +1,44 @@
+name: Test LPP Collecting Production
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/lppcollecting-production
+    paths:
+      - scripts/build_retail_index.py
+      - scripts/test_lppcollecting_production.py
+      - .github/workflows/test-lppcollecting-production.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify syntax
+        run: |
+          python -m py_compile scripts/build_retail_index.py
+          python -m py_compile scripts/test_lppcollecting_production.py
+
+      - name: Run read-only LPP audit
+        run: python scripts/test_lppcollecting_production.py
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lpp-production-audit-report
+          path: lpp_production_audit_report.json
+          if-no-files-found: warn
