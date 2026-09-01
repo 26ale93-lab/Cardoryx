@@ -297,6 +297,7 @@ report = {
         "newIdentitiesCreated": False,
         "productionParserReused": True,
         "exactExistingIdentityOnly": True,
+        "explicitVariantRequired": True,
         "duplicateStoreRejected": True,
         "rarityNeverUsedAsVariant": True,
         "ambiguousVariantAccepted": False,
