@@ -40,6 +40,9 @@ REQUIRED_BUILDER_FUNCTIONS = [
     "cardpassion_condition",
     "cardpassion_price",
     "get_cardpassion_products",
+    "gs_gameon_parse_title",
+    "gs_gameon_variant",
+    "http_get_json",
 ]
 missing = [name for name in REQUIRED_BUILDER_FUNCTIONS if not callable(ns.get(name))]
 if missing:
@@ -304,6 +307,180 @@ def audit_card_passion():
     }
 
 
+def audit_gs_gameon():
+    """Deep read-only audit mirroring current GS-Gameon V17 production logic."""
+    stats = Counter()
+    rejection_examples = defaultdict(list)
+    safe_missing_store_candidates = []
+    priority_two_to_three = []
+    ambiguous_name_review = []
+
+    identity_index = defaultdict(list)
+    for key, card in cards.items():
+        number = norm_number(card.get("number", ""))
+        base = number.split("/")[0].lstrip("0") or "0"
+        identity_index[(norm(card.get("set", "")), base)].append((key, card))
+
+    def example(reason, payload):
+        if len(rejection_examples[reason]) < 30:
+            rejection_examples[reason].append(payload)
+
+    def candidates_for(parsed):
+        target_set = norm(parsed["set"])
+        target_number = parsed["localNumber"]
+        found = list(identity_index.get((target_set, target_number), []))
+        reconciliation = "exact-set"
+
+        if not found:
+            compact_target = target_set.replace(" supplementi", "").replace(":", " ")
+            compact_target = " ".join(compact_target.split())
+            possible = []
+            for (set_key, number_key), values in identity_index.items():
+                if number_key != target_number:
+                    continue
+                compact_set = set_key.replace(" supplementi", "").replace(":", " ")
+                compact_set = " ".join(compact_set.split())
+                if compact_set == compact_target:
+                    possible.extend(values)
+            found = possible
+            reconciliation = "supplementi-normalized" if found else "none"
+        return found, reconciliation
+
+    for page in range(1, 41):
+        url = ns["GS_GAMEON_COLLECTION_URL"].format(page=page)
+        payload = ns["http_get_json"](url)
+        products = payload.get("products", []) if isinstance(payload, dict) else []
+        if not products:
+            break
+
+        for product in products:
+            stats["products"] += 1
+            title = str(product.get("title") or "").strip()
+            handle = str(product.get("handle") or "").strip()
+            product_url = "https://www.gs-gameon.com/products/" + handle if handle else None
+
+            parsed = ns["gs_gameon_parse_title"](title)
+            if not parsed:
+                stats["invalidTitle"] += 1
+                example("invalidTitle", {"title": title, "url": product_url})
+                continue
+
+            candidates, reconciliation = candidates_for(parsed)
+            if not candidates:
+                stats["noExistingSetNumberIdentity"] += 1
+
+            for shop_variant in (product.get("variants", []) or []):
+                stats["variants"] += 1
+                context = {
+                    "title": title,
+                    "url": product_url,
+                    "set": parsed.get("set"),
+                    "localNumber": parsed.get("localNumber"),
+                    "rarity": parsed.get("rarity"),
+                    "language": str(shop_variant.get("option1", "")).strip(),
+                    "condition": str(shop_variant.get("option2", "")).strip(),
+                    "edition": str(shop_variant.get("option3", "")).strip(),
+                    "reconciliation": reconciliation,
+                }
+
+                if not shop_variant.get("available"):
+                    stats["unavailable"] += 1
+                    example("unavailable", context)
+                    continue
+                if norm(context["language"]) != "italiano":
+                    stats["languageRejected"] += 1
+                    example("languageRejected", context)
+                    continue
+                if norm(context["condition"]) != "near mint":
+                    stats["conditionRejected"] += 1
+                    example("conditionRejected", context)
+                    continue
+
+                variant = ns["gs_gameon_variant"](context["edition"], parsed["rarity"])
+                context["mappedVariant"] = variant
+                if variant is None:
+                    stats["editionRejected"] += 1
+                    example("editionRejected", context)
+                    continue
+
+                matching = [(key, card) for key, card in candidates if card.get("variant") == variant]
+                if len(matching) != 1:
+                    stats["identityAmbiguous"] += 1
+                    name_matching = [
+                        (key, card) for key, card in matching
+                        if norm(card.get("name", "")) == norm(parsed.get("name", ""))
+                    ]
+                    if len(name_matching) == 1:
+                        stats["ambiguousResolvedByExactNameDiagnostic"] += 1
+                        key, card = name_matching[0]
+                        if len(ambiguous_name_review) < 200:
+                            ambiguous_name_review.append({
+                                **context,
+                                "existingIdentity": compact_card(key, card),
+                                "status": "manual-review-only",
+                                "reason": "production set/number/variant ambiguous; exact normalized name leaves one existing identity",
+                            })
+                    example("identityAmbiguous", {
+                        **context,
+                        "candidateCount": len(candidates),
+                        "variantCandidateCount": len(matching),
+                    })
+                    continue
+
+                key, card = matching[0]
+                raw_price = shop_variant.get("price")
+                try:
+                    price = float(raw_price)
+                except (TypeError, ValueError):
+                    stats["priceUnavailable"] += 1
+                    example("priceUnavailable", context)
+                    continue
+                if isinstance(raw_price, int):
+                    price = price / 100.0
+                price = round(price, 2)
+                if price <= 0:
+                    stats["priceUnavailable"] += 1
+                    example("priceUnavailable", context)
+                    continue
+
+                stats["productionEligible"] += 1
+                stores = store_names(card)
+                if "GS-Gameon" in stores:
+                    stats["alreadyPresentInRetail"] += 1
+                    continue
+
+                stats["safeMissingStoreCandidates"] += 1
+                candidate = {
+                    **context,
+                    "price": price,
+                    "existingIdentity": compact_card(key, card),
+                    "impact": "2->3" if len(stores) == 2 else "1->2" if len(stores) == 1 else f"{len(stores)}->{len(stores)+1}",
+                    "status": "safe-diagnostic-candidate",
+                }
+                if len(safe_missing_store_candidates) < 300:
+                    safe_missing_store_candidates.append(candidate)
+                if len(stores) == 2:
+                    stats["potentialTwoToThree"] += 1
+                    if len(priority_two_to_three) < 150:
+                        priority_two_to_three.append(candidate)
+                elif len(stores) == 1:
+                    stats["potentialOneToTwo"] += 1
+
+        if len(products) < 250:
+            break
+
+    return {
+        "source": "GS-Gameon",
+        "ok": True,
+        "mode": "deep-read-only",
+        "stats": dict(stats),
+        "rejectionExamples": dict(rejection_examples),
+        "priorityTwoToThree": priority_two_to_three,
+        "safeMissingStoreCandidates": safe_missing_store_candidates,
+        "ambiguousResolvedByExactNameDiagnostic": ambiguous_name_review,
+    }
+
+
 ACTIVE_STORES = [
     "Card Passion",
     "BSA Store",
@@ -326,7 +503,7 @@ EXCLUDED_STORES = [
 
 # V1 audits Card Passion deeply. The framework and workflow filename remain
 # unchanged when the next active-store adapters are added.
-source_reports = [audit_card_passion()]
+source_reports = [audit_card_passion(), audit_gs_gameon()]
 
 report = {
     "schema": 1,
@@ -345,9 +522,8 @@ report = {
     },
     "activeStores": ACTIVE_STORES,
     "excludedStores": EXCLUDED_STORES,
-    "implementedAdapters": ["Card Passion"],
+    "implementedAdapters": ["Card Passion", "GS-Gameon"],
     "pendingAdapters": [
-        "GS-Gameon",
         "Warcard",
         "DanyStore",
         "CardPioneer",
@@ -376,5 +552,6 @@ print(json.dumps({
     "implementedAdapters": report["implementedAdapters"],
     "pendingAdapters": report["pendingAdapters"],
     "cardPassionStats": source_reports[0]["stats"],
+    "gsGameonStats": source_reports[1]["stats"],
 }, ensure_ascii=False, indent=2))
 print(f"Report: {REPORT}")
