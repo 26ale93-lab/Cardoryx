@@ -202,6 +202,7 @@ report = {
         "exactExistingIdentityOnly": True,
         "explicitVariantRequired": True,
         "duplicateStoreRejected": True,
+        "knownFusionStrikeAnomalyRejected": True,
         "galleryLabelAutoMappedToVariant": False,
         "normalVariantAutoAssumed": False,
         "manualTaxonomyVerificationRequired": True,
