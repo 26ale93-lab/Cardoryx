@@ -9,6 +9,7 @@ import unicodedata
 import urllib.parse
 import urllib.request
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -6582,6 +6583,477 @@ def collect_collectorstorecards(cards):
 
     return stats
 
+
+# ============================================================
+# LPP COLLECTING — PRODUZIONE, SOLO IDENTITA ESISTENTI
+# ============================================================
+
+LPP_BASE_URL = "https://www.lppcollecting.it"
+LPP_SEARCH_URL = LPP_BASE_URL + "/pokemon/ricercacarte.php"
+LPP_DISCOVERY_SET_ID = "103"
+LPP_MAX_SET_PAGES = 48
+LPP_WORKERS = 8
+LPP_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/126.0.0.0 Safari/537.36"
+)
+
+
+def lpp_get_text(url):
+
+    last_error = None
+
+    for attempt in range(1, 3):
+
+        try:
+
+            request = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": LPP_USER_AGENT,
+                    "Accept": "text/html,application/xhtml+xml",
+                    "Accept-Language": "it-IT,it;q=0.9,en;q=0.5",
+                    "Cache-Control": "no-cache",
+                    "Connection": "close",
+                },
+            )
+
+            with urllib.request.urlopen(
+                request,
+                timeout=35,
+            ) as response:
+
+                return response.read().decode(
+                    "utf-8",
+                    errors="replace",
+                )
+
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            TimeoutError,
+            OSError,
+        ) as exc:
+
+            last_error = exc
+            status = getattr(exc, "code", None)
+
+            if attempt >= 2 or status not in {
+                403,
+                429,
+                500,
+                502,
+                503,
+                504,
+            }:
+                raise
+
+            # Un solo retry lento per indisponibilita transitorie.
+            # Nessun proxy, cookie di sfida o aggiramento di protezioni.
+            time.sleep(4)
+
+    if last_error:
+        raise last_error
+
+    raise RuntimeError(
+        f"Impossibile leggere {url}"
+    )
+
+
+def lpp_set_options(page_html):
+
+    select = re.search(
+        r"<select\b[^>]*name\s*=\s*['\"]?poke_idserie['\"]?"
+        r"[^>]*>(.*?)</select>",
+        page_html,
+        re.I | re.S,
+    )
+
+    if not select:
+        return []
+
+    options = []
+
+    for match in re.finditer(
+        r"<option\b[^>]*value\s*=\s*['\"]?(\d+)['\"]?"
+        r"[^>]*>(.*?)</option>",
+        select.group(1),
+        re.I | re.S,
+    ):
+
+        set_id = match.group(1)
+        set_name = strip_html(
+            match.group(2)
+        ).split("/")[0].strip()
+
+        if set_id != "0" and set_name:
+            options.append((set_id, set_name))
+
+    return options
+
+
+def lpp_rows(page_html):
+
+    rows = []
+
+    for row_match in re.finditer(
+        r"<tr\b[^>]*>(.*?)</tr>",
+        page_html,
+        re.I | re.S,
+    ):
+
+        row_html = row_match.group(1)
+        cells = [
+            strip_html(cell)
+            for cell in re.findall(
+                r"<td\b[^>]*>(.*?)</td>",
+                row_html,
+                re.I | re.S,
+            )
+        ]
+        sku_match = re.search(
+            r"\b(PO-[A-Z0-9-]+_(?:ita|eng))\b",
+            row_html,
+            re.I,
+        )
+
+        if not sku_match or len(cells) < 9:
+            continue
+
+        number_match = re.search(
+            r"\b([A-Z]*\d+\s*/\s*[A-Z]*\d+)\b",
+            cells[4],
+            re.I,
+        )
+        price_match = re.search(
+            r"€\s*(\d+(?:[.,]\d{1,2})?)",
+            cells[8],
+        )
+
+        if not number_match or not price_match:
+            continue
+
+        rows.append({
+            "name": cells[2].strip(),
+            "sku": sku_match.group(1),
+            "number": number_match.group(1),
+            "rarity": cells[5].strip(),
+            "condition": cells[6].strip(),
+            "price": float(
+                price_match.group(1).replace(",", ".")
+            ),
+            "available": (
+                "non disponibile" not in norm(row_html)
+                and "basketin.php" in row_html
+            ),
+        })
+
+    return rows
+
+
+def lpp_variant(rarity, sku):
+
+    text = norm(f"{rarity} {sku}")
+
+    if (
+        "reverse" in text
+        or re.search(
+            r"(?:^|\s)rh(?:\s|$)",
+            text,
+        )
+    ):
+        return "Reverse Holo"
+
+    if norm(rarity) in {
+        "h",
+        "holo",
+        "olografica",
+        "olografiche",
+    }:
+        return "Holo"
+
+    return None
+
+
+def lpp_search_url(set_id):
+
+    return LPP_SEARCH_URL + "?" + urllib.parse.urlencode({
+        "poke_idrarita": "0",
+        "poke_idserie": set_id,
+        "poke_ricerca": "",
+        "poke_tipocarta": "tutte",
+    })
+
+
+def collect_lppcollecting(cards):
+
+    print()
+    print(
+        "=== LPP COLLECTING ===",
+        flush=True,
+    )
+
+    stats = {
+        "source": "LPP Collecting",
+        "setIdsDiscovered": 0,
+        "setPagesAttempted": 0,
+        "setPagesOk": 0,
+        "setPagesFailed": 0,
+        "rowsParsed": 0,
+        "accepted": 0,
+        "languageRejected": 0,
+        "conditionRejected": 0,
+        "unavailable": 0,
+        "priceRejected": 0,
+        "variantRejected": 0,
+        "identityRejected": 0,
+        "duplicateCandidate": 0,
+        "duplicateStore": 0,
+        "newReliablePotential": 0,
+        "alreadyReliablePotential": 0,
+        "errors": 0,
+        "ok": True,
+    }
+
+    # LPP non crea mai identita. L'indice comprende soltanto le carte
+    # gia stabilite dalle fonti eseguite prima di questo adapter.
+    identity_index = {}
+    two_store_set_priority = {}
+
+    for key, card in cards.items():
+
+        identity_key = (
+            norm(card.get("set", "")),
+            norm_number(card.get("number", "")),
+            norm(card.get("name", "")),
+            card.get("variant", ""),
+        )
+
+        identity_index.setdefault(
+            identity_key,
+            [],
+        ).append((key, card))
+
+        stores = {
+            norm(offer.get("store", ""))
+            for offer in card.get("offers", [])
+            if offer.get("store")
+        }
+
+        if len(stores) == 2:
+            normalized_set = norm(card.get("set", ""))
+            two_store_set_priority[normalized_set] = (
+                two_store_set_priority.get(normalized_set, 0) + 1
+            )
+
+    checked_at = utc_now()
+    discovery_url = lpp_search_url(
+        LPP_DISCOVERY_SET_ID
+    )
+
+    try:
+
+        options = lpp_set_options(
+            lpp_get_text(discovery_url)
+        )
+        stats["setIdsDiscovered"] = len(options)
+
+        if not options:
+            raise RuntimeError(
+                "LPP: nessun set rilevato nella pagina di ricerca"
+            )
+
+        selected = sorted(
+            enumerate(options),
+            key=lambda item: (
+                -two_store_set_priority.get(
+                    norm(item[1][1]),
+                    0,
+                ),
+                item[0],
+            ),
+        )[:LPP_MAX_SET_PAGES]
+        selected = [item for _, item in selected]
+
+        def fetch_set(item):
+
+            set_id, set_name = item
+            url = lpp_search_url(set_id)
+            return (
+                set_name,
+                url,
+                lpp_get_text(url),
+            )
+
+        pending_candidates = {}
+
+        with ThreadPoolExecutor(
+            max_workers=LPP_WORKERS,
+        ) as pool:
+
+            futures = [
+                pool.submit(fetch_set, item)
+                for item in selected
+            ]
+
+            for future in as_completed(futures):
+
+                stats["setPagesAttempted"] += 1
+
+                try:
+                    set_name, url, page_html = future.result()
+                except Exception as exc:
+                    stats["setPagesFailed"] += 1
+                    stats["errors"] += 1
+                    print(
+                        "LPP pagina non disponibile:",
+                        str(exc),
+                        flush=True,
+                    )
+                    continue
+
+                stats["setPagesOk"] += 1
+                rows = lpp_rows(page_html)
+                stats["rowsParsed"] += len(rows)
+
+                for row in rows:
+
+                    if not row["sku"].lower().endswith("_ita"):
+                        stats["languageRejected"] += 1
+                        continue
+
+                    if norm(row["condition"]) not in {
+                        "mint near mint",
+                        "near mint",
+                        "mint",
+                    }:
+                        stats["conditionRejected"] += 1
+                        continue
+
+                    if not row["available"]:
+                        stats["unavailable"] += 1
+                        continue
+
+                    if not valid_price(row["price"]):
+                        stats["priceRejected"] += 1
+                        continue
+
+                    variant = lpp_variant(
+                        row["rarity"],
+                        row["sku"],
+                    )
+
+                    if not variant:
+                        stats["variantRejected"] += 1
+                        continue
+
+                    identity_key = (
+                        norm(set_name),
+                        norm_number(row["number"]),
+                        norm(row["name"]),
+                        variant,
+                    )
+                    matches = identity_index.get(
+                        identity_key,
+                        [],
+                    )
+
+                    if len(matches) != 1:
+                        stats["identityRejected"] += 1
+                        continue
+
+                    key, card = matches[0]
+                    pending_candidates.setdefault(
+                        key,
+                        [],
+                    ).append({
+                        "card": card,
+                        "price": round(float(row["price"]), 2),
+                        "url": url,
+                    })
+
+        for key, candidates in pending_candidates.items():
+
+            stats["duplicateCandidate"] += max(
+                0,
+                len(candidates) - 1,
+            )
+            prices = {
+                candidate["price"]
+                for candidate in candidates
+            }
+
+            # Fail closed: righe duplicate discordanti non consentono
+            # di scegliere automaticamente quale prezzo sia corretto.
+            if len(prices) != 1:
+                stats["priceRejected"] += len(candidates)
+                continue
+
+            candidate = sorted(
+                candidates,
+                key=lambda item: item["url"],
+            )[0]
+            card = candidate["card"]
+            stores_before = {
+                norm(offer.get("store", ""))
+                for offer in card.get("offers", [])
+                if offer.get("store")
+            }
+
+            if norm("LPP Collecting") in stores_before:
+                stats["duplicateStore"] += 1
+                continue
+
+            if len(stores_before) >= MIN_STORES_FOR_STATS:
+                stats["alreadyReliablePotential"] += 1
+            elif len(stores_before) == (
+                MIN_STORES_FOR_STATS - 1
+            ):
+                stats["newReliablePotential"] += 1
+
+            offer = {
+                "store": "LPP Collecting",
+                "price": candidate["price"],
+                "url": candidate["url"],
+                "language": "IT",
+                "condition": "NM/MINT",
+                "variant": card.get("variant", ""),
+                "checkedAt": checked_at,
+                "sourceType": "retail-store",
+            }
+
+            if add_offer(
+                cards,
+                set_name=card.get("set", ""),
+                number=card.get("number", ""),
+                card_name=card.get("name", ""),
+                variant=card.get("variant", ""),
+                language="IT",
+                condition="NM/MINT",
+                offer=offer,
+            ):
+                stats["accepted"] += 1
+            else:
+                stats["duplicateStore"] += 1
+
+    except Exception as exc:
+
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    print(
+        "LPP Collecting:",
+        json.dumps(
+            stats,
+            ensure_ascii=False,
+        ),
+        flush=True,
+    )
+
+    return stats
+
 def collect_retail_data():
 
     cards = {}
@@ -6845,6 +7317,32 @@ def collect_retail_data():
         )
         result = {
             "source": "Collector Store Cards",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 12 — LPP COLLECTING
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "LPP Collecting",
+            collect_lppcollecting,
+            cards,
+            hard_seconds=240,
+        )
+    except Exception as exc:
+        print(
+            "LPP Collecting non disponibile:",
+            str(exc),
+            flush=True,
+        )
+        result = {
+            "source": "LPP Collecting",
             "ok": False,
             "error": str(exc),
             "accepted": 0,
