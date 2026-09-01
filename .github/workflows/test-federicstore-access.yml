@@ -1,0 +1,28 @@
+name: Diagnosi accesso Federicstore
+
+on:
+  push:
+    branches:
+      - diagnostic/federicstore-access-20260901
+    paths:
+      - scripts/test_federicstore_access.py
+      - .github/workflows/test-federicstore-access.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose-federicstore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verifica sintassi
+        run: python3 -m py_compile scripts/test_federicstore_access.py
+
+      - name: Diagnostica accesso pubblico
+        run: python3 scripts/test_federicstore_access.py
