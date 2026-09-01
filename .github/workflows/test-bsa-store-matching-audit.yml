@@ -35,7 +35,7 @@ jobs:
 
           report = json.loads(path.read_text(encoding="utf-8"))
 
-          if report.get("schema") != 1:
+          if report.get("schema") != 2:
               raise SystemExit(f"Wrong schema: {report.get('schema')}")
 
           rules = report.get("rules", {})
