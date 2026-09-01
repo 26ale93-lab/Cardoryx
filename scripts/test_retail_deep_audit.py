@@ -263,8 +263,17 @@ def audit_card_passion():
                 or product.get("url")
                 or product.get("link")
             )
+            body = strip_html(
+                str(product.get("body_html") or "")
+            )
+            raw_tags = product.get("tags")
+            tags_text = (
+                " ".join(str(tag) for tag in raw_tags)
+                if isinstance(raw_tags, list)
+                else str(raw_tags or "")
+            )
 
-            if ns["cardpassion_excluded"](product):
+            if ns["cardpassion_excluded"](title, body, tags_text):
                 stats["excluded"] += 1
                 example("excluded", {"title": title, "url": product_url})
                 continue
@@ -335,8 +344,17 @@ def audit_card_passion():
                 continue
 
             card_key, card = matching[0]
-            language = ns["cardpassion_language"](product)
-            condition = ns["cardpassion_condition"](product)
+            language = ns["cardpassion_language"](
+                title,
+                body,
+                tags_text,
+                parsed_set,
+            )
+            condition = ns["cardpassion_condition"](
+                title,
+                body,
+                tags_text,
+            )
             context.update(
                 {
                     "language": language,
@@ -344,7 +362,7 @@ def audit_card_passion():
                 }
             )
 
-            if norm(language) not in ("italiano", "ita"):
+            if language != "IT":
                 stats["languageRejected"] += 1
                 example("languageRejected", context)
                 if len(exact_identity_failed_metadata) < 150:
@@ -353,7 +371,7 @@ def audit_card_passion():
                     )
                 continue
 
-            if norm(condition) not in ("near mint", "near mint mint", "nm"):
+            if condition != "NM/MINT":
                 stats["conditionRejected"] += 1
                 example("conditionRejected", context)
                 if len(exact_identity_failed_metadata) < 150:
