@@ -116,6 +116,7 @@ if not isinstance(cards, dict) or not cards:
     raise SystemExit("Indice retail vuoto o non valido")
 
 exact_index = defaultdict(list)
+two_store_set_priority = Counter()
 for card_key, card in cards.items():
     exact_index[
         (
@@ -125,6 +126,14 @@ for card_key, card in cards.items():
             card.get("variant"),
         )
     ].append((card_key, card))
+    if len(
+        {
+            str(offer.get("store") or "").strip()
+            for offer in (card.get("offers") or [])
+            if str(offer.get("store") or "").strip()
+        }
+    ) == 2:
+        two_store_set_priority[norm(card.get("set"))] += 1
 
 
 def stores_for(card):
@@ -450,7 +459,7 @@ def audit_lpp():
     result = source_result(
         "LPP Collecting",
         {
-            "scope": "first 24 set IDs discovered from live selector",
+            "scope": "48 live set IDs prioritized by existing two-store Cardoryx identities",
             "identity": "exact Italian set + full number + exact normalized name + explicit H/RH variant",
             "language": "SKU suffix _ita",
             "condition": "mint/near mint, near mint or mint only",
@@ -473,7 +482,18 @@ def audit_lpp():
 
     options = lpp_set_options(discovery["text"])
     result["stats"]["setIdsDiscovered"] = len(options)
-    selected = options[:24]
+    selected = sorted(
+        enumerate(options),
+        key=lambda item: (
+            -two_store_set_priority.get(norm(item[1][1]), 0),
+            item[0],
+        ),
+    )[:48]
+    selected = [item for _, item in selected]
+    result["stats"]["prioritizedSetPages"] = sum(
+        two_store_set_priority.get(norm(set_name), 0) > 0
+        for _, set_name in selected
+    )
 
     def fetch_set(item):
         set_id, set_name = item
