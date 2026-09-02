@@ -394,7 +394,8 @@
       <input id="setTotalInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="159">
     </div>
   </div>
-  <input id="nameInput" type="hidden">
+  <div class="label">Nome carta (opzionale)</div>
+  <input id="nameInput" autocomplete="off" placeholder="es. Genesect-ex">
   <div class="spacer"></div>
   <button class="btn big" type="button" onclick="runManualCollectorSearch()">🔎 Identifica carta</button>
   <div id="searchMsg" class="footer-note"></div>
@@ -2831,6 +2832,7 @@ document.addEventListener('click',function(e){
 
 
 let browseSetState={set:null,cards:[],shown:0,pageSize:12};
+let manualCandidateState={cards:[],shown:0,pageSize:6,route:'',message:''};
 
 async function fetchAllSets(){
   try{
@@ -2927,10 +2929,62 @@ function renderFullSetChunk(){
   searchMsg.textContent=`Mostrate ${st.shown} di ${st.cards.length} carte.`;
 }
 
+function normalizeManualExactName(value=''){
+  return String(value)
+    .normalize('NFC')
+    .toLocaleLowerCase('it-IT')
+    .replace(/[’‘`´]/g,"'")
+    .replace(/[‐‑‒–—−]/g,'-')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function manualExactNameMatches(cards,name){
+  const target=normalizeManualExactName(name);
+  if(!target)return [];
+  return (cards||[]).filter(c=>normalizeManualExactName(c?.name||'')===target);
+}
+
+function renderManualCandidateChunk(){
+  const st=manualCandidateState;
+  st.shown=Math.min(st.cards.length,st.shown+st.pageSize);
+  const visible=st.cards.slice(0,st.shown);
+
+  candidateMap={};
+  const cardsHtml=visible.map((c,i)=>{
+    const key=`manual_${i}`;
+    candidateMap[key]=c;
+    const count=setOfficialCount(c);
+    return `<div class="candidate">
+      <img class="card-zoomable" src="${cardImageSrc(c,'low')}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
+      <h3>${esc(c.name||'Carta')}</h3>
+      <div class="small">N° ${esc(c.localId||'—')}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
+      <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
+    </div>`;
+  }).join('');
+
+  const remaining=st.cards.length-st.shown;
+  const loadMore=remaining>0
+    ? `<div style="margin-top:12px"><button class="btn alt big" type="button" onclick="showMoreManualCandidates()">${remaining<=st.pageSize?`➕ Mostra le ultime ${remaining}`:`➕ Mostra altre ${st.pageSize} — ne restano ${remaining}`}</button></div>`
+    : '';
+  results.innerHTML=`<div class="candidate-grid">${cardsHtml}</div>${loadMore}`;
+  searchMsg.textContent=st.message||`Mostrate ${st.shown} di ${st.cards.length} carte compatibili. Scegli quella corretta.`;
+}
+
+function showMoreManualCandidates(){
+  renderManualCandidateChunk();
+}
+
+function startManualCandidatePagination(cards,route,message=''){
+  manualCandidateState={cards:[...(cards||[])],shown:0,pageSize:6,route,message};
+  renderManualCandidateChunk();
+}
+
 
 async function runManualCollectorSearch(){
   const num=String(numberInput.value||'').replace(/\D/g,'');
   const total=String(setTotalInput.value||'').replace(/\D/g,'');
+  const requestedName=String(nameInput.value||'').trim();
 
   if(!num||!total){
     searchMsg.textContent='Inserisci Numero carta e Totale set.';
@@ -2939,6 +2993,7 @@ async function runManualCollectorSearch(){
 
   searchMsg.textContent=`Identifico ${num}/${total}…`;
   results.innerHTML='';
+  manualCandidateState={cards:[],shown:0,pageSize:6,route:'',message:''};
   clearSelection();
 
   try{
@@ -2949,14 +3004,28 @@ async function runManualCollectorSearch(){
       return;
     }
 
-    if(cards.length===1){
+    if(!requestedName && cards.length===1){
       searchMsg.textContent=`✓ ${cards[0].name} · ${cards[0].localId}/${setOfficialCount(cards[0])}`;
       await chooseCard(cards[0]);
       return;
     }
 
-    searchMsg.textContent=`${cards.length} carte compatibili. Scegli quella corretta.`;
-    await renderFastCandidates(cards.slice(0,8),'Numero + Totale set');
+    if(requestedName){
+      const exactNameCards=manualExactNameMatches(cards,requestedName);
+      if(exactNameCards.length===1){
+        const card=exactNameCards[0];
+        searchMsg.textContent=`✓ ${card.name} · ${card.localId}/${setOfficialCount(card)}`;
+        await chooseCard(card);
+        return;
+      }
+      const reason=exactNameCards.length
+        ? 'Più candidati condividono il nome indicato. Scegli manualmente.'
+        : 'Il nome non corrisponde in modo univoco ai candidati trovati. Scegli manualmente.';
+      startManualCandidatePagination(cards,'Numero + Totale set',reason);
+      return;
+    }
+
+    startManualCandidatePagination(cards,'Numero + Totale set');
   }catch(e){
     console.error('Resolver Numero/Totale:',e);
     searchMsg.textContent='Ricerca TCGdex non riuscita. Verifica connessione e riprova.';
