@@ -167,7 +167,7 @@ def main():
     analyses=[name_audit.analyze_identity(recognizer,x,groups[x["id"]]) for x in ambiguous_items]
     name_safe=sum(x["theoreticallySafeWithTwoConcordantOCRReads"] for x in analyses)
     name_false=sum(x["falsePositive"] for x in analyses)
-    special_all=[x for x in eligible if full.special_parts(x["localId"])]
+    special_all=[x for x in eligible if full.special_parts(x["localId"]) and not x["promo"]]
     special_amb=[x for x in special_all if classifications[x["id"]]["outcome"]=="recognizedAmbiguous"]
     special_unique=sum(classifications[x["id"]]["outcome"]=="recognizedUnique" for x in special_all)
     meta=energy_audit.metadata(details)
