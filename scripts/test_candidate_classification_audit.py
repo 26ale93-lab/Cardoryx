@@ -294,7 +294,7 @@ def main():
         ids=[c["id"] for c in cands]
         if len(cands)>6 and item["id"] in ids:
             all_candidate_items.append(item); all_groups[item["id"]]=cands
-    group_keys={tuple(c["id"] for c in all_groups.values()) for c in all_groups.values()}
+    group_keys={tuple(card["id"] for card in candidates) for candidates in all_groups.values()}
     beyond_items=[x for x in all_candidate_items if [c["id"] for c in all_groups[x["id"]]].index(x["id"])>=6]
     cap_contrib=Counter(); still_beyond=made_displayable=made_unique=0
     for item in beyond_items:
@@ -337,7 +337,7 @@ def main():
       "previousReports":{"fullRun":33611775731,"nameRun":33616802992,"ocrEnergyRun":33619165542,
         "expected":EXPECTED,"recomputed":previous_real,"discrepancies":discrepancy},
       "scope":{"catalogIdentities":len(identities),"physicalIdentities":len(eligible),"ambiguousIdentities":len(ambiguous_items),
-        "ambiguousGroups":len({tuple(c["id"] for c in groups.values()) for c in groups.values()})},
+        "ambiguousGroups":len({tuple(card["id"] for card in candidates) for candidates in groups.values()})},
       "categoryQuality":category_quality,"trainerSubtypes":{"actualValuesIT":fields.values["it"]["trainer-types"],
         "actualValuesEN":fields.values["en"]["trainer-types"],"translationEvidence":translation["trainer-types"],
         "distribution":subtype_distribution},
