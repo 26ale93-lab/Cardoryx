@@ -55,22 +55,29 @@ def sha256(path):
 
 
 def request(url, *, timeout=TIMEOUT):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": UA,
-            "Accept": "application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "it-IT,it;q=0.9,en;q=0.7",
-            "Connection": "close",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        return (
-            response.read().decode("utf-8", "replace"),
-            dict(response.headers.items()),
-            getattr(response, "status", None),
-            response.geturl(),
+    for attempt in range(2):
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": UA,
+                "Accept": "application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "it-IT,it;q=0.9,en;q=0.7",
+                "Connection": "close",
+            },
         )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                return (
+                    response.read().decode("utf-8", "replace"),
+                    dict(response.headers.items()),
+                    getattr(response, "status", None),
+                    response.geturl(),
+                )
+        except urllib.error.HTTPError as exc:
+            if attempt == 0 and 500 <= exc.code < 600:
+                time.sleep(1)
+                continue
+            raise
 
 
 def get_json(url, *, timeout=TIMEOUT):
@@ -103,6 +110,9 @@ def indexes(cards):
         if not sk or not nk:
             continue
         by_set_number[(sk, nk)].append(card)
+        local = nk.split("/", 1)[0]
+        if local != nk:
+            by_set_number[(sk, local)].append(card)
         known_sets[sk] = card.get("set")
     return by_set_number, known_sets
 
@@ -305,7 +315,30 @@ def audit_magomatto(cards, by_set_number, known_sets):
     stats = base_stats("MagoMatto")
     seen = set()
     code_map = {str(k).upper().lstrip("X"): v for k, v in BUILDER.TIMETWISTER_SET_CODE_MAP.items()}
-    code_map.update({"PFL": "Fiamme Spettrali", "ASC": "Ascesa Eroica", "BLK": "Luce Nera", "MEG": "Megaevoluzione"})
+    code_map.update({
+        "PFL": "Fiamme Spettrali", "ASC": "Ascesa Eroica", "BLK": "Luce Nera",
+        "MEG": "Megaevoluzione", "EVS": "Evoluzioni Eteree", "OBF": "Ossidiana Infuocata",
+        "JTG": "Avventure Insieme", "PAF": "Destino di Paldea", "CEL": "Gran Festa",
+        "PGO": "Pokémon GO", "SHF": "Destino Splendente",
+    })
+    english_map = {}
+    for code, labels in BUILDER.TIMETWISTER_SET_LABEL_HINTS.items():
+        target = BUILDER.TIMETWISTER_SET_CODE_MAP.get(code)
+        if target:
+            for label in labels:
+                english_map[norm(label)] = target
+    english_map.update({
+        norm("Evolving Skies"): "Evoluzioni Eteree",
+        norm("Obsidian Flames"): "Ossidiana Infuocata",
+        norm("Journey Together"): "Avventure Insieme",
+        norm("Phantasmal Flames"): "Fiamme Spettrali",
+        norm("Ascended Heroes"): "Ascesa Eroica",
+        norm("Mega Evolution"): "Megaevoluzione",
+        norm("Paldean Fates"): "Destino di Paldea",
+        norm("Celebrations"): "Gran Festa",
+        norm("Pokemon GO"): "Pokémon GO",
+        norm("Shining Fates"): "Destino Splendente",
+    })
     samples = []
     try:
         page = 0
@@ -327,7 +360,7 @@ def audit_magomatto(cards, by_set_number, known_sets):
                 if len(samples) < 3:
                     samples.append({"keys": sorted(item.keys()), "sample": {k: item.get(k) for k in sorted(item) if k not in {"image", "description"}}})
                 language = norm(first_value(item, ("language", "languageName", "lang", "cardLanguage")))
-                condition = norm(first_value(item, ("condition", "conditionName", "cardCondition")))
+                condition = norm(first_value(item, ("condition", "cond", "conditionName", "cardCondition")))
                 quantity = first_value(item, ("quantity", "stock", "availableQuantity"))
                 note = str(first_value(item, ("note", "notes", "comment", "description")) or "")
                 if language not in {"it", "ita", "italian", "italiano"}:
@@ -356,14 +389,23 @@ def audit_magomatto(cards, by_set_number, known_sets):
                     rejection["price"] += 1
                     continue
                 set_code = str(first_value(item, ("setCode", "set", "expansionCode")) or "").upper().strip()
-                set_name = code_map.get(set_code) or known_sets.get(norm(first_value(item, ("setName", "expansionName"))))
-                number_value = first_value(item, ("number", "cardNumber", "collectorNumber", "localId"))
+                set_name = (
+                    code_map.get(set_code)
+                    or english_map.get(norm(first_value(item, ("setNameEn", "setName", "expansionName"))))
+                    or known_sets.get(norm(first_value(item, ("setName", "expansionName"))))
+                )
+                number_value = first_value(item, ("number", "cardNumber", "collectorNumber", "setCardCode", "localId"))
                 numbers = collector_numbers(number_value, allow_short=True)
                 if not set_name or len(numbers) != 1:
                     rejection["identityMetadata"] += 1
                     continue
                 stats["eligibleMetadata"] += 1
-                variant = variant_from_text(" ".join(str(first_value(item, (k,)) or "") for k in ("variant", "finish", "rarity", "note")))
+                if item.get("reverseHolo") is True:
+                    variant = "Reverse Holo"
+                elif item.get("foil") is True:
+                    variant = "Holo"
+                else:
+                    variant = variant_from_text(" ".join(str(first_value(item, (k,)) or "") for k in ("variant", "finish", "rarity", "comment")))
                 card = exact_candidate(by_set_number, set_name, numbers[0], variant)
                 if card is None:
                     stats["ambiguousIdentity"] += 1
