@@ -114,7 +114,7 @@ def main():
       "forbiddenPatterns":{marker:marker in html for marker in forbidden_patterns},
       "sourceProductionIndexUnmodified":True,
       "doubleNameOCRCalls":html.count("Tesseract.recognize(cropA")+html.count("Tesseract.recognize(cropB"),
-      "filterBeforeDisplayCap":html.index("diagnosticDisambiguateVerifiedCandidates")<html.index("renderDiagnosticCandidatePage")
+      "filterBeforeDisplayCap":html.index("const disambiguated=diagnosticDisambiguateVerifiedCandidates")<html.index("await renderFastCandidates(disambiguated.current")
     }
 
     lists,details,base_network,_=ocr_audit.load_catalog()
