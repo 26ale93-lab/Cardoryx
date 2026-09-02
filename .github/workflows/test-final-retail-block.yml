@@ -1,0 +1,87 @@
+name: Final Retail Block Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/final-retail-block-20260902
+    paths:
+      - scripts/test_final_retail_block.py
+      - .github/workflows/test-final-retail-block.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit MagoMatto, MyComics and Divertilandia Pro
+        run: python scripts/test_final_retail_block.py
+
+      - name: Verify read-only safety
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/final_retail_block_audit_report.json")
+          if not path.exists():
+              raise SystemExit("Report finale retail non generato")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+          if report.get("schema") != 1:
+              raise SystemExit("Schema report non valido")
+
+          rules = report.get("rules", {})
+          required = {
+              "retailPricesModified": False,
+              "cardmarketTouched": False,
+              "newIdentitiesCreated": False,
+              "productionDataModified": False,
+              "exactExistingIdentityOnly": True,
+              "italianOnly": True,
+              "nearMintOrMintOnly": True,
+              "availableOnly": True,
+              "positivePriceOnly": True,
+              "priorityTwoToThree": True,
+              "failClosed": True,
+              "parallelSources": True,
+          }
+          for key, expected in required.items():
+              if rules.get(key) is not expected:
+                  raise SystemExit(f"Regola sicurezza fallita: {key}={rules.get(key)!r}")
+
+          names = {x.get("source") for x in report.get("sources", [])}
+          expected_names = {"MagoMatto", "MyComics", "Divertilandia Pro"}
+          if names != expected_names:
+              raise SystemExit(f"Fonti incomplete: {sorted(names)}")
+
+          print("Audit finale retail verificato")
+          for source in report["sources"]:
+              print(source["source"], {
+                  "access": source.get("access"),
+                  "products": source.get("products"),
+                  "candidates": source.get("uniqueCandidates"),
+                  "twoToThree": source.get("twoToThree"),
+                  "error": source.get("error"),
+              })
+          PY
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-retail-block-audit-report
+          path: data/final_retail_block_audit_report.json
+          if-no-files-found: error
+          retention-days: 14

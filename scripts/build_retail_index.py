@@ -9,6 +9,7 @@ import unicodedata
 import urllib.parse
 import urllib.request
 
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -7054,6 +7055,214 @@ def collect_lppcollecting(cards):
 
     return stats
 
+
+# ============================================================
+# MAGOMATTO — INVENTARIO PUBBLICO, SOLO IDENTITA ESISTENTI
+# ============================================================
+
+MAGOMATTO_SEARCH_URL = "https://magoalbum.gaborgalazzo.com/search/pokemon"
+MAGOMATTO_CATALOG_URL = "https://magomatto-toolbox.web.app/album/pokemon"
+MAGOMATTO_PAGE_SIZE = 200
+
+MAGOMATTO_SET_CODE_MAP = {
+    **{str(code).upper().lstrip("X"): name for code, name in TIMETWISTER_SET_CODE_MAP.items()},
+    "PFL": "Fiamme Spettrali", "ASC": "Ascesa Eroica", "BLK": "Luce Nera",
+    "MEG": "Megaevoluzione", "EVS": "Evoluzioni Eteree", "OBF": "Ossidiana Infuocata",
+    "JTG": "Avventure Insieme", "PAF": "Destino di Paldea", "CEL": "Gran Festa",
+    "PGO": "Pokémon GO", "SHF": "Destino Splendente",
+}
+
+MAGOMATTO_SET_NAME_MAP = {
+    "evolving skies": "Evoluzioni Eteree",
+    "obsidian flames": "Ossidiana Infuocata",
+    "journey together": "Avventure Insieme",
+    "phantasmal flames": "Fiamme Spettrali",
+    "ascended heroes": "Ascesa Eroica",
+    "mega evolution": "Megaevoluzione",
+    "paldean fates": "Destino di Paldea",
+    "celebrations": "Gran Festa",
+    "pokemon go": "Pokémon GO",
+    "shining fates": "Destino Splendente",
+}
+for _code, _labels in TIMETWISTER_SET_LABEL_HINTS.items():
+    _target = TIMETWISTER_SET_CODE_MAP.get(_code)
+    if _target:
+        for _label in _labels:
+            MAGOMATTO_SET_NAME_MAP[norm(_label)] = _target
+
+
+def magomatto_first(item, *keys):
+    for key in keys:
+        value = item.get(key)
+        if value not in (None, "", []):
+            return value
+    return None
+
+
+def magomatto_name_equivalent(card_name, source_name, set_code):
+    source = re.sub(r"\s*\[[^\]]*\]\s*$", "", str(source_name or "")).strip()
+    target = str(card_name or "").strip()
+    if norm(target) == norm(source):
+        return True
+    suffix = str(set_code or "").upper().lstrip("X")
+    parts = target.rsplit(None, 1)
+    return len(parts) == 2 and parts[1].upper() == suffix and norm(parts[0]) == norm(source)
+
+
+def magomatto_variant(item):
+    if item.get("reverseHolo") is True:
+        return "Reverse Holo"
+    if item.get("foil") is True:
+        return "Holo"
+    return None
+
+
+def magomatto_local_number(value):
+    local = norm_number(value).split("/", 1)[0].upper()
+    match = re.fullmatch(r"([A-Z]{0,4})(\d{1,4})", local)
+    if not match:
+        return local
+    return match.group(1) + str(int(match.group(2)))
+
+
+def collect_magomatto(cards):
+    print("\n=== MAGOMATTO ===", flush=True)
+    stats = {
+        "source": "MagoMatto", "ok": True, "pages": 0, "products": 0,
+        "eligibleMetadata": 0, "accepted": 0, "newReliablePotential": 0,
+        "secondStorePotential": 0, "alreadyReliablePotential": 0,
+        "identityRejected": 0, "nameRejected": 0,
+        "languageRejected": 0, "conditionRejected": 0, "availabilityRejected": 0,
+        "gradedRejected": 0, "specialCopyRejected": 0, "priceRejected": 0,
+        "duplicateCandidate": 0, "priceConflict": 0, "duplicateStore": 0,
+        "errors": 0,
+    }
+    try:
+        by_set_local = defaultdict(list)
+        for card in cards.values():
+            if norm(card.get("language")) != "it" or norm(card.get("condition")) != "nm mint":
+                continue
+            number = magomatto_local_number(card.get("number"))
+            by_set_local[(norm(card.get("set")), number)].append(card)
+
+        pending = defaultdict(list)
+        page = 0
+        total_pages = 1
+        while page < total_pages and page < 100:
+            params = urllib.parse.urlencode({
+                "page": page, "size": MAGOMATTO_PAGE_SIZE,
+                "sort": "price,desc", "filter": "quantity>0",
+            })
+            payload = http_get_json(MAGOMATTO_SEARCH_URL + "?" + params)
+            content = payload.get("content") if isinstance(payload, dict) else payload
+            if not isinstance(content, list):
+                raise ValueError("Risposta inventario MagoMatto non riconosciuta")
+            if isinstance(payload, dict):
+                total_pages = int(payload.get("totalPages") or 1)
+            stats["pages"] += 1
+            stats["products"] += len(content)
+
+            for item in content:
+                if not isinstance(item, dict):
+                    continue
+                language = norm(magomatto_first(item, "lang", "language", "languageName"))
+                condition = norm(magomatto_first(item, "cond", "condition", "conditionName"))
+                if language not in {"it", "ita", "italian", "italiano"}:
+                    stats["languageRejected"] += 1
+                    continue
+                if condition not in {"nm", "near mint", "mt", "mint", "nm mint"}:
+                    stats["conditionRejected"] += 1
+                    continue
+                try:
+                    if float(magomatto_first(item, "quantity", "stock", "availableQuantity")) <= 0:
+                        stats["availabilityRejected"] += 1
+                        continue
+                except (TypeError, ValueError):
+                    stats["availabilityRejected"] += 1
+                    continue
+                comment = str(magomatto_first(item, "comment", "note", "description") or "")
+                comment_n = norm(comment)
+                if "slab" in comment_n or any(x in comment_n for x in ("psa ", "bgs ", "graded")):
+                    stats["gradedRejected"] += 1
+                    continue
+                if item.get("signed") is True or item.get("playset") is True or item.get("firstEdition") is True:
+                    stats["specialCopyRejected"] += 1
+                    continue
+                try:
+                    price = round(float(magomatto_first(item, "price", "sellPrice", "unitPrice")), 2)
+                except (TypeError, ValueError):
+                    stats["priceRejected"] += 1
+                    continue
+                if price <= 0:
+                    stats["priceRejected"] += 1
+                    continue
+
+                set_code = str(magomatto_first(item, "setCode", "set", "expansionCode") or "").upper().strip()
+                set_name = (
+                    MAGOMATTO_SET_CODE_MAP.get(set_code.lstrip("X"))
+                    or MAGOMATTO_SET_NAME_MAP.get(norm(magomatto_first(item, "setNameEn", "setName")))
+                )
+                local = magomatto_local_number(
+                    magomatto_first(item, "setCardCode", "number", "cardNumber", "localId")
+                )
+                variant = magomatto_variant(item)
+                matches = list(by_set_local.get((norm(set_name), local), [])) if set_name and local else []
+                if variant:
+                    matches = [c for c in matches if norm(c.get("variant")) == norm(variant)]
+                else:
+                    matches = [c for c in matches if "reverse" not in norm(c.get("variant"))]
+                if len(matches) != 1:
+                    stats["identityRejected"] += 1
+                    continue
+                card = matches[0]
+                source_name = magomatto_first(item, "nameIt", "name", "nameEn")
+                if not magomatto_name_equivalent(card.get("name"), source_name, set_code):
+                    stats["nameRejected"] += 1
+                    continue
+                stats["eligibleMetadata"] += 1
+                key = make_key(card["set"], card["number"], card["variant"], "IT", "NM/MINT")
+                pending[key].append({"card": card, "price": price})
+            page += 1
+
+        checked_at = utc_now()
+        for candidates in pending.values():
+            stats["duplicateCandidate"] += max(0, len(candidates) - 1)
+            prices = {x["price"] for x in candidates}
+            if len(prices) != 1:
+                stats["priceConflict"] += 1
+                continue
+            card = candidates[0]["card"]
+            stores_before = {norm(o.get("store")) for o in card.get("offers", []) if o.get("store")}
+            if norm("MagoMatto") in stores_before:
+                stats["duplicateStore"] += 1
+                continue
+            if len(stores_before) >= MIN_STORES_FOR_STATS:
+                stats["alreadyReliablePotential"] += 1
+            elif len(stores_before) == MIN_STORES_FOR_STATS - 1:
+                stats["newReliablePotential"] += 1
+            elif len(stores_before) == 1:
+                stats["secondStorePotential"] += 1
+            offer = {
+                "store": "MagoMatto", "price": candidates[0]["price"],
+                "url": MAGOMATTO_CATALOG_URL, "language": "IT", "condition": "NM/MINT",
+                "variant": card.get("variant", ""), "checkedAt": checked_at,
+                "sourceType": "retail-store",
+            }
+            if add_offer(
+                cards, set_name=card["set"], number=card["number"], card_name=card["name"],
+                variant=card["variant"], language="IT", condition="NM/MINT", offer=offer,
+            ):
+                stats["accepted"] += 1
+            else:
+                stats["duplicateStore"] += 1
+    except Exception as exc:
+        stats["ok"] = False
+        stats["errors"] += 1
+        stats["error"] = str(exc)
+
+    print("MagoMatto:", json.dumps(stats, ensure_ascii=False), flush=True)
+    return stats
+
 def collect_retail_data():
 
     cards = {}
@@ -7343,6 +7552,28 @@ def collect_retail_data():
         )
         result = {
             "source": "LPP Collecting",
+            "ok": False,
+            "error": str(exc),
+            "accepted": 0,
+        }
+
+    source_stats.append(result)
+
+    # --------------------------------------------------------
+    # FONTE 13 — MAGOMATTO
+    # --------------------------------------------------------
+
+    try:
+        result = run_source_timed(
+            "MagoMatto",
+            collect_magomatto,
+            cards,
+            hard_seconds=120,
+        )
+    except Exception as exc:
+        print("MagoMatto non disponibile:", str(exc), flush=True)
+        result = {
+            "source": "MagoMatto",
             "ok": False,
             "error": str(exc),
             "accepted": 0,
