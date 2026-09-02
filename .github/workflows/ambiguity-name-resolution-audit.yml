@@ -1,0 +1,126 @@
+name: Ambiguity Name Resolution Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/ambiguity-name-resolution-20260902
+    paths:
+      - scripts/ambiguity_name_resolution_audit.py
+      - .github/workflows/ambiguity-name-resolution-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ambiguity-name-resolution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify main and diagnostic-only diff
+        run: |
+          git fetch origin main
+          test "$(git merge-base HEAD origin/main)" = "86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f"
+          actual="$(git diff --name-only origin/main...HEAD | sort)"
+          expected="$(printf '%s\n' '.github/workflows/ambiguity-name-resolution-audit.yml' '.github/workflows/full-catalog-coverage-postmerge.yml' 'scripts/ambiguity_name_resolution_audit.py' 'scripts/full_catalog_coverage_postmerge_audit.py' | sort)"
+          test "$actual" = "$expected"
+
+      - name: Verify production recognition source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path("index.html").read_text(encoding="utf-8")
+          checks = (
+              "return a>0 && b>0 && b<=999;",
+              ".filter(isPhysicalTCGSet)\n    .slice(0,40)",
+              "queryBySpecialPrintedCode",
+              "queryByStandalonePrintedLocalId",
+              "verifiedNumberTotalCandidate(card,num,total)",
+              "renderFastCandidates(cards.slice(0,6),route)",
+          )
+          missing = [value for value in checks if value not in source]
+          if missing:
+              raise SystemExit("Production recognition source mismatch")
+          print("Production recognition source verified")
+          PY
+
+      - name: Snapshot protected production files
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.before
+
+      - name: Run ambiguity name-resolution audit
+        run: python scripts/ambiguity_name_resolution_audit.py
+
+      - name: Verify report and read-only safety
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("artifacts/ambiguity_name_resolution_audit_report.json")
+          if not path.exists():
+              raise SystemExit("Ambiguity report not generated")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+          if report.get("schema") != 1:
+              raise SystemExit("Invalid report schema")
+
+          scope = report.get("scope", {})
+          summary = report.get("summary", {})
+          if scope.get("ambiguousIdentities") != 11249:
+              raise SystemExit("Ambiguous population differs from full audit")
+          if summary.get("simulatedFalsePositives") != 0:
+              raise SystemExit("Simulated false positives detected")
+          if summary.get("regressions") != 0:
+              raise SystemExit("Recognition regressions detected")
+          if summary.get("networkErrors") != 0:
+              raise SystemExit("TCGdex/API errors detected")
+          if report.get("genesectControl", {}).get("passed") is not True:
+              raise SystemExit("Genesect 067/086 control failed")
+
+          safety = report.get("safety", {})
+          for key in (
+              "indexHtmlModified",
+              "retailModified",
+              "cardmarketModified",
+              "collectionDataModified",
+              "newIdentitiesCreated",
+              "scannerBehaviorModified",
+              "productionWorkflowModified",
+          ):
+              if safety.get(key) is not False:
+                  raise SystemExit(f"Safety violation: {key}")
+
+          print(json.dumps({
+              "scope": scope,
+              "summary": summary,
+              "candidateGroupSizeDistribution": report.get("candidateGroupSizeDistribution", {}),
+              "dangerousCategories": report.get("dangerousCategories", {}),
+              "genesectControl": report.get("genesectControl", {}),
+              "regressionChecks": report.get("regressionChecks", {}),
+              "finalAssessment": report.get("finalAssessment"),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload ambiguity name-resolution report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ambiguity-name-resolution-audit-report
+          path: artifacts/ambiguity_name_resolution_audit_report.json
+          if-no-files-found: error
+          retention-days: 14
