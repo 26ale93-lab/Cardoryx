@@ -49,6 +49,19 @@ OUTPUT_FILE = ROOT / "data" / "retail_prices.json"
 
 HTTP_TIMEOUT = 30
 
+SOURCE_COLLAPSE_MIN_PREVIOUS_ACCEPTED = 100
+SOURCE_COLLAPSE_GUARDED = frozenset({
+    "BSA Store",
+    "Card Passion",
+    "CardPioneer",
+    "DanyStore",
+    "GS-Gameon",
+    "LPP Collecting",
+    "MagoMatto",
+    "TimeTwister Games",
+    "Warcard",
+})
+
 
 # ============================================================
 # CARD PASSION
@@ -7799,14 +7812,136 @@ def reconciliation_diagnostics(cards):
 # MAIN
 # ============================================================
 
+def load_previous_retail_index(
+    path=OUTPUT_FILE,
+):
+
+    if not path.exists():
+        return None
+
+    try:
+        previous = json.loads(
+            path.read_text(encoding="utf-8")
+        )
+    except (
+        OSError,
+        UnicodeError,
+        json.JSONDecodeError,
+    ) as exc:
+        print(
+            "ATTENZIONE: indice precedente non leggibile; "
+            f"protezione anti-crollo non applicata: {exc}",
+            flush=True,
+        )
+        return None
+
+    if not isinstance(previous, dict):
+        print(
+            "ATTENZIONE: indice precedente non valido; "
+            "protezione anti-crollo non applicata",
+            flush=True,
+        )
+        return None
+
+    return previous
+
+
+def _accepted_by_source(source_stats):
+
+    accepted = {}
+
+    if not isinstance(source_stats, list):
+        return accepted
+
+    for item in source_stats:
+
+        if not isinstance(item, dict):
+            continue
+
+        source = item.get("source")
+
+        if not isinstance(source, str):
+            continue
+
+        try:
+            value = int(item.get("accepted", 0) or 0)
+        except (TypeError, ValueError):
+            value = 0
+
+        accepted[source] = max(0, value)
+
+    return accepted
+
+
+def validate_source_collapse(
+    previous_index,
+    current_source_stats,
+):
+
+    result = {
+        "enabled": True,
+        "comparedToPrevious": False,
+        "minimumPreviousAccepted":
+            SOURCE_COLLAPSE_MIN_PREVIOUS_ACCEPTED,
+        "guardedSources":
+            sorted(SOURCE_COLLAPSE_GUARDED),
+    }
+
+    if not isinstance(previous_index, dict):
+        return result
+
+    previous = _accepted_by_source(
+        previous_index.get("sources")
+    )
+    current = _accepted_by_source(
+        current_source_stats
+    )
+
+    if not previous:
+        return result
+
+    result["comparedToPrevious"] = True
+
+    collapsed = []
+
+    for source in sorted(SOURCE_COLLAPSE_GUARDED):
+
+        previous_accepted = previous.get(source, 0)
+        current_accepted = current.get(source, 0)
+
+        if (
+            previous_accepted
+            >= SOURCE_COLLAPSE_MIN_PREVIOUS_ACCEPTED
+            and current_accepted == 0
+        ):
+            collapsed.append(
+                f"{source} ({previous_accepted} -> 0)"
+            )
+
+    if collapsed:
+        raise RuntimeError(
+            "Protezione anti-crollo fonti: "
+            + ", ".join(collapsed)
+            + ". Il file retail precedente resta invariato."
+        )
+
+    return result
+
 def main():
 
     print(
         "=== CARDORYX RETAIL INDEX BUILDER ==="
     )
 
+    previous_index = load_previous_retail_index()
+
     cards, source_stats = (
         collect_retail_data()
+    )
+
+    source_collapse_guard = validate_source_collapse(
+        previous_index,
+        source_stats,
     )
 
     generated = utc_now()
@@ -7880,6 +8015,9 @@ def main():
 
             "crossSourceMatching":
                 "independent-any-3-stores",
+
+            "sourceCollapseGuard":
+                source_collapse_guard,
         },
 
         "sources":
