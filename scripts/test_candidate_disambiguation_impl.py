@@ -101,7 +101,7 @@ def main():
       "showMoreDiagnosticCandidates",
       "downloadCandidateDiagnosticLog",
       "Nome esatto opzionale",
-      "CARDORYX_DIAGNOSTIC.pageSize"
+      "state.pageSize"
     ]
     forbidden_patterns=[
       "renderFastCandidates(cards.slice(0,6),route)",
