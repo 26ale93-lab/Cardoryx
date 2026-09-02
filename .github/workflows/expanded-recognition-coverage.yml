@@ -1,0 +1,112 @@
+name: Expanded Recognition Coverage
+
+on:
+  push:
+    branches:
+      - feature/expanded-recognition-coverage-20260902
+    paths:
+      - index.html
+      - scripts/catalog_coverage_audit.py
+      - .github/workflows/expanded-recognition-coverage.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  expanded-recognition-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Snapshot protected production data
+        run: |
+          sha256sum data/retail_prices.json data/cardmarket_play_index.json > /tmp/cardoryx-protected.before
+
+      - name: Run before-after recognition audit
+        run: python scripts/catalog_coverage_audit.py
+
+      - name: Verify report and production separation
+        run: |
+          sha256sum data/retail_prices.json data/cardmarket_play_index.json > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code -- data/retail_prices.json data/cardmarket_play_index.json .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml scripts/build_retail_index.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("artifacts/expanded_recognition_coverage_report.json")
+          if not path.exists():
+              raise SystemExit("Report Expanded Recognition non generato")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+          if report.get("schema") != 2:
+              raise SystemExit("Schema report non valido")
+
+          summary = report.get("summary", {})
+          required = (
+              "recognizedBefore",
+              "recognizedAfter",
+              "identitiesRecovered",
+              "ambiguousAfter",
+              "regressions",
+              "falsePositives",
+              "sveMeeControlsPassed",
+              "safeToMerge",
+          )
+          for key in required:
+              if key not in summary:
+                  raise SystemExit(f"Campo summary mancante: {key}")
+
+          if summary["recognizedAfter"] <= summary["recognizedBefore"]:
+              raise SystemExit("Copertura non aumentata")
+          if summary["regressions"] != 0:
+              raise SystemExit("Regressioni rilevate")
+          if summary["falsePositives"] != 0:
+              raise SystemExit("Falsi positivi rilevati")
+          if summary["sveMeeControlsPassed"] != summary["sveMeeControlsTested"]:
+              raise SystemExit("Regressione Energie SVE/MEE")
+          if summary["safeToMerge"] is not True:
+              raise SystemExit("Candidato non sicuro per il merge")
+
+          rules = report.get("rules", {})
+          for key in (
+              "retailModified",
+              "cardmarketModified",
+              "collectionDataModified",
+              "newIdentitiesCreated",
+              "productionWorkflowModified",
+              "productionMergePerformed",
+          ):
+              if rules.get(key) is not False:
+                  raise SystemExit(f"Vincolo violato: {key}")
+
+          print(json.dumps({
+              "summary": summary,
+              "categories": {
+                  key: {
+                      k: v for k, v in value.items()
+                      if not k.startswith("examples")
+                  }
+                  for key, value in report.get("categories", {}).items()
+              },
+              "performance": report.get("performance", {}),
+              "finalAssessment": report.get("finalAssessment"),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload expanded recognition report
+        uses: actions/upload-artifact@v4
+        with:
+          name: expanded-recognition-coverage-report
+          path: artifacts/expanded_recognition_coverage_report.json
+          if-no-files-found: error
+          retention-days: 14
