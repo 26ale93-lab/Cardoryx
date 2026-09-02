@@ -1533,25 +1533,74 @@ function setScanProgress(pct,msg=''){
   if(bar)bar.style.width=Math.max(0,Math.min(100,pct))+'%';
   if(txt&&msg)txt.textContent=msg;
 }
+function canonicalPrintedLocalId(value=''){
+  return String(value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+}
+function printedLocalIdParts(value=''){
+  const m=canonicalPrintedLocalId(value).match(/^([A-Z]{1,5})(\d{1,3})$/);
+  return m?{prefix:m[1],number:Number(m[2]),digits:m[2]}:null;
+}
+function exactLocalIdKey(value=''){
+  const raw=canonicalPrintedLocalId(value);
+  const p=printedLocalIdParts(raw);
+  if(p)return `${p.prefix}${p.number}`;
+  if(/^\d+$/.test(raw))return String(Number(raw));
+  return raw;
+}
 function extractCollectorCode(text=''){
   const t=String(text).replace(/[Oo]/g,'0');
-  let m=t.match(/\b(\d{1,3})\s*[\/|\\]\s*(\d{2,3})\b/);
-  if(m)return {num:m[1].padStart(3,'0'),total:m[2]};
+  let m=t.match(/\b(\d{1,3})\s*[\/|\\]\s*(\d{1,3})\b/);
+  if(m)return {kind:'numberTotal',num:m[1].padStart(3,'0'),total:m[2]};
   m=t.match(/\b(\d{2,3})\D{1,4}(\d{2,3})\b/);
   if(m){
     const a=Number(m[1]),b=Number(m[2]);
-    if(a>0&&b>=a&&b<=500)return {num:String(a).padStart(3,'0'),total:String(b)};
+    if(a>0&&b>0&&b<=999)return {kind:'numberTotal',num:String(a).padStart(3,'0'),total:String(b)};
   }
   return null;
 }
-
+function extractPrintedIdentity(text=''){
+  const upper=String(text||'').toUpperCase();
+  let m=upper.match(/\b([A-Z]{1,5}\s*[-]?\s*\d{1,3})\s*[\/|\\]\s*([A-Z]{1,5}\s*[-]?\s*\d{1,3})\b/);
+  if(m){
+    const localId=canonicalPrintedLocalId(m[1]);
+    const totalLocalId=canonicalPrintedLocalId(m[2]);
+    const a=printedLocalIdParts(localId),b=printedLocalIdParts(totalLocalId);
+    if(a&&b&&a.prefix===b.prefix&&a.number>0&&b.number>0){
+      return {kind:'specialPair',localId,totalLocalId};
+    }
+  }
+  const numeric=extractCollectorCode(text);
+  if(numeric)return numeric;
+  m=upper.match(/\b([A-Z]{1,5}\s*[-]?\s*\d{1,3})\b/);
+  if(m){
+    const localId=canonicalPrintedLocalId(m[1]);
+    const p=printedLocalIdParts(localId);
+    if(p&&!['HP','PS'].includes(p.prefix)&&p.number>0){
+      return {kind:'standaloneLocalId',localId};
+    }
+  }
+  return null;
+}
 function collectorCodeKey(c){
-  return c?`${Number(c.num)}/${Number(c.total)}`:'';
+  if(!c)return '';
+  if(c.kind==='specialPair')return `special:${exactLocalIdKey(c.localId)}/${exactLocalIdKey(c.totalLocalId)}`;
+  if(c.kind==='standaloneLocalId')return `local:${exactLocalIdKey(c.localId)}`;
+  return `number:${Number(c.num)}/${Number(c.total)}`;
 }
 function collectorCodeValid(c){
   if(!c)return false;
+  if(c.kind==='specialPair'){
+    const a=printedLocalIdParts(c.localId),b=printedLocalIdParts(c.totalLocalId);
+    return !!(a&&b&&a.prefix===b.prefix&&a.number>0&&b.number>0);
+  }
+  if(c.kind==='standaloneLocalId'){
+    const p=printedLocalIdParts(c.localId);
+    return !!(p&&p.number>0&&!['HP','PS'].includes(p.prefix));
+  }
   const a=Number(c.num),b=Number(c.total);
-  return a>0 && b>0 && a<=b && b<=999;
+  // Secret cards legitimately use a numerator greater than the official set count.
+  // Acceptance still requires exact localId + exact cardCount.official downstream.
+  return a>0 && b>0 && b<=999;
 }
 async function readCollectorCodeFocused(img){
   const crops=[
@@ -1563,9 +1612,9 @@ async function readCollectorCodeFocused(img){
   const attempts=[];
   for(const crop of crops){
     attempts.push([crop,'7',null]);
-    attempts.push([enhanceForOCR(crop,150),'7','0123456789/|']);
-    attempts.push([enhanceForOCR(crop,175),'7','0123456789/|']);
-    attempts.push([enhanceForOCR(crop,195),'6','0123456789/|']);
+    attempts.push([enhanceForOCR(crop,150),'7','0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/|-']);
+    attempts.push([enhanceForOCR(crop,175),'7','0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/|-']);
+    attempts.push([enhanceForOCR(crop,195),'6','0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/|-']);
   }
 
   const counts=new Map();
@@ -1575,7 +1624,7 @@ async function readCollectorCodeFocused(img){
       if(whitelist)opts.tessedit_char_whitelist=whitelist;
       const r=await Tesseract.recognize(canvas,'eng',opts);
       const text=String(r?.data?.text||'').trim();
-      const code=extractCollectorCode(text);
+      const code=extractPrintedIdentity(text);
       if(!collectorCodeValid(code))continue;
       const key=collectorCodeKey(code);
       const current=counts.get(key)||{code,count:0,texts:[]};
@@ -1586,6 +1635,9 @@ async function readCollectorCodeFocused(img){
   }
 
   return [...counts.values()]
+    // A standalone promo/localId has no denominator: require corroboration by
+    // at least two OCR attempts before even querying TCGdex.
+    .filter(x=>x.code.kind!=='standaloneLocalId'||x.count>=2)
     .sort((a,b)=>b.count-a.count)
     .map(x=>({...x.code,votes:x.count,ocrTexts:x.texts}));
 }
@@ -1641,45 +1693,63 @@ function numVariants(v=''){
   const n=String(Number(raw));
   return [...new Set([raw,n,n.padStart(2,'0'),n.padStart(3,'0')])];
 }
+function localIdVariants(value=''){
+  const raw=canonicalPrintedLocalId(value);
+  if(!raw)return [];
+  if(/^\d+$/.test(raw))return numVariants(raw);
+  const p=printedLocalIdParts(raw);
+  if(!p)return [raw];
+  const n=String(p.number);
+  return [...new Set([raw,`${p.prefix}${n}`,`${p.prefix}${n.padStart(2,'0')}`,`${p.prefix}${n.padStart(3,'0')}`])];
+}
 function sameCollectorNumber(a,b){
   const av=String(a||'').replace(/\D/g,'').replace(/^0+/,'')||'0';
   const bv=String(b||'').replace(/\D/g,'').replace(/^0+/,'')||'0';
   return av===bv;
+}
+function sameExactLocalId(a,b){
+  return !!a&&!!b&&exactLocalIdKey(a)===exactLocalIdKey(b);
 }
 function sameSetTotal(a,b){
   const av=Number(String(a||'').replace(/\D/g,''));
   const bv=Number(String(b||'').replace(/\D/g,''));
   return !!av && !!bv && av===bv;
 }
-async function queryByAnyLocalId(num){
-  const variants=numVariants(num);
+async function queryByAnyLocalId(value){
+  const variants=localIdVariants(value);
   const merged=new Map();
+  const alphanumeric=!!printedLocalIdParts(value);
   for(const v of variants){
     const arr=await apiCardsQuery({localId:v});
     for(const c of arr||[])merged.set(c.id,c);
-    if(merged.size>=20)break;
+    if(!alphanumeric&&merged.size>=20)break;
   }
   return [...merged.values()];
 }
 
-
 let ALL_SETS_CACHE=null;
+function isPhysicalTCGSet(set){
+  const blob=`${set?.id||''} ${set?.name||''} ${set?.serie?.id||''} ${set?.serie?.name||''} ${set?.series?.id||''} ${set?.series?.name||''}`;
+  const id=String(set?.id||'');
+  return !/pokemon tcg pocket|tcg pocket/i.test(blob) && !/^(?:A\d+[a-z]?|P-A)$/i.test(id);
+}
 async function fetchAllSetsCached(){
   if(Array.isArray(ALL_SETS_CACHE)&&ALL_SETS_CACHE.length)return ALL_SETS_CACHE;
-  const locales=[API,'https://api.tcgdex.net/v2/en'];
-  for(const base of locales){
+  const merged=new Map();
+  for(const base of [API,'https://api.tcgdex.net/v2/en']){
     try{
       const r=await fetch(`${base}/sets`,{cache:'no-store'});
       if(!r.ok)continue;
       const data=await r.json();
-      if(Array.isArray(data)&&data.length){
-        ALL_SETS_CACHE=data;
-        return data;
+      for(const set of (Array.isArray(data)?data:[])){
+        if(set?.id&&!merged.has(set.id))merged.set(set.id,set);
       }
     }catch(e){}
   }
-  return [];
+  ALL_SETS_CACHE=[...merged.values()].filter(isPhysicalTCGSet);
+  return ALL_SETS_CACHE;
 }
+
 const SET_DETAIL_CACHE=new Map();
 async function fetchSetDetail(setId){
   if(SET_DETAIL_CACHE.has(setId))return SET_DETAIL_CACHE.get(setId);
@@ -1723,139 +1793,107 @@ const PRINTED_CODE_HINTS={
   "98/159":{setId:"sv09",localId:"098"}
 };
 
-async function fetchHintedPrintedCard(num,total){
-  const key=`${String(Number(num))}/${String(Number(total))}`;
-  const hint=PRINTED_CODE_HINTS[key];
-  if(!hint)return null;
-  for(const base of [API,'https://api.tcgdex.net/v2/en']){
-    for(const id of numVariants(hint.localId)){
+async function fetchCardFromExactSet(setId,localId){
+  for(const variant of localIdVariants(localId)){
+    for(const base of [API,'https://api.tcgdex.net/v2/en']){
       try{
-        const r=await fetch(`${base}/sets/${encodeURIComponent(hint.setId)}/${encodeURIComponent(id)}`,{cache:'no-store'});
+        const r=await fetch(`${base}/sets/${encodeURIComponent(setId)}/${encodeURIComponent(variant)}`,{cache:'no-store'});
         if(!r.ok)continue;
-        const c=await r.json();
-        if(c?.id)return c;
+        const card=await r.json();
+        if(card?.id&&sameExactLocalId(card.localId,localId))return card;
       }catch(e){}
     }
   }
   return null;
 }
-
+async function verifiedNumberTotalCandidate(card,num,total){
+  if(!card?.id||!sameExactLocalId(card.localId,num))return null;
+  const setId=card?.set?.id||String(card.id).split('-')[0]||'';
+  if(!setId)return null;
+  const setDetail=await fetchSetDetail(setId);
+  if(!setDetail||!isPhysicalTCGSet(setDetail))return null;
+  if(Number(setDetail?.cardCount?.official||0)!==Number(total))return null;
+  return {...card,set:{...(card.set||{}),...setDetail}};
+}
+async function fetchHintedPrintedCard(num,total){
+  const key=`${String(Number(num))}/${String(Number(total))}`;
+  const hint=PRINTED_CODE_HINTS[key];
+  if(!hint)return null;
+  const card=await fetchCardFromExactSet(hint.setId,hint.localId);
+  return verifiedNumberTotalCandidate(card,num,total);
+}
 async function queryByPrintedCode(num,total){
   const cleanNum=String(num||'').replace(/\D/g,'');
   const cleanTotal=Number(String(total||'').replace(/\D/g,''));
+  if(!cleanNum||!cleanTotal)return [];
 
-  if(!cleanNum || !cleanTotal)return [];
-
-  const found=new Map();
-
-  // 0) Manteniamo temporaneamente gli hint già presenti.
-  // Sono solo una scorciatoia e non sono più necessari per le nuove carte.
+  // Hints are shortcuts only. They must pass the exact same validation.
   try{
     const hinted=await fetchHintedPrintedCard(cleanNum,cleanTotal);
-    if(hinted?.id){
-      found.set(hinted.id,hinted);
-      return [...found.values()];
-    }
+    if(hinted?.id)return [hinted];
   }catch(e){}
 
-  // 1) Cerca esclusivamente le carte con quel numero.
-  // TCGdex viene interrogato sia IT sia EN da queryByAnyLocalId().
-  let briefs=[];
-  try{
-    briefs=await queryByAnyLocalId(cleanNum);
-  }catch(e){
-    console.warn('Ricerca localId:',e);
-  }
+  const found=new Map();
+  // Narrow by the exact official set count before applying an operational cap.
+  const matchingSets=(await querySetsByOfficialCount(cleanTotal))
+    .filter(isPhysicalTCGSet)
+    .slice(0,40);
 
-  if(!briefs.length)return [];
-
-  // 2) Per ogni candidato controlla SOLTANTO il suo set.
-  // Non scarichiamo più l'intero archivio dei set TCGdex.
-  for(const brief of briefs.slice(0,60)){
+  for(const summary of matchingSets){
     try{
-      const full=await fetchFullCandidate(brief);
-
-      if(!full?.id || !sameCollectorNumber(full.localId,cleanNum)){
-        continue;
-      }
-
-      const setId=
-        full?.set?.id ||
-        brief?.set?.id ||
-        '';
-
-      if(!setId)continue;
-
-      const setDetail=await fetchSetDetail(setId);
-      if(!setDetail)continue;
-
-      const official=Number(setDetail?.cardCount?.official||0);
-
-      if(official!==cleanTotal)continue;
-
-      // Il numero e il totale del set corrispondono.
-      found.set(full.id,{
-        ...full,
-        set:{
-          ...(full.set||{}),
-          ...setDetail
-        }
-      });
-
+      const setDetail=await fetchSetDetail(summary.id);
+      if(!setDetail||!isPhysicalTCGSet(setDetail))continue;
+      if(Number(setDetail?.cardCount?.official||0)!==cleanTotal)continue;
+      const card=await fetchCardFromExactSet(summary.id,cleanNum);
+      const verified=await verifiedNumberTotalCandidate(card,cleanNum,cleanTotal);
+      if(verified?.id)found.set(verified.id,verified);
     }catch(e){
-      console.warn('Verifica candidato Numero/Totale:',brief?.id,e);
+      console.warn('Verifica candidato Numero/Totale:',summary?.id,e);
     }
   }
-
-  if(found.size)return [...found.values()];
-
-  // 3) Ultimo fallback:
-  // se il brief possiede già un set, prova direttamente
-  // /sets/{setId}/{numero} con le varianti 98 / 098 ecc.
-  const variants=numVariants(cleanNum);
-
-  for(const brief of briefs.slice(0,60)){
-    const setId=brief?.set?.id;
-    if(!setId)continue;
-
+  return [...found.values()];
+}
+function observedSpecialTotal(setDetail,prefix){
+  const values=(Array.isArray(setDetail?.cards)?setDetail.cards:[])
+    .map(c=>printedLocalIdParts(c?.localId))
+    .filter(p=>p&&p.prefix===prefix)
+    .map(p=>p.number);
+  return values.length?Math.max(...values):0;
+}
+async function queryBySpecialPrintedCode(localId,totalLocalId){
+  const wanted=printedLocalIdParts(localId);
+  const printedTotal=printedLocalIdParts(totalLocalId);
+  if(!wanted||!printedTotal||wanted.prefix!==printedTotal.prefix)return [];
+  const briefs=await queryByAnyLocalId(localId);
+  const found=new Map();
+  for(const brief of briefs){
     try{
+      const full=await fetchFullCandidate(brief);
+      if(!full?.id||!sameExactLocalId(full.localId,localId))continue;
+      const setId=full?.set?.id||brief?.set?.id||String(full.id).split('-')[0]||'';
       const setDetail=await fetchSetDetail(setId);
-      if(
-        !setDetail ||
-        Number(setDetail?.cardCount?.official||0)!==cleanTotal
-      ){
-        continue;
-      }
-
-      for(const v of variants){
-        for(const base of [API,'https://api.tcgdex.net/v2/en']){
-          try{
-            const r=await fetch(
-              `${base}/sets/${encodeURIComponent(setId)}/${encodeURIComponent(v)}`,
-              {cache:'no-store'}
-            );
-
-            if(!r.ok)continue;
-
-            const card=await r.json();
-
-            if(
-              card?.id &&
-              sameCollectorNumber(card.localId,cleanNum)
-            ){
-              found.set(card.id,card);
-              break;
-            }
-          }catch(e){}
-        }
-
-        if(found.size)break;
-      }
+      if(!setDetail||!isPhysicalTCGSet(setDetail))continue;
+      if(observedSpecialTotal(setDetail,wanted.prefix)!==printedTotal.number)continue;
+      found.set(full.id,{...full,set:{...(full.set||{}),...setDetail}});
     }catch(e){}
-
-    if(found.size)break;
   }
-
+  return [...found.values()];
+}
+async function queryByStandalonePrintedLocalId(localId){
+  const wanted=printedLocalIdParts(localId);
+  if(!wanted)return [];
+  const briefs=await queryByAnyLocalId(localId);
+  const found=new Map();
+  for(const brief of briefs){
+    try{
+      const full=await fetchFullCandidate(brief);
+      if(!full?.id||!sameExactLocalId(full.localId,localId))continue;
+      const setId=full?.set?.id||brief?.set?.id||String(full.id).split('-')[0]||'';
+      const setDetail=await fetchSetDetail(setId);
+      if(!setDetail||!isPhysicalTCGSet(setDetail))continue;
+      found.set(full.id,{...full,set:{...(full.set||{}),...setDetail}});
+    }catch(e){}
+  }
   return [...found.values()];
 }
 
@@ -2632,13 +2670,13 @@ async function runSmartOCR(){
 
   setScanProgress(5,'Preparo la foto…');
   ocrStatus.textContent='Riconoscimento in corso…';
-  setScannerRoute('Leggo Numero / Totale set.');
+  setScannerRoute('Leggo il codice collezione stampato.');
 
   try{
     await loadTesseract();
     const img=await downscaleImageForOCR(f,1100,1600);
 
-    // Keep the deterministic Basic Energy route.
+    // Preserve the deterministic SVE/MEE Basic Energy route unchanged.
     setScanProgress(15,'Controllo se è un’Energia Base…');
     const energy=await readBasicEnergyIdentity(img);
     if(energy.isBasic){
@@ -2651,38 +2689,53 @@ async function runSmartOCR(){
       }
     }
 
-    // Single identification route: collector number + printed set total.
-    setScanProgress(30,'Leggo Numero / Totale set…');
+    setScanProgress(30,'Leggo il codice collezione…');
     const codes=await readCollectorCodeFocused(img);
 
     for(const code of codes.slice(0,5)){
       if(!collectorCodeValid(code))continue;
+      let cards=[],label='',route='';
 
-      setScanProgress(55,`Verifico ${code.num}/${code.total}…`);
-      const cards=await queryByPrintedCode(code.num,code.total);
+      if(code.kind==='specialPair'){
+        label=`${code.localId}/${code.totalLocalId}`;
+        route='LocalId speciale verificato';
+        cards=await queryBySpecialPrintedCode(code.localId,code.totalLocalId);
+      }else if(code.kind==='standaloneLocalId'){
+        label=code.localId;
+        route='Codice promo/localId verificato';
+        cards=await queryByStandalonePrintedLocalId(code.localId);
+      }else{
+        label=`${code.num}/${code.total}`;
+        route='Numero + Totale set';
+        cards=await queryByPrintedCode(code.num,code.total);
+      }
 
-      if(cards.length){
-        numberInput.value=code.num;
-        setTotalInput.value=code.total;
-        lastOCR={name:'',number:code.num,total:code.total};
+      setScanProgress(55,`Verifico ${label}…`);
+      if(!cards.length)continue;
 
-        setScanProgress(100,'Carta trovata.');
+      lastOCR={
+        name:'',
+        number:code.localId||code.num||'',
+        total:code.totalLocalId||code.total||''
+      };
+      numberInput.value=lastOCR.number;
+      setTotalInput.value=lastOCR.total;
+      setScanProgress(100,'Carta trovata.');
 
-        if(cards.length===1){
-          ocrStatus.textContent=`✓ ${cards[0].name} · ${code.num}/${code.total}`;
-          await chooseCard(cards[0]);
-          return;
-        }
-
-        ocrStatus.textContent=`✓ ${code.num}/${code.total}: ${cards.length} candidati reali.`;
-        await renderFastCandidates(cards.slice(0,6),'Numero + Totale set');
+      if(cards.length===1){
+        ocrStatus.textContent=`✓ ${cards[0].name} · ${label}`;
+        await chooseCard(cards[0]);
         return;
       }
+
+      // Never select automatically when more than one exact identity remains.
+      ocrStatus.textContent=`✓ ${label}: ${cards.length} identità esatte da confermare.`;
+      await renderFastCandidates(cards.slice(0,6),route);
+      return;
     }
 
-    // One fallback only. No OCR name, no second/third automatic searches.
     setScanProgress(100,'Inserimento manuale richiesto.');
-    setScannerRoute('Numero/Set non letto con sicurezza. Inseriscilo una sola volta qui sotto.','warn');
+    setScannerRoute('Codice non letto o identità non univoca. Inserisci i dati manualmente.','warn');
     ocrStatus.textContent='Non ho trovato una corrispondenza certa. La foto resta disponibile.';
     if(fallback)fallback.classList.remove('hidden');
     numberInput.focus();
@@ -2690,51 +2743,11 @@ async function runSmartOCR(){
   }catch(e){
     console.error('Scanner unico:',e);
     setScanProgress(100,'Riconoscimento interrotto.');
-    setScannerRoute('Riconoscimento non riuscito. Inserisci Numero e Totale set una sola volta.','warn');
+    setScannerRoute('Riconoscimento non riuscito. Inserisci i dati manualmente.','warn');
     ocrStatus.textContent='La foto resta disponibile.';
     if(fallback)fallback.classList.remove('hidden');
   }finally{
     ocrBtn.disabled=false;
-  }
-}
-
-
-async function refreshUnknownTrainerSubtypes(){
-  let changed=false;
-  const candidates=db.filter(c=>{
-    const cat=normText(c?.category||'');
-    const isTrainer=cat==='trainer'||cat==='allenatore'||cat.includes('trainer')||cat.includes('allenatore');
-    return isTrainer && !canonicalTrainerType(c);
-  });
-  for(const c of candidates){
-    const ids=[];
-    const add=x=>{x=String(x||'').trim();if(x&&!ids.includes(x))ids.push(x)};
-    add(c.tcgdexId); add(c.id);
-    if(c?.setId && c?.localId)add(`${c.setId}-${c.localId}`);
-    let resolved='';
-    for(const id of ids){
-      for(const base of [API,'https://api.tcgdex.net/v2/en']){
-        try{
-          const r=await fetch(`${base}/cards/${encodeURIComponent(id)}`,{cache:'no-store'});
-          if(!r.ok)continue;
-          const full=await r.json();
-          const t=canonicalTrainerType(full);
-          if(t){resolved=t;break}
-        }catch(e){}
-      }
-      if(resolved)break;
-    }
-    if(resolved && c.trainerType!==resolved){
-      c.trainerType=resolved;
-      changed=true;
-    }
-  }
-  if(changed){
-    try{localStorage.setItem('cardoryx_db',JSON.stringify(db))}catch(e){}
-    renderHomeDashboard();
-    fillTypeFilter();
-    renderCatalog();
-    renderStats();
   }
 }
 
