@@ -383,7 +383,7 @@
 
     <div id="singleScanFallback" class="card">
   <div class="section-title">🔢 Ricerca senza foto</div>
-  <div class="small">Puoi cercare direttamente una carta inserendo <b>Numero carta</b> e <b>Totale set</b>, anche senza scattare alcuna foto.</div>
+  <div class="small">Puoi cercare direttamente una carta con <b>Numero carta</b> e <b>Totale set</b>, oppure esplorare il catalogo inserendo soltanto il <b>Nome carta</b>.</div>
   <div class="row" style="margin-top:10px">
     <div>
       <div class="label">Numero carta</div>
@@ -394,7 +394,8 @@
       <input id="setTotalInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="159">
     </div>
   </div>
-  <input id="nameInput" type="hidden">
+  <div class="label">Nome carta (opzionale)</div>
+  <input id="nameInput" autocomplete="off" placeholder="es. Genesect-ex">
   <div class="spacer"></div>
   <button class="btn big" type="button" onclick="runManualCollectorSearch()">🔎 Identifica carta</button>
   <div id="searchMsg" class="footer-note"></div>
@@ -2831,6 +2832,7 @@ document.addEventListener('click',function(e){
 
 
 let browseSetState={set:null,cards:[],shown:0,pageSize:12};
+let manualCandidateState={cards:[],shown:0,pageSize:6,route:'',message:''};
 
 async function fetchAllSets(){
   try{
@@ -2927,21 +2929,141 @@ function renderFullSetChunk(){
   searchMsg.textContent=`Mostrate ${st.shown} di ${st.cards.length} carte.`;
 }
 
+function normalizeManualExactName(value=''){
+  return String(value)
+    .normalize('NFC')
+    .toLocaleLowerCase('it-IT')
+    .replace(/[’‘`´]/g,"'")
+    .replace(/[‐‑‒–—−]/g,'-')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function manualExactNameMatches(cards,name){
+  const target=normalizeManualExactName(name);
+  if(!target)return [];
+  return (cards||[]).filter(c=>normalizeManualExactName(c?.name||'')===target);
+}
+
+function manualNameContainsMatches(cards,name){
+  const target=normalizeManualExactName(name);
+  if(!target)return [];
+  return (cards||[]).filter(c=>normalizeManualExactName(c?.name||'').includes(target));
+}
+
+function sortManualNameResults(cards,name){
+  const target=normalizeManualExactName(name);
+  return [...(cards||[])].sort((a,b)=>{
+    const an=normalizeManualExactName(a?.name||'');
+    const bn=normalizeManualExactName(b?.name||'');
+    const exactDelta=Number(bn===target)-Number(an===target);
+    if(exactDelta)return exactDelta;
+    return an.localeCompare(bn,'it-IT')
+      || normalizeManualExactName(setName(a)).localeCompare(normalizeManualExactName(setName(b)),'it-IT')
+      || String(a?.localId||'').localeCompare(String(b?.localId||''),'it-IT',{numeric:true})
+      || String(a?.id||'').localeCompare(String(b?.id||''),'it-IT');
+  });
+}
+
+async function queryManualCardsByName(name){
+  const target=normalizeManualExactName(name);
+  if(!target)return [];
+
+  const briefs=await apiCardsQuery({name});
+  const uniqueBriefs=[...new Map((briefs||[]).filter(c=>c?.id).map(c=>[c.id,c])).values()];
+  const physical=[];
+  const batchSize=12;
+
+  for(let i=0;i<uniqueBriefs.length;i+=batchSize){
+    const batch=await Promise.all(uniqueBriefs.slice(i,i+batchSize).map(async brief=>{
+      const card=await fetchFullCandidate(brief);
+      const setId=card?.set?.id||brief?.set?.id||String(card?.id||brief?.id||'').split('-')[0]||'';
+      if(!setId)return null;
+      const setDetail=await fetchSetDetail(setId);
+      if(!setDetail||!isPhysicalTCGSet(setDetail))return null;
+      return {...brief,...card,set:{...(card?.set||{}),...setDetail}};
+    }));
+    for(const card of batch)if(card?.id)physical.push(card);
+  }
+
+  return sortManualNameResults(
+    manualNameContainsMatches([...new Map(physical.map(c=>[c.id,c])).values()],name),
+    name
+  );
+}
+
+function renderManualCandidateChunk(){
+  const st=manualCandidateState;
+  st.shown=Math.min(st.cards.length,st.shown+st.pageSize);
+  const visible=st.cards.slice(0,st.shown);
+
+  candidateMap={};
+  const cardsHtml=visible.map((c,i)=>{
+    const key=`manual_${i}`;
+    candidateMap[key]=c;
+    const count=setOfficialCount(c);
+    return `<div class="candidate">
+      <img class="card-zoomable" src="${cardImageSrc(c,'low')}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">
+      <h3>${esc(c.name||'Carta')}</h3>
+      <div class="small">N° ${esc(c.localId||'—')}${count?'/'+esc(count):''}${setName(c)?' · '+esc(setName(c)):''}</div>
+      <button class="btn" style="width:100%;margin-top:7px" onclick="chooseCandidate('${key}')">È questa ↓</button>
+    </div>`;
+  }).join('');
+
+  const remaining=st.cards.length-st.shown;
+  const loadMore=remaining>0
+    ? `<div style="margin-top:12px"><button class="btn alt big" type="button" onclick="showMoreManualCandidates()">${remaining<=st.pageSize?`➕ Mostra le ultime ${remaining}`:`➕ Mostra altre ${st.pageSize} — ne restano ${remaining}`}</button></div>`
+    : '';
+  results.innerHTML=`<div class="candidate-grid">${cardsHtml}</div>${loadMore}`;
+  searchMsg.textContent=st.message||`Mostrate ${st.shown} di ${st.cards.length} carte compatibili. Scegli quella corretta.`;
+}
+
+function showMoreManualCandidates(){
+  renderManualCandidateChunk();
+}
+
+function startManualCandidatePagination(cards,route,message=''){
+  manualCandidateState={cards:[...(cards||[])],shown:0,pageSize:6,route,message};
+  renderManualCandidateChunk();
+}
+
 
 async function runManualCollectorSearch(){
   const num=String(numberInput.value||'').replace(/\D/g,'');
   const total=String(setTotalInput.value||'').replace(/\D/g,'');
+  const requestedName=String(nameInput.value||'').trim();
 
-  if(!num||!total){
-    searchMsg.textContent='Inserisci Numero carta e Totale set.';
+  if(!requestedName&&!num&&!total){
+    searchMsg.textContent='Inserisci Nome carta oppure Numero carta + Totale set.';
     return;
   }
 
-  searchMsg.textContent=`Identifico ${num}/${total}…`;
+  if((num&&!total)||(!num&&total)){
+    searchMsg.textContent='Inserisci sia Numero carta sia Totale set.';
+    return;
+  }
+
   results.innerHTML='';
+  manualCandidateState={cards:[],shown:0,pageSize:6,route:'',message:''};
   clearSelection();
 
   try{
+    if(requestedName&&!num&&!total){
+      searchMsg.textContent=`Cerco le carte che contengono “${requestedName}”…`;
+      const cards=await queryManualCardsByName(requestedName);
+      if(!cards.length){
+        searchMsg.textContent='Nessuna carta trovata con questo nome.';
+        return;
+      }
+      startManualCandidatePagination(
+        cards,
+        'Solo nome',
+        `${cards.length} carte trovate per “${requestedName}”. Scegli quella corretta.`
+      );
+      return;
+    }
+
+    searchMsg.textContent=`Identifico ${num}/${total}…`;
     const cards=await queryByPrintedCode(num,total);
 
     if(!cards.length){
@@ -2949,14 +3071,28 @@ async function runManualCollectorSearch(){
       return;
     }
 
-    if(cards.length===1){
+    if(!requestedName && cards.length===1){
       searchMsg.textContent=`✓ ${cards[0].name} · ${cards[0].localId}/${setOfficialCount(cards[0])}`;
       await chooseCard(cards[0]);
       return;
     }
 
-    searchMsg.textContent=`${cards.length} carte compatibili. Scegli quella corretta.`;
-    await renderFastCandidates(cards.slice(0,8),'Numero + Totale set');
+    if(requestedName){
+      const exactNameCards=manualExactNameMatches(cards,requestedName);
+      if(exactNameCards.length===1){
+        const card=exactNameCards[0];
+        searchMsg.textContent=`✓ ${card.name} · ${card.localId}/${setOfficialCount(card)}`;
+        await chooseCard(card);
+        return;
+      }
+      const reason=exactNameCards.length
+        ? 'Più candidati condividono il nome indicato. Scegli manualmente.'
+        : 'Il nome non corrisponde in modo univoco ai candidati trovati. Scegli manualmente.';
+      startManualCandidatePagination(cards,'Numero + Totale set',reason);
+      return;
+    }
+
+    startManualCandidatePagination(cards,'Numero + Totale set');
   }catch(e){
     console.error('Resolver Numero/Totale:',e);
     searchMsg.textContent='Ricerca TCGdex non riuscita. Verifica connessione e riprova.';
