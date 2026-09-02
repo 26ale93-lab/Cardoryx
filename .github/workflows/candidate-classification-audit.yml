@@ -6,7 +6,6 @@ on:
       - diagnostic/candidate-classification-audit-20260902
     paths:
       - scripts/test_candidate_classification_audit.py
-      - .github/workflows/candidate-classification-audit.yml
   workflow_dispatch:
 
 permissions:
@@ -30,10 +29,69 @@ jobs:
       - name: Verify current main and recognition source
         run: |
           git fetch origin main
-          test "$(git rev-parse origin/main)" = "a3017852154a23f82f196f2d4c8981bf4d68c414"
+          main_sha="$(git rev-parse origin/main)"
+          echo "CARDORYX_MAIN_SHA=$main_sha" >> "$GITHUB_ENV"
           test "$(git merge-base HEAD origin/main)" = "86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f"
-          test "$(git diff --name-only 86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f origin/main)" = "data/cardmarket_play_index.json"
-          protected=(index.html data/retail_prices.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml)
+          changed="$(git diff --name-only 86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f origin/main)"
+          unexpected="$(printf '%s\n' "$changed" | grep -Ev '^(data/cardmarket_play_index\.json|data/retail_prices\.json)
+
+      - name: Validate diagnostic Python
+        run: python -m py_compile scripts/test_candidate_classification_audit.py
+
+      - name: Snapshot protected production files
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.before
+
+      - name: Run candidate classification audit
+        run: python scripts/test_candidate_classification_audit.py
+
+      - name: Verify report and read-only safety
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("artifacts/candidate_classification_audit_report.json")
+          if not p.exists(): raise SystemExit("Required report missing")
+          r=json.loads(p.read_text(encoding="utf-8"))
+          if r.get("sourceMain")!=__import__("os").environ["CARDORYX_MAIN_SHA"]: raise SystemExit("Unexpected main")
+          if r.get("previousReports",{}).get("discrepancies"): raise SystemExit("Previous audit discrepancy")
+          q=r.get("quality",{})
+          if q.get("simulatedFalsePositives")!=0: raise SystemExit("False positive")
+          if q.get("targetsLost")!=0: raise SystemExit("Target lost")
+          if q.get("regressions")!=0: raise SystemExit("Regression")
+          if q.get("apiNetworkErrors")!=0: raise SystemExit("API/network error")
+          s=r.get("safety",{})
+          for key in ("indexHtmlModified","retailModified","cardmarketModified","collectionDataModified","scannerBehaviorModified","newIdentitiesCreated"):
+              if s.get(key) is not False: raise SystemExit(f"Safety violation: {key}")
+          if r.get("finalAssessment")!="CANDIDATO PER TEST IMPLEMENTATIVO": raise SystemExit("Audit not safe")
+          print(json.dumps({
+            "scope":r.get("scope"),
+            "category":r.get("categoryQuality"),
+            "trainerSubtypes":r.get("trainerSubtypes"),
+            "pokemon":r.get("pokemonMetadata"),
+            "energy":r.get("energyReuse"),
+            "special":r.get("specialNumbering"),
+            "cap6":r.get("displayCap6"),
+            "cascade":r.get("cascade"),
+            "manualSearch":r.get("manualSearch"),
+            "quality":q,
+            "final":r.get("finalAssessment")
+          },ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload diagnostic report
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-classification-audit-report
+          path: artifacts/candidate_classification_audit_report.json
+          if-no-files-found: error
+          retention-days: 14
+ || true)"
+          test -z "$unexpected"
+          protected=(index.html scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml)
           git diff --exit-code origin/main...HEAD -- "${protected[@]}"
 
       - name: Validate diagnostic Python
