@@ -332,7 +332,7 @@ def main():
     false_positives=sum(v["simulatedFalsePositives"] for v in strategies.values())
     target_lost=sum(v["targetsLost"] for v in strategies.values())
     theoretical_unique=unique+cascade_resolved
-    report={"schema":1,"testType":"candidate-classification-special-numbering","generatedAt":now(),
+    report={"schema":2,"testType":"candidate-classification-special-numbering","generatedAt":now(),
       "sourceMain":MAIN,"recognitionSourceUnchangedFrom":RECOGNITION_BASE,"diagnosticCommit":os.environ.get("GITHUB_SHA","unknown"),
       "previousReports":{"fullRun":33611775731,"nameRun":33616802992,"ocrEnergyRun":33619165542,
         "expected":EXPECTED,"recomputed":previous_real,"discrepancies":discrepancy},
