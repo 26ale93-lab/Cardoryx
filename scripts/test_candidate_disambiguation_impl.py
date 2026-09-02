@@ -310,10 +310,11 @@ def main():
     }
 
     synthetic=[{"id":"a","signal":"pokemon","name":"Genesect-ex"},{"id":"b","signal":"trainer","name":"Hydreigon-ex"},{"id":"c","signal":"","name":"Sliggoo"}]
-    restored,_,reason=safe_filter(synthetic,"energy",lambda x:x["signal"])
+    known=[synthetic[0],synthetic[1]]
+    restored,_,reason=safe_filter(known,"energy",lambda x:x["signal"])
     exact_restored,_,name_reason=exact_name_filter(synthetic,"Not present")
     failsafe={
-      "zeroCategoryFilterRestoresOriginal":reason=="zero-restored" and restored==synthetic,
+      "zeroCategoryFilterRestoresOriginal":reason=="zero-restored" and restored==known,
       "zeroNameFilterRestoresOriginal":name_reason=="zero-restored" and exact_restored==synthetic,
       "missingCandidateMetadataPreserved":synthetic[2] in safe_filter(synthetic,"pokemon",lambda x:x["signal"])[0],
       "candidatesLost":lost,
@@ -328,7 +329,12 @@ def main():
       and not any(html_checks["forbiddenPatterns"].values())
       and html_checks["filterBeforeDisplayCap"]
       and genesect.get("concordantAutoSelect") and genesect.get("discordantOCRKeepsAllCandidates")
-      and not pagination_failures and all(failsafe.values())
+      and not pagination_failures
+      and failsafe["zeroCategoryFilterRestoresOriginal"]
+      and failsafe["zeroNameFilterRestoresOriginal"]
+      and failsafe["missingCandidateMetadataPreserved"]
+      and failsafe["candidatesLost"]==0
+      and failsafe["simulatedFalsePositives"]==0
       and regression["regressionCount"]==0 and not network_errors
     )
     report={
