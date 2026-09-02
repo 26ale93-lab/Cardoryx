@@ -463,6 +463,31 @@ def audit_mycomics(cards, by_set_number, known_sets):
     return stats
 
 
+def audit_magomatto_production(cards):
+    copied = {
+        BUILDER.make_key(c["set"], c["number"], c["variant"], c["language"], c["condition"]):
+        copy.deepcopy(c)
+        for c in cards
+    }
+    production = BUILDER.collect_magomatto(copied)
+    stats = base_stats("MagoMatto")
+    stats.update({
+        "access": production.get("pages", 0) > 0,
+        "products": production.get("products", 0),
+        "eligibleMetadata": production.get("eligibleMetadata", 0),
+        "uniqueCandidates": production.get("accepted", 0),
+        "oneToTwo": production.get("secondStorePotential", 0),
+        "twoToThree": production.get("newReliablePotential", 0),
+        "threeToFourOrMore": production.get("alreadyReliablePotential", 0),
+        "ambiguousIdentity": production.get("identityRejected", 0),
+        "duplicateStore": production.get("duplicateStore", 0),
+        "productionSimulation": production,
+    })
+    if production.get("ok") is not True:
+        stats["error"] = production.get("error") or "Adapter di produzione non riuscito"
+    return stats
+
+
 def audit_divertilandia(cards, by_set_number, known_sets):
     stats = audit_wc(
         "Divertilandia Pro", DIVERTILANDIA_BASE, ("pokemon",), cards,
@@ -480,7 +505,7 @@ def main():
     by_set_number, known_sets = indexes(cards)
 
     jobs = {
-        "MagoMatto": lambda: audit_magomatto(cards, by_set_number, known_sets),
+        "MagoMatto": lambda: audit_magomatto_production(cards),
         "MyComics": lambda: audit_mycomics(cards, by_set_number, known_sets),
         "Divertilandia Pro": lambda: audit_divertilandia(cards, by_set_number, known_sets),
     }
