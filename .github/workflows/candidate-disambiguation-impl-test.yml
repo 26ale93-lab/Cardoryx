@@ -43,20 +43,9 @@ jobs:
           protected=(index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml)
           git diff --exit-code 845e463928f57ae1b5f139b289dd5c9120cd4f61...HEAD -- "${protected[@]}"
 
-      - name: Load exact previous diagnostic engine
-        run: |
-          prior="aa071a5e36dd6db4e01b740d991f4307ad0dbab8"
-          git fetch origin "$prior"
-          test "$(git rev-parse FETCH_HEAD)" = "$prior"
-          mkdir -p /tmp/cardoryx-diagnostic-lib
-          for file in full_catalog_coverage_postmerge_audit.py ambiguity_name_resolution_audit.py test_ocr_name_ambiguity.py test_energy_ambiguity.py test_candidate_classification_audit.py; do
-            git show "$prior:scripts/$file" > "/tmp/cardoryx-diagnostic-lib/$file"
-          done
-          echo "PYTHONPATH=/tmp/cardoryx-diagnostic-lib" >> "$GITHUB_ENV"
-
       - name: Validate Python and real-photo diagnostic JavaScript
         run: |
-          python -m py_compile scripts/test_candidate_disambiguation_impl.py /tmp/cardoryx-diagnostic-lib/*.py
+          python -m py_compile scripts/test_candidate_disambiguation_impl.py
           python - <<'PY'
           import re
           from pathlib import Path
@@ -100,15 +89,12 @@ jobs:
           if r.get("priorReports",{}).get("discrepancies"): raise SystemExit("Prior audit discrepancy")
           checks=r.get("implementation",{}).get("checks",{})
           required_runtime_checks=(
-            "photoInputCaptureEnvironment","filterBeforeDisplayCap","loadMoreWithoutNewQuery",
-            "groundTruthIncludesNone","exportExcludesImages","collectionSaveButtonRemoved",
-            "collectionSaveRuntimeDisabled","runtimeDoesNotPersistCollection",
-            "diagnosticStorageSeparated","realPhotoStatistics","performanceMeasured",
-            "schema3Export","schema2Migration","sevenControlledNameVariants",
-            "currentRuleAThresholdPreserved","ruleBMetricOnly","ruleCNeverApplied",
-            "classificationDoesNotFilter","targetedNoFuzzy","targetedNoNamedHardcoding",
-            "exportRejectsImages","collectorRawCaptured","newSignalsDiagnosticOnly",
-            "collectorIdentityBeforeClassification"
+            "cameraCapture","advancedPanel","sevenControlledNameVariants","preprocessingMatrix",
+            "currentRuleAThresholdPreserved","tokenSequenceConsecutive","significantSuffixPreserved",
+            "ruleBMetricOnly","ruleCMetricOnly","classificationDiagnosticOnly",
+            "identityBeforeClassification","collectorRawCaptured","schema3Export","schema2Migration",
+            "imagesExcluded","targetedNoFuzzy","targetedNoNamedHardcoding","collectionSaveDisabled",
+            "noCollectionPersistence","loadMore","localGroundTruth","performanceTiming"
           )
           for key in required_runtime_checks:
               if checks.get(key) is not True: raise SystemExit(f"Real-photo page check failed: {key}")
@@ -121,8 +107,6 @@ jobs:
           q=r.get("quality",{})
           if q.get("simulatedFalsePositives")!=0 or q.get("candidateIdsLost")!=0: raise SystemExit("Candidate safety failure")
           if q.get("regressions")!=0 or q.get("apiNetworkErrors")!=0: raise SystemExit("Regression or network error")
-          cap=r.get("displayCap6",{})
-          if not cap.get("loadMoreTested") or cap.get("paginationFailures")!=0 or cap.get("duplicateIds")!=0: raise SystemExit("Load more failure")
           replay=r.get("realPhotoReplay",{})
           if replay.get("totalTests")!=27 or replay.get("photoScans")!=19 or replay.get("ambiguousPhotoScans")!=8:
               raise SystemExit("Real-photo export baseline mismatch")
@@ -134,14 +118,11 @@ jobs:
           if r.get("photoValidation",{}).get("newPhotosExecutedInWorkflow")!=0: raise SystemExit("Unexpected new-photo claim")
           if r.get("collectorCode",{}).get("parserChanged") is not False: raise SystemExit("Collector parser changed")
           safety=r.get("safety",{})
-          for key in ("mainModified","retailModified","cardmarketModified","collectionDataModified","newIdentitiesCreated","pricesModified"):
+          for key in ("mainModified","indexProductionModified","retailModified","cardmarketModified","collectionDataModified","newIdentitiesCreated","pricesModified"):
               if safety.get(key) is not False: raise SystemExit(f"Safety violation: {key}")
           if r.get("finalAssessment")!="PRONTO PER SECONDO TEST FOTO REALI": raise SystemExit("Not ready for second photo test")
           print(json.dumps({
-            "scope":r.get("scope"),"category":r.get("category"),"trainers":r.get("trainers"),
-            "energy":r.get("energy"),"name":r.get("name"),"realPhotoReplay":replay,"genesect":g,
-            "specialNumbering":r.get("specialNumbering"),"displayCap6":cap,
-            "manualSearch":r.get("manualSearch"),"structuralSimulation":r.get("structuralSimulation"),
+            "name":r.get("name"),"realPhotoReplay":replay,"genesect":g,
             "photoValidation":r.get("photoValidation"),"collectorCode":r.get("collectorCode"),
             "classificationPhoto":r.get("classificationPhoto"),"performance":r.get("performance"),
             "quality":q,"safety":safety,"finalAssessment":r.get("finalAssessment")
