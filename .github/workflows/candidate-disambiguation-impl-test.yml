@@ -1,0 +1,121 @@
+name: Candidate Disambiguation Implementation Test
+
+on:
+  push:
+    branches:
+      - diagnostic/candidate-disambiguation-implementation-test-20260902
+    paths:
+      - scripts/test_candidate_disambiguation_impl.py
+      - diagnostic/candidate-disambiguation-test.html
+      - .github/workflows/candidate-disambiguation-impl-test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic-implementation-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify main and diagnostic isolation
+        run: |
+          git fetch origin main
+          main_sha="$(git rev-parse origin/main)"
+          echo "CARDORYX_MAIN_SHA=$main_sha" >> "$GITHUB_ENV"
+          echo "MAIN_BEFORE=$main_sha" >> "$GITHUB_ENV"
+          test "$(git merge-base HEAD origin/main)" = "845e463928f57ae1b5f139b289dd5c9120cd4f61"
+          changed_main="$(git diff --name-only 845e463928f57ae1b5f139b289dd5c9120cd4f61 origin/main)"
+          unexpected_main="$(printf '%s\n' "$changed_main" | grep -Ev '^(data/cardmarket_play_index\.json|data/retail_prices\.json)$' || true)"
+          test -z "$unexpected_main"
+          expected_branch="$(git diff --name-only 845e463928f57ae1b5f139b289dd5c9120cd4f61...HEAD | sort)"
+          test "$expected_branch" = "$(printf '%s\n' .github/workflows/candidate-disambiguation-impl-test.yml diagnostic/candidate-disambiguation-test.html scripts/test_candidate_disambiguation_impl.py | sort)"
+          protected=(index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml)
+          git diff --exit-code 845e463928f57ae1b5f139b289dd5c9120cd4f61...HEAD -- "${protected[@]}"
+
+      - name: Load exact previous diagnostic engine
+        run: |
+          prior="aa071a5e36dd6db4e01b740d991f4307ad0dbab8"
+          git fetch origin "$prior"
+          test "$(git rev-parse FETCH_HEAD)" = "$prior"
+          mkdir -p /tmp/cardoryx-diagnostic-lib
+          for file in full_catalog_coverage_postmerge_audit.py ambiguity_name_resolution_audit.py test_ocr_name_ambiguity.py test_energy_ambiguity.py test_candidate_classification_audit.py; do
+            git show "$prior:scripts/$file" > "/tmp/cardoryx-diagnostic-lib/$file"
+          done
+          echo "PYTHONPATH=/tmp/cardoryx-diagnostic-lib" >> "$GITHUB_ENV"
+
+      - name: Validate Python and diagnostic JavaScript
+        run: |
+          python -m py_compile scripts/test_candidate_disambiguation_impl.py /tmp/cardoryx-diagnostic-lib/*.py
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html=Path("diagnostic/candidate-disambiguation-test.html").read_text(encoding="utf-8")
+          scripts=re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>",html,re.S|re.I)
+          Path("/tmp/cardoryx-diagnostic-inline.js").write_text("\n".join(scripts),encoding="utf-8")
+          PY
+          node --check /tmp/cardoryx-diagnostic-inline.js
+
+      - name: Snapshot protected production files
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.before
+
+      - name: Run diagnostic implementation test
+        run: python scripts/test_candidate_disambiguation_impl.py
+
+      - name: Verify report, fail-safe and read-only state
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_BEFORE"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("artifacts/candidate_disambiguation_impl_report.json")
+          if not p.exists(): raise SystemExit("Required report missing")
+          r=json.loads(p.read_text(encoding="utf-8"))
+          if r.get("sourceMain")!=os.environ["CARDORYX_MAIN_SHA"]: raise SystemExit("Unexpected main")
+          if r.get("priorReports",{}).get("discrepancies"): raise SystemExit("Prior audit discrepancy")
+          q=r.get("quality",{})
+          if q.get("simulatedFalsePositives")!=0 or q.get("candidateIdsLost")!=0: raise SystemExit("Candidate safety failure")
+          if q.get("regressions")!=0 or q.get("apiNetworkErrors")!=0: raise SystemExit("Regression or network error")
+          cap=r.get("displayCap6",{})
+          if not cap.get("loadMoreTested") or cap.get("paginationFailures")!=0 or cap.get("duplicateIds")!=0: raise SystemExit("Load more failure")
+          g=r.get("genesect067of086",{})
+          if not g.get("concordantAutoSelect") or not g.get("discordantOCRKeepsAllCandidates"): raise SystemExit("Genesect control failure")
+          if r.get("photoValidation",{}).get("realScansExecuted")!=0: raise SystemExit("Unexpected real-photo claim")
+          safety=r.get("safety",{})
+          for key in ("mainModified","retailModified","cardmarketModified","collectionDataModified","newIdentitiesCreated","pricesModified"):
+              if safety.get(key) is not False: raise SystemExit(f"Safety violation: {key}")
+          if r.get("finalAssessment")!="PRONTO PER TEST SU FOTO REALI": raise SystemExit("Not ready for photo test")
+          print(json.dumps({
+            "scope":r.get("scope"),"category":r.get("category"),"trainers":r.get("trainers"),
+            "energy":r.get("energy"),"name":r.get("name"),"genesect":g,
+            "specialNumbering":r.get("specialNumbering"),"displayCap6":cap,
+            "manualSearch":r.get("manualSearch"),"structuralSimulation":r.get("structuralSimulation"),
+            "photoValidation":r.get("photoValidation"),"performance":r.get("performance"),
+            "quality":q,"safety":safety,"finalAssessment":r.get("finalAssessment")
+          },ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload diagnostic implementation package
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-disambiguation-implementation-test
+          path: |
+            artifacts/candidate_disambiguation_impl_report.json
+            diagnostic/candidate-disambiguation-test.html
+          if-no-files-found: error
+          retention-days: 14
