@@ -277,6 +277,7 @@
 </head>
 <style>
 .diagnostic-panel{margin-top:14px;border:2px solid #7c3aed;background:#faf5ff}.diagnostic-panel h3{margin:0 0 10px}.diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.diagnostic-kv{padding:9px;border:1px solid #e9d5ff;border-radius:10px;background:#fff}.diagnostic-kv b{display:block;font-size:11px;color:#6b21a8;text-transform:uppercase}.diagnostic-kv span{display:block;margin-top:3px;overflow-wrap:anywhere}.diagnostic-wide{grid-column:1/-1}.diagnostic-result{margin-top:10px;padding:12px;border-radius:12px;border:1px solid #d1d5db;background:#f3f4f6}.diagnostic-result[data-state="correct"]{background:#ecfdf3;border-color:#6ce9a6;color:#05603a}.diagnostic-result[data-state="manual"]{background:#fffaeb;border-color:#fec84b;color:#93370d}.diagnostic-result[data-state="wrong"]{background:#fef3f2;border-color:#fda29b;color:#912018}.diagnostic-result[data-state="pending"]{background:#f2f4f7;color:#475467}.diagnostic-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.diagnostic-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.diagnostic-stat{padding:9px;border-radius:10px;background:#fff;border:1px solid #e5e7eb}.diagnostic-stat strong{display:block;font-size:18px}.diagnostic-timeline{margin:8px 0 0;padding-left:18px}.diagnostic-timeline li{margin:4px 0}.ground-truth-none{width:100%;margin-top:9px}.diagnostic-note{padding:10px;border-left:4px solid #7c3aed;background:#f5f3ff;border-radius:8px}.diagnostic-sample{font-size:12px;line-height:1.55;color:#475467}.production-disabled{opacity:.7;pointer-events:none}.diagnostic-only-hide{display:none!important}@media(max-width:520px){.diagnostic-grid,.diagnostic-stats{grid-template-columns:1fr}.diagnostic-wide{grid-column:auto}}
+.advanced-diagnostics summary{cursor:pointer;font-weight:900;color:#5b21b6;padding:4px 0}.advanced-crop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.advanced-crop{border:1px solid #ddd6fe;border-radius:12px;background:#fff;padding:8px}.advanced-crop img{width:100%;height:82px;object-fit:contain;background:#111827;border-radius:8px}.advanced-crop b{display:block;margin:6px 0 3px}.advanced-crop pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;margin:5px 0}.diagnostic-rule{padding:8px;border-radius:9px;background:#f8fafc;border:1px solid #e2e8f0;margin-top:6px}.diagnostic-rule strong{color:#5b21b6}.diagnostic-warning{color:#9a3412}.diagnostic-ok{color:#067647}@media(max-width:520px){.advanced-crop-grid{grid-template-columns:1fr}}
 </style>
 <body><div id="candidateDiagnosticBanner" style="position:sticky;top:0;z-index:99999;background:#3b176b;color:white;padding:10px 14px;text-align:center;font:600 14px system-ui">TEST FOTO REALI — nessun salvataggio in collezione <button onclick="downloadCandidateDiagnosticLog()" style="margin-left:10px;padding:6px 10px;border:0;border-radius:8px">Esporta risultati test</button></div>
 <div class="app">
@@ -409,6 +410,17 @@
         <ul id="diagTimeline" class="diagnostic-timeline"><li>In attesa di una foto.</li></ul>
         <div id="diagVisualOutcome" class="diagnostic-result" data-state="pending"><b>GRIGIO — Ground truth non ancora indicata</b></div>
       </div>
+      <details id="advancedOcrDiagnostics" class="card diagnostic-panel advanced-diagnostics" open>
+        <summary>🔬 Diagnostica OCR avanzata</summary>
+        <div class="small">I crop sono mostrati solo in memoria. L’export salva coordinate e testo OCR, mai immagini o base64.</div>
+        <h4>Nome — crop N1/N2/N3/N4 e preprocessing A–G</h4>
+        <div id="diagAdvancedNameCrops" class="advanced-crop-grid"><div class="small">In attesa di una scansione ambigua.</div></div>
+        <div id="diagAdvancedNameRules"></div>
+        <h4>Categoria / sottotipo / Energia</h4>
+        <div id="diagAdvancedClassification" class="advanced-crop-grid"><div class="small">In attesa di una foto.</div></div>
+        <h4>Collector code</h4>
+        <div id="diagAdvancedCollector" class="advanced-crop-grid"><div class="small">In attesa di una foto.</div></div>
+      </details>
     </div>
 
     <div id="singleScanFallback" class="card">
@@ -426,7 +438,7 @@
   </div>
   <div style="margin-top:10px">
     <div class="label">Nome carta <span class="small">(opzionale, confronto esatto)</span></div>
-    <input id="nameInput" autocomplete="off" placeholder="es. Genesect-ex">
+    <input id="nameInput" autocomplete="off" placeholder="Nome completo della carta">
   </div>
   <div class="spacer"></div>
   <button class="btn big" type="button" onclick="runManualCollectorSearch()">🔎 Identifica carta</button>
@@ -454,7 +466,7 @@
     <button class="btn" type="button" onclick="downloadCandidateDiagnosticLog()">Esporta risultati test</button>
     <button class="btn alt" type="button" onclick="resetCandidateDiagnosticLog()">Reset risultati test</button>
   </div>
-  <div class="diagnostic-sample" style="margin-top:12px"><b>Campione suggerito: 30 identità × 2 foto.</b><br>Genesect-ex 067/086; Pokémon standard, ex, V, GX, VMAX/VSTAR; Allenatore Aiuto, Oggetto, Stadio, Strumento; Energia Base e Speciale; TG, GG, H; promo; carte vecchie e moderne; nomi corti/lunghi; bustina con riflesso; foto inclinata.</div>
+  <div class="diagnostic-sample" style="margin-top:12px"><b>Secondo campione suggerito: stessa carta con 2 foto.</b><br>Pokémon standard e con suffisso; Allenatore Aiuto, Oggetto, Stadio, Strumento; Energia Base e Speciale; TG, GG, H; carte vecchie e moderne; nomi corti/lunghi; bustina con riflesso; foto inclinata.</div>
 </div>
 
 <div id="confirmCard" class="card hidden">
@@ -7204,6 +7216,535 @@ document.addEventListener('DOMContentLoaded',function(){
       setTimeout(function(){setScanProgress(0,'Pronto. Numero/localId prima; doppio OCR nome solo se i candidati sono ambigui.')},0);
     });
   });
+});
+</script>
+
+<script id="candidateTargetedOcrDiagnosticRuntime">
+/* TARGETED OCR DIAGNOSTIC — schema 3.
+   New crop/token/category metrics never select a card. Only legacy Rule A can
+   retain the already-tested exact double-read behavior. */
+CARDORYX_DIAGNOSTIC.schema=3;
+CARDORYX_DIAGNOSTIC.previewState={name:[],classification:[],collector:[]};
+
+const DIAGNOSTIC_NAME_CROP_MATRIX=[
+  {id:'N1-A',crop:'N1',label:'N1 · A originale',coords:{x:.12,y:.055,w:.72,h:.075},scale:2.2,preprocess:'original'},
+  {id:'N1-B',crop:'N1',label:'N1 · B grayscale',coords:{x:.12,y:.055,w:.72,h:.075},scale:2.2,preprocess:'grayscale'},
+  {id:'N1-C',crop:'N1',label:'N1 · C contrasto',coords:{x:.12,y:.055,w:.72,h:.075},scale:2.2,preprocess:'contrast'},
+  {id:'N1-D',crop:'N1',label:'N1 · D threshold 170',coords:{x:.12,y:.055,w:.72,h:.075},scale:2.2,preprocess:'threshold',threshold:170},
+  {id:'N2-E',crop:'N2',label:'N2 · E upscale 2x',coords:{x:.08,y:.045,w:.68,h:.065},scale:4.0,preprocess:'original'},
+  {id:'N3-F',crop:'N3',label:'N3 · F upscale + grayscale',coords:{x:.08,y:.025,w:.76,h:.09},scale:4.0,preprocess:'grayscale'},
+  {id:'N4-G',crop:'N4',label:'N4 · G upscale + threshold',coords:{x:.04,y:.04,w:.84,h:.075},scale:4.0,preprocess:'threshold'}
+];
+const DIAGNOSTIC_SIGNIFICANT_SUFFIXES=new Set(['ex','gx','v','vmax','vstar']);
+
+function diagnosticCloneCanvas(source){
+  const out=document.createElement('canvas');out.width=source.width;out.height=source.height;
+  out.getContext('2d',{alpha:false}).drawImage(source,0,0);return out;
+}
+function diagnosticPixelPreprocess(canvas,mode,threshold){
+  if(mode==='original')return canvas;
+  if(mode==='threshold')return enhanceForOCR(canvas,Number.isFinite(threshold)?threshold:174);
+  const out=diagnosticCloneCanvas(canvas),ctx=out.getContext('2d'),im=ctx.getImageData(0,0,out.width,out.height),d=im.data;
+  for(let i=0;i<d.length;i+=4){
+    const gray=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    let value=gray;
+    if(mode==='contrast')value=Math.max(0,Math.min(255,(gray-128)*1.65+128));
+    d[i]=d[i+1]=d[i+2]=value;
+  }
+  ctx.putImageData(im,0,0);return out;
+}
+function diagnosticCanvasPreview(canvas){
+  try{return canvas.toDataURL('image/jpeg',.72)}catch(e){return ''}
+}
+function diagnosticTokens(value){
+  return diagnosticNameKey(value).replace(/-/g,' ').split(/\s+/).filter(Boolean);
+}
+function diagnosticSequenceIndex(haystack,needle){
+  if(!needle.length||needle.length>haystack.length)return -1;
+  for(let i=0;i<=haystack.length-needle.length;i++){
+    let ok=true;
+    for(let j=0;j<needle.length;j++)if(haystack[i+j]!==needle[j]){ok=false;break}
+    if(ok)return i;
+  }
+  return -1;
+}
+function diagnosticNameParts(name){
+  const tokens=diagnosticTokens(name);
+  const suffix=tokens.length&&DIAGNOSTIC_SIGNIFICANT_SUFFIXES.has(tokens[tokens.length-1])?tokens[tokens.length-1]:'';
+  return {tokens:tokens,suffixExpected:suffix,baseTokens:suffix?tokens.slice(0,-1):tokens};
+}
+function diagnosticCandidateMatch(raw,card){
+  const normalized=diagnosticNameKey(raw),ocrTokens=diagnosticTokens(raw),parts=diagnosticNameParts(card?.name||'');
+  const fullIndex=diagnosticSequenceIndex(ocrTokens,parts.tokens);
+  const baseIndex=diagnosticSequenceIndex(ocrTokens,parts.baseTokens);
+  const exactFullName=!!normalized&&normalized===diagnosticNameKey(card?.name||'');
+  const exactTokenSequence=fullIndex>=0;
+  const baseNameOnly=baseIndex>=0&&!exactTokenSequence;
+  const suffixObserved=parts.suffixExpected&&baseIndex>=0?String(ocrTokens[baseIndex+parts.baseTokens.length]||''):'';
+  const suffixAgreement=!parts.suffixExpected||suffixObserved===parts.suffixExpected;
+  const matched=exactTokenSequence?parts.tokens:(baseNameOnly?parts.baseTokens:[]);
+  const start=exactTokenSequence?fullIndex:baseIndex;
+  const extraTokens=start>=0?ocrTokens.slice(0,start).concat(ocrTokens.slice(start+matched.length)):ocrTokens;
+  const numericTokens=extraTokens.filter(x=>/^\d+[a-z]?$/.test(x));
+  const hpPsTokens=extraTokens.filter(x=>x==='hp'||x==='ps');
+  const symbolTokens=String(raw||'').match(/[^\p{L}\p{N}\s'’\-]/gu)||[];
+  const bestDiagnosticLevel=exactFullName?3:(exactTokenSequence&&suffixAgreement?2:(baseNameOnly?1:0));
+  return {
+    candidateId:card?.id||'',candidateName:card?.name||'',exactFullName:exactFullName,
+    exactTokenSequence:exactTokenSequence,baseNameOnly:baseNameOnly,
+    suffixExpected:parts.suffixExpected,suffixObserved:suffixObserved,suffixAgreement:suffixAgreement,
+    matchedNameTokens:matched,extraTokens:extraTokens,numericTokens:numericTokens,
+    hpPsTokens:hpPsTokens,symbolTokens:symbolTokens,bestDiagnosticLevel:bestDiagnosticLevel
+  };
+}
+function diagnosticAnalyzeNameReads(reads,candidates){
+  const analyzed=reads.map(function(read){
+    const matches=(candidates||[]).map(card=>diagnosticCandidateMatch(read.raw,card));
+    const strongOwners=matches.filter(x=>x.bestDiagnosticLevel>=2&&x.suffixAgreement);
+    const baseOwners=matches.filter(x=>x.bestDiagnosticLevel>=1);
+    matches.forEach(function(x){
+      x.uniqueCandidateOwner=x.bestDiagnosticLevel>=2?strongOwners.length===1:(x.bestDiagnosticLevel===1&&baseOwners.length===1);
+    });
+    return Object.assign({},read,{candidateMatches:matches,bestDiagnosticLevel:matches.reduce((m,x)=>Math.max(m,x.bestDiagnosticLevel),0)});
+  });
+  const byId={};
+  (candidates||[]).forEach(function(card){
+    const perRead=analyzed.map(r=>r.candidateMatches.find(x=>x.candidateId===card.id)).filter(Boolean);
+    byId[card.id]={
+      card:card,strong:perRead.filter(x=>x.bestDiagnosticLevel>=2&&x.suffixAgreement),
+      partial:perRead.filter(x=>x.bestDiagnosticLevel>=1),perRead:perRead
+    };
+  });
+  const legacyA=analyzed.find(x=>x.id==='N1-A'),legacyB=analyzed.find(x=>x.id==='N1-D');
+  const ruleACandidates=(candidates||[]).filter(function(card){
+    const a=diagnosticNameKey(legacyA?.raw||''),b=diagnosticNameKey(legacyB?.raw||'');
+    return !!a&&a===b&&a===diagnosticNameKey(card.name||'');
+  });
+  const ruleBCandidates=Object.values(byId).filter(x=>x.strong.length>=2).map(x=>x.card);
+  const ruleCCandidates=Object.values(byId).filter(function(x){
+    if(!x.strong.length)return false;
+    const strongIds=new Set(x.strong.map(r=>r));
+    return x.partial.some(r=>!strongIds.has(r));
+  }).map(x=>x.card);
+  return {
+    reads:analyzed,
+    ruleA:{resolved:ruleACandidates.length===1,candidateId:ruleACandidates.length===1?ruleACandidates[0].id:'',candidateName:ruleACandidates.length===1?ruleACandidates[0].name:'',appliedToSelection:true},
+    ruleB:{resolved:ruleBCandidates.length===1,candidateId:ruleBCandidates.length===1?ruleBCandidates[0].id:'',candidateName:ruleBCandidates.length===1?ruleBCandidates[0].name:'',appliedToSelection:false},
+    ruleC:{theoretical:ruleCCandidates.length===1,candidateId:ruleCCandidates.length===1?ruleCCandidates[0].id:'',candidateName:ruleCCandidates.length===1?ruleCCandidates[0].name:'',appliedToSelection:false},
+    exactTokenSequenceMatches:analyzed.reduce((n,r)=>n+r.candidateMatches.filter(x=>x.exactTokenSequence&&x.uniqueCandidateOwner).length,0),
+    suffixFailures:analyzed.reduce((n,r)=>n+r.candidateMatches.filter(x=>x.suffixExpected&&!x.suffixAgreement&&x.baseNameOnly).length,0),
+    baseNameOnlyCases:analyzed.reduce((n,r)=>n+r.candidateMatches.filter(x=>x.baseNameOnly&&x.uniqueCandidateOwner).length,0)
+  };
+}
+async function readAdvancedNameDiagnostics(img,candidates){
+  const reads=[],previews=[];
+  const started=performance.now();
+  for(const spec of DIAGNOSTIC_NAME_CROP_MATRIX){
+    const base=cropImage(img,spec.coords.x,spec.coords.y,spec.coords.w,spec.coords.h,spec.scale);
+    const prepared=diagnosticPixelPreprocess(base,spec.preprocess,spec.threshold);
+    previews.push({id:spec.id,label:spec.label,url:diagnosticCanvasPreview(prepared)});
+    const one=performance.now();
+    let result=null,error='';
+    try{result=await Tesseract.recognize(prepared,'ita+eng',{tessedit_pageseg_mode:'7'})}
+    catch(e){error=String(e?.message||e)}
+    const raw=String(result?.data?.text||'').trim();
+    reads.push({
+      id:spec.id,crop:spec.crop,coordinates:spec.coords,scale:spec.scale,preprocessing:spec.preprocess,
+      threshold:Number.isFinite(spec.threshold)?spec.threshold:null,
+      raw:raw,normalized:diagnosticNameKey(raw),confidence:Number.isFinite(Number(result?.data?.confidence))?Number(result.data.confidence):null,
+      timingMs:performance.now()-one,error:error
+    });
+  }
+  const analysis=diagnosticAnalyzeNameReads(reads,candidates||[]);
+  const flatMatches=analysis.reads.flatMap(function(read){return read.candidateMatches.map(function(match){return Object.assign({readId:read.id},match)})});
+  analysis.crops=reads.map(x=>({id:x.id,crop:x.crop,coordinates:x.coordinates,scale:x.scale,preprocessing:x.preprocessing,threshold:x.threshold}));
+  analysis.rawTexts=reads.map(x=>({id:x.id,text:x.raw}));
+  analysis.normalizedTexts=reads.map(x=>({id:x.id,text:x.normalized}));
+  analysis.timings=reads.map(x=>({id:x.id,timingMs:x.timingMs}));
+  analysis.candidateMatches=flatMatches;
+  analysis.exactFullName=flatMatches.some(x=>x.exactFullName&&x.uniqueCandidateOwner);
+  analysis.exactTokenSequence=flatMatches.some(x=>x.exactTokenSequence&&x.uniqueCandidateOwner);
+  const suffixRelevant=flatMatches.filter(x=>x.suffixExpected&&(x.baseNameOnly||x.exactTokenSequence));
+  analysis.suffixAgreement=suffixRelevant.length?suffixRelevant.every(x=>x.suffixAgreement):null;
+  analysis.baseNameDetected=[...new Set(flatMatches.filter(x=>x.baseNameOnly&&x.uniqueCandidateOwner).map(x=>x.candidateName))].join(' | ');
+  analysis.bestDiagnosticLevel=analysis.reads.reduce((best,x)=>Math.max(best,x.bestDiagnosticLevel||0),0);
+  analysis.totalTimingMs=performance.now()-started;
+  CARDORYX_DIAGNOSTIC.previewState.name=previews;
+  return analysis;
+}
+function diagnosticDetectClassification(raw){
+  const normalized=diagnosticNameKey(raw),tokens=diagnosticTokens(raw);
+  let category='',subtype='',energyType='';
+  if(tokens.includes('allenatore')||tokens.includes('trainer'))category='trainer';
+  else if((tokens.includes('energia')&&(tokens.includes('base')||tokens.includes('speciale')))||tokens.includes('energy'))category='energy';
+  else if((tokens.includes('ps')||tokens.includes('hp'))&&(tokens.includes('base')||tokens.includes('fase')||tokens.includes('stage')))category='pokemon';
+  if(tokens.includes('aiuto')||tokens.includes('supporter'))subtype='supporter';
+  else if(tokens.includes('stadio')||tokens.includes('stadium'))subtype='stadium';
+  else if(tokens.includes('strumento')||(tokens.includes('pokemon')&&tokens.includes('tool')))subtype='tool';
+  else if(tokens.includes('oggetto')||tokens.includes('item'))subtype='item';
+  const energyMap=[
+    ['grass',['erba','grass']],['fire',['fuoco','fire']],['water',['acqua','water']],
+    ['lightning',['lampo','elettro','lightning','electric']],['psychic',['psico','psychic']],
+    ['fighting',['lotta','fighting']],['darkness',['oscurita','darkness']],
+    ['metal',['metallo','metal']],['fairy',['folletto','fairy']],['colorless',['incolore','colorless']]
+  ];
+  for(const row of energyMap)if(row[1].some(x=>tokens.includes(x))){energyType=row[0];break}
+  if(category==='energy'&&!energyType){
+    if(tokens.includes('speciale')||tokens.includes('special'))energyType='special';
+    else if(tokens.includes('base')||tokens.includes('basic'))energyType='basic';
+  }
+  return {normalized:normalized,category:category,subtype:subtype,energyType:energyType};
+}
+async function readPhotoClassificationDiagnostics(img){
+  const specs=[
+    {id:'category-original',label:'Header categoria · originale',coords:{x:.02,y:.015,w:.96,h:.17},scale:2.6,preprocess:'original',psm:'6'},
+    {id:'category-threshold',label:'Header categoria · threshold',coords:{x:.02,y:.015,w:.96,h:.17},scale:2.6,preprocess:'threshold',psm:'6'},
+    {id:'subtype-grayscale',label:'Sottotipo · upscale + grayscale',coords:{x:.02,y:.015,w:.72,h:.095},scale:4.0,preprocess:'grayscale',psm:'6'}
+  ];
+  const reads=[],previews=[],started=performance.now();
+  for(const spec of specs){
+    const prepared=diagnosticPixelPreprocess(cropImage(img,spec.coords.x,spec.coords.y,spec.coords.w,spec.coords.h,spec.scale),spec.preprocess);
+    previews.push({id:spec.id,label:spec.label,url:diagnosticCanvasPreview(prepared)});
+    const one=performance.now();let result=null,error='';
+    try{result=await Tesseract.recognize(prepared,'ita+eng',{tessedit_pageseg_mode:spec.psm})}catch(e){error=String(e?.message||e)}
+    const raw=String(result?.data?.text||'').trim(),detected=diagnosticDetectClassification(raw);
+    reads.push({
+      id:spec.id,coordinates:spec.coords,scale:spec.scale,preprocessing:spec.preprocess,raw:raw,
+      normalized:detected.normalized,confidence:Number.isFinite(Number(result?.data?.confidence))?Number(result.data.confidence):null,
+      category:detected.category,subtype:detected.subtype,energyType:detected.energyType,timingMs:performance.now()-one,error:error
+    });
+  }
+  const unique=function(key){return [...new Set(reads.map(x=>x[key]).filter(Boolean))]};
+  const cats=unique('category'),subs=unique('subtype'),energy=unique('energyType');
+  const category=cats.length===1?cats[0]:'',subtype=subs.length===1?subs[0]:'',energyType=energy.length===1?energy[0]:'';
+  const confidenceFor=function(key,value){const vals=reads.filter(x=>x[key]===value).map(x=>x.confidence).filter(x=>x!=null);return vals.length?Math.max(...vals):null};
+  CARDORYX_DIAGNOSTIC.previewState.classification=previews;
+  return {
+    categoryRaw:reads.map(x=>x.raw).filter(Boolean).join(' | '),categoryNormalized:reads.map(x=>x.normalized).filter(Boolean).join(' | '),
+    categoryDetected:category,categoryConfidence:confidenceFor('category',category),
+    subtypeRaw:reads.filter(x=>x.subtype).map(x=>x.raw).join(' | '),subtypeDetected:subtype,
+    energyRaw:reads.filter(x=>x.energyType).map(x=>x.raw).join(' | '),energyDetected:energyType,
+    reads:reads,totalTimingMs:performance.now()-started,appliedToCandidates:false
+  };
+}
+async function readCollectorCodeFocusedDiagnostic(img){
+  const cropSpecs=[
+    {id:'collector-C1',label:'Collector C1',coords:{x:.015,y:.875,w:.58,h:.105},scale:4.0},
+    {id:'collector-C2',label:'Collector C2',coords:{x:.015,y:.845,w:.68,h:.135},scale:3.5},
+    {id:'collector-C3',label:'Collector C3',coords:{x:0,y:.895,w:.72,h:.09},scale:4.2}
+  ];
+  const variants=[
+    {name:'original',psm:'7',threshold:null,whitelist:null},
+    {name:'threshold-150',psm:'7',threshold:150,whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/|-'},
+    {name:'threshold-175',psm:'7',threshold:175,whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/|-'},
+    {name:'threshold-195',psm:'6',threshold:195,whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/|-'}
+  ];
+  const rawReads=[],counts=new Map(),previews=[],started=performance.now();
+  for(const cropSpec of cropSpecs){
+    const base=cropImage(img,cropSpec.coords.x,cropSpec.coords.y,cropSpec.coords.w,cropSpec.coords.h,cropSpec.scale);
+    previews.push({id:cropSpec.id,label:cropSpec.label,url:diagnosticCanvasPreview(base)});
+    for(const variant of variants){
+      const canvas=variant.threshold==null?base:enhanceForOCR(base,variant.threshold);
+      const opts={tessedit_pageseg_mode:variant.psm};
+      if(variant.whitelist)opts.tessedit_char_whitelist=variant.whitelist;
+      const one=performance.now();let result=null,error='';
+      try{result=await Tesseract.recognize(canvas,'eng',opts)}catch(e){error=String(e?.message||e)}
+      const raw=String(result?.data?.text||'').trim(),parsed=extractPrintedIdentity(raw),valid=collectorCodeValid(parsed);
+      let rejectionReason='';
+      if(error)rejectionReason='ocr-error';
+      else if(!raw)rejectionReason='empty-read';
+      else if(!parsed)rejectionReason='parser-no-identity';
+      else if(!valid)rejectionReason='parser-rejected-identity';
+      rawReads.push({
+        cropId:cropSpec.id,coordinates:cropSpec.coords,preprocessing:variant.name,raw:raw,
+        confidence:Number.isFinite(Number(result?.data?.confidence))?Number(result.data.confidence):null,
+        parsed:parsed||null,valid:!!valid,slashDetected:/[\/|\\]/.test(raw),
+        denominatorDetected:!!(parsed&&(parsed.total||parsed.totalLocalId)),rejectionReason:rejectionReason,
+        timingMs:performance.now()-one
+      });
+      if(valid){
+        const key=collectorCodeKey(parsed),current=counts.get(key)||{code:parsed,count:0,texts:[]};
+        current.count++;current.texts.push(raw);counts.set(key,current);
+      }
+    }
+  }
+  const codes=[...counts.values()].filter(function(x){return x.code.kind!=='standaloneLocalId'||x.count>=2})
+    .sort((a,b)=>b.count-a.count).map(x=>Object.assign({},x.code,{votes:x.count,ocrTexts:x.texts}));
+  rawReads.forEach(function(read){
+    if(read.valid&&read.parsed?.kind==='standaloneLocalId'){
+      const key=collectorCodeKey(read.parsed),count=counts.get(key)?.count||0;
+      if(count<2)read.rejectionReason='standalone-needs-two-votes';
+    }
+  });
+  CARDORYX_DIAGNOSTIC.previewState.collector=previews;
+  return {
+    codes:codes,
+    diagnostics:{
+      rawReads:rawReads,parsedReads:rawReads.filter(x=>x.parsed).map(x=>x.parsed),
+      slashDetected:rawReads.some(x=>x.slashDetected),denominatorDetected:rawReads.some(x=>x.denominatorDetected),
+      rejectionReasons:rawReads.map(x=>x.rejectionReason).filter(Boolean),
+      topFailureModes:Object.entries(rawReads.reduce(function(acc,x){if(x.rejectionReason)acc[x.rejectionReason]=(acc[x.rejectionReason]||0)+1;return acc},{})).sort((a,b)=>b[1]-a[1]),
+      totalTimingMs:performance.now()-started
+    }
+  };
+}
+function diagnosticStripPreviews(value){
+  if(Array.isArray(value))return value.map(diagnosticStripPreviews);
+  if(value&&typeof value==='object'){
+    const out={};
+    Object.entries(value).forEach(function(entry){
+      const key=entry[0],val=entry[1];
+      if(!['url','preview','previewDataUrl','image','blob','canvas'].includes(key))out[key]=diagnosticStripPreviews(val);
+    });
+    return out;
+  }
+  return value;
+}
+function diagnosticEmptyNameDiagnostics(){
+  return {reads:[],crops:[],rawTexts:[],normalizedTexts:[],timings:[],candidateMatches:[],exactFullName:false,exactTokenSequence:false,suffixAgreement:null,baseNameDetected:'',bestDiagnosticLevel:0,ruleA:{resolved:false},ruleB:{resolved:false},ruleC:{theoretical:false},legacy:true};
+}
+function diagnosticMigrateScanV3(scan){
+  const out=Object.assign({},scan);
+  out.nameDiagnostics=out.nameDiagnostics||diagnosticEmptyNameDiagnostics();
+  out.classificationDiagnostics=out.classificationDiagnostics||{categoryRaw:'',categoryNormalized:'',categoryDetected:'',categoryConfidence:null,subtypeRaw:'',subtypeDetected:'',energyRaw:'',energyDetected:'',reads:[],appliedToCandidates:false,legacy:true};
+  out.collectorDiagnostics=out.collectorDiagnostics||{rawReads:[],parsedReads:[],slashDetected:null,denominatorDetected:null,rejectionReasons:['legacy-schema2-raw-unavailable'],topFailureModes:[['legacy-schema2-raw-unavailable',1]],legacy:true};
+  return out;
+}
+diagnosticStorageLoad=function(){
+  try{
+    const raw=window.localStorage.getItem(CARDORYX_DIAGNOSTIC.storageKey),parsed=raw?JSON.parse(raw):null;
+    CARDORYX_DIAGNOSTIC.scans=(Array.isArray(parsed?.scans)?parsed.scans:[]).map(diagnosticMigrateScanV3);
+  }catch(e){CARDORYX_DIAGNOSTIC.scans=[]}
+};
+diagnosticStorageSave=function(){
+  try{
+    window.localStorage.setItem(CARDORYX_DIAGNOSTIC.storageKey,JSON.stringify({
+      schema:3,mainSha:CARDORYX_DIAGNOSTIC.mainSha,branch:CARDORYX_DIAGNOSTIC.branch,
+      updatedAt:new Date().toISOString(),scans:CARDORYX_DIAGNOSTIC.scans.map(diagnosticStripPreviews)
+    }));
+  }catch(e){console.warn('Archivio diagnostico locale non disponibile:',e)}
+};
+const diagnosticBeginScanSchema2=diagnosticBeginScan;
+diagnosticBeginScan=function(source){
+  const scan=diagnosticBeginScanSchema2(source);
+  scan.nameDiagnostics=diagnosticEmptyNameDiagnostics();
+  scan.classificationDiagnostics=diagnosticMigrateScanV3({}).classificationDiagnostics;
+  scan.collectorDiagnostics=diagnosticMigrateScanV3({}).collectorDiagnostics;
+  return scan;
+};
+const diagnosticFinalizeSchema2=diagnosticFinalize;
+diagnosticFinalize=function(cards,result,meta){
+  diagnosticFinalizeSchema2(cards,result,meta);
+  const scan=CARDORYX_DIAGNOSTIC.current;
+  if(!scan)return;
+  scan.nameDiagnostics=meta?.nameDiagnostics?diagnosticStripPreviews(meta.nameDiagnostics):diagnosticEmptyNameDiagnostics();
+  scan.classificationDiagnostics=meta?.classificationDiagnostics?diagnosticStripPreviews(meta.classificationDiagnostics):diagnosticMigrateScanV3({}).classificationDiagnostics;
+  scan.collectorDiagnostics=meta?.collectorDiagnostics?diagnosticStripPreviews(meta.collectorDiagnostics):diagnosticMigrateScanV3({}).collectorDiagnostics;
+  scan.detectedCategory=scan.classificationDiagnostics.categoryDetected||scan.detectedCategory||'';
+  scan.detectedSubtype=scan.classificationDiagnostics.subtypeDetected||scan.detectedSubtype||'';
+  scan.detectedEnergyType=scan.classificationDiagnostics.energyDetected||scan.detectedEnergyType||'';
+  diagnosticPersistCurrent();diagnosticRenderCurrent();diagnosticRenderAdvanced();
+};
+function diagnosticRenderAdvanced(){
+  const scan=CARDORYX_DIAGNOSTIC.current,previews=CARDORYX_DIAGNOSTIC.previewState;
+  const nameBox=diagnosticEl('diagAdvancedNameCrops');
+  if(nameBox){
+    const reads=scan?.nameDiagnostics?.reads||[];
+    nameBox.innerHTML=previews.name.length?previews.name.map(function(p){
+      const row=reads.find(x=>x.id===p.id)||{};
+      return '<div class="advanced-crop"><img src="'+p.url+'" alt="'+esc(p.label)+'"><b>'+esc(p.label)+'</b>'+
+        '<div class="small">'+esc(JSON.stringify(row.coordinates||{}))+' · '+esc(row.preprocessing||'')+' · '+diagnosticMillis(row.timingMs)+'</div>'+
+        '<pre>raw: '+esc(row.raw||'—')+'\nnormalizzato: '+esc(row.normalized||'—')+'\nconfidence: '+esc(row.confidence==null?'—':Math.round(row.confidence))+'\nlivello: '+esc(row.bestDiagnosticLevel??0)+'</pre></div>';
+    }).join(''):'<div class="small">Nessun OCR nome: il candidato era già unico oppure il collector non ha verificato l’identità.</div>';
+  }
+  const rules=diagnosticEl('diagAdvancedNameRules');
+  if(rules&&scan){
+    const n=scan.nameDiagnostics||{};
+    rules.innerHTML=
+      '<div class="diagnostic-rule"><strong>Regola A — attuale:</strong> '+(n.ruleA?.resolved?'risolta':'non risolta')+' · unica regola autorizzata all’auto-selezione.</div>'+
+      '<div class="diagnostic-rule"><strong>Regola B — token sequence:</strong> '+(n.ruleB?.resolved?'potenzialmente risolta':'non risolta')+' · solo metrica, non applicata.</div>'+
+      '<div class="diagnostic-rule"><strong>Regola C — una forte + una parziale:</strong> '+(n.ruleC?.theoretical?'potenziale teorico':'non risolta')+' · mai applicata.</div>'+
+      '<div class="diagnostic-rule">Token-sequence unici: '+esc(n.exactTokenSequenceMatches||0)+' · errori suffisso: '+esc(n.suffixFailures||0)+' · solo base name: '+esc(n.baseNameOnlyCases||0)+'</div>';
+  }
+  const classBox=diagnosticEl('diagAdvancedClassification');
+  if(classBox){
+    const reads=scan?.classificationDiagnostics?.reads||[];
+    classBox.innerHTML=previews.classification.length?previews.classification.map(function(p){
+      const row=reads.find(x=>x.id===p.id)||{};
+      return '<div class="advanced-crop"><img src="'+p.url+'" alt="'+esc(p.label)+'"><b>'+esc(p.label)+'</b>'+
+        '<pre>raw: '+esc(row.raw||'—')+'\ncategoria: '+esc(row.category||'non determinata')+'\nsottotipo: '+esc(row.subtype||'non determinato')+'\nenergia: '+esc(row.energyType||'non determinata')+'\nconfidence: '+esc(row.confidence==null?'—':Math.round(row.confidence))+'</pre></div>';
+    }).join(''):'<div class="small">In attesa di una foto.</div>';
+  }
+  const collectorBox=diagnosticEl('diagAdvancedCollector');
+  if(collectorBox){
+    const rows=scan?.collectorDiagnostics?.rawReads||[];
+    collectorBox.innerHTML=previews.collector.length?previews.collector.map(function(p){
+      const related=rows.filter(x=>x.cropId===p.id);
+      return '<div class="advanced-crop"><img src="'+p.url+'" alt="'+esc(p.label)+'"><b>'+esc(p.label)+'</b><pre>'+
+        related.map(x=>x.preprocessing+': '+(x.raw||'—')+' → '+(x.valid?'valido':x.rejectionReason||'scartato')).map(esc).join('\n')+'</pre></div>';
+    }).join(''):'<div class="small">In attesa di una foto.</div>';
+  }
+}
+diagnosticAggregate=function(){
+  const scans=(CARDORYX_DIAGNOSTIC.scans||[]).map(diagnosticMigrateScanV3);
+  const photo=scans.filter(x=>x.source==='photo'),ground=scans.filter(x=>x.groundTruthCardId||x.finalClassification==='ground-truth-none');
+  const auto=scans.filter(x=>x.automaticCandidateId),autoGround=ground.filter(x=>x.automaticCandidateId);
+  const ambiguous=photo.filter(x=>x.candidateCountInitial>1);
+  const collectorVerified=photo.filter(x=>x.candidateCountInitial>0).length;
+  const classificationAttempts=photo.filter(x=>!x.classificationDiagnostics?.legacy).length;
+  const subtypeAttempts=photo.filter(x=>!x.classificationDiagnostics?.legacy&&x.classificationDiagnostics?.categoryDetected==='trainer').length;
+  const energyAttempts=photo.filter(x=>!x.classificationDiagnostics?.legacy&&x.classificationDiagnostics?.categoryDetected==='energy').length;
+  const prefixResolved=function(p){return scans.filter(x=>x.specialPrefix===p&&x.automaticCandidateId).length};
+  return {
+    scansTotal:scans.length,photoScans:photo.length,groundTruthCompleted:ground.length,
+    automaticSelections:auto.length,automaticCorrect:autoGround.filter(x=>x.automaticCorrect===true).length,
+    automaticWrong:autoGround.filter(x=>x.automaticCorrect===false).length,manualFallbacks:scans.filter(x=>x.manualFallback).length,
+    collectorVerified:collectorVerified,collectorFailure:photo.length-collectorVerified,
+    collectorSuccessPercent:photo.length?Math.round(10000*collectorVerified/photo.length)/100:null,
+    ambiguousPhotoScans:ambiguous.length,
+    rawDoubleConsensus:ambiguous.filter(x=>x.nameDiagnostics?.ruleA?.resolved).length,
+    ruleAResolved:ambiguous.filter(x=>x.nameDiagnostics?.ruleA?.resolved).length,
+    ruleBResolved:ambiguous.filter(x=>x.nameDiagnostics?.ruleB?.resolved).length,
+    ruleCTheoretical:ambiguous.filter(x=>x.nameDiagnostics?.ruleC?.theoretical).length,
+    exactTokenSequenceMatches:ambiguous.reduce((n,x)=>n+(x.nameDiagnostics?.exactTokenSequenceMatches||0),0),
+    suffixFailures:ambiguous.reduce((n,x)=>n+(x.nameDiagnostics?.suffixFailures||0),0),
+    baseNameOnlyCases:ambiguous.reduce((n,x)=>n+(x.nameDiagnostics?.baseNameOnlyCases||0),0),
+    nameConcordant:ambiguous.filter(x=>x.nameConsensus).length,
+    nameDiscordant:ambiguous.filter(x=>x.ocrNameA&&x.ocrNameB&&!x.nameConsensus).length,
+    categoryAttempts:classificationAttempts,categoryDetected:photo.filter(x=>x.classificationDiagnostics?.categoryDetected).length,
+    categoryCorrectGroundTruth:null,trainerSubtypeAttempts:subtypeAttempts,
+    trainerSubtypeDetected:photo.filter(x=>x.classificationDiagnostics?.subtypeDetected).length,
+    energyTypeAttempts:energyAttempts,energyTypeDetected:photo.filter(x=>x.classificationDiagnostics?.energyDetected).length,
+    energiesResolved:photo.filter(x=>x.detectedCategory==='energy'&&x.automaticCandidateId).length,
+    tgResolved:prefixResolved('TG'),ggResolved:prefixResolved('GG'),hResolved:prefixResolved('H'),
+    casesOver6:scans.filter(x=>x.candidateCountFinal>6).length,loadMoreUses:scans.filter(x=>x.loadMoreUsed).length,
+    autoGroundTruthCount:autoGround.length
+  };
+};
+diagnosticRenderStats=function(){
+  const s=diagnosticAggregate(),box=diagnosticEl('diagnosticStats');
+  if(box){
+    const rows=[
+      ['Scansioni totali / foto',s.scansTotal+' / '+s.photoScans],['Collector verificato',s.collectorVerified],
+      ['Collector fallito',s.collectorFailure],['Successo collector',s.collectorSuccessPercent==null?'—':s.collectorSuccessPercent+'%'],
+      ['Foto ambigue',s.ambiguousPhotoScans],['Regola A / B / C teorica',s.ruleAResolved+' / '+s.ruleBResolved+' / '+s.ruleCTheoretical],
+      ['Token-sequence esatti',s.exactTokenSequenceMatches],['Errori suffisso / solo base',s.suffixFailures+' / '+s.baseNameOnlyCases],
+      ['Categoria rilevata',s.categoryDetected+'/'+s.categoryAttempts],['Sottotipo Allenatore',s.trainerSubtypeDetected+'/'+s.trainerSubtypeAttempts],
+      ['Tipo Energia',s.energyTypeDetected+'/'+s.energyTypeAttempts],['Ground truth completate',s.groundTruthCompleted],
+      ['Auto corrette / errate',s.automaticCorrect+' / '+s.automaticWrong],['Fallback manuali',s.manualFallbacks],
+      ['Casi oltre 6',s.casesOver6],['Utilizzi Mostra altri',s.loadMoreUses]
+    ];
+    box.innerHTML=rows.map(x=>'<div class="diagnostic-stat"><strong>'+esc(x[1])+'</strong><span>'+esc(x[0])+'</span></div>').join('');
+  }
+  const p=diagnosticEl('diagnosticPrecision');
+  if(p)p.textContent=s.autoGroundTruthCount>=10
+    ?'Precisione auto-selezione: '+((s.automaticCorrect/s.autoGroundTruthCount)*100).toFixed(1)+'% ('+s.automaticCorrect+'/'+s.autoGroundTruthCount+')'
+    :'Precisione auto-selezione: campione insufficiente ('+s.autoGroundTruthCount+'/10 auto-selezioni con ground truth).';
+};
+downloadCandidateDiagnosticLog=function(){
+  const payload={
+    metadata:{schema:3,test:'Cardoryx Targeted OCR Crop and Category Diagnostic',mainSha:CARDORYX_DIAGNOSTIC.mainSha,
+      diagnosticBranch:CARDORYX_DIAGNOSTIC.branch,exportedAt:new Date().toISOString(),
+      browser:navigator.userAgent,declaration:'OCR REALE — risultati misurati; immagini e crop esclusi'},
+    statistics:diagnosticAggregate(),
+    scans:CARDORYX_DIAGNOSTIC.scans.map(x=>diagnosticStripPreviews(diagnosticMigrateScanV3(x)))
+  };
+  const serialized=JSON.stringify(payload);
+  if(/data:image|blob:|base64/i.test(serialized)){alert('Export bloccato: rilevato contenuto immagine.');return}
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='candidate_disambiguation_real_scans.json';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url)},1000);
+};
+runSmartOCR=async function(){
+  const file=scanQueue[queueIndex];if(!file)return;
+  const scan=diagnosticBeginScan('photo');
+  CARDORYX_DIAGNOSTIC.previewState={name:[],classification:[],collector:[]};
+  ocrBtn.disabled=true;document.getElementById('singleScanFallback')?.classList.remove('hidden');
+  results.innerHTML='';searchMsg.textContent='';clearSelection();
+  setScanProgress(4,'Preparo la foto…');ocrStatus.textContent='Diagnostica OCR mirata in corso…';
+  try{
+    await loadTesseract();
+    const img=await downscaleImageForOCR(file,1100,1600);
+    let classification={categoryRaw:'',categoryNormalized:'',categoryDetected:'',categoryConfidence:null,subtypeRaw:'',subtypeDetected:'',energyRaw:'',energyDetected:'',reads:[],totalTimingMs:0,appliedToCandidates:false,skippedUntilVerifiedIdentity:true};
+    setScanProgress(18,'Controllo prima il resolver Energia SVE/MEE…');
+    const energyProbe=await readBasicEnergyIdentity(img);
+    if(energyProbe.isBasic){
+      const energyCards=await findBasicEnergyCandidates(energyProbe);
+      if(energyCards.length){
+        setScanProgress(35,'Identità Energia verificata; misuro categoria e tipo…');
+        classification=await readPhotoClassificationDiagnostics(img);
+        const nameDiagnostics=energyCards.length>1?await readAdvancedNameDiagnostics(img,energyCards):diagnosticEmptyNameDiagnostics();
+        const legacyA=nameDiagnostics.reads?.find(x=>x.id==='N1-A'),legacyB=nameDiagnostics.reads?.find(x=>x.id==='N1-D');
+        const evidence={category:'energy',energyType:energyProbe.type||'basic',
+          nameA:legacyA?.raw||'',nameB:legacyB?.raw||'',nameConcordant:!!nameDiagnostics.ruleA?.resolved};
+        const result=diagnosticDisambiguateVerifiedCandidates(energyCards,evidence);
+        const printed=energyProbe.code?(energyProbe.code.set+' '+energyProbe.code.num):'Energia Base';
+        diagnosticFinalize(energyCards,result,{
+          printedIdentity:printed,number:energyProbe.code?.num||'',localId:printed,category:'energy',energyType:energyProbe.type||'basic',
+          nameEvidence:{nameA:legacyA?.raw||'',nameB:legacyB?.raw||'',keyA:legacyA?.normalized||'',keyB:legacyB?.normalized||'',concordant:!!nameDiagnostics.ruleA?.resolved,durationMs:nameDiagnostics.totalTimingMs||0},
+          nameDiagnostics:nameDiagnostics,classificationDiagnostics:classification,
+          collectorDiagnostics:{rawReads:[],parsedReads:[],slashDetected:null,denominatorDetected:null,rejectionReasons:[],topFailureModes:[],route:'deterministic-energy'},
+          timings:{codeMs:0,classificationMs:classification.totalTimingMs},route:'Energia Base SVE/MEE verificata',
+          fallbackReason:'Energia non univoca con la regola attuale',timeline:['Categoria/sottotipo misurati ma non applicati.','Resolver Energia SVE/MEE preservato.']
+        });
+        setScanProgress(100,result.autoSelected?'Energia identificata.':'Conferma manuale richiesta.');
+        ocrStatus.textContent='Diagnostica Energia completata; indica la ground truth.';
+        return;
+      }
+    }
+    setScanProgress(38,'Analizzo tutti i raw del collector code prima degli altri segnali…');
+    const collector=await readCollectorCodeFocusedDiagnostic(img);
+    for(const code of collector.codes.slice(0,5)){
+      let cards=[],label='',route='',localId='',total='',subsetTotal='';
+      if(code.kind==='specialPair'){
+        localId=code.localId;total=code.totalLocalId;subsetTotal=code.totalLocalId;label=localId+'/'+total;
+        route='LocalId speciale verificato';cards=await queryBySpecialPrintedCode(localId,total);
+      }else if(code.kind==='standaloneLocalId'){
+        localId=code.localId;label=localId;route='Codice promo/localId verificato';cards=await queryByStandalonePrintedLocalId(localId);
+      }else{
+        localId=code.num;total=code.total;label=localId+'/'+total;route='Numero + Totale set';cards=await queryByPrintedCode(localId,total);
+      }
+      if(!cards.length)continue;
+      lastOCR={name:'',number:localId,total:total};numberInput.value=localId;setTotalInput.value=total;
+      setScanProgress(58,'Identità stampata verificata; misuro categoria e sottotipo…');
+      classification=await readPhotoClassificationDiagnostics(img);
+      setScanProgress(68,cards.length>1?'Confronto sette varianti crop nome…':'Candidato già unico: nessun OCR nome aggiuntivo.');
+      const nameDiagnostics=cards.length>1?await readAdvancedNameDiagnostics(img,cards):diagnosticEmptyNameDiagnostics();
+      const legacyA=nameDiagnostics.reads?.find(x=>x.id==='N1-A'),legacyB=nameDiagnostics.reads?.find(x=>x.id==='N1-D');
+      const nameEvidence={nameA:legacyA?.raw||'',nameB:legacyB?.raw||'',keyA:legacyA?.normalized||'',keyB:legacyB?.normalized||'',
+        concordant:!!nameDiagnostics.ruleA?.resolved,durationMs:nameDiagnostics.totalTimingMs||0};
+      const result=diagnosticDisambiguateVerifiedCandidates(cards,{
+        nameA:nameEvidence.nameA,nameB:nameEvidence.nameB,nameConcordant:nameEvidence.concordant
+      });
+      diagnosticFinalize(cards,result,{
+        printedIdentity:label,number:localId,total:total,localId:localId,subsetTotal:subsetTotal,
+        nameEvidence:nameEvidence,nameDiagnostics:nameDiagnostics,classificationDiagnostics:classification,
+        collectorDiagnostics:collector.diagnostics,timings:{codeMs:collector.diagnostics.totalTimingMs,classificationMs:classification.totalTimingMs},
+        route:route,fallbackReason:nameDiagnostics.ruleB?.resolved?'Regola B diagnostica positiva, non autorizzata alla selezione':'Regola A non risolta',
+        timeline:['Identità stampata verificata prima del nome.','Categoria e sottotipo misurati ma non applicati ai candidati.','Regole B e C calcolate solo come metriche.']
+      });
+      setScanProgress(100,result.autoSelected?'Regola A: candidato unico.':'Diagnostica completata; conferma manuale.');
+      ocrStatus.textContent=result.autoSelected?'Regola A esatta riuscita; indica la ground truth.':'Nuovi crop analizzati senza forzare una selezione.';
+      return;
+    }
+    const result={original:[],current:[],trace:[],autoSelected:false,afterCategory:0,afterSubtypeType:0};
+    diagnosticFinalize([],result,{
+      printedIdentity:'Non letta',classificationDiagnostics:classification,collectorDiagnostics:collector.diagnostics,
+      timings:{codeMs:collector.diagnostics.totalTimingMs,classificationMs:classification.totalTimingMs},route:'Nessun candidato',
+      fallbackReason:'Numero/localId non verificato',timeline:['Raw collector registrati; parser non modificato.','Nessuna identità creata dal nome o dalla categoria.']
+    });
+    setScanProgress(100,'Inserimento manuale richiesto.');ocrStatus.textContent='Collector non verificato: raw e motivi disponibili nella diagnostica avanzata.';
+  }catch(e){
+    scan.apiErrors.push(String(e?.message||e));scan.fallbackReason='Errore OCR/TCGdex; nessun candidato forzato';
+    scan.manualFallback=true;scan.timings.totalMs=performance.now()-scan._startedAt;scan.timeline.push('Errore: fallback manuale fail-safe.');
+    diagnosticPersistCurrent();diagnosticRenderCurrent();diagnosticRenderAdvanced();
+    setScanProgress(100,'Diagnostica interrotta.');ocrStatus.textContent='Errore diagnostico; nessuna carta selezionata.';
+  }finally{ocrBtn.disabled=false}
+};
+window.downloadCandidateDiagnosticLog=downloadCandidateDiagnosticLog;
+document.addEventListener('DOMContentLoaded',function(){
+  CARDORYX_DIAGNOSTIC.scans=(CARDORYX_DIAGNOSTIC.scans||[]).map(diagnosticMigrateScanV3);
+  diagnosticStorageSave();diagnosticRenderStats();
 });
 </script>
 

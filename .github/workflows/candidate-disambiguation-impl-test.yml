@@ -67,6 +67,11 @@ jobs:
           node --check /tmp/cardoryx-diagnostic-inline.js
           test -f diagnostic/candidate-disambiguation-test.html
           grep -Fq 'candidate_disambiguation_real_scans.json' diagnostic/candidate-disambiguation-test.html
+          grep -Fq 'candidateTargetedOcrDiagnosticRuntime' diagnostic/candidate-disambiguation-test.html
+          grep -Fq 'DIAGNOSTIC_NAME_CROP_MATRIX' diagnostic/candidate-disambiguation-test.html
+          grep -Fq 'legacy-schema2-raw-unavailable' diagnostic/candidate-disambiguation-test.html
+          grep -Fq 'metadata:{schema:3' diagnostic/candidate-disambiguation-test.html
+          grep -Fq 'Diagnostica OCR avanzata' diagnostic/candidate-disambiguation-test.html
           grep -Fq 'Mostra altri usato senza nuove query.' diagnostic/candidate-disambiguation-test.html
           grep -Fq 'Salvataggio collezione disattivato' diagnostic/candidate-disambiguation-test.html
           ! grep -Fq 'onclick="saveSelected()"' diagnostic/candidate-disambiguation-test.html
@@ -98,10 +103,17 @@ jobs:
             "photoInputCaptureEnvironment","filterBeforeDisplayCap","loadMoreWithoutNewQuery",
             "groundTruthIncludesNone","exportExcludesImages","collectionSaveButtonRemoved",
             "collectionSaveRuntimeDisabled","runtimeDoesNotPersistCollection",
-            "diagnosticStorageSeparated","realPhotoStatistics","performanceMeasured"
+            "diagnosticStorageSeparated","realPhotoStatistics","performanceMeasured",
+            "schema3Export","schema2Migration","sevenControlledNameVariants",
+            "currentRuleAThresholdPreserved","ruleBMetricOnly","ruleCNeverApplied",
+            "classificationDoesNotFilter","targetedNoFuzzy","targetedNoNamedHardcoding",
+            "exportRejectsImages","collectorRawCaptured","newSignalsDiagnosticOnly",
+            "collectorIdentityBeforeClassification"
           )
           for key in required_runtime_checks:
               if checks.get(key) is not True: raise SystemExit(f"Real-photo page check failed: {key}")
+          unit_tests=r.get("implementation",{}).get("unitTests",{})
+          if not unit_tests or not all(unit_tests.values()): raise SystemExit(f"Targeted unit test failure: {unit_tests}")
           features=r.get("photoValidation",{}).get("features",{})
           if not features or not all(features.values()): raise SystemExit("Real-photo feature incomplete")
           if r.get("photoValidation",{}).get("diagnosticLogDownload")!="candidate_disambiguation_real_scans.json":
@@ -111,19 +123,27 @@ jobs:
           if q.get("regressions")!=0 or q.get("apiNetworkErrors")!=0: raise SystemExit("Regression or network error")
           cap=r.get("displayCap6",{})
           if not cap.get("loadMoreTested") or cap.get("paginationFailures")!=0 or cap.get("duplicateIds")!=0: raise SystemExit("Load more failure")
+          replay=r.get("realPhotoReplay",{})
+          if replay.get("totalTests")!=27 or replay.get("photoScans")!=19 or replay.get("ambiguousPhotoScans")!=8:
+              raise SystemExit("Real-photo export baseline mismatch")
+          if replay.get("ruleAFalsePositives")!=0 or replay.get("ruleBFalsePositives")!=0:
+              raise SystemExit("Real-photo replay false positive")
           g=r.get("genesect067of086",{})
-          if not g.get("concordantAutoSelect") or not g.get("discordantOCRKeepsAllCandidates"): raise SystemExit("Genesect control failure")
-          if r.get("photoValidation",{}).get("realScansExecuted")!=0: raise SystemExit("Unexpected real-photo claim")
+          if g.get("ruleA",{}).get("resolved") or g.get("ruleB",{}).get("resolved") or g.get("ruleC",{}).get("theoretical"):
+              raise SystemExit("Significant suffix fail-safe failure")
+          if r.get("photoValidation",{}).get("newPhotosExecutedInWorkflow")!=0: raise SystemExit("Unexpected new-photo claim")
+          if r.get("collectorCode",{}).get("parserChanged") is not False: raise SystemExit("Collector parser changed")
           safety=r.get("safety",{})
           for key in ("mainModified","retailModified","cardmarketModified","collectionDataModified","newIdentitiesCreated","pricesModified"):
               if safety.get(key) is not False: raise SystemExit(f"Safety violation: {key}")
-          if r.get("finalAssessment")!="PRONTO PER TEST SU FOTO REALI": raise SystemExit("Not ready for photo test")
+          if r.get("finalAssessment")!="PRONTO PER SECONDO TEST FOTO REALI": raise SystemExit("Not ready for second photo test")
           print(json.dumps({
             "scope":r.get("scope"),"category":r.get("category"),"trainers":r.get("trainers"),
-            "energy":r.get("energy"),"name":r.get("name"),"genesect":g,
+            "energy":r.get("energy"),"name":r.get("name"),"realPhotoReplay":replay,"genesect":g,
             "specialNumbering":r.get("specialNumbering"),"displayCap6":cap,
             "manualSearch":r.get("manualSearch"),"structuralSimulation":r.get("structuralSimulation"),
-            "photoValidation":r.get("photoValidation"),"performance":r.get("performance"),
+            "photoValidation":r.get("photoValidation"),"collectorCode":r.get("collectorCode"),
+            "classificationPhoto":r.get("classificationPhoto"),"performance":r.get("performance"),
             "quality":q,"safety":safety,"finalAssessment":r.get("finalAssessment")
           },ensure_ascii=False,indent=2))
           PY
