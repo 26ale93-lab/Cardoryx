@@ -12,7 +12,7 @@ import test_energy_ambiguity as energy_audit
 import test_ocr_name_ambiguity as ocr_audit
 
 OUT=Path("artifacts/candidate_classification_audit_report.json")
-MAIN="a3017852154a23f82f196f2d4c8981bf4d68c414"
+MAIN=os.environ.get("CARDORYX_MAIN_SHA","845e463928f57ae1b5f139b289dd5c9120cd4f61")
 RECOGNITION_BASE="86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f"
 EXPECTED={
  "full":{"physical":21534,"unique":9466,"ambiguous":11249,"notRecognized":819,"coverage":96.2,"uniqueCoverage":43.96,
