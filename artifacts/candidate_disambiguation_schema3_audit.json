@@ -1,0 +1,6244 @@
+{
+  "auditContext": {
+    "verifiedMainSha": "845e463928f57ae1b5f139b289dd5c9120cd4f61",
+    "diagnosticBaseSha": "c04798638fa4e2cbbb2522c5314449da2d3b4ee6",
+    "mode": "read-only export audit"
+  },
+  "source": {
+    "fileName": "candidate_disambiguation_real_scans 3.json",
+    "exportMetadata": {
+      "schema": 3,
+      "test": "Cardoryx Targeted OCR Crop and Category Diagnostic",
+      "mainSha": "845e463928f57ae1b5f139b289dd5c9120cd4f61",
+      "diagnosticBranch": "diagnostic/candidate-disambiguation-implementation-test-20260902",
+      "exportedAt": "2026-09-02T19:20:42.207Z",
+      "browser": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
+      "declaration": "OCR REALE — risultati misurati; immagini e crop esclusi"
+    },
+    "sourceCounts": {
+      "recordsTotal": 51,
+      "photoScans": 38,
+      "manualScans": 13,
+      "schema3PhotoRecords": 13,
+      "legacySchema2PhotoRecords": 25,
+      "schema3PhotosWithNameMultiCrop": 7,
+      "groundTruthCompleted": 34,
+      "importantScopeNote": "Le statistiche aggregate comprendono record schema 2 migrati. Raw OCR, crop e timing avanzati sono disponibili soltanto nei record schema 3 che li contengono."
+    },
+    "reportedStatistics": {
+      "scansTotal": 51,
+      "photoScans": 38,
+      "groundTruthCompleted": 34,
+      "automaticSelections": 17,
+      "automaticCorrect": 13,
+      "automaticWrong": 1,
+      "manualFallbacks": 34,
+      "collectorVerified": 24,
+      "collectorFailure": 14,
+      "collectorSuccessPercent": 63.16,
+      "ambiguousPhotoScans": 20,
+      "rawDoubleConsensus": 0,
+      "ruleAResolved": 0,
+      "ruleBResolved": 2,
+      "ruleCTheoretical": 0,
+      "exactTokenSequenceMatches": 10,
+      "suffixFailures": 7,
+      "baseNameOnlyCases": 7,
+      "nameConcordant": 0,
+      "nameDiscordant": 15,
+      "categoryAttempts": 13,
+      "categoryDetected": 2,
+      "categoryCorrectGroundTruth": null,
+      "trainerSubtypeAttempts": 1,
+      "trainerSubtypeDetected": 0,
+      "energyTypeAttempts": 1,
+      "energyTypeDetected": 1,
+      "energiesResolved": 1,
+      "tgResolved": 0,
+      "ggResolved": 0,
+      "hResolved": 0,
+      "casesOver6": 1,
+      "loadMoreUses": 1,
+      "autoGroundTruthCount": 14
+    },
+    "sourceFileCommitted": false
+  },
+  "automaticWrongAudit": {
+    "count": 1,
+    "records": [
+      {
+        "scanId": "scan-1788376381138-pagrhi",
+        "source": "photo",
+        "printedIdentity": "Energia Base",
+        "candidateIdsInitial": [
+          "sv06.5-098",
+          "sv06.5-099",
+          "sv03.5-207",
+          "sv03-230",
+          "sv01-257",
+          "sv01-258",
+          "sv02-278",
+          "sv02-279"
+        ],
+        "candidateCountInitial": 8,
+        "candidateCountFinal": 8,
+        "automaticCandidateId": "sve-002",
+        "automaticCandidateName": "Energia Fuoco",
+        "groundTruthCardId": "",
+        "groundTruthName": "Nessuna delle precedenti",
+        "automaticCorrect": false,
+        "finalClassification": "ground-truth-none",
+        "detectedCategory": "energy",
+        "detectedSubtype": "",
+        "detectedEnergyType": "basic",
+        "categoryApplied": false,
+        "subtypeApplied": false,
+        "energyTypeApplied": false,
+        "nameApplied": false,
+        "ruleA": {
+          "resolved": false,
+          "candidateId": "",
+          "candidateName": "",
+          "appliedToSelection": true
+        },
+        "ruleB": {
+          "resolved": false,
+          "candidateId": "",
+          "candidateName": "",
+          "appliedToSelection": false
+        },
+        "ruleC": {
+          "theoretical": false,
+          "candidateId": "",
+          "candidateName": "",
+          "appliedToSelection": false
+        },
+        "timeline": [
+          "Categoria/sottotipo misurati ma non applicati.",
+          "Resolver Energia SVE/MEE preservato.",
+          "Filtro category: 8 → 8 (nessuna riduzione).",
+          "Filtro energyType saltato: segnale non determinato.",
+          "Fallback manuale mantenuto.",
+          "Mostra altri usato senza nuove query.",
+          "Ground truth registrata: Nessuna delle precedenti."
+        ],
+        "causeClassification": "G. altra causa",
+        "evidence": "Il record conserva 8 candidati iniziali e 8 finali; categoryApplied=False, subtypeApplied=False, energyTypeApplied=False, nameApplied=False. L'automaticCandidateId sve-002 non appartiene ai candidati iniziali=True; collector route=deterministic-energy."
+      }
+    ]
+  },
+  "ambiguousPhotoAudit": [
+    {
+      "scanId": "scan-1788357891475-m6jvit",
+      "schemaData": 2,
+      "printedIdentity": "055/159",
+      "groundTruthCardId": "sv09-055",
+      "groundTruthName": "Kilowattrel di Kissara",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-055",
+        "sv09-055"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-055",
+          "name": null
+        },
+        {
+          "id": "sv09-055",
+          "name": "Kilowattrel di Kissara"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788358194616-enyi7f",
+      "schemaData": 2,
+      "printedIdentity": "076/132",
+      "groundTruthCardId": "me01-076",
+      "groundTruthName": "Riolu",
+      "candidateCount": 4,
+      "candidateIds": [
+        "dp3-76",
+        "me01-076",
+        "gym1-76",
+        "gym2-76"
+      ],
+      "candidateNames": [
+        {
+          "id": "dp3-76",
+          "name": null
+        },
+        {
+          "id": "me01-076",
+          "name": "Riolu"
+        },
+        {
+          "id": "gym1-76",
+          "name": null
+        },
+        {
+          "id": "gym2-76",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788358296239-cc81lh",
+      "schemaData": 2,
+      "printedIdentity": "067/086",
+      "groundTruthCardId": "sv10.5b-067",
+      "groundTruthName": "Genesect-ex",
+      "candidateCount": 3,
+      "candidateIds": [
+        "sv10.5w-067",
+        "sv10.5b-067",
+        "me04-067"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv10.5w-067",
+          "name": null
+        },
+        {
+          "id": "sv10.5b-067",
+          "name": "Genesect-ex"
+        },
+        {
+          "id": "me04-067",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788358668614-8hmhia",
+      "schemaData": 2,
+      "printedIdentity": "077/086",
+      "groundTruthCardId": "sv10.5w-077",
+      "groundTruthName": "Bouffalant-ex",
+      "candidateCount": 3,
+      "candidateIds": [
+        "sv10.5w-077",
+        "sv10.5b-077",
+        "me04-077"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv10.5w-077",
+          "name": "Bouffalant-ex"
+        },
+        {
+          "id": "sv10.5b-077",
+          "name": null
+        },
+        {
+          "id": "me04-077",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788358722924-xrx48q",
+      "schemaData": 2,
+      "printedIdentity": "027/159",
+      "groundTruthCardId": "sv09-027",
+      "groundTruthName": "Darmanitan di N",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-027",
+        "sv09-027"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-027",
+          "name": null
+        },
+        {
+          "id": "sv09-027",
+          "name": "Darmanitan di N"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788358791931-5srske",
+      "schemaData": 2,
+      "printedIdentity": "038/182",
+      "groundTruthCardId": "sv10-038",
+      "groundTruthName": "Houndoom del Team Rocket",
+      "candidateCount": 2,
+      "candidateIds": [
+        "sv04-038",
+        "sv10-038"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv04-038",
+          "name": null
+        },
+        {
+          "id": "sv10-038",
+          "name": "Houndoom del Team Rocket"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788358975784-z4cxt9",
+      "schemaData": 2,
+      "printedIdentity": "160/159",
+      "groundTruthCardId": "swsh12.5-160",
+      "groundTruthName": "Pikachu",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-160",
+        "sv09-160"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-160",
+          "name": "Pikachu"
+        },
+        {
+          "id": "sv09-160",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788359194586-xnt35e",
+      "schemaData": 2,
+      "printedIdentity": "084/086",
+      "groundTruthCardId": "sv10.5w-084",
+      "groundTruthName": "Anita",
+      "candidateCount": 3,
+      "candidateIds": [
+        "sv10.5w-084",
+        "sv10.5b-084",
+        "me04-084"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv10.5w-084",
+          "name": "Anita"
+        },
+        {
+          "id": "sv10.5b-084",
+          "name": null
+        },
+        {
+          "id": "me04-084",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788363378030-bk4gue",
+      "schemaData": 2,
+      "printedIdentity": "084/086",
+      "groundTruthCardId": "sv10.5w-084",
+      "groundTruthName": "Anita",
+      "candidateCount": 3,
+      "candidateIds": [
+        "sv10.5w-084",
+        "sv10.5b-084",
+        "me04-084"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv10.5w-084",
+          "name": "Anita"
+        },
+        {
+          "id": "sv10.5b-084",
+          "name": null
+        },
+        {
+          "id": "me04-084",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788363590485-ipr21u",
+      "schemaData": 2,
+      "printedIdentity": "027/159",
+      "groundTruthCardId": "sv09-027",
+      "groundTruthName": "Darmanitan di N",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-027",
+        "sv09-027"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-027",
+          "name": null
+        },
+        {
+          "id": "sv09-027",
+          "name": "Darmanitan di N"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788363643000-eis4j1",
+      "schemaData": 2,
+      "printedIdentity": "055/159",
+      "groundTruthCardId": "sv09-055",
+      "groundTruthName": "Kilowattrel di Kissara",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-055",
+        "sv09-055"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-055",
+          "name": null
+        },
+        {
+          "id": "sv09-055",
+          "name": "Kilowattrel di Kissara"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788363695954-a2aaq0",
+      "schemaData": 2,
+      "printedIdentity": "038/182",
+      "groundTruthCardId": "sv10-038",
+      "groundTruthName": "Houndoom del Team Rocket",
+      "candidateCount": 2,
+      "candidateIds": [
+        "sv04-038",
+        "sv10-038"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv04-038",
+          "name": null
+        },
+        {
+          "id": "sv10-038",
+          "name": "Houndoom del Team Rocket"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788363771058-8i7a61",
+      "schemaData": 2,
+      "printedIdentity": "160/159",
+      "groundTruthCardId": "swsh12.5-160",
+      "groundTruthName": "Pikachu",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-160",
+        "sv09-160"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-160",
+          "name": "Pikachu"
+        },
+        {
+          "id": "sv09-160",
+          "name": null
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": false
+        },
+        "N1-B": {
+          "available": false
+        },
+        "N1-C": {
+          "available": false
+        },
+        "N1-D": {
+          "available": false
+        },
+        "N2-E": {
+          "available": false
+        },
+        "N3-F": {
+          "available": false
+        },
+        "N4-G": {
+          "available": false
+        }
+      },
+      "ruleA": {
+        "resolved": false
+      },
+      "ruleB": {
+        "resolved": false
+      },
+      "ruleC": {
+        "theoretical": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "legacy-schema2-multicrop-unavailable"
+    },
+    {
+      "scanId": "scan-1788375192294-zpn75i",
+      "schemaData": 3,
+      "printedIdentity": "027/159",
+      "groundTruthCardId": "sv09-027",
+      "groundTruthName": "Darmanitan di N",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-027",
+        "sv09-027"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-027",
+          "name": "Salandit"
+        },
+        {
+          "id": "sv09-027",
+          "name": "Darmanitan di N"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "“/Darmanitan di N A 14C",
+          "normalized": "darmanitan di n a 14c",
+          "confidence": 80,
+          "timingMs": 652.9999999999927,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "sv09-027",
+              "candidateName": "Darmanitan di N",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "darmanitan",
+                "di",
+                "n"
+              ],
+              "extraTokens": [
+                "a",
+                "14c"
+              ],
+              "numericTokens": [
+                "14c"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "“",
+                "/"
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "“’“Darmanitan din 14(\n“loa \\ LL Sievnlveda Darumakadi N EE a an",
+          "normalized": "' darmanitan din 14 loa ll sievnlveda darumakadi n ee a an",
+          "confidence": 41,
+          "timingMs": 798,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "<’“Darmanitan din 14(\nloa \\ | $evnlve da Darumakadi N J =",
+          "normalized": "' darmanitan din 14 loa evnlve da darumakadi n j",
+          "confidence": 55,
+          "timingMs": 757,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "",
+          "normalized": "",
+          "confidence": 0,
+          "timingMs": 250.99999999999272,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "= /Darmanitanan |",
+          "normalized": "darmanitanan",
+          "confidence": 2,
+          "timingMs": 1202.9999999999927,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "= /Darmanitan din + 14C",
+          "normalized": "darmanitan din 14c",
+          "confidence": 27,
+          "timingMs": 794,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "",
+          "normalized": "",
+          "confidence": 0,
+          "timingMs": 381,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "complete-multicrop"
+    },
+    {
+      "scanId": "scan-1788375762783-yefau9",
+      "schemaData": 3,
+      "printedIdentity": "038/182",
+      "groundTruthCardId": "sv10-038",
+      "groundTruthName": "Houndoom del Team Rocket",
+      "candidateCount": 2,
+      "candidateIds": [
+        "sv04-038",
+        "sv10-038"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv04-038",
+          "name": "Garchomp-ex"
+        },
+        {
+          "id": "sv10-038",
+          "name": "Houndoom del Team Rocket"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "““Houndoom del Team Rocket ps | 3",
+          "normalized": "houndoom del team rocket ps 3",
+          "confidence": 62,
+          "timingMs": 609,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10-038",
+              "candidateName": "Houndoom del Team Rocket",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "houndoom",
+                "del",
+                "team",
+                "rocket"
+              ],
+              "extraTokens": [
+                "ps",
+                "3"
+              ],
+              "numericTokens": [
+                "3"
+              ],
+              "hpPsTokens": [
+                "ps"
+              ],
+              "symbolTokens": [
+                "“",
+                "“",
+                "|"
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "<<\" Houndoom del Team Rocket +; 13\n| _Si evolve da Houndour del Team Rocket Woo",
+          "normalized": "houndoom del team rocket 13 si evolve da houndour del team rocket woo",
+          "confidence": 56,
+          "timingMs": 732,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10-038",
+              "candidateName": "Houndoom del Team Rocket",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "houndoom",
+                "del",
+                "team",
+                "rocket"
+              ],
+              "extraTokens": [
+                "13",
+                "si",
+                "evolve",
+                "da",
+                "houndour",
+                "del",
+                "team",
+                "rocket",
+                "woo"
+              ],
+              "numericTokens": [
+                "13"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "<",
+                "<",
+                "\"",
+                "+",
+                ";",
+                "|",
+                "_"
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "1/ Houndoom del Team Rocket A 13C\n| si evolve da Houndour del Team Rocket mmm",
+          "normalized": "1 houndoom del team rocket a 13c si evolve da houndour del team rocket mmm",
+          "confidence": 67,
+          "timingMs": 732,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10-038",
+              "candidateName": "Houndoom del Team Rocket",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "houndoom",
+                "del",
+                "team",
+                "rocket"
+              ],
+              "extraTokens": [
+                "1",
+                "a",
+                "13c",
+                "si",
+                "evolve",
+                "da",
+                "houndour",
+                "del",
+                "team",
+                "rocket",
+                "mmm"
+              ],
+              "numericTokens": [
+                "1",
+                "13c"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "/",
+                "|"
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "i JOON |\n~ J",
+          "normalized": "i joon j",
+          "confidence": 64,
+          "timingMs": 295,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "=<'“'Houndoom del Team Rocket A ]",
+          "normalized": "' 'houndoom del team rocket a",
+          "confidence": 73,
+          "timingMs": 1013.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "= HoundoomselTeamRoctet +; 13(",
+          "normalized": "houndoomselteamroctet 13",
+          "confidence": 32,
+          "timingMs": 846,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "FASE] ge —— o\npa oun Lal i 130 /",
+          "normalized": "fase ge -- o pa oun lal i 130",
+          "confidence": 42,
+          "timingMs": 667.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": true,
+        "candidateId": "sv10-038",
+        "candidateName": "Houndoom del Team Rocket",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "sv10-038",
+      "resolvedCorrectAgainstGroundTruth": true,
+      "dataAvailability": "complete-multicrop"
+    },
+    {
+      "scanId": "scan-1788375918912-058kf5",
+      "schemaData": 3,
+      "printedIdentity": "027/159",
+      "groundTruthCardId": "sv09-027",
+      "groundTruthName": "Darmanitan di N",
+      "candidateCount": 2,
+      "candidateIds": [
+        "swsh12.5-027",
+        "sv09-027"
+      ],
+      "candidateNames": [
+        {
+          "id": "swsh12.5-027",
+          "name": "Salandit"
+        },
+        {
+          "id": "sv09-027",
+          "name": "Darmanitan di N"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "“/Darmanitan di N A 14C",
+          "normalized": "darmanitan di n a 14c",
+          "confidence": 80,
+          "timingMs": 588.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "sv09-027",
+              "candidateName": "Darmanitan di N",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "darmanitan",
+                "di",
+                "n"
+              ],
+              "extraTokens": [
+                "a",
+                "14c"
+              ],
+              "numericTokens": [
+                "14c"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "“",
+                "/"
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "“’“Darmanitan din 14(\n“loa \\ LL Sievnlveda Darumakadi N EE a an",
+          "normalized": "' darmanitan din 14 loa ll sievnlveda darumakadi n ee a an",
+          "confidence": 41,
+          "timingMs": 718,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "<’“Darmanitan din 14(\nloa \\ | $evnlve da Darumakadi N J =",
+          "normalized": "' darmanitan din 14 loa evnlve da darumakadi n j",
+          "confidence": 55,
+          "timingMs": 688,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "",
+          "normalized": "",
+          "confidence": 0,
+          "timingMs": 232,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "= /Darmanitanan |",
+          "normalized": "darmanitanan",
+          "confidence": 2,
+          "timingMs": 1103.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "= /Darmanitan din + 14C",
+          "normalized": "darmanitan din 14c",
+          "confidence": 27,
+          "timingMs": 739,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "",
+          "normalized": "",
+          "confidence": 0,
+          "timingMs": 348.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "complete-multicrop"
+    },
+    {
+      "scanId": "scan-1788376098783-hoieqe",
+      "schemaData": 3,
+      "printedIdentity": "077/086",
+      "groundTruthCardId": "sv10.5w-077",
+      "groundTruthName": "Bouffalant-ex",
+      "candidateCount": 3,
+      "candidateIds": [
+        "sv10.5w-077",
+        "sv10.5b-077",
+        "me04-077"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv10.5w-077",
+          "name": "Bouffalant-ex"
+        },
+        {
+          "id": "sv10.5b-077",
+          "name": "Rufflet"
+        },
+        {
+          "id": "me04-077",
+          "name": "Matière"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "3 Bouffalant@2 4220",
+          "normalized": "3 bouffalant 2 4220",
+          "confidence": 38,
+          "timingMs": 597.0000000001164,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "2",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "3",
+                "2",
+                "4220"
+              ],
+              "numericTokens": [
+                "3",
+                "2",
+                "4220"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "@"
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "5 Bouffalant@X 4220",
+          "normalized": "5 bouffalant x 4220",
+          "confidence": 37,
+          "timingMs": 489.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "x",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "5",
+                "x",
+                "4220"
+              ],
+              "numericTokens": [
+                "5",
+                "4220"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "@"
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "$5 Bouffalant@X #220",
+          "normalized": "5 bouffalant x 220",
+          "confidence": 57,
+          "timingMs": 433,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "x",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "5",
+                "x",
+                "220"
+              ],
+              "numericTokens": [
+                "5",
+                "220"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "$",
+                "@",
+                "#"
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "Spr Bouffalant@&Y A 220 Ì",
+          "normalized": "spr bouffalant y a 220 i",
+          "confidence": 46,
+          "timingMs": 383.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "y",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "spr",
+                "y",
+                "a",
+                "220",
+                "i"
+              ],
+              "numericTokens": [
+                "220"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "@",
+                "&"
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "1245! Bouffalant(@@? po. 4",
+          "normalized": "1245 bouffalant po 4",
+          "confidence": 45,
+          "timingMs": 915.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "po",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "1245",
+                "po",
+                "4"
+              ],
+              "numericTokens": [
+                "1245",
+                "4"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "!",
+                "(",
+                "@",
+                "@",
+                "?",
+                "."
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "EE 0200 CD\n12555\" Bouffalant@X 220",
+          "normalized": "ee 0200 cd 12555 bouffalant x 220",
+          "confidence": 37,
+          "timingMs": 1111,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "x",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "ee",
+                "0200",
+                "cd",
+                "12555",
+                "x",
+                "220"
+              ],
+              "numericTokens": [
+                "0200",
+                "12555",
+                "220"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "\"",
+                "@"
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "2555 Bouffalant@Z £220 3",
+          "normalized": "2555 bouffalant z 220 3",
+          "confidence": 35,
+          "timingMs": 551,
+          "error": "",
+          "bestDiagnosticLevel": 1,
+          "candidateMatches": [
+            {
+              "candidateId": "sv10.5w-077",
+              "candidateName": "Bouffalant-ex",
+              "exactFullName": false,
+              "exactTokenSequence": false,
+              "baseNameOnly": true,
+              "suffixExpected": "ex",
+              "suffixObserved": "z",
+              "suffixAgreement": false,
+              "matchedNameTokens": [
+                "bouffalant"
+              ],
+              "extraTokens": [
+                "2555",
+                "z",
+                "220",
+                "3"
+              ],
+              "numericTokens": [
+                "2555",
+                "220",
+                "3"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "@",
+                "£"
+              ],
+              "bestDiagnosticLevel": 1,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "complete-multicrop"
+    },
+    {
+      "scanId": "scan-1788376162430-r1h8he",
+      "schemaData": 3,
+      "printedIdentity": "084/086",
+      "groundTruthCardId": "sv10.5w-084",
+      "groundTruthName": "Anita",
+      "candidateCount": 3,
+      "candidateIds": [
+        "sv10.5w-084",
+        "sv10.5b-084",
+        "me04-084"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv10.5w-084",
+          "name": "Anita"
+        },
+        {
+          "id": "sv10.5b-084",
+          "name": "Pokégear 3.0"
+        },
+        {
+          "id": "me04-084",
+          "name": "Energia Water Frizzante"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "I\n~~ ALLENATOR",
+          "normalized": "i allenator",
+          "confidence": 34,
+          "timingMs": 759.0000000001164,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "I\nut ~~ ALLENATOR",
+          "normalized": "i ut allenator",
+          "confidence": 53,
+          "timingMs": 720,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "Co\nAiutc ~~ ALLENATOR",
+          "normalized": "co aiutc allenator",
+          "confidence": 45,
+          "timingMs": 704,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "FE.",
+          "normalized": "fe",
+          "confidence": 39,
+          "timingMs": 271,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "v I MEF F 2B F AM pe.",
+          "normalized": "v i mef f 2b f am pe",
+          "confidence": 56,
+          "timingMs": 525,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "",
+          "normalized": "",
+          "confidence": 0,
+          "timingMs": 346.9999999998836,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "np\n4 | y = .Y Wa an -\n4 pr I",
+          "normalized": "np 4 y y wa an - 4 pr i",
+          "confidence": 57,
+          "timingMs": 563,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "complete-multicrop"
+    },
+    {
+      "scanId": "scan-1788376220667-fu6s87",
+      "schemaData": 3,
+      "printedIdentity": "076/132",
+      "groundTruthCardId": "me01-076",
+      "groundTruthName": "Riolu",
+      "candidateCount": 4,
+      "candidateIds": [
+        "dp3-76",
+        "me01-076",
+        "gym1-76",
+        "gym2-76"
+      ],
+      "candidateNames": [
+        {
+          "id": "dp3-76",
+          "name": "Bagon"
+        },
+        {
+          "id": "me01-076",
+          "name": "Riolu"
+        },
+        {
+          "id": "gym1-76",
+          "name": "Erika's Bellsprout"
+        },
+        {
+          "id": "gym2-76",
+          "name": "Giovanni's Nidoran ♂"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "Riolu dg :8(",
+          "normalized": "riolu dg 8",
+          "confidence": 47,
+          "timingMs": 484,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "me01-076",
+              "candidateName": "Riolu",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "riolu"
+              ],
+              "extraTokens": [
+                "dg",
+                "8"
+              ],
+              "numericTokens": [
+                "8"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                ":",
+                "("
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "“ Riolu 8",
+          "normalized": "riolu 8",
+          "confidence": 18,
+          "timingMs": 374,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "me01-076",
+              "candidateName": "Riolu",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "riolu"
+              ],
+              "extraTokens": [
+                "8"
+              ],
+              "numericTokens": [
+                "8"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "“"
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "“= Riolu ne 8(\n——— yee TT, TTT",
+          "normalized": "riolu ne 8 --- yee tt ttt",
+          "confidence": 35,
+          "timingMs": 664,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "me01-076",
+              "candidateName": "Riolu",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "riolu"
+              ],
+              "extraTokens": [
+                "ne",
+                "8",
+                "yee",
+                "tt",
+                "ttt"
+              ],
+              "numericTokens": [
+                "8"
+              ],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "“",
+                "=",
+                "(",
+                "—",
+                "—",
+                "—",
+                ","
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "SEA ‘\nBEATIN. go\n3 7 y A pr ha \\\\",
+          "normalized": "sea ' beatin go 3 7 y a pr ha",
+          "confidence": 51,
+          "timingMs": 577.9999999997672,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "== Riolu Ln",
+          "normalized": "riolu ln",
+          "confidence": 59,
+          "timingMs": 568,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "me01-076",
+              "candidateName": "Riolu",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "riolu"
+              ],
+              "extraTokens": [
+                "ln"
+              ],
+              "numericTokens": [],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "=",
+                "="
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "==\" Riolu i \"BC",
+          "normalized": "riolu i bc",
+          "confidence": 72,
+          "timingMs": 570,
+          "error": "",
+          "bestDiagnosticLevel": 2,
+          "candidateMatches": [
+            {
+              "candidateId": "me01-076",
+              "candidateName": "Riolu",
+              "exactFullName": false,
+              "exactTokenSequence": true,
+              "baseNameOnly": false,
+              "suffixExpected": "",
+              "suffixObserved": "",
+              "suffixAgreement": true,
+              "matchedNameTokens": [
+                "riolu"
+              ],
+              "extraTokens": [
+                "i",
+                "bc"
+              ],
+              "numericTokens": [],
+              "hpPsTokens": [],
+              "symbolTokens": [
+                "=",
+                "=",
+                "\"",
+                "\""
+              ],
+              "bestDiagnosticLevel": 2,
+              "uniqueCandidateOwner": true
+            }
+          ],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "— eee SE\ni n i i\n‘i Pp hi 4\nat p> .80¢\n* Pi a -v =! : '\n| -",
+          "normalized": "- eee se i n i i 'i pp hi 4 at p 80 pi a -v ' -",
+          "confidence": 38,
+          "timingMs": 1284,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": true,
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "me01-076",
+      "resolvedCorrectAgainstGroundTruth": true,
+      "dataAvailability": "complete-multicrop"
+    },
+    {
+      "scanId": "scan-1788376381138-pagrhi",
+      "schemaData": 3,
+      "printedIdentity": "Energia Base",
+      "groundTruthCardId": "",
+      "groundTruthName": "Nessuna delle precedenti",
+      "candidateCount": 8,
+      "candidateIds": [
+        "sv06.5-098",
+        "sv06.5-099",
+        "sv03.5-207",
+        "sv03-230",
+        "sv01-257",
+        "sv01-258",
+        "sv02-278",
+        "sv02-279"
+      ],
+      "candidateNames": [
+        {
+          "id": "sv06.5-098",
+          "name": "Energia base Darkness"
+        },
+        {
+          "id": "sv06.5-099",
+          "name": "Energia base Metal"
+        },
+        {
+          "id": "sv03.5-207",
+          "name": "Energia base Psychic"
+        },
+        {
+          "id": "sv03-230",
+          "name": "Energia base Fire"
+        },
+        {
+          "id": "sv01-257",
+          "name": "Energia base Lightning"
+        },
+        {
+          "id": "sv01-258",
+          "name": "Energia base Fighting"
+        },
+        {
+          "id": "sv02-278",
+          "name": "Energia base Grass"
+        },
+        {
+          "id": "sv02-279",
+          "name": "Energia base Water"
+        }
+      ],
+      "reads": {
+        "N1-A": {
+          "available": true,
+          "id": "N1-A",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "Eats hace de",
+          "normalized": "eats hace de",
+          "confidence": 49,
+          "timingMs": 435,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-B": {
+          "available": true,
+          "id": "N1-B",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "iaia hace de",
+          "normalized": "iaia hace de",
+          "confidence": 53,
+          "timingMs": 427,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-C": {
+          "available": true,
+          "id": "N1-C",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "contrast",
+          "threshold": null,
+          "raw": "IRE MIAO,\nEnarais hace de",
+          "normalized": "ire miao enarais hace de",
+          "confidence": 42,
+          "timingMs": 534,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N1-D": {
+          "available": true,
+          "id": "N1-D",
+          "crop": "N1",
+          "coordinates": {
+            "x": 0.12,
+            "y": 0.055,
+            "w": 0.72,
+            "h": 0.075
+          },
+          "scale": 2.2,
+          "preprocessing": "threshold",
+          "threshold": 170,
+          "raw": "— [ J\n-naragia hace di",
+          "normalized": "- j -naragia hace di",
+          "confidence": 56,
+          "timingMs": 399,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N2-E": {
+          "available": true,
+          "id": "N2-E",
+          "crop": "N2",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.045,
+            "w": 0.68,
+            "h": 0.065
+          },
+          "scale": 4,
+          "preprocessing": "original",
+          "threshold": null,
+          "raw": "ioni ein i EE",
+          "normalized": "ioni ein i ee",
+          "confidence": 41,
+          "timingMs": 709,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N3-F": {
+          "available": true,
+          "id": "N3-F",
+          "crop": "N3",
+          "coordinates": {
+            "x": 0.08,
+            "y": 0.025,
+            "w": 0.76,
+            "h": 0.09
+          },
+          "scale": 4,
+          "preprocessing": "grayscale",
+          "threshold": null,
+          "raw": "Ri LA\n4 > No »\npu . ” DY",
+          "normalized": "ri la 4 no pu dy",
+          "confidence": 43,
+          "timingMs": 619,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        },
+        "N4-G": {
+          "available": true,
+          "id": "N4-G",
+          "crop": "N4",
+          "coordinates": {
+            "x": 0.04,
+            "y": 0.04,
+            "w": 0.84,
+            "h": 0.075
+          },
+          "scale": 4,
+          "preprocessing": "threshold",
+          "threshold": null,
+          "raw": "‘LS ei\na WWE ‘\n[J - pp 9 - A [J\n. - -— -\nSe. Ai AD oda — E —A o tale 5 . MASSA IR ENN i 3 . pe i ~ = RC A,\nCes i a \"AO a sasa i a .",
+          "normalized": "'ls ei a wwe ' j - pp 9 - a j - -- - se ai ad oda - e -a o tale 5 massa ir enn i 3 pe i rc a ces i a ao a sasa i a",
+          "confidence": 40,
+          "timingMs": 1698,
+          "error": "",
+          "bestDiagnosticLevel": 0,
+          "candidateMatches": [],
+          "candidateMatchOmission": "zero-signal candidate rows omitted; candidate IDs remain at scan level"
+        }
+      },
+      "ruleA": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": true
+      },
+      "ruleB": {
+        "resolved": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "ruleC": {
+        "theoretical": false,
+        "candidateId": "",
+        "candidateName": "",
+        "appliedToSelection": false
+      },
+      "resolvedCandidateId": "",
+      "resolvedCorrectAgainstGroundTruth": null,
+      "dataAvailability": "complete-multicrop"
+    }
+  ],
+  "exactTokenSequenceAudit": {
+    "count": 10,
+    "records": [
+      {
+        "scanId": "scan-1788375192294-zpn75i",
+        "groundTruthCardId": "sv09-027",
+        "groundTruthName": "Darmanitan di N",
+        "readId": "N1-A",
+        "crop": "N1",
+        "preprocessing": "original",
+        "raw": "“/Darmanitan di N A 14C",
+        "normalized": "darmanitan di n a 14c",
+        "candidateId": "sv09-027",
+        "candidateName": "Darmanitan di N",
+        "extraTokens": [
+          "a",
+          "14c"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788375762783-yefau9",
+        "groundTruthCardId": "sv10-038",
+        "groundTruthName": "Houndoom del Team Rocket",
+        "readId": "N1-A",
+        "crop": "N1",
+        "preprocessing": "original",
+        "raw": "““Houndoom del Team Rocket ps | 3",
+        "normalized": "houndoom del team rocket ps 3",
+        "candidateId": "sv10-038",
+        "candidateName": "Houndoom del Team Rocket",
+        "extraTokens": [
+          "ps",
+          "3"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788375762783-yefau9",
+        "groundTruthCardId": "sv10-038",
+        "groundTruthName": "Houndoom del Team Rocket",
+        "readId": "N1-B",
+        "crop": "N1",
+        "preprocessing": "grayscale",
+        "raw": "<<\" Houndoom del Team Rocket +; 13\n| _Si evolve da Houndour del Team Rocket Woo",
+        "normalized": "houndoom del team rocket 13 si evolve da houndour del team rocket woo",
+        "candidateId": "sv10-038",
+        "candidateName": "Houndoom del Team Rocket",
+        "extraTokens": [
+          "13",
+          "si",
+          "evolve",
+          "da",
+          "houndour",
+          "del",
+          "team",
+          "rocket",
+          "woo"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788375762783-yefau9",
+        "groundTruthCardId": "sv10-038",
+        "groundTruthName": "Houndoom del Team Rocket",
+        "readId": "N1-C",
+        "crop": "N1",
+        "preprocessing": "contrast",
+        "raw": "1/ Houndoom del Team Rocket A 13C\n| si evolve da Houndour del Team Rocket mmm",
+        "normalized": "1 houndoom del team rocket a 13c si evolve da houndour del team rocket mmm",
+        "candidateId": "sv10-038",
+        "candidateName": "Houndoom del Team Rocket",
+        "extraTokens": [
+          "1",
+          "a",
+          "13c",
+          "si",
+          "evolve",
+          "da",
+          "houndour",
+          "del",
+          "team",
+          "rocket",
+          "mmm"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788375918912-058kf5",
+        "groundTruthCardId": "sv09-027",
+        "groundTruthName": "Darmanitan di N",
+        "readId": "N1-A",
+        "crop": "N1",
+        "preprocessing": "original",
+        "raw": "“/Darmanitan di N A 14C",
+        "normalized": "darmanitan di n a 14c",
+        "candidateId": "sv09-027",
+        "candidateName": "Darmanitan di N",
+        "extraTokens": [
+          "a",
+          "14c"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "readId": "N1-A",
+        "crop": "N1",
+        "preprocessing": "original",
+        "raw": "Riolu dg :8(",
+        "normalized": "riolu dg 8",
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "extraTokens": [
+          "dg",
+          "8"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "readId": "N1-B",
+        "crop": "N1",
+        "preprocessing": "grayscale",
+        "raw": "“ Riolu 8",
+        "normalized": "riolu 8",
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "extraTokens": [
+          "8"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "readId": "N1-C",
+        "crop": "N1",
+        "preprocessing": "contrast",
+        "raw": "“= Riolu ne 8(\n——— yee TT, TTT",
+        "normalized": "riolu ne 8 --- yee tt ttt",
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "extraTokens": [
+          "ne",
+          "8",
+          "yee",
+          "tt",
+          "ttt"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "readId": "N2-E",
+        "crop": "N2",
+        "preprocessing": "original",
+        "raw": "== Riolu Ln",
+        "normalized": "riolu ln",
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "extraTokens": [
+          "ln"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "readId": "N3-F",
+        "crop": "N3",
+        "preprocessing": "grayscale",
+        "raw": "==\" Riolu i \"BC",
+        "normalized": "riolu i bc",
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "extraTokens": [
+          "i",
+          "bc"
+        ],
+        "suffixExpected": "",
+        "suffixObserved": "",
+        "suffixAgreement": true,
+        "uniqueCandidateOwner": true,
+        "correct": true,
+        "classification": "2. nome completo corretto con rumore esterno"
+      }
+    ],
+    "classificationCounts": {
+      "2. nome completo corretto con rumore esterno": 10
+    }
+  },
+  "ruleBAudit": {
+    "count": 2,
+    "safe": 1,
+    "notSufficientlyIndependent": 1,
+    "wrong": 0,
+    "records": [
+      {
+        "scanId": "scan-1788375762783-yefau9",
+        "candidateId": "sv10-038",
+        "candidateName": "Houndoom del Team Rocket",
+        "groundTruthCardId": "sv10-038",
+        "groundTruthName": "Houndoom del Team Rocket",
+        "correct": true,
+        "supportingReads": [
+          {
+            "readId": "N1-A",
+            "crop": "N1",
+            "coordinates": {
+              "x": 0.12,
+              "y": 0.055,
+              "w": 0.72,
+              "h": 0.075
+            },
+            "preprocessing": "original",
+            "raw": "““Houndoom del Team Rocket ps | 3",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          },
+          {
+            "readId": "N1-B",
+            "crop": "N1",
+            "coordinates": {
+              "x": 0.12,
+              "y": 0.055,
+              "w": 0.72,
+              "h": 0.075
+            },
+            "preprocessing": "grayscale",
+            "raw": "<<\" Houndoom del Team Rocket +; 13\n| _Si evolve da Houndour del Team Rocket Woo",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          },
+          {
+            "readId": "N1-C",
+            "crop": "N1",
+            "coordinates": {
+              "x": 0.12,
+              "y": 0.055,
+              "w": 0.72,
+              "h": 0.075
+            },
+            "preprocessing": "contrast",
+            "raw": "1/ Houndoom del Team Rocket A 13C\n| si evolve da Houndour del Team Rocket mmm",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          }
+        ],
+        "independentSupportingPairs": [],
+        "sameCropOnly": true,
+        "classification": "NON SUFFICIENTEMENTE INDIPENDENTE"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "candidateId": "me01-076",
+        "candidateName": "Riolu",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "correct": true,
+        "supportingReads": [
+          {
+            "readId": "N1-A",
+            "crop": "N1",
+            "coordinates": {
+              "x": 0.12,
+              "y": 0.055,
+              "w": 0.72,
+              "h": 0.075
+            },
+            "preprocessing": "original",
+            "raw": "Riolu dg :8(",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          },
+          {
+            "readId": "N1-B",
+            "crop": "N1",
+            "coordinates": {
+              "x": 0.12,
+              "y": 0.055,
+              "w": 0.72,
+              "h": 0.075
+            },
+            "preprocessing": "grayscale",
+            "raw": "“ Riolu 8",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          },
+          {
+            "readId": "N1-C",
+            "crop": "N1",
+            "coordinates": {
+              "x": 0.12,
+              "y": 0.055,
+              "w": 0.72,
+              "h": 0.075
+            },
+            "preprocessing": "contrast",
+            "raw": "“= Riolu ne 8(\n——— yee TT, TTT",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          },
+          {
+            "readId": "N2-E",
+            "crop": "N2",
+            "coordinates": {
+              "x": 0.08,
+              "y": 0.045,
+              "w": 0.68,
+              "h": 0.065
+            },
+            "preprocessing": "original",
+            "raw": "== Riolu Ln",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          },
+          {
+            "readId": "N3-F",
+            "crop": "N3",
+            "coordinates": {
+              "x": 0.08,
+              "y": 0.025,
+              "w": 0.76,
+              "h": 0.09
+            },
+            "preprocessing": "grayscale",
+            "raw": "==\" Riolu i \"BC",
+            "suffixExpected": "",
+            "suffixAgreement": true
+          }
+        ],
+        "independentSupportingPairs": [
+          [
+            "N1-A",
+            "N2-E"
+          ],
+          [
+            "N1-A",
+            "N3-F"
+          ],
+          [
+            "N1-B",
+            "N2-E"
+          ],
+          [
+            "N1-B",
+            "N3-F"
+          ],
+          [
+            "N1-C",
+            "N2-E"
+          ],
+          [
+            "N1-C",
+            "N3-F"
+          ],
+          [
+            "N2-E",
+            "N3-F"
+          ]
+        ],
+        "sameCropOnly": false,
+        "classification": "SAFE"
+      }
+    ]
+  },
+  "suffixFailureAudit": {
+    "count": 7,
+    "distinctScans": 1,
+    "records": [
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "2",
+        "readId": "N1-A",
+        "crop": "N1",
+        "raw": "3 Bouffalant@2 4220",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "x",
+        "readId": "N1-B",
+        "crop": "N1",
+        "raw": "5 Bouffalant@X 4220",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "x",
+        "readId": "N1-C",
+        "crop": "N1",
+        "raw": "$5 Bouffalant@X #220",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "y",
+        "readId": "N1-D",
+        "crop": "N1",
+        "raw": "Spr Bouffalant@&Y A 220 Ì",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "po",
+        "readId": "N2-E",
+        "crop": "N2",
+        "raw": "1245! Bouffalant(@@? po. 4",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "x",
+        "readId": "N3-F",
+        "crop": "N3",
+        "raw": "EE 0200 CD\n12555\" Bouffalant@X 220",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "candidateId": "sv10.5w-077",
+        "candidateFullName": "Bouffalant-ex",
+        "baseName": "bouffalant",
+        "suffixRequired": "ex",
+        "suffixObserved": "z",
+        "readId": "N4-G",
+        "crop": "N4",
+        "raw": "2555 Bouffalant@Z £220 3",
+        "otherCandidatesWithSameDetectedBase": [],
+        "correctAgainstGroundTruth": true,
+        "decision": "NON SUFFICIENTE: il suffisso fisico significativo non concorda."
+      }
+    ],
+    "rule": "Il base name non è sufficiente se un suffisso fisico significativo distingue l'identità."
+  },
+  "cropPerformance": {
+    "N1-A": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 7,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 4,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 5,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 589.43,
+      "medianTimingMs": 597.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    },
+    "N1-B": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 7,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 2,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 3,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 608.43,
+      "medianTimingMs": 718.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    },
+    "N1-C": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 7,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 2,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 3,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 644.57,
+      "medianTimingMs": 688.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    },
+    "N1-D": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 5,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 0,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 1,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 344.29,
+      "medianTimingMs": 295.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    },
+    "N2-E": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 7,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 1,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 2,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 862.71,
+      "medianTimingMs": 916.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    },
+    "N3-F": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 6,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 1,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 2,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 718.0,
+      "medianTimingMs": 739.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    },
+    "N4-G": {
+      "scansAttempted": 7,
+      "nonEmptyReads": 5,
+      "exactFullNameCorrect": 0,
+      "exactTokenSequenceCorrect": 0,
+      "baseNameOnly": 1,
+      "suffixSuccess": 0,
+      "suffixFailure": 1,
+      "candidateUniqueOwnerCorrect": 1,
+      "candidateUniqueOwnerWrong": 0,
+      "potentialFalsePositives": 0,
+      "meanTimingMs": 784.86,
+      "medianTimingMs": 563.0,
+      "p95TimingMs": null,
+      "p95Availability": "insufficient-sample (<20)"
+    }
+  },
+  "pairPerformance": [
+    {
+      "pair": [
+        "N1-A",
+        "N1-B"
+      ],
+      "independentCrops": false,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 2,
+      "correct": 2,
+      "wrong": 0,
+      "suffixSafe": 2,
+      "casesRecovered": 2,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1197.86,
+      "medianCombinedOcrMs": 1307.0,
+      "meanRecoveredCaseOcrMs": 1099.5,
+      "examples": [
+        {
+          "scanId": "scan-1788375762783-yefau9",
+          "candidateId": "sv10-038",
+          "correct": true
+        },
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-A",
+        "N1-C"
+      ],
+      "independentCrops": false,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 2,
+      "correct": 2,
+      "wrong": 0,
+      "suffixSafe": 2,
+      "casesRecovered": 2,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1234.0,
+      "medianCombinedOcrMs": 1277.0,
+      "meanRecoveredCaseOcrMs": 1244.5,
+      "examples": [
+        {
+          "scanId": "scan-1788375762783-yefau9",
+          "candidateId": "sv10-038",
+          "correct": true
+        },
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-B",
+        "N1-C"
+      ],
+      "independentCrops": false,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 2,
+      "correct": 2,
+      "wrong": 0,
+      "suffixSafe": 2,
+      "casesRecovered": 2,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1253.0,
+      "medianCombinedOcrMs": 1406.0,
+      "meanRecoveredCaseOcrMs": 1251.0,
+      "examples": [
+        {
+          "scanId": "scan-1788375762783-yefau9",
+          "candidateId": "sv10-038",
+          "correct": true
+        },
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-A",
+        "N3-F"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1307.43,
+      "medianCombinedOcrMs": 1328.0,
+      "meanRecoveredCaseOcrMs": 1054.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-B",
+        "N3-F"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1326.43,
+      "medianCombinedOcrMs": 1457.0,
+      "meanRecoveredCaseOcrMs": 944.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-C",
+        "N3-F"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1362.57,
+      "medianCombinedOcrMs": 1427.0,
+      "meanRecoveredCaseOcrMs": 1234.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-A",
+        "N2-E"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1452.14,
+      "medianCombinedOcrMs": 1513.0,
+      "meanRecoveredCaseOcrMs": 1052.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-B",
+        "N2-E"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1471.14,
+      "medianCombinedOcrMs": 1406.0,
+      "meanRecoveredCaseOcrMs": 942.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-C",
+        "N2-E"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1507.29,
+      "medianCombinedOcrMs": 1349.0,
+      "meanRecoveredCaseOcrMs": 1232.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N2-E",
+        "N3-F"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1580.71,
+      "medianCombinedOcrMs": 1843.0,
+      "meanRecoveredCaseOcrMs": 1138.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "pair": [
+        "N1-A",
+        "N1-D"
+      ],
+      "independentCrops": false,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 933.71,
+      "medianCombinedOcrMs": 904.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-B",
+        "N1-D"
+      ],
+      "independentCrops": false,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 952.71,
+      "medianCombinedOcrMs": 952.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-C",
+        "N1-D"
+      ],
+      "independentCrops": false,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 988.86,
+      "medianCombinedOcrMs": 975.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-D",
+        "N3-F"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1062.29,
+      "medianCombinedOcrMs": 1045.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-D",
+        "N4-G"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1129.14,
+      "medianCombinedOcrMs": 935.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-D",
+        "N2-E"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1207.0,
+      "medianCombinedOcrMs": 1300.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-A",
+        "N4-G"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1374.29,
+      "medianCombinedOcrMs": 1277.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-B",
+        "N4-G"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1393.29,
+      "medianCombinedOcrMs": 1283.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N1-C",
+        "N4-G"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1429.43,
+      "medianCombinedOcrMs": 1267.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N3-F",
+        "N4-G"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1502.86,
+      "medianCombinedOcrMs": 1514.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    },
+    {
+      "pair": [
+        "N2-E",
+        "N4-G"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 0,
+      "correct": 0,
+      "wrong": 0,
+      "suffixSafe": 0,
+      "casesRecovered": 0,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1647.57,
+      "medianCombinedOcrMs": 1584.0,
+      "meanRecoveredCaseOcrMs": null,
+      "examples": []
+    }
+  ],
+  "n4Audit": {
+    "attempts": 7,
+    "nonEmpty": 5,
+    "incrementalCorrectIdentifications": 0,
+    "potentialFalsePositives": 0,
+    "meanTimingMs": 784.86,
+    "recommendation": "Eliminabile dal prossimo test: nessun recupero corretto incrementale osservato."
+  },
+  "categoryAudit": {
+    "attempts": 13,
+    "ocrExecuted": 8,
+    "skippedAfterCollectorFailure": 5,
+    "detected": 2,
+    "byDetectedCategory": {
+      "not-detected": 11,
+      "trainer": 1,
+      "energy": 1
+    },
+    "trainerSubtypeAttempts": 1,
+    "trainerSubtypeDetected": 0,
+    "energyTypeAttempts": 1,
+    "energyTypeDetected": 1,
+    "validationNote": "La singola rilevazione Energy 1/1 non è una validazione statistica. L'export non contiene una ground truth categoria separata, quindi precisione categoria non calcolata.",
+    "records": [
+      {
+        "scanId": "scan-1788375192294-zpn75i",
+        "printedIdentity": "027/159",
+        "groundTruthCardId": "sv09-027",
+        "groundTruthName": "Darmanitan di N",
+        "categoryRaw": "= Darmanitan din 140 &\nIF | prise@Darmanll 7 140@\nos add) È",
+        "categoryDetected": "",
+        "categoryConfidence": 57,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "= Darmanitan din 140 &\nIF",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 1659
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "prise@Darmanll 7 140@\nos add) È",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 616
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 405
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 2,
+          "afterCategory": 2,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 2
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788375582279-jrjt1d",
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "categoryRaw": "",
+        "categoryDetected": "",
+        "categoryConfidence": null,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [],
+        "ocrAttempted": false,
+        "notAttemptedReason": "collector identity not verified",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 0,
+          "afterCategory": 0,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 0
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788375617047-28clya",
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "categoryRaw": "",
+        "categoryDetected": "",
+        "categoryConfidence": null,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [],
+        "ocrAttempted": false,
+        "notAttemptedReason": "collector identity not verified",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 0,
+          "afterCategory": 0,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 0
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788375664406-py0gj0",
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "categoryRaw": "",
+        "categoryDetected": "",
+        "categoryConfidence": null,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [],
+        "ocrAttempted": false,
+        "notAttemptedReason": "collector identity not verified",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 0,
+          "afterCategory": 0,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 0
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788375762783-yefau9",
+        "printedIdentity": "038/182",
+        "groundTruthCardId": "sv10-038",
+        "groundTruthName": "Houndoom del Team Rocket",
+        "categoryRaw": "Pa Houndoom del Team Rocket ps 130 &\n2Y ~~ | A\npiieloundoon ill}\n(“NN |; | 2221 Houndoom del Team Rocket pq",
+        "categoryDetected": "",
+        "categoryConfidence": 70,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "Pa Houndoom del Team Rocket ps 130 &\n2Y ~~",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 1208
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "A\npiieloundoon ill}\n(“NN |;",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 619
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "2221 Houndoom del Team Rocket pq",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 740
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 2,
+          "afterCategory": 2,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 2
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788375918912-058kf5",
+        "printedIdentity": "027/159",
+        "groundTruthCardId": "sv09-027",
+        "groundTruthName": "Darmanitan di N",
+        "categoryRaw": "= Darmanitan din 140 &\nIF | prise@Darmanll 7 140@\nos add) È",
+        "categoryDetected": "",
+        "categoryConfidence": 57,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "= Darmanitan din 140 &\nIF",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 1594
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "prise@Darmanll 7 140@\nos add) È",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 561
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 367.9999999998836
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 2,
+          "afterCategory": 2,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 2
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376061800-g3kguu",
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "categoryRaw": "",
+        "categoryDetected": "",
+        "categoryConfidence": null,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [],
+        "ocrAttempted": false,
+        "notAttemptedReason": "collector identity not verified",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 0,
+          "afterCategory": 0,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 0
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376098783-hoieqe",
+        "printedIdentity": "077/086",
+        "groundTruthCardId": "sv10.5w-077",
+        "groundTruthName": "Bouffalant-ex",
+        "categoryRaw": "ad ‘Bouffalant@&? 220 *\n[ =  Y/ ras 2 | Bouffalant@2 £220 X\n= a >\nvw A UE ai | (= ' Bouffalant@? pi)",
+        "categoryDetected": "",
+        "categoryConfidence": 49,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "ad ‘Bouffalant@&? 220 *\n[ =  Y/ ras 2",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 1292
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "Bouffalant@2 £220 X\n= a >\nvw A UE ai",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 739.0000000001164
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "(= ' Bouffalant@? pi)",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 755
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 3,
+          "afterCategory": 3,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 3
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376162430-r1h8he",
+        "printedIdentity": "084/086",
+        "groundTruthCardId": "sv10.5w-084",
+        "groundTruthName": "Anita",
+        "categoryRaw": "q ~~ ALLENATORE /\nAnita | J | li i\n| rvr— 4 SE e",
+        "categoryDetected": "trainer",
+        "categoryConfidence": 57,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "q ~~ ALLENATORE /\nAnita",
+            "category": "trainer",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 585.0000000001164
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "J",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 332
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "li i\n| rvr— 4 SE e",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 744
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 3,
+          "afterCategory": 3,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 3
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376220667-fu6s87",
+        "printedIdentity": "076/132",
+        "groundTruthCardId": "me01-076",
+        "groundTruthName": "Riolu",
+        "categoryRaw": "CN\n“Riou // 80@ | _- O\n1 laf No \\¢ | N | | È\nBASE sds\n= Riolu",
+        "categoryDetected": "",
+        "categoryConfidence": 53,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "CN\n“Riou // 80@",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 1354
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "_- O\n1 laf No \\¢ | N |",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 620
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "È\nBASE sds\n= Riolu",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 819
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 4,
+          "afterCategory": 4,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 4
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376381138-pagrhi",
+        "printedIdentity": "Energia Base",
+        "groundTruthCardId": "",
+        "groundTruthName": "Nessuna delle precedenti",
+        "categoryRaw": "Energia base ua ENERGIA /\nEnergia base & ®\nne RR ee I | E: ‘se\nEnergia base & @ | e pe - |",
+        "categoryDetected": "energy",
+        "categoryConfidence": 70,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "Energia base ua ENERGIA /\nEnergia base & ®\nne RR ee I | E: ‘se\nEnergia base & @",
+        "energyDetected": "basic",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "Energia base ua ENERGIA /\nEnergia base & ®\nne RR ee I",
+            "category": "energy",
+            "subtype": "",
+            "energyType": "basic",
+            "timingMs": 1420
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "E: ‘se\nEnergia base & @",
+            "category": "energy",
+            "subtype": "",
+            "energyType": "basic",
+            "timingMs": 467
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": "e pe - |",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 546
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 8,
+          "afterCategory": 8,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 8
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376524910-giyt6b",
+        "printedIdentity": "146/159",
+        "groundTruthCardId": "sv09-146",
+        "groundTruthName": "Ricerca di Brock",
+        "categoryRaw": "GA EO rd A ALLENAT ORE.)\n| Ricerca di Brock | ————— _ i e ite or pe nd nile pre Pe Ad A\ni 2 Pan nad\nA UO maman I dar LL cara r-v—=i\n“+e th\nMr di on\nrca di Broc “a\nAU Me,\nCy ME te i | : VIlUido A A A",
+        "categoryDetected": "",
+        "categoryConfidence": 58,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [
+          {
+            "id": "category-original",
+            "preprocessing": "original",
+            "raw": "GA EO rd A ALLENAT ORE.)\n| Ricerca di Brock",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 951
+          },
+          {
+            "id": "category-threshold",
+            "preprocessing": "threshold",
+            "raw": "————— _ i e ite or pe nd nile pre Pe Ad A\ni 2 Pan nad\nA UO maman I dar LL cara r-v—=i\n“+e th\nMr di on\nrca di Broc “a\nAU Me,\nCy ME te i",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 1663
+          },
+          {
+            "id": "subtype-grayscale",
+            "preprocessing": "grayscale",
+            "raw": ": VIlUido A A A",
+            "category": "",
+            "subtype": "",
+            "energyType": "",
+            "timingMs": 477
+          }
+        ],
+        "ocrAttempted": true,
+        "notAttemptedReason": "",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 1,
+          "afterCategory": 1,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 1
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      },
+      {
+        "scanId": "scan-1788376806582-12vjfo",
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "categoryRaw": "",
+        "categoryDetected": "",
+        "categoryConfidence": null,
+        "subtypeRaw": "",
+        "subtypeDetected": "",
+        "energyRaw": "",
+        "energyDetected": "",
+        "reads": [],
+        "ocrAttempted": false,
+        "notAttemptedReason": "collector identity not verified",
+        "effectOnCandidates": {
+          "categoryApplied": false,
+          "before": 0,
+          "afterCategory": 0,
+          "subtypeApplied": false,
+          "energyTypeApplied": false,
+          "afterSubtypeOrType": 0
+        },
+        "correctness": "not-verifiable: export has no explicit category ground truth"
+      }
+    ]
+  },
+  "collectorFailureAudit": {
+    "count": 14,
+    "legacyWithoutRaw": 9,
+    "schema3WithRaw": 5,
+    "failureModes": {
+      "legacy-schema2-raw-unavailable": 9,
+      "numero plausibile discordante / nessun consenso verificabile": 2,
+      "localId alfanumerico spurio / nessun doppio voto": 3
+    },
+    "safelyRecoverableByNormalization": 0,
+    "records": [
+      {
+        "scanId": "scan-1788357992926-cd5nmd",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788358059455-kxs4mp",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788358109055-fky462",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788358835678-xicpcm",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788358892623-csntpy",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788358937774-jwoeyb",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788359338550-zojt0y",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788359376251-ccob6h",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788363478825-i6h8nm",
+        "schemaData": 2,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": null,
+        "denominatorDetected": null,
+        "rawReads": [],
+        "parsedReads": [],
+        "rejectionReasons": [
+          "legacy-schema2-raw-unavailable"
+        ],
+        "failureMode": "legacy-schema2-raw-unavailable",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Raw OCR non disponibile nel record migrato."
+      },
+      {
+        "scanId": "scan-1788375582279-jrjt1d",
+        "schemaData": 3,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": true,
+        "denominatorDetected": true,
+        "rawReads": [
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "original",
+            "raw": "pc 3 | carte Premio ogni volta\na (=\nHELE 557 737) A —\n©2025 Pokemon/Nintendo/Creatures/G",
+            "confidence": 58,
+            "parsed": {
+              "kind": "numberTotal",
+              "num": "557",
+              "total": "737"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": true,
+            "rejectionReason": "",
+            "timingMs": 814
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-150",
+            "raw": "Lot ® I\nBD mtn xen J carte Premio ogni volta ch",
+            "confidence": 43,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 445
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-175",
+            "raw": "Loaf WW me ——\nJ PEE\n\n0 mr greg Wes\n“oy , B 9 a oy r —",
+            "confidence": 23,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 556
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-195",
+            "raw": "RTT fo Noe\nHIRCERE 557: 3 <5",
+            "confidence": 33,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 437
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "original",
+            "raw": "beh tdetnd JIN JS = DERN. UA AR. 0\nSS —— . p— :\nRegola del Pokémon-€X 24\n11 SU Ee —————————————————————————dl\n| H (PREM | ‘ | carte Premio ogni volta che il tuo Poke\nH 15541317 2 nN\n©2025 Pokémon/Nintendo/Creatures/GAME FREAK",
+            "confidence": 54,
+            "parsed": {
+              "kind": "numberTotal",
+              "num": "024",
+              "total": "11"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": true,
+            "rejectionReason": "",
+            "timingMs": 1263
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-150",
+            "raw": "pv J BW > La dhe TM Teo Ns CGAY * WAAAASN at udand\n—w\nI af\nS { carte Premie veita che il two Polk\n5573 7h —=\n©2023 PehbtmonNintende/Crestures/GAME FREAK",
+            "confidence": 36,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 772
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-175",
+            "raw": "EARLE IN _ AIS TTT RE N__/ A a 2 VIA AANA AS\n» Regola del Pokemon €X Prd\n\n1 orf 7\n\nHILT 557737). SR MR\n\nTg rr aa \\ ass rasa",
+            "confidence": 36,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "A2"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 938
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-195",
+            "raw": "LR EE A - -\n\n] i A - ha 4 as AR RR, i\n. l AE RV SR\n\nPT fo CX ag\n\n0 = goes",
+            "confidence": 27,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "HA4"
+            },
+            "valid": true,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 703
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "original",
+            "raw": "Pr ‘ carte Premio ogni volta che il tuo Pokemeo\nBQ (PREn 1554131 ir _ i\n©2025 Pokemon/Nintendo/Creaturesy/ GAME FREAK",
+            "confidence": 56,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 762
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-150",
+            "raw": "B i CURRIE carta Premio ogni volta che I two Pebime\n5 7137h —\n©2025 Pekimon/intende/Crestures/GAME FREAK",
+            "confidence": 48,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 550
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-175",
+            "raw": "i \\ I __aaste Sasanie acnl ales ale ii aeas Shale ase\n) -— a\ni J\nPRE\" J\ni.",
+            "confidence": 23,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 586
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-195",
+            "raw": "X HINER) 55773) <5 —",
+            "confidence": 20,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 394.0000000000582
+          }
+        ],
+        "parsedReads": [
+          {
+            "kind": "numberTotal",
+            "num": "557",
+            "total": "737"
+          },
+          {
+            "kind": "numberTotal",
+            "num": "024",
+            "total": "11"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "A2"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "HA4"
+          }
+        ],
+        "rejectionReasons": [
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "standalone-needs-two-votes",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity"
+        ],
+        "failureMode": "numero plausibile discordante / nessun consenso verificabile",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Nessuna identità coerente dispone di almeno due letture concordanti; normalizzare ulteriormente creerebbe rischio di falso positivo."
+      },
+      {
+        "scanId": "scan-1788375617047-28clya",
+        "schemaData": 3,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": true,
+        "denominatorDetected": true,
+        "rawReads": [
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "original",
+            "raw": "pc 3 | carte Premio ogni volta\na (=\nHELE 557 737) A —\n©2025 Pokemon/Nintendo/Creatures/G",
+            "confidence": 58,
+            "parsed": {
+              "kind": "numberTotal",
+              "num": "557",
+              "total": "737"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": true,
+            "rejectionReason": "",
+            "timingMs": 1138
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-150",
+            "raw": "Lot ® I\nBD mtn xen J carte Premio ogni volta ch",
+            "confidence": 43,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 525
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-175",
+            "raw": "Loaf WW me ——\nJ PEE\n\n0 mr greg Wes\n“oy , B 9 a oy r —",
+            "confidence": 23,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 619
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-195",
+            "raw": "RTT fo Noe\nHIRCERE 557: 3 <5",
+            "confidence": 33,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 470
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "original",
+            "raw": "beh tdetnd JIN JS = DERN. UA AR. 0\nSS —— . p— :\nRegola del Pokémon-€X 24\n11 SU Ee —————————————————————————dl\n| H (PREM | ‘ | carte Premio ogni volta che il tuo Poke\nH 15541317 2 nN\n©2025 Pokémon/Nintendo/Creatures/GAME FREAK",
+            "confidence": 54,
+            "parsed": {
+              "kind": "numberTotal",
+              "num": "024",
+              "total": "11"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": true,
+            "rejectionReason": "",
+            "timingMs": 1319
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-150",
+            "raw": "pv J BW > La dhe TM Teo Ns CGAY * WAAAASN at udand\n—w\nI af\nS { carte Premie veita che il two Polk\n5573 7h —=\n©2023 PehbtmonNintende/Crestures/GAME FREAK",
+            "confidence": 36,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 810.9999999999418
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-175",
+            "raw": "EARLE IN _ AIS TTT RE N__/ A a 2 VIA AANA AS\n» Regola del Pokemon €X Prd\n\n1 orf 7\n\nHILT 557737). SR MR\n\nTg rr aa \\ ass rasa",
+            "confidence": 36,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "A2"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 971
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-195",
+            "raw": "LR EE A - -\n\n] i A - ha 4 as AR RR, i\n. l AE RV SR\n\nPT fo CX ag\n\n0 = goes",
+            "confidence": 27,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "HA4"
+            },
+            "valid": true,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 714
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "original",
+            "raw": "Pr ‘ carte Premio ogni volta che il tuo Pokemeo\nBQ (PREn 1554131 ir _ i\n©2025 Pokemon/Nintendo/Creaturesy/ GAME FREAK",
+            "confidence": 56,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 767
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-150",
+            "raw": "B i CURRIE carta Premio ogni volta che I two Pebime\n5 7137h —\n©2025 Pekimon/intende/Crestures/GAME FREAK",
+            "confidence": 48,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 553.0000000000582
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-175",
+            "raw": "i \\ I __aaste Sasanie acnl ales ale ii aeas Shale ase\n) -— a\ni J\nPRE\" J\ni.",
+            "confidence": 23,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 598
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-195",
+            "raw": "X HINER) 55773) <5 —",
+            "confidence": 20,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 398
+          }
+        ],
+        "parsedReads": [
+          {
+            "kind": "numberTotal",
+            "num": "557",
+            "total": "737"
+          },
+          {
+            "kind": "numberTotal",
+            "num": "024",
+            "total": "11"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "A2"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "HA4"
+          }
+        ],
+        "rejectionReasons": [
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "standalone-needs-two-votes",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity"
+        ],
+        "failureMode": "numero plausibile discordante / nessun consenso verificabile",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Nessuna identità coerente dispone di almeno due letture concordanti; normalizzare ulteriormente creerebbe rischio di falso positivo."
+      },
+      {
+        "scanId": "scan-1788375664406-py0gj0",
+        "schemaData": 3,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": true,
+        "denominatorDetected": false,
+        "rawReads": [
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "original",
+            "raw": "4 Pokémon-\nBe 408 CL\n] lerkys 4\n[ TE. | Pol | carte Premio ogni volta ch\nA [PREM 165773 Ra A\na REVEN TTR | eryvre——\n£7025 Pokémon/Nintendo/Creatureyv/C",
+            "confidence": 41,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "BE408"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 1098
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-150",
+            "raw": ") 4 Rcgola del Pokemon: €\n\n0 Zit carta Prose ogi volta h\nD ®ir gry ta =\n#..",
+            "confidence": 33,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 511
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-175",
+            "raw": "| Regola del Pokemon €\nTruly\nHELE 6577310 J\na",
+            "confidence": 57,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 463
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-195",
+            "raw": "Regan ar dde Foren: (&\nJA » ‘re Se a\n2 “ify : _— - a.\nHNL 6571 3 TRS\n[J",
+            "confidence": 29,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "A2"
+            },
+            "valid": true,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 624
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "original",
+            "raw": "a : | arte Premi i volta — Poké\n—— 3\n\n[0 (PREn | : \\. ¢ Premio ogni v she uo\nBs renner reson mink",
+            "confidence": 48,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 736
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-150",
+            "raw": "wr resistenz al > glliriticita\n\nI Ze\n\nrs -\nEE TE",
+            "confidence": 27,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 512
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-175",
+            "raw": "debolez1a! \\ al x | | Er aglisiticdtal\n\n| Regola del Pokemon €X pr\n\nHILT 65773 78 SEAN A\na",
+            "confidence": 49,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 609
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-195",
+            "raw": "JRUSIS2Y ANE : » ie)\nV4 -\nI: Dif\" — SE\nHILAIRE 65713 TRAIN oo\n-",
+            "confidence": 28,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "V4"
+            },
+            "valid": true,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 613.9999999999418
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "original",
+            "raw": "HIYJerk yum hy\n| (PRE & E wef l | carte Premio ogni volta che il tuo Pokémo\n1 i dh 0\n} ot 16 5 /U + J Nyy a —\n: — ch rn Re BR\n02025 Pokémon Nintendo Cre atures /GAME FREAK",
+            "confidence": 48,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "MO1"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 1260
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-150",
+            "raw": "Ubsly Macro Promic ogni vetca chat cue Pokione\nREN ST\nH 1657.13 1Ra0\" BL Cu",
+            "confidence": 20,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 582.9999999999418
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-175",
+            "raw": "HILT 65773702 SR _",
+            "confidence": 24,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 424.0000000000582
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-195",
+            "raw": "Lo DfT ly Cpl ————\n0 \"er gaymg vy —",
+            "confidence": 19,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 506.9999999999418
+          }
+        ],
+        "parsedReads": [
+          {
+            "kind": "standaloneLocalId",
+            "localId": "BE408"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "A2"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "V4"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "MO1"
+          }
+        ],
+        "rejectionReasons": [
+          "standalone-needs-two-votes",
+          "parser-no-identity",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "standalone-needs-two-votes",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity"
+        ],
+        "failureMode": "localId alfanumerico spurio / nessun doppio voto",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Nessuna identità coerente dispone di almeno due letture concordanti; normalizzare ulteriormente creerebbe rischio di falso positivo."
+      },
+      {
+        "scanId": "scan-1788376061800-g3kguu",
+        "schemaData": 3,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": true,
+        "denominatorDetected": false,
+        "rawReads": [
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "original",
+            "raw": "» Bas} -\n| : carte Premio ogni volta che\n- —-—\nEe ——=",
+            "confidence": 43,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 550.9999999998836
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-150",
+            "raw": "A | TY PSUR carts Promise ogni veka ch\n| 0, JTGn 10987,1 59 RE A\\ :\n/ BF TT id",
+            "confidence": 40,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 422
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-175",
+            "raw": "v Gr roy WEN Tvs mT.\n0% ev\nad ni x.\nra RE\nEE",
+            "confidence": 32,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 641.0000000001164
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-195",
+            "raw": "ESTE RR TERRY PTR.\n0:\nA~_\npe\n-. __________________________________________________________________________",
+            "confidence": 22,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 606.9999999998836
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "original",
+            "raw": "; J Regolo del Pokémon-€X pr 48g\netegpes _\ncarte Presvio ogni volta che il tuo Pokem\nTon] Comp Ty | e———————\n= -— 7\na",
+            "confidence": 40,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 815
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-150",
+            "raw": "Vv. Tr.\npia . -~y\n0,\" gop\n; rT\niii",
+            "confidence": 36,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 411.0000000001164
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-175",
+            "raw": "4 Koger are \"Poe rin 0X\nRANE LA & —\n0% cpr —\n< o-oo eo\nra EE a\n.,.",
+            "confidence": 33,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 762
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-195",
+            "raw": ". . bol So»\nRy\n—\n>.",
+            "confidence": 25,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 534
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "original",
+            "raw": "4A 4.8 \\VIFO at 09) ud ™ § . SN —————\n\ny 02025 Pokéman/Nir - ( do/ ME FREAK\nEE ——_—\nEE SS I ER  — Ye",
+            "confidence": 31,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "AT09"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 1171.0000000001164
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-150",
+            "raw": "| / § is P-",
+            "confidence": 51,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 300
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-175",
+            "raw": "Le JRE WPS 747 IY)\nx neti . AT hc\n\n’ TT ag\n~~",
+            "confidence": 32,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "WPS747"
+            },
+            "valid": true,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 622.9999999998836
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-195",
+            "raw": "wo Lelie)\n\n-\nd+\n\n..",
+            "confidence": 25,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 590
+          }
+        ],
+        "parsedReads": [
+          {
+            "kind": "standaloneLocalId",
+            "localId": "AT09"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "WPS747"
+          }
+        ],
+        "rejectionReasons": [
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "parser-no-identity"
+        ],
+        "failureMode": "localId alfanumerico spurio / nessun doppio voto",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Nessuna identità coerente dispone di almeno due letture concordanti; normalizzare ulteriormente creerebbe rischio di falso positivo."
+      },
+      {
+        "scanId": "scan-1788376806582-12vjfo",
+        "schemaData": 3,
+        "printedIdentity": "Non letta",
+        "groundTruthCardId": "",
+        "groundTruthName": "",
+        "slashDetected": true,
+        "denominatorDetected": false,
+        "rawReads": [
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "original",
+            "raw": "Ee\n{ to. —— xe b Ee Sen el ER - Tm - om\n0\" rors\ni\ni LS\n.\noo ey",
+            "confidence": 29,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 489
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-150",
+            "raw": "Ad . am\np]\n. - o- [CSSEY SRA SC\n; n\nll\n. » Lo ' R",
+            "confidence": 26,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 456
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-175",
+            "raw": "",
+            "confidence": 0,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "empty-read",
+            "timingMs": 171
+          },
+          {
+            "cropId": "collector-C1",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.875,
+              "w": 0.58,
+              "h": 0.105
+            },
+            "preprocessing": "threshold-195",
+            "raw": "",
+            "confidence": 0,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "empty-read",
+            "timingMs": 168
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "original",
+            "raw": "- — - EE\n{ oT tl eee a a i Ta i ia ELIE\n\\ LK 55\n-\nx med 0\nFL ie ~ PE g",
+            "confidence": 34,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "LK55"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 616
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-150",
+            "raw": "rl wad of STE ISL A.\nCe A ER,\n1 RE 2: SSA\ni - Los [RSA RRR CSS ee ee\n1 n Te",
+            "confidence": 28,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "RE2"
+            },
+            "valid": true,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 698
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-175",
+            "raw": "",
+            "confidence": 0,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "empty-read",
+            "timingMs": 178
+          },
+          {
+            "cropId": "collector-C2",
+            "coordinates": {
+              "x": 0.015,
+              "y": 0.845,
+              "w": 0.68,
+              "h": 0.135
+            },
+            "preprocessing": "threshold-195",
+            "raw": "",
+            "confidence": 0,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "empty-read",
+            "timingMs": 178.99999999976717
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "original",
+            "raw": "i —\ni Pokemon Nrtence C eats en GAME FREAK",
+            "confidence": 43,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "parser-no-identity",
+            "timingMs": 453
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-150",
+            "raw": "K [| o-- (~~ = >< - -\nf 4 ie\n[l\n1]\nCoca. ~\nEl v N\nol al ’",
+            "confidence": 30,
+            "parsed": {
+              "kind": "standaloneLocalId",
+              "localId": "F4"
+            },
+            "valid": true,
+            "slashDetected": true,
+            "denominatorDetected": false,
+            "rejectionReason": "standalone-needs-two-votes",
+            "timingMs": 580
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-175",
+            "raw": "",
+            "confidence": 0,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "empty-read",
+            "timingMs": 181.99999999976717
+          },
+          {
+            "cropId": "collector-C3",
+            "coordinates": {
+              "x": 0,
+              "y": 0.895,
+              "w": 0.72,
+              "h": 0.09
+            },
+            "preprocessing": "threshold-195",
+            "raw": "",
+            "confidence": 0,
+            "parsed": null,
+            "valid": false,
+            "slashDetected": false,
+            "denominatorDetected": false,
+            "rejectionReason": "empty-read",
+            "timingMs": 182
+          }
+        ],
+        "parsedReads": [
+          {
+            "kind": "standaloneLocalId",
+            "localId": "LK55"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "RE2"
+          },
+          {
+            "kind": "standaloneLocalId",
+            "localId": "F4"
+          }
+        ],
+        "rejectionReasons": [
+          "parser-no-identity",
+          "parser-no-identity",
+          "empty-read",
+          "empty-read",
+          "standalone-needs-two-votes",
+          "standalone-needs-two-votes",
+          "empty-read",
+          "empty-read",
+          "parser-no-identity",
+          "standalone-needs-two-votes",
+          "empty-read",
+          "empty-read"
+        ],
+        "failureMode": "localId alfanumerico spurio / nessun doppio voto",
+        "safelyRecoverableByNormalization": false,
+        "safetyReason": "Nessuna identità coerente dispone di almeno due letture concordanti; normalizzare ulteriormente creerebbe rischio di falso positivo."
+      }
+    ]
+  },
+  "recommendedNextConfiguration": {
+    "cropsToKeep": [
+      "N1-A",
+      "N3-F"
+    ],
+    "cropsPotentiallyRemove": [
+      "N4-G"
+    ],
+    "preprocessing": {
+      "N1-A": "original",
+      "N3-F": "grayscale"
+    },
+    "candidatePair": {
+      "pair": [
+        "N1-A",
+        "N3-F"
+      ],
+      "independentCrops": true,
+      "scansWithBothReads": 7,
+      "sameCandidateSupported": 1,
+      "correct": 1,
+      "wrong": 0,
+      "suffixSafe": 1,
+      "casesRecovered": 1,
+      "falsePositives": 0,
+      "meanCombinedOcrMs": 1307.43,
+      "medianCombinedOcrMs": 1328.0,
+      "meanRecoveredCaseOcrMs": 1054.0,
+      "examples": [
+        {
+          "scanId": "scan-1788376220667-fu6s87",
+          "candidateId": "me01-076",
+          "correct": true
+        }
+      ]
+    },
+    "suffixRule": "Richiedere suffisso significativo esatto; base name solo non può selezionare.",
+    "categoryNextTest": "Sì, solo diagnostica: 2/13 rilevazioni e nessuna ground truth categoria esplicita non bastano per filtrare.",
+    "recommendedNewPhotos": 30,
+    "reason": "La coppia proposta usa crop distinti, recupera almeno un caso reale con ground truth e non mostra falsi positivi. Il campione multi-crop resta piccolo: serve un terzo test, non una modifica di produzione."
+  },
+  "safety": {
+    "fuzzyMatchingIntroduced": false,
+    "productionLogicModified": false,
+    "diagnosticPageModified": false,
+    "sourceExportCommitted": false,
+    "retailModified": false,
+    "cardmarketModified": false,
+    "collectionDataModified": false,
+    "mainModified": false,
+    "potentialFalsePositivesInRecommendedPair": 0,
+    "scopeLimit": "Audit dei dati esportati; nessuna immagine disponibile o analizzata."
+  },
+  "finalAssessment": "CONFIGURAZIONE OCR CANDIDATA PER TERZO TEST FOTO REALI",
+  "sourceVerification": {
+    "allMatched": true,
+    "checks": {
+      "scansTotal": {
+        "expected": 51,
+        "actual": 51,
+        "match": true
+      },
+      "photoScans": {
+        "expected": 38,
+        "actual": 38,
+        "match": true
+      },
+      "groundTruthCompleted": {
+        "expected": 34,
+        "actual": 34,
+        "match": true
+      },
+      "collectorVerified": {
+        "expected": 24,
+        "actual": 24,
+        "match": true
+      },
+      "collectorFailure": {
+        "expected": 14,
+        "actual": 14,
+        "match": true
+      },
+      "ambiguousPhotoScans": {
+        "expected": 20,
+        "actual": 20,
+        "match": true
+      },
+      "exactTokenSequenceMatches": {
+        "expected": 10,
+        "actual": 10,
+        "match": true
+      },
+      "ruleBResolved": {
+        "expected": 2,
+        "actual": 2,
+        "match": true
+      },
+      "ruleAResolved": {
+        "expected": 0,
+        "actual": 0,
+        "match": true
+      },
+      "suffixFailures": {
+        "expected": 7,
+        "actual": 7,
+        "match": true
+      },
+      "baseNameOnlyCases": {
+        "expected": 7,
+        "actual": 7,
+        "match": true
+      },
+      "categoryAttempts": {
+        "expected": 13,
+        "actual": 13,
+        "match": true
+      },
+      "categoryDetected": {
+        "expected": 2,
+        "actual": 2,
+        "match": true
+      },
+      "energyTypeDetected": {
+        "expected": 1,
+        "actual": 1,
+        "match": true
+      },
+      "automaticWrong": {
+        "expected": 1,
+        "actual": 1,
+        "match": true
+      },
+      "derivedAmbiguousRows": {
+        "expected": 20,
+        "actual": 20,
+        "match": true
+      },
+      "derivedExactTokenRows": {
+        "expected": 10,
+        "actual": 10,
+        "match": true
+      },
+      "derivedRuleBRows": {
+        "expected": 2,
+        "actual": 2,
+        "match": true
+      },
+      "derivedSuffixRows": {
+        "expected": 7,
+        "actual": 7,
+        "match": true
+      }
+    }
+  }
+}
