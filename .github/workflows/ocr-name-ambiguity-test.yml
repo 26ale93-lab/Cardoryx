@@ -1,0 +1,83 @@
+name: OCR Name Validation and Energy Ambiguity Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/ocr-name-energy-ambiguity-20260902
+    paths:
+      - scripts/test_ocr_name_ambiguity.py
+      - scripts/test_energy_ambiguity.py
+      - .github/workflows/ocr-name-ambiguity-test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ocr-name-and-energy-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify main and protected files
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f"
+          test "$(git merge-base HEAD origin/main)" = "86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f"
+          protected=(index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml)
+          git diff --exit-code origin/main...HEAD -- "${protected[@]}"
+
+      - name: Snapshot protected production files
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.before
+
+      - name: Test A - OCR name validation
+        run: python scripts/test_ocr_name_ambiguity.py
+
+      - name: Test B - Energy ambiguity audit
+        run: python scripts/test_energy_ambiguity.py
+
+      - name: Verify reports and read-only safety
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          op=Path("artifacts/ocr_name_ambiguity_report.json")
+          ep=Path("artifacts/energy_ambiguity_report.json")
+          if not op.exists() or not ep.exists(): raise SystemExit("Required report missing")
+          o=json.loads(op.read_text(encoding="utf-8"))
+          e=json.loads(ep.read_text(encoding="utf-8"))
+          if not o.get("previousAudit",{}).get("verified"): raise SystemExit("Previous audit discrepancy")
+          if o.get("photoEvidence",{}).get("declaration")!="OCR REALE NON VALIDATO": raise SystemExit("OCR claim overstated")
+          if o.get("photoEvidence",{}).get("realOCRValidatedCases")!=0: raise SystemExit("Unexpected real OCR validation")
+          if o.get("failSafeSimulation",{}).get("simulatedFalsePositives")!=0: raise SystemExit("OCR false positive")
+          if e.get("summary",{}).get("simulatedFalsePositives")!=0: raise SystemExit("Energy false positive")
+          if o.get("regressions")!=0 or e.get("summary",{}).get("regressions")!=0: raise SystemExit("Regression")
+          for report in (o,e):
+              safety=report.get("safety",{})
+              for key in ("indexHtmlModified","retailModified","cardmarketModified","collectionDataModified","scannerBehaviorModified"):
+                  if safety.get(key) is not False: raise SystemExit(f"Safety violation: {key}")
+          print(json.dumps({"ocr":{"simulation":o.get("failSafeSimulation"),"photoEvidence":o.get("photoEvidence"),"performance":o.get("performance"),"final":o.get("finalAssessment")},"energy":{"summary":e.get("summary"),"controls":e.get("specialControls"),"final":e.get("finalAssessment")}},ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload both diagnostic reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocr-name-and-energy-ambiguity-reports
+          path: |
+            artifacts/ocr_name_ambiguity_report.json
+            artifacts/energy_ambiguity_report.json
+          if-no-files-found: error
+          retention-days: 14
