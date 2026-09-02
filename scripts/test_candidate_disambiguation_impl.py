@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Diagnostic implementation test for Cardoryx candidate disambiguation.
+"""Diagnostic implementation and real-photo page test for Cardoryx.
 
 Read-only: exercises the current recognizer/catalog, the isolated diagnostic HTML,
 fail-safe filters, exact-name disambiguation, Energy reuse, special numbering,
-manual optional-name filtering, and six-at-a-time candidate pagination.
+manual optional-name filtering, six-at-a-time candidate pagination, ground truth,
+local-only scan logs, export/reset, and production-write isolation.
 """
 
 import json
@@ -95,11 +96,22 @@ def main():
     html=HTML.read_text(encoding="utf-8")
     required_markers=[
       "DIAGNOSTIC ONLY — Candidate disambiguation implementation test",
+      'id="candidateRealPhotoDiagnosticRuntime"',
       "diagnosticDisambiguateVerifiedCandidates",
       "readDiagnosticNameEvidence",
       "diagnosticExactNameFilter",
       "showMoreDiagnosticCandidates",
       "downloadCandidateDiagnosticLog",
+      "resetCandidateDiagnosticLog",
+      "setDiagnosticGroundTruth",
+      "candidate_disambiguation_real_scans.json",
+      "cardoryx_candidate_disambiguation_real_scans_v1",
+      "diagPrintedIdentity",
+      "diagNameA",
+      "diagNameB",
+      "diagTimeTotal",
+      "performance.now()",
+      "Salvataggio collezione disattivato",
       "Nome esatto opzionale",
       "state.pageSize"
     ]
@@ -109,12 +121,23 @@ def main():
       "diagnosticSimilarity",
       "diagnosticFuzzy"
     ]
+    runtime=html.split('<script id="candidateRealPhotoDiagnosticRuntime">',1)[1].split("</script>",1)[0]
     html_checks={
       "requiredMarkers":{marker:marker in html for marker in required_markers},
       "forbiddenPatterns":{marker:marker in html for marker in forbidden_patterns},
       "sourceProductionIndexUnmodified":True,
       "doubleNameOCRCalls":html.count("Tesseract.recognize(cropA")+html.count("Tesseract.recognize(cropB"),
-      "filterBeforeDisplayCap":html.index("const disambiguated=diagnosticDisambiguateVerifiedCandidates")<html.index("await renderFastCandidates(disambiguated.current")
+      "filterBeforeDisplayCap":runtime.index("CARDORYX_DIAGNOSTIC.candidates=current")<runtime.index("state.candidates.slice(0,state.shown)"),
+      "photoInputCaptureEnvironment":'id="cameraInput" type="file" accept="image/*" capture="environment"' in html,
+      "loadMoreWithoutNewQuery":"Mostra altri usato senza nuove query." in runtime,
+      "groundTruthIncludesNone":'<option value="__none__">Nessuna delle precedenti</option>' in runtime,
+      "exportExcludesImages":"imageStored:false" in runtime and "candidate_disambiguation_real_scans.json" in runtime,
+      "collectionSaveButtonRemoved":'onclick="saveSelected()"' not in html,
+      "collectionSaveRuntimeDisabled":"saveSelected=function()" in runtime and "salvataggio in collezione è disattivato" in runtime,
+      "runtimeDoesNotPersistCollection":"persist()" not in runtime and "db.push(" not in runtime,
+      "diagnosticStorageSeparated":"cardoryx_candidate_disambiguation_real_scans_v1" in runtime,
+      "realPhotoStatistics":"diagnosticAggregate()" in runtime and "diagnosticRenderStats()" in runtime,
+      "performanceMeasured":"performance.now()" in runtime and "diagTimeTotal" in html
     }
 
     lists,details,base_network,_=ocr_audit.load_catalog()
@@ -328,6 +351,16 @@ def main():
       not discrepancies and all(html_checks["requiredMarkers"].values())
       and not any(html_checks["forbiddenPatterns"].values())
       and html_checks["filterBeforeDisplayCap"]
+      and html_checks["photoInputCaptureEnvironment"]
+      and html_checks["loadMoreWithoutNewQuery"]
+      and html_checks["groundTruthIncludesNone"]
+      and html_checks["exportExcludesImages"]
+      and html_checks["collectionSaveButtonRemoved"]
+      and html_checks["collectionSaveRuntimeDisabled"]
+      and html_checks["runtimeDoesNotPersistCollection"]
+      and html_checks["diagnosticStorageSeparated"]
+      and html_checks["realPhotoStatistics"]
+      and html_checks["performanceMeasured"]
       and genesect.get("concordantAutoSelect") and genesect.get("discordantOCRKeepsAllCandidates")
       and not pagination_failures
       and failsafe["zeroCategoryFilterRestoresOriginal"]
@@ -358,8 +391,14 @@ def main():
         "theoreticalUniqueCoveragePercent":round(100*(len(unique)+resolved_total)/len(eligible),2)},
       "photoValidation":{"availableRepositoryPhotos":0,"realScansExecuted":0,
         "recommendedMinimum":{"identities":30,"acquisitionsEach":2,"totalScans":60},
-        "diagnosticLogDownload":"candidate_disambiguation_photo_log.json",
-        "status":"PRONTO PER TEST SU FOTO REALI — accuratezza OCR non dichiarata"},
+        "diagnosticPage":"diagnostic/candidate-disambiguation-test.html",
+        "diagnosticLogDownload":"candidate_disambiguation_real_scans.json",
+        "features":{"cameraCapture":True,"numberLocalIdOCR":True,"categoryPanel":True,
+          "trainerSubtypePanel":True,"energyTypePanel":True,"doubleNameOCR":True,
+          "specialNumberingPreserved":True,"loadMore":True,"manualGroundTruth":True,
+          "localStatistics":True,"jsonExport":True,"diagnosticReset":True,
+          "performanceTiming":True,"collectionSaveDisabled":True},
+        "status":"PRONTO PER TEST SU FOTO REALI — accuratezza OCR sarà misurata dalle foto esportate"},
       "performance":{"additionalOCRUniqueCandidate":0,"additionalOCRAmbiguousCandidate":2,
         "averageAdditionalOCRCallsIfAppliedToCurrentRecognizedMix":round(2*len(ambiguous)/(len(unique)+len(ambiguous)),3),
         "measuredAdditionalTimeMs":None,"worstCaseAdditionalOCRCalls":2,

@@ -275,7 +275,10 @@
 .variant-badge+.variant-badge{margin-left:5px}
 .scanner-pro-panel{margin:12px 0;padding:12px;border:1px solid #dbe3ea;border-radius:14px;background:#fff}.scanner-pro-title{font-weight:800}.scanner-pro-split{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-top:10px}.scanner-pro-field label{display:block;font-size:12px;font-weight:800;color:#6b7280;margin-bottom:5px}.scanner-pro-field input{width:100%;min-width:0}.scanner-pro-slash{font-size:26px;font-weight:800;padding-bottom:12px}.scanner-pro-find{width:100%;margin-top:9px}.scanner-pro-candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.scanner-pro-card{border:1px solid #dbe3ea;border-radius:12px;padding:8px;background:#fff;text-align:left}.scanner-pro-card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#f5f7f9}.scanner-pro-card b{display:block;margin-top:5px}@media(min-width:700px){.scanner-pro-candidates{grid-template-columns:repeat(4,minmax(0,1fr))}}</style>
 </head>
-<body><div id="candidateDiagnosticBanner" style="position:sticky;top:0;z-index:99999;background:#3b176b;color:white;padding:10px 14px;text-align:center;font:600 14px system-ui">TEST DIAGNOSTICO — nessuna modifica alla produzione <button onclick="downloadCandidateDiagnosticLog()" style="margin-left:10px;padding:6px 10px;border:0;border-radius:8px">Scarica log scansioni</button></div>
+<style>
+.diagnostic-panel{margin-top:14px;border:2px solid #7c3aed;background:#faf5ff}.diagnostic-panel h3{margin:0 0 10px}.diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.diagnostic-kv{padding:9px;border:1px solid #e9d5ff;border-radius:10px;background:#fff}.diagnostic-kv b{display:block;font-size:11px;color:#6b21a8;text-transform:uppercase}.diagnostic-kv span{display:block;margin-top:3px;overflow-wrap:anywhere}.diagnostic-wide{grid-column:1/-1}.diagnostic-result{margin-top:10px;padding:12px;border-radius:12px;border:1px solid #d1d5db;background:#f3f4f6}.diagnostic-result[data-state="correct"]{background:#ecfdf3;border-color:#6ce9a6;color:#05603a}.diagnostic-result[data-state="manual"]{background:#fffaeb;border-color:#fec84b;color:#93370d}.diagnostic-result[data-state="wrong"]{background:#fef3f2;border-color:#fda29b;color:#912018}.diagnostic-result[data-state="pending"]{background:#f2f4f7;color:#475467}.diagnostic-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.diagnostic-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.diagnostic-stat{padding:9px;border-radius:10px;background:#fff;border:1px solid #e5e7eb}.diagnostic-stat strong{display:block;font-size:18px}.diagnostic-timeline{margin:8px 0 0;padding-left:18px}.diagnostic-timeline li{margin:4px 0}.ground-truth-none{width:100%;margin-top:9px}.diagnostic-note{padding:10px;border-left:4px solid #7c3aed;background:#f5f3ff;border-radius:8px}.diagnostic-sample{font-size:12px;line-height:1.55;color:#475467}.production-disabled{opacity:.7;pointer-events:none}.diagnostic-only-hide{display:none!important}@media(max-width:520px){.diagnostic-grid,.diagnostic-stats{grid-template-columns:1fr}.diagnostic-wide{grid-column:auto}}
+</style>
+<body><div id="candidateDiagnosticBanner" style="position:sticky;top:0;z-index:99999;background:#3b176b;color:white;padding:10px 14px;text-align:center;font:600 14px system-ui">TEST FOTO REALI — nessun salvataggio in collezione <button onclick="downloadCandidateDiagnosticLog()" style="margin-left:10px;padding:6px 10px;border:0;border-radius:8px">Esporta risultati test</button></div>
 <div class="app">
   <header class="top"><div style="display:flex;align-items:center;gap:12px"><img src="cardoryx-logo.png" alt="Cardoryx" style="width:52px;height:52px;border-radius:14px"><div><h1>Cardoryx</h1><p>Scan · Collect · Build · Value</p></div></div></header>
 
@@ -378,7 +381,34 @@
       <div id="scanFallbackInfo"></div>
 
 
-      <div id="ocrStatus" class="footer-note">Un solo flusso: foto → Numero/Totale → TCGdex → Conferma.</div>
+      <div id="ocrStatus" class="footer-note">Un solo flusso: foto → Numero/Totale → TCGdex → Conferma diagnostica.</div>
+      <div id="candidateDiagnosticPanel" class="card diagnostic-panel">
+        <h3>🧪 Dettaglio scansione reale</h3>
+        <div class="diagnostic-note">La foto resta soltanto in memoria durante la scansione e non viene inclusa nell’export.</div>
+        <div class="diagnostic-grid" style="margin-top:10px">
+          <div class="diagnostic-kv"><b>Identità stampata</b><span id="diagPrintedIdentity">—</span></div>
+          <div class="diagnostic-kv"><b>Numero / totale</b><span id="diagNumberTotal">—</span></div>
+          <div class="diagnostic-kv"><b>LocalId completo</b><span id="diagLocalId">—</span></div>
+          <div class="diagnostic-kv"><b>Prefisso speciale</b><span id="diagSpecialPrefix">—</span></div>
+          <div class="diagnostic-kv"><b>Candidati iniziali</b><span id="diagInitialCount">0</span></div>
+          <div class="diagnostic-kv"><b>Dopo categoria</b><span id="diagAfterCategory">—</span></div>
+          <div class="diagnostic-kv"><b>Categoria rilevata</b><span id="diagCategory">Non determinata</span></div>
+          <div class="diagnostic-kv"><b>Sottotipo rilevato</b><span id="diagSubtype">Non determinato</span></div>
+          <div class="diagnostic-kv"><b>Tipo Energia</b><span id="diagEnergyType">Non determinato</span></div>
+          <div class="diagnostic-kv"><b>Dopo sottotipo/tipo</b><span id="diagAfterSubtype">—</span></div>
+          <div class="diagnostic-kv"><b>OCR nome A</b><span id="diagNameA">—</span></div>
+          <div class="diagnostic-kv"><b>OCR nome B</b><span id="diagNameB">—</span></div>
+          <div class="diagnostic-kv"><b>Concordanza nome</b><span id="diagNameConsensus">NO</span></div>
+          <div class="diagnostic-kv"><b>Dopo nome</b><span id="diagAfterName">—</span></div>
+          <div class="diagnostic-kv diagnostic-wide"><b>Risultato finale / fallback</b><span id="diagFinalResult">Ground truth non ancora indicata</span></div>
+          <div class="diagnostic-kv"><b>OCR numero/localId</b><span id="diagTimeCode">—</span></div>
+          <div class="diagnostic-kv"><b>OCR categoria/sottotipo</b><span id="diagTimeClass">—</span></div>
+          <div class="diagnostic-kv"><b>OCR nome</b><span id="diagTimeName">—</span></div>
+          <div class="diagnostic-kv"><b>Tempo totale</b><span id="diagTimeTotal">—</span></div>
+        </div>
+        <ul id="diagTimeline" class="diagnostic-timeline"><li>In attesa di una foto.</li></ul>
+        <div id="diagVisualOutcome" class="diagnostic-result" data-state="pending"><b>GRIGIO — Ground truth non ancora indicata</b></div>
+      </div>
     </div>
 
     <div id="singleScanFallback" class="card">
@@ -394,7 +424,10 @@
       <input id="setTotalInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="159">
     </div>
   </div>
-  <input id="nameInput" type="hidden">
+  <div style="margin-top:10px">
+    <div class="label">Nome carta <span class="small">(opzionale, confronto esatto)</span></div>
+    <input id="nameInput" autocomplete="off" placeholder="es. Genesect-ex">
+  </div>
   <div class="spacer"></div>
   <button class="btn big" type="button" onclick="runManualCollectorSearch()">🔎 Identifica carta</button>
   <div id="searchMsg" class="footer-note"></div>
@@ -411,6 +444,17 @@
     <div id="energyTypeGrid" class="grid"></div>
     <div id="energyTypeChoices" class="hidden" style="margin-top:12px"></div>
   </div>
+</div>
+
+<div id="candidateDiagnosticStatsCard" class="card diagnostic-panel">
+  <div class="section-title">📊 Risultati locali del test</div>
+  <div id="diagnosticStats" class="diagnostic-stats"></div>
+  <div id="diagnosticPrecision" class="footer-note">Precisione auto-selezione: campione insufficiente.</div>
+  <div class="diagnostic-actions">
+    <button class="btn" type="button" onclick="downloadCandidateDiagnosticLog()">Esporta risultati test</button>
+    <button class="btn alt" type="button" onclick="resetCandidateDiagnosticLog()">Reset risultati test</button>
+  </div>
+  <div class="diagnostic-sample" style="margin-top:12px"><b>Campione suggerito: 30 identità × 2 foto.</b><br>Genesect-ex 067/086; Pokémon standard, ex, V, GX, VMAX/VSTAR; Allenatore Aiuto, Oggetto, Stadio, Strumento; Energia Base e Speciale; TG, GG, H; promo; carte vecchie e moderne; nomi corti/lunghi; bustina con riflesso; foto inclinata.</div>
 </div>
 
 <div id="confirmCard" class="card hidden">
@@ -463,7 +507,7 @@
       <option value="PL">PL — Played</option>
       <option value="PO">PO — Poor</option>
     </select>
-      <div class="grid" style="margin-top:12px"><button class="btn green" onclick="saveSelected()">Salva</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
+      <div class="grid" style="margin-top:12px"><button class="btn green production-disabled" type="button" disabled>Salvataggio collezione disattivato</button><button class="btn alt" onclick="clearSelection()">Annulla</button></div>
       
 
   <div id="scanValueBox" class="scan-value-box hidden">
@@ -6685,6 +6729,482 @@ document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scann
 
 
 document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}catch(e){}});
+</script>
+
+<script id="candidateRealPhotoDiagnosticRuntime">
+/* REAL PHOTO DIAGNOSTIC RUNTIME.
+   It overrides scanner selection only in this isolated page. Production index.html is untouched. */
+Object.assign(CARDORYX_DIAGNOSTIC,{
+  schema:2,
+  mainSha:'845e463928f57ae1b5f139b289dd5c9120cd4f61',
+  branch:'diagnostic/candidate-disambiguation-implementation-test-20260902',
+  storageKey:'cardoryx_candidate_disambiguation_real_scans_v1',
+  scans:[],
+  current:null,
+  groundTruthCandidates:[],
+  realPhotoMode:true
+});
+
+function diagnosticStorageLoad(){
+  try{
+    const raw=window.localStorage.getItem(CARDORYX_DIAGNOSTIC.storageKey);
+    const parsed=raw?JSON.parse(raw):null;
+    CARDORYX_DIAGNOSTIC.scans=Array.isArray(parsed?.scans)?parsed.scans:[];
+  }catch(e){CARDORYX_DIAGNOSTIC.scans=[]}
+}
+function diagnosticStorageSave(){
+  try{
+    window.localStorage.setItem(CARDORYX_DIAGNOSTIC.storageKey,JSON.stringify({
+      schema:2,mainSha:CARDORYX_DIAGNOSTIC.mainSha,branch:CARDORYX_DIAGNOSTIC.branch,
+      updatedAt:new Date().toISOString(),scans:CARDORYX_DIAGNOSTIC.scans
+    }));
+  }catch(e){console.warn('Archivio diagnostico locale non disponibile:',e)}
+}
+function diagnosticEl(id){return document.getElementById(id)}
+function diagnosticText(id,value){const el=diagnosticEl(id);if(el)el.textContent=value===''||value==null?'—':String(value)}
+function diagnosticMillis(value){return Number.isFinite(Number(value))?Math.round(Number(value))+' ms':'—'}
+function diagnosticPrefix(localId){
+  const match=String(localId||'').trim().toUpperCase().match(/^([A-Z]+)(\d[\dA-Z-]*)$/);
+  return match?match[1]:'';
+}
+function diagnosticSpecialNumber(localId){
+  const match=String(localId||'').trim().toUpperCase().match(/^[A-Z]+(.+)$/);
+  return match?match[1]:'';
+}
+function diagnosticCategoryLabel(value){
+  return {pokemon:'Pokémon',trainer:'Allenatore',energy:'Energia'}[diagnosticCanonicalCategory(value)]||'Non determinata';
+}
+function diagnosticSubtypeLabel(value){
+  return {supporter:'Aiuto',item:'Oggetto',stadium:'Stadio',tool:'Strumento'}[diagnosticTrainerSubtype(value)]||value||'Non determinato';
+}
+function diagnosticEnergyLabel(value){
+  const key=diagnosticEnergyType(value);
+  return {grass:'Erba',fire:'Fuoco',water:'Acqua',lightning:'Lampo',psychic:'Psico',fighting:'Lotta',darkness:'Oscurità',metal:'Metallo',fairy:'Folletto',colorless:'Incolore',special:'Energia Speciale',basic:'Energia Base'}[key]||value||'Non determinato';
+}
+function diagnosticBeginScan(source){
+  CARDORYX_DIAGNOSTIC.current={
+    id:'scan-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
+    timestamp:new Date().toISOString(),source:source||'photo',
+    imageStored:false,printedIdentity:'',number:'',total:'',localId:'',specialPrefix:'',
+    specialNumber:'',subsetTotal:'',candidateCountInitial:0,candidateIdsInitial:[],
+    detectedCategory:'',categoryApplied:false,candidateCountAfterCategory:0,
+    detectedSubtype:'',subtypeApplied:false,detectedEnergyType:'',energyTypeApplied:false,
+    ocrNameA:'',ocrNameB:'',normalizedNameA:'',normalizedNameB:'',nameConsensus:false,
+    nameApplied:false,candidateCountFinal:0,candidateIdsFinal:[],
+    automaticCandidateId:'',automaticCandidateName:'',manualFallback:true,fallbackReason:'in-progress',
+    loadMoreUsed:false,groundTruthCardId:'',groundTruthName:'',automaticCorrect:null,
+    finalClassification:'pending',timings:{codeMs:null,classificationMs:null,nameMs:null,totalMs:null},
+    apiErrors:[],timeline:['Scansione avviata.'],_startedAt:performance.now()
+  };
+  CARDORYX_DIAGNOSTIC.candidates=[];
+  CARDORYX_DIAGNOSTIC.groundTruthCandidates=[];
+  CARDORYX_DIAGNOSTIC.shown=0;
+  diagnosticRenderCurrent();
+  return CARDORYX_DIAGNOSTIC.current;
+}
+function diagnosticPersistCurrent(){
+  const cur=CARDORYX_DIAGNOSTIC.current;
+  if(!cur)return;
+  const clean=JSON.parse(JSON.stringify(cur));
+  delete clean._startedAt;
+  const idx=CARDORYX_DIAGNOSTIC.scans.findIndex(x=>x.id===clean.id);
+  if(idx>=0)CARDORYX_DIAGNOSTIC.scans[idx]=clean;else CARDORYX_DIAGNOSTIC.scans.push(clean);
+  diagnosticStorageSave();
+  diagnosticRenderStats();
+}
+function diagnosticStage(trace,label,fallback){
+  const row=(trace||[]).find(x=>x.filter===label);
+  return row?{count:row.applied?row.after:row.before,applied:!!row.applied,ignored:row.reason==='zero-restored'}:fallback;
+}
+function diagnosticRenderCurrent(){
+  const s=CARDORYX_DIAGNOSTIC.current;
+  if(!s)return;
+  diagnosticText('diagPrintedIdentity',s.printedIdentity||'—');
+  diagnosticText('diagNumberTotal',(s.number||s.localId||'—')+(s.total?'/'+s.total:''));
+  diagnosticText('diagLocalId',s.localId||s.number||'—');
+  diagnosticText('diagSpecialPrefix',s.specialPrefix?(s.specialPrefix+' · numero '+(s.specialNumber||'—')+(s.subsetTotal?' · totale subset '+s.subsetTotal:'')):'Nessuno');
+  diagnosticText('diagInitialCount',s.candidateCountInitial);
+  diagnosticText('diagAfterCategory',s.candidateCountAfterCategory+(s.categoryApplied?' · filtro applicato':' · filtro saltato/ignorato'));
+  diagnosticText('diagCategory',diagnosticCategoryLabel(s.detectedCategory));
+  diagnosticText('diagSubtype',diagnosticSubtypeLabel(s.detectedSubtype));
+  diagnosticText('diagEnergyType',diagnosticEnergyLabel(s.detectedEnergyType));
+  diagnosticText('diagAfterSubtype',s.candidateCountAfterSubtypeType==null?'—':s.candidateCountAfterSubtypeType);
+  diagnosticText('diagNameA',s.ocrNameA||'—');
+  diagnosticText('diagNameB',s.ocrNameB||'—');
+  diagnosticText('diagNameConsensus',s.nameConsensus?'SI':'NO');
+  diagnosticText('diagAfterName',s.candidateCountFinal);
+  diagnosticText('diagFinalResult',s.automaticCandidateId?('Auto: '+s.automaticCandidateName):(s.manualFallback?('Manuale: '+s.fallbackReason):'—'));
+  diagnosticText('diagTimeCode',diagnosticMillis(s.timings?.codeMs));
+  diagnosticText('diagTimeClass',diagnosticMillis(s.timings?.classificationMs));
+  diagnosticText('diagTimeName',diagnosticMillis(s.timings?.nameMs));
+  diagnosticText('diagTimeTotal',diagnosticMillis(s.timings?.totalMs));
+  const tl=diagnosticEl('diagTimeline');
+  if(tl)tl.innerHTML=(s.timeline||[]).map(x=>'<li>'+esc(x)+'</li>').join('');
+  diagnosticRenderOutcome();
+}
+function diagnosticRenderOutcome(){
+  const s=CARDORYX_DIAGNOSTIC.current,out=diagnosticEl('diagVisualOutcome');
+  if(!s||!out)return;
+  let state='pending',text='GRIGIO — Ground truth non ancora indicata';
+  if(s.groundTruthCardId||s.finalClassification==='ground-truth-none'){
+    if(s.automaticCandidateId){
+      if(s.automaticCorrect){state='correct';text='VERDE — Riconoscimento corretto'}
+      else{state='wrong';text='ROSSO — Riconoscimento automatico errato'}
+    }else{state='manual';text='GIALLO — Fallback manuale corretto'}
+  }
+  out.dataset.state=state;
+  out.innerHTML='<b>'+text+'</b>';
+}
+function diagnosticAggregate(){
+  const scans=CARDORYX_DIAGNOSTIC.scans||[];
+  const ground=scans.filter(x=>x.groundTruthCardId||x.finalClassification==='ground-truth-none');
+  const auto=scans.filter(x=>x.automaticCandidateId);
+  const autoGround=ground.filter(x=>x.automaticCandidateId);
+  const prefixResolved=p=>scans.filter(x=>x.specialPrefix===p&&x.automaticCandidateId).length;
+  return {
+    scansTotal:scans.length,groundTruthCompleted:ground.length,automaticSelections:auto.length,
+    automaticCorrect:autoGround.filter(x=>x.automaticCorrect===true).length,
+    automaticWrong:autoGround.filter(x=>x.automaticCorrect===false).length,
+    manualFallbacks:scans.filter(x=>x.manualFallback).length,
+    nameConcordant:scans.filter(x=>x.ocrNameA&&x.ocrNameB&&x.nameConsensus).length,
+    nameDiscordant:scans.filter(x=>x.ocrNameA&&x.ocrNameB&&!x.nameConsensus).length,
+    categoryDetected:scans.filter(x=>x.detectedCategory).length,
+    subtypeDetected:scans.filter(x=>x.detectedSubtype).length,
+    energiesResolved:scans.filter(x=>diagnosticCanonicalCategory(x.detectedCategory)==='energy'&&x.automaticCandidateId).length,
+    tgResolved:prefixResolved('TG'),ggResolved:prefixResolved('GG'),hResolved:prefixResolved('H'),
+    casesOver6:scans.filter(x=>x.candidateCountFinal>6).length,
+    loadMoreUses:scans.filter(x=>x.loadMoreUsed).length,
+    autoGroundTruthCount:autoGround.length
+  };
+}
+function diagnosticRenderStats(){
+  const s=diagnosticAggregate(),box=diagnosticEl('diagnosticStats');
+  if(box){
+    const rows=[
+      ['Scansioni totali',s.scansTotal],['Ground truth completate',s.groundTruthCompleted],
+      ['Auto-selezioni',s.automaticSelections],['Auto corrette',s.automaticCorrect],
+      ['Auto errate',s.automaticWrong],['Fallback manuali',s.manualFallbacks],
+      ['OCR nome concordante',s.nameConcordant],['OCR nome discordante',s.nameDiscordant],
+      ['Categoria rilevata',s.categoryDetected],['Sottotipo rilevato',s.subtypeDetected],
+      ['Energie risolte',s.energiesResolved],['TG / GG / H risolte',s.tgResolved+' / '+s.ggResolved+' / '+s.hResolved],
+      ['Casi oltre 6',s.casesOver6],['Utilizzi Mostra altri',s.loadMoreUses]
+    ];
+    box.innerHTML=rows.map(x=>'<div class="diagnostic-stat"><strong>'+esc(x[1])+'</strong><span>'+esc(x[0])+'</span></div>').join('');
+  }
+  const p=diagnosticEl('diagnosticPrecision');
+  if(p){
+    p.textContent=s.autoGroundTruthCount>=10
+      ?'Precisione auto-selezione: '+((s.automaticCorrect/s.autoGroundTruthCount)*100).toFixed(1)+'% ('+s.automaticCorrect+'/'+s.autoGroundTruthCount+')'
+      :'Precisione auto-selezione: campione insufficiente ('+s.autoGroundTruthCount+'/10 auto-selezioni con ground truth).';
+  }
+}
+function diagnosticSafeFilterV2(cards,targetValue,extractor,label,trace){
+  if(!targetValue){trace.push({filter:label,before:cards.length,after:cards.length,applied:false,reason:'signal-missing'});return cards}
+  const filtered=cards.filter(card=>{const value=extractor(card);return !value||value===targetValue});
+  if(!filtered.length){
+    CARDORYX_DIAGNOSTIC.counters.filtersIgnoredAtZero++;
+    trace.push({filter:label,before:cards.length,after:0,applied:false,reason:'zero-restored'});
+    return cards;
+  }
+  trace.push({filter:label,before:cards.length,after:filtered.length,applied:filtered.length<cards.length});
+  return filtered;
+}
+diagnosticSafeFilter=diagnosticSafeFilterV2;
+diagnosticDisambiguateVerifiedCandidates=function(cards,evidence){
+  evidence=evidence||{};
+  const original=diagnosticDeduplicate(cards),trace=[];
+  let current=original;
+  const category=diagnosticCanonicalCategory(evidence.category);
+  current=diagnosticSafeFilterV2(current,category,diagnosticCardCategory,'category',trace);
+  const afterCategory=current.length;
+  if(category==='trainer')current=diagnosticSafeFilterV2(current,diagnosticTrainerSubtype(evidence.trainerSubtype),diagnosticCardTrainerSubtype,'trainerSubtype',trace);
+  if(category==='energy')current=diagnosticSafeFilterV2(current,diagnosticEnergyType(evidence.energyType),diagnosticCardEnergyType,'energyType',trace);
+  const afterSubtypeType=current.length;
+  const nameConsensus=!!evidence.nameConcordant&&diagnosticNameKey(evidence.nameA)===diagnosticNameKey(evidence.nameB);
+  if(nameConsensus)current=diagnosticExactNameFilter(current,evidence.nameA,trace);
+  const unique=current.length===1;
+  const autoSelected=original.length===1||(original.length>1&&nameConsensus&&unique);
+  return {original:original,current:current,trace:trace,unique:unique,autoSelected:autoSelected,afterCategory:afterCategory,afterSubtypeType:afterSubtypeType};
+};
+readDiagnosticNameEvidence=async function(img){
+  const started=performance.now();
+  const cropA=cropImage(img,.12,.055,.72,.075,2.2);
+  const cropB=enhanceForOCR(cropImage(img,.12,.055,.72,.075,2.2),170);
+  const raw=await Promise.all([
+    Tesseract.recognize(cropA,'ita+eng',{tessedit_pageseg_mode:'7'}),
+    Tesseract.recognize(cropB,'ita+eng',{tessedit_pageseg_mode:'7'})
+  ]);
+  const nameA=narrowNameOCRText(raw[0]?.data?.text||'');
+  const nameB=narrowNameOCRText(raw[1]?.data?.text||'');
+  const keyA=meaningfulOCRName(nameA)?diagnosticNameKey(nameA):'';
+  const keyB=meaningfulOCRName(nameB)?diagnosticNameKey(nameB):'';
+  return {nameA:nameA,nameB:nameB,keyA:keyA,keyB:keyB,concordant:!!keyA&&keyA===keyB,durationMs:performance.now()-started};
+};
+function diagnosticFinalize(cards,result,meta){
+  const s=CARDORYX_DIAGNOSTIC.current||diagnosticBeginScan(meta?.source||'photo');
+  const original=diagnosticDeduplicate(cards||[]);
+  const current=diagnosticDeduplicate(result?.current||original);
+  const categoryStage=diagnosticStage(result?.trace,'category',{count:original.length,applied:false});
+  const subtypeStage=diagnosticStage(result?.trace,'trainerSubtype',null);
+  const energyStage=diagnosticStage(result?.trace,'energyType',null);
+  const nameStage=diagnosticStage(result?.trace,'exactName',null);
+  Object.assign(s,{
+    printedIdentity:meta?.printedIdentity||'',number:String(meta?.number||''),total:String(meta?.total||''),
+    localId:String(meta?.localId||meta?.number||''),specialPrefix:diagnosticPrefix(meta?.localId||meta?.number||''),
+    specialNumber:diagnosticSpecialNumber(meta?.localId||meta?.number||''),subsetTotal:String(meta?.subsetTotal||''),
+    candidateCountInitial:original.length,candidateIdsInitial:original.map(c=>c.id),
+    detectedCategory:meta?.category||'',categoryApplied:!!categoryStage?.applied,
+    candidateCountAfterCategory:result?.afterCategory??categoryStage?.count??original.length,
+    detectedSubtype:meta?.trainerSubtype||'',subtypeApplied:!!subtypeStage?.applied,
+    detectedEnergyType:meta?.energyType||'',energyTypeApplied:!!energyStage?.applied,
+    candidateCountAfterSubtypeType:result?.afterSubtypeType??subtypeStage?.count??energyStage?.count??result?.afterCategory??original.length,
+    ocrNameA:meta?.nameEvidence?.nameA||'',ocrNameB:meta?.nameEvidence?.nameB||'',
+    normalizedNameA:meta?.nameEvidence?.keyA||'',normalizedNameB:meta?.nameEvidence?.keyB||'',
+    nameConsensus:!!meta?.nameEvidence?.concordant,nameApplied:!!nameStage?.applied,
+    candidateCountFinal:current.length,candidateIdsFinal:current.map(c=>c.id),
+    automaticCandidateId:result?.autoSelected&&current[0]?current[0].id:'',
+    automaticCandidateName:result?.autoSelected&&current[0]?current[0].name:'',
+    manualFallback:!result?.autoSelected,
+    fallbackReason:result?.autoSelected?'':(meta?.fallbackReason||(!meta?.nameEvidence?.concordant?'OCR nome non concordante':'Nome esatto non univoco')),
+    timings:{
+      codeMs:meta?.timings?.codeMs??null,classificationMs:meta?.timings?.classificationMs??null,
+      nameMs:meta?.nameEvidence?.durationMs??meta?.timings?.nameMs??null,
+      totalMs:performance.now()-(s._startedAt||performance.now())
+    },
+    timeline:(meta?.timeline||[]).concat((result?.trace||[]).map(x=>{
+      if(x.reason==='zero-restored')return 'Filtro '+x.filter+' ignorato: avrebbe eliminato tutti i candidati.';
+      if(x.reason==='signal-missing')return 'Filtro '+x.filter+' saltato: segnale non determinato.';
+      return 'Filtro '+x.filter+': '+x.before+' → '+x.after+(x.applied?' (applicato).':' (nessuna riduzione).');
+    })).concat(result?.autoSelected?['Candidato unico verificato.']:['Fallback manuale mantenuto.'])
+  });
+  CARDORYX_DIAGNOSTIC.groundTruthCandidates=original;
+  CARDORYX_DIAGNOSTIC.candidates=current;
+  CARDORYX_DIAGNOSTIC.shown=Math.min(CARDORYX_DIAGNOSTIC.pageSize,current.length);
+  CARDORYX_DIAGNOSTIC.route=meta?.route||'Candidati verificati';
+  diagnosticPersistCurrent();
+  diagnosticRenderCurrent();
+  renderDiagnosticCandidatePage();
+}
+renderDiagnosticCandidatePage=function(){
+  const state=CARDORYX_DIAGNOSTIC,visible=state.candidates.slice(0,state.shown);
+  const cardsHtml=visible.map(function(c){
+    const count=setOfficialCount(c);
+    return '<div class="candidate">'+
+      '<img class="card-zoomable" src="'+esc(cardImageSrc(c,'low'))+'" onclick="openCardZoom(this.src)" onerror="this.style.visibility=\'hidden\'" title="Tocca per ingrandire">'+
+      '<h3>'+esc(c.name||'Carta')+'</h3>'+
+      '<div class="small">ID '+esc(c.id||'—')+' · N° '+esc(c.localId||'—')+(count?'/'+esc(count):'')+(setName(c)?' · '+esc(setName(c)):'')+'</div>'+
+      '<button class="btn" style="width:100%;margin-top:7px" onclick="setDiagnosticGroundTruth(&quot;'+esc(c.id)+'&quot;)">La carta era questa</button></div>';
+  }).join('');
+  const remaining=state.candidates.length-state.shown;
+  const all=state.groundTruthCandidates||[];
+  const options=all.map(c=>'<option value="'+esc(c.id)+'">'+esc((c.name||'Carta')+' · '+(c.localId||'—')+' · '+setName(c))+'</option>').join('');
+  results.innerHTML=
+    '<div class="candidate-grid">'+cardsHtml+'</div>'+
+    (remaining>0?'<div class="load-more-wrap"><button id="diagnosticLoadMore" class="btn alt" onclick="showMoreDiagnosticCandidates()">'+diagnosticLoadMoreLabel(remaining)+'</button></div>':'')+
+    '<div class="diagnostic-note" style="margin-top:12px"><b>La carta fotografata era:</b>'+
+    '<select id="diagnosticGroundTruthSelect" style="width:100%;margin-top:7px"><option value="">Seleziona ground truth…</option>'+options+'<option value="__none__">Nessuna delle precedenti</option></select>'+
+    '<button class="btn ground-truth-none" type="button" onclick="confirmDiagnosticGroundTruth()">Registra ground truth</button></div>';
+  const info=diagnosticEl('scanFallbackInfo');
+  if(info)info.innerHTML='<div class="scan-found">✓ '+esc(state.route)+': mostrate '+visible.length+' di '+state.candidates.length+' identità dopo i filtri; '+all.length+' candidati iniziali disponibili per la ground truth.</div>';
+};
+showMoreDiagnosticCandidates=function(){
+  const state=CARDORYX_DIAGNOSTIC;
+  state.shown=Math.min(state.candidates.length,state.shown+state.pageSize);
+  state.counters.loadMoreClicks++;
+  if(state.current){state.current.loadMoreUsed=true;state.current.timeline.push('Mostra altri usato senza nuove query.');diagnosticPersistCurrent();diagnosticRenderCurrent()}
+  renderDiagnosticCandidatePage();
+};
+function confirmDiagnosticGroundTruth(){
+  const select=diagnosticEl('diagnosticGroundTruthSelect');
+  if(!select?.value){alert('Seleziona la carta corretta oppure Nessuna delle precedenti.');return}
+  setDiagnosticGroundTruth(select.value);
+}
+function setDiagnosticGroundTruth(cardId){
+  const s=CARDORYX_DIAGNOSTIC.current;if(!s)return;
+  if(cardId==='__none__'){
+    s.groundTruthCardId='';s.groundTruthName='Nessuna delle precedenti';
+    s.automaticCorrect=s.automaticCandidateId?false:null;s.finalClassification='ground-truth-none';
+  }else{
+    const card=(CARDORYX_DIAGNOSTIC.groundTruthCandidates||[]).find(c=>String(c.id)===String(cardId));
+    if(!card)return;
+    s.groundTruthCardId=card.id;s.groundTruthName=card.name||'';
+    s.automaticCorrect=s.automaticCandidateId?String(s.automaticCandidateId)===String(card.id):null;
+    s.finalClassification=s.automaticCandidateId?(s.automaticCorrect?'automatic-correct':'automatic-wrong'):'manual-fallback-correct';
+  }
+  s.timeline.push('Ground truth registrata: '+s.groundTruthName+'.');
+  diagnosticPersistCurrent();diagnosticRenderCurrent();
+}
+function resetCandidateDiagnosticLog(){
+  if(!confirm('Cancellare solo i risultati diagnostici locali? I dati Cardoryx non saranno toccati.'))return;
+  CARDORYX_DIAGNOSTIC.scans=[];CARDORYX_DIAGNOSTIC.current=null;
+  try{window.localStorage.removeItem(CARDORYX_DIAGNOSTIC.storageKey)}catch(e){}
+  diagnosticRenderStats();
+  ['diagPrintedIdentity','diagNumberTotal','diagLocalId','diagSpecialPrefix'].forEach(id=>diagnosticText(id,'—'));
+  diagnosticText('diagFinalResult','Risultati diagnostici locali azzerati.');
+  const out=diagnosticEl('diagVisualOutcome');if(out){out.dataset.state='pending';out.innerHTML='<b>GRIGIO — Ground truth non ancora indicata</b>'}
+}
+downloadCandidateDiagnosticLog=function(){
+  const payload={
+    metadata:{schema:2,test:'Cardoryx Candidate Disambiguation Real Photo Diagnostic',mainSha:CARDORYX_DIAGNOSTIC.mainSha,
+      diagnosticBranch:CARDORYX_DIAGNOSTIC.branch,exportedAt:new Date().toISOString(),
+      browser:navigator.userAgent,declaration:'OCR REALE — risultati misurati; immagini escluse'},
+    statistics:diagnosticAggregate(),
+    scans:CARDORYX_DIAGNOSTIC.scans.map(function(scan){const clean=JSON.parse(JSON.stringify(scan));delete clean._startedAt;return clean})
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='candidate_disambiguation_real_scans.json';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url)},1000);
+};
+chooseCard=async function(candidate){
+  const brief=typeof candidate==='string'?JSON.parse(candidate):candidate;
+  selectedCard=brief||null;
+  confirmCard.classList.add('hidden');
+  if(CARDORYX_DIAGNOSTIC.current&&brief){
+    CARDORYX_DIAGNOSTIC.current.automaticCandidateId=brief.id||'';
+    CARDORYX_DIAGNOSTIC.current.automaticCandidateName=brief.name||'';
+    CARDORYX_DIAGNOSTIC.current.manualFallback=false;
+    diagnosticPersistCurrent();diagnosticRenderCurrent();
+  }
+  return brief;
+};
+saveSelected=function(){
+  const msg='Test diagnostico: il salvataggio in collezione è disattivato.';
+  if(typeof saveMsg!=='undefined'&&saveMsg)saveMsg.textContent=msg;
+  alert(msg);
+  return false;
+};
+renderFastCandidates=async function(cardList,route){
+  const full=diagnosticDeduplicate(cardList||[]);
+  CARDORYX_DIAGNOSTIC.candidates=full;
+  CARDORYX_DIAGNOSTIC.shown=Math.min(CARDORYX_DIAGNOSTIC.pageSize,full.length);
+  CARDORYX_DIAGNOSTIC.route=route||'Candidati verificati';
+  renderDiagnosticCandidatePage();
+  return !!full.length;
+};
+runManualCollectorSearch=async function(){
+  const rawNumber=String(numberInput.value||'').trim().toUpperCase();
+  const rawTotal=String(setTotalInput.value||'').trim().toUpperCase();
+  const optionalName=String(nameInput.value||'').trim();
+  if(!rawNumber||!rawTotal){searchMsg.textContent='Inserisci Numero/localId e Totale set.';return}
+  const scan=diagnosticBeginScan('manual');
+  searchMsg.textContent='Identifico '+rawNumber+'/'+rawTotal+'…';results.innerHTML='';clearSelection();
+  const started=performance.now();
+  try{
+    const hasPrefix=/^[A-Z]+/.test(rawNumber);
+    const original=hasPrefix?await queryBySpecialPrintedCode(rawNumber,rawTotal):await queryByPrintedCode(rawNumber.replace(/\D/g,''),rawTotal.replace(/\D/g,''));
+    const trace=[];
+    const filtered=optionalName?diagnosticExactNameFilter(original,optionalName,trace):original;
+    const auto=filtered.length===1;
+    const result={original:original,current:filtered,trace:trace,autoSelected:auto,afterCategory:original.length,afterSubtypeType:original.length};
+    diagnosticFinalize(original,result,{
+      source:'manual',printedIdentity:rawNumber+'/'+rawTotal,number:rawNumber,total:rawTotal,localId:rawNumber,
+      subsetTotal:hasPrefix?rawTotal:'',route:'Ricerca manuale Numero/Totale'+(optionalName?' + Nome esatto opzionale':''),
+      nameEvidence:optionalName?{nameA:optionalName,nameB:optionalName,keyA:diagnosticNameKey(optionalName),keyB:diagnosticNameKey(optionalName),concordant:true,durationMs:0}:null,
+      timings:{codeMs:performance.now()-started,classificationMs:0},fallbackReason:original.length?'Scelta manuale richiesta':'Nessuna identità verificata',
+      timeline:['Ricerca manuale: numero/localId e totale verificati.','Nome opzionale '+(optionalName?'applicato come confronto esatto.':'non inserito.')]
+    });
+    searchMsg.textContent=original.length?(auto?'Candidato unico verificato; indica la ground truth.':filtered.length+' candidati compatibili; indica la ground truth.'):'Nessuna carta trovata.';
+  }catch(e){
+    scan.apiErrors.push(String(e?.message||e));scan.fallbackReason='Errore TCGdex/rete';scan.timings.totalMs=performance.now()-scan._startedAt;
+    diagnosticPersistCurrent();diagnosticRenderCurrent();searchMsg.textContent='Ricerca TCGdex non riuscita.';
+  }
+};
+runSmartOCR=async function(){
+  const f=scanQueue[queueIndex];if(!f)return;
+  const scan=diagnosticBeginScan('photo');
+  ocrBtn.disabled=true;document.getElementById('singleScanFallback')?.classList.remove('hidden');
+  results.innerHTML='';searchMsg.textContent='';clearSelection();
+  setScanProgress(5,'Preparo la foto…');ocrStatus.textContent='Riconoscimento diagnostico in corso…';
+  setScannerRoute('Leggo il codice collezione stampato.');
+  try{
+    await loadTesseract();
+    const img=await downscaleImageForOCR(f,1100,1600);
+    setScanProgress(15,'Controllo Energia Base…');
+    const classStarted=performance.now();
+    const energy=await readBasicEnergyIdentity(img);
+    const classificationMs=performance.now()-classStarted;
+    if(energy.isBasic){
+      const codeStarted=performance.now(),energyCards=await findBasicEnergyCandidates(energy),codeMs=performance.now()-codeStarted;
+      if(energyCards.length){
+        const energyPrintedCode=energy.code?(energy.code.set+' '+energy.code.num):'Energia Base';
+        const nameEvidence=energyCards.length>1?await readDiagnosticNameEvidence(img):null;
+        const evidence={category:'energy',energyType:energy.type||'basic',nameA:nameEvidence?.nameA||'',nameB:nameEvidence?.nameB||'',nameConcordant:!!nameEvidence?.concordant};
+        const result=diagnosticDisambiguateVerifiedCandidates(energyCards,evidence);
+        diagnosticFinalize(energyCards,result,{
+          printedIdentity:energyPrintedCode,number:energy.code?.num||'',total:'',
+          localId:energyPrintedCode,category:'energy',energyType:energy.type||'basic',nameEvidence:nameEvidence,
+          timings:{codeMs:codeMs,classificationMs:classificationMs},route:'Energia Base SVE/MEE verificata',
+          fallbackReason:'Energia non univoca dopo i filtri sicuri',timeline:['Resolver Energia SVE/MEE eseguito.']
+        });
+        setScanProgress(100,result.autoSelected?'Energia identificata.':'Conferma manuale richiesta.');
+        ocrStatus.textContent=result.autoSelected?'Energia identificata; indica la ground truth.':'Energia: più candidati verificati.';
+        return;
+      }
+    }
+    setScanProgress(30,'Leggo numero/localId…');
+    const codeStarted=performance.now(),codes=await readCollectorCodeFocused(img),codeMs=performance.now()-codeStarted;
+    for(const code of codes.slice(0,5)){
+      if(!collectorCodeValid(code))continue;
+      let cards=[],label='',route='',localId='',total='',subsetTotal='';
+      if(code.kind==='specialPair'){
+        localId=code.localId;total=code.totalLocalId;subsetTotal=code.totalLocalId;
+        label=localId+'/'+total;route='LocalId speciale verificato';
+        cards=await queryBySpecialPrintedCode(localId,total);
+      }else if(code.kind==='standaloneLocalId'){
+        localId=code.localId;label=localId;route='Codice promo/localId verificato';
+        cards=await queryByStandalonePrintedLocalId(localId);
+      }else{
+        localId=code.num;total=code.total;label=localId+'/'+total;route='Numero + Totale set';
+        cards=await queryByPrintedCode(localId,total);
+      }
+      if(!cards.length)continue;
+      lastOCR={name:'',number:localId,total:total};numberInput.value=localId;setTotalInput.value=total;
+      let nameEvidence=null;
+      if(cards.length>1)nameEvidence=await readDiagnosticNameEvidence(img);
+      const result=diagnosticDisambiguateVerifiedCandidates(cards,{
+        nameA:nameEvidence?.nameA||'',nameB:nameEvidence?.nameB||'',nameConcordant:!!nameEvidence?.concordant
+      });
+      diagnosticFinalize(cards,result,{
+        printedIdentity:label,number:localId,total:total,localId:localId,subsetTotal:subsetTotal,
+        nameEvidence:nameEvidence,timings:{codeMs:codeMs,classificationMs:classificationMs},route:route,
+        fallbackReason:nameEvidence?.concordant?'Nome esatto non univoco':'Doppio OCR nome assente o discordante',
+        timeline:['Identità stampata verificata prima dei filtri.','Categoria/sottotipo non usati senza un segnale fotografico validato.']
+      });
+      setScanProgress(100,result.autoSelected?'Candidato unico verificato.':'Conferma manuale richiesta.');
+      ocrStatus.textContent=result.autoSelected
+        ?'✓ '+result.current[0].name+' · doppio OCR nome concordante; indica la ground truth.'
+        :'✓ '+label+': '+result.current.length+' candidati da confermare.';
+      return;
+    }
+    const empty={original:[],current:[],trace:[],autoSelected:false,afterCategory:0,afterSubtypeType:0};
+    diagnosticFinalize([],empty,{printedIdentity:'Non letta',timings:{codeMs:codeMs,classificationMs:classificationMs},route:'Nessun candidato',fallbackReason:'Numero/localId non letto o non verificato',timeline:['Nessuna identità stampata verificabile.']});
+    setScanProgress(100,'Inserimento manuale richiesto.');ocrStatus.textContent='Nessuna corrispondenza certa; usa la ricerca manuale.';
+  }catch(e){
+    scan.apiErrors.push(String(e?.message||e));scan.fallbackReason='Errore OCR/TCGdex; candidati non forzati';
+    scan.manualFallback=true;scan.timings.totalMs=performance.now()-scan._startedAt;scan.timeline.push('Errore: fallback manuale fail-safe.');
+    diagnosticPersistCurrent();diagnosticRenderCurrent();
+    setScanProgress(100,'Riconoscimento interrotto.');ocrStatus.textContent='Errore diagnostico; nessuna carta selezionata.';
+  }finally{ocrBtn.disabled=false}
+};
+window.setDiagnosticGroundTruth=setDiagnosticGroundTruth;
+window.confirmDiagnosticGroundTruth=confirmDiagnosticGroundTruth;
+window.resetCandidateDiagnosticLog=resetCandidateDiagnosticLog;
+window.downloadCandidateDiagnosticLog=downloadCandidateDiagnosticLog;
+window.showMoreDiagnosticCandidates=showMoreDiagnosticCandidates;
+
+document.addEventListener('DOMContentLoaded',function(){
+  diagnosticStorageLoad();diagnosticRenderStats();
+  try{showView('scan')}catch(e){}
+  document.querySelector('nav.bottom')?.classList.add('diagnostic-only-hide');
+  document.querySelector('.quick-scan-card')?.classList.add('diagnostic-only-hide');
+  document.getElementById('confirmCard')?.classList.add('diagnostic-only-hide');
+  ['cameraInput','galleryInput','continuousCameraInput'].forEach(function(id){
+    document.getElementById(id)?.addEventListener('change',function(){
+      setTimeout(function(){setScanProgress(0,'Pronto. Numero/localId prima; doppio OCR nome solo se i candidati sono ambigui.')},0);
+    });
+  });
+});
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
