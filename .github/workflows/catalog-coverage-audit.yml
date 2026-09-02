@@ -1,0 +1,92 @@
+name: Catalog Coverage Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/catalog-coverage-audit-20260902
+    paths:
+      - scripts/catalog_coverage_audit.py
+      - .github/workflows/catalog-coverage-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  catalog-coverage-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Snapshot protected production files
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json > /tmp/cardoryx-protected.before
+
+      - name: Run read-only catalog coverage audit
+        run: python scripts/catalog_coverage_audit.py
+
+      - name: Verify report and production safety
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code -- index.html data/retail_prices.json data/cardmarket_play_index.json .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("artifacts/catalog_coverage_audit_report.json")
+          if not path.exists():
+              raise SystemExit("Catalog Coverage Audit report non generato")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+          if report.get("schema") != 1:
+              raise SystemExit("Schema report non valido")
+
+          rules = report.get("rules", {})
+          required_false = (
+              "indexHtmlModified",
+              "retailPricesModified",
+              "cardmarketTouched",
+              "collectionDataModified",
+              "newIdentitiesCreated",
+              "productionWorkflowModified",
+              "retailSystemModified",
+              "automaticCorrectionsApplied",
+          )
+          if rules.get("readOnly") is not True:
+              raise SystemExit("Audit non dichiarato read-only")
+          for key in required_false:
+              if rules.get(key) is not False:
+                  raise SystemExit(f"Safety rule failed: {key}")
+
+          scope = report.get("scope", {})
+          summary = report.get("summary", {})
+          if not scope.get("identitiesAnalyzed"):
+              raise SystemExit("Nessuna identità analizzata")
+          for key in (
+              "estimatedCoveragePercent",
+              "potentialFalseNegatives",
+              "identifiableWithCurrentMethod",
+          ):
+              if key not in summary:
+                  raise SystemExit(f"Campo summary mancante: {key}")
+
+          print("Catalog Coverage Audit verificato")
+          print(json.dumps(summary, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload catalog coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-coverage-audit-report
+          path: artifacts/catalog_coverage_audit_report.json
+          if-no-files-found: error
+          retention-days: 14
