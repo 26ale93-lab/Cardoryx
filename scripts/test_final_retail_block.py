@@ -160,6 +160,20 @@ def exact_candidate(by_set_number, set_key, number, explicit_variant):
     return candidates[0] if len(candidates) == 1 else None
 
 
+def magomatto_name_equivalent(card_name, source_name, set_code):
+    source = re.sub(r"\s*\[[^\]]*\]\s*$", "", str(source_name or "")).strip()
+    target = str(card_name or "").strip()
+    if norm(target) == norm(source):
+        return True
+    suffix = str(set_code or "").upper().lstrip("X")
+    parts = target.rsplit(None, 1)
+    return (
+        len(parts) == 2
+        and parts[1].upper() == suffix
+        and norm(parts[0]) == norm(source)
+    )
+
+
 def price_from_wc(product):
     prices = product.get("prices") or {}
     raw = prices.get("price")
@@ -410,7 +424,11 @@ def audit_magomatto(cards, by_set_number, known_sets):
                 if card is None:
                     stats["ambiguousIdentity"] += 1
                     continue
-                add_candidate(stats, seen, card, "MagoMatto", price, "https://magomatto-toolbox.web.app/album/pokemon", first_value(item, ("nameIt", "name", "nameEn")))
+                source_name = first_value(item, ("nameIt", "name", "nameEn"))
+                if not magomatto_name_equivalent(card.get("name"), source_name, set_code):
+                    rejection["nameMismatch"] += 1
+                    continue
+                add_candidate(stats, seen, card, "MagoMatto", price, "https://magomatto-toolbox.web.app/album/pokemon", source_name)
             page += 1
         stats["pages"] = page
         stats["totalPages"] = total_pages
