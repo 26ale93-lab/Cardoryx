@@ -1,0 +1,132 @@
+name: Full Catalog Coverage Post-Merge
+
+on:
+  push:
+    branches:
+      - diagnostic/full-catalog-coverage-postmerge-20260902
+    paths:
+      - scripts/full_catalog_coverage_postmerge_audit.py
+      - .github/workflows/full-catalog-coverage-postmerge.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-catalog-coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify diagnostic-only branch
+        run: |
+          git fetch origin main
+          test "$(git merge-base HEAD origin/main)" = "86c39e1b74a93bed468ab0bcbbbaac2ad2109d2f"
+          actual="$(git diff --name-only origin/main...HEAD | sort)"
+          expected="$(printf '%s\n' '.github/workflows/full-catalog-coverage-postmerge.yml' 'scripts/full_catalog_coverage_postmerge_audit.py' | sort)"
+          test "$actual" = "$expected"
+
+      - name: Verify current recognition source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path("index.html").read_text(encoding="utf-8")
+          checks = {
+              "secret numerator": "return a>0 && b>0 && b<=999;" in source,
+              "official-count filter before cap": ".filter(isPhysicalTCGSet)\n    .slice(0,40)" in source,
+              "exact special localId": "queryBySpecialPrintedCode" in source,
+              "promo localId": "queryByStandalonePrintedLocalId" in source,
+              "verified hints": "verifiedNumberTotalCandidate(card,num,total)" in source,
+              "physical filter": "isPhysicalTCGSet" in source,
+              "SVE/MEE resolver": "const coded=makeCodedBasicEnergy(identity);if(coded)return [coded];" in source,
+          }
+          failed = [name for name, ok in checks.items() if not ok]
+          if failed:
+              raise SystemExit("Recognition source mismatch: " + ", ".join(failed))
+          print("Current post-merge recognition source verified")
+          PY
+
+      - name: Snapshot protected production files
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.before
+
+      - name: Run full catalog coverage audit
+        run: python scripts/full_catalog_coverage_postmerge_audit.py
+
+      - name: Verify report and read-only safety
+        run: |
+          sha256sum index.html data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml .github/workflows/update-cardmarket-play-index.yml > /tmp/cardoryx-protected.after
+          diff -u /tmp/cardoryx-protected.before /tmp/cardoryx-protected.after
+          git diff --exit-code
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("artifacts/full_catalog_coverage_postmerge_report.json")
+          if not path.exists():
+              raise SystemExit("Full catalog report not generated")
+
+          report = json.loads(path.read_text(encoding="utf-8"))
+          if report.get("schema") != 1:
+              raise SystemExit("Invalid report schema")
+
+          scope = report.get("scope", {})
+          summary = report.get("summary", {})
+          if not scope.get("catalogIdentities") or not scope.get("physicalIdentitiesEligible"):
+              raise SystemExit("Catalog scope is empty")
+
+          classified = (
+              int(summary.get("recognizedUnique", 0))
+              + int(summary.get("recognizedAmbiguous", 0))
+              + int(summary.get("notRecognized", 0))
+          )
+          if classified != int(scope["physicalIdentitiesEligible"]):
+              raise SystemExit("Not all physical identities were classified")
+          if summary.get("regressions") != 0:
+              raise SystemExit("Recognition regressions detected")
+          if summary.get("networkErrors") != 0:
+              raise SystemExit("TCGdex/API errors detected")
+          if report.get("finalAssessment") != "AUDIT AFFIDABILE":
+              raise SystemExit("Audit requires verification")
+
+          safety = report.get("safety", {})
+          for key in (
+              "indexHtmlModified",
+              "retailModified",
+              "cardmarketModified",
+              "collectionDataModified",
+              "newIdentitiesCreated",
+              "scannerBehaviorModified",
+              "productionWorkflowModified",
+          ):
+              if safety.get(key) is not False:
+                  raise SystemExit(f"Safety violation: {key}")
+
+          print(json.dumps({
+              "scope": scope,
+              "summary": summary,
+              "distributionByCategory": report.get("distributionByCategory", {}),
+              "topFailureReasons": report.get("topFailureReasons", []),
+              "highPotentialRecoveryGroups": report.get("highPotentialRecoveryGroups", []),
+              "finalAssessment": report.get("finalAssessment"),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload full catalog report
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-catalog-coverage-postmerge-report
+          path: artifacts/full_catalog_coverage_postmerge_report.json
+          if-no-files-found: error
+          retention-days: 14
