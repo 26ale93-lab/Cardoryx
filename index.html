@@ -383,7 +383,7 @@
 
     <div id="singleScanFallback" class="card">
   <div class="section-title">🔢 Ricerca senza foto</div>
-  <div class="small">Puoi cercare direttamente una carta inserendo <b>Numero carta</b> e <b>Totale set</b>, anche senza scattare alcuna foto.</div>
+  <div class="small">Puoi cercare direttamente una carta con <b>Numero carta</b> e <b>Totale set</b>, oppure esplorare il catalogo inserendo soltanto il <b>Nome carta</b>.</div>
   <div class="row" style="margin-top:10px">
     <div>
       <div class="label">Numero carta</div>
@@ -2945,6 +2945,53 @@ function manualExactNameMatches(cards,name){
   return (cards||[]).filter(c=>normalizeManualExactName(c?.name||'')===target);
 }
 
+function manualNameContainsMatches(cards,name){
+  const target=normalizeManualExactName(name);
+  if(!target)return [];
+  return (cards||[]).filter(c=>normalizeManualExactName(c?.name||'').includes(target));
+}
+
+function sortManualNameResults(cards,name){
+  const target=normalizeManualExactName(name);
+  return [...(cards||[])].sort((a,b)=>{
+    const an=normalizeManualExactName(a?.name||'');
+    const bn=normalizeManualExactName(b?.name||'');
+    const exactDelta=Number(bn===target)-Number(an===target);
+    if(exactDelta)return exactDelta;
+    return an.localeCompare(bn,'it-IT')
+      || normalizeManualExactName(setName(a)).localeCompare(normalizeManualExactName(setName(b)),'it-IT')
+      || String(a?.localId||'').localeCompare(String(b?.localId||''),'it-IT',{numeric:true})
+      || String(a?.id||'').localeCompare(String(b?.id||''),'it-IT');
+  });
+}
+
+async function queryManualCardsByName(name){
+  const target=normalizeManualExactName(name);
+  if(!target)return [];
+
+  const briefs=await apiCardsQuery({name});
+  const uniqueBriefs=[...new Map((briefs||[]).filter(c=>c?.id).map(c=>[c.id,c])).values()];
+  const physical=[];
+  const batchSize=12;
+
+  for(let i=0;i<uniqueBriefs.length;i+=batchSize){
+    const batch=await Promise.all(uniqueBriefs.slice(i,i+batchSize).map(async brief=>{
+      const card=await fetchFullCandidate(brief);
+      const setId=card?.set?.id||brief?.set?.id||String(card?.id||brief?.id||'').split('-')[0]||'';
+      if(!setId)return null;
+      const setDetail=await fetchSetDetail(setId);
+      if(!setDetail||!isPhysicalTCGSet(setDetail))return null;
+      return {...brief,...card,set:{...(card?.set||{}),...setDetail}};
+    }));
+    for(const card of batch)if(card?.id)physical.push(card);
+  }
+
+  return sortManualNameResults(
+    manualNameContainsMatches([...new Map(physical.map(c=>[c.id,c])).values()],name),
+    name
+  );
+}
+
 function renderManualCandidateChunk(){
   const st=manualCandidateState;
   st.shown=Math.min(st.cards.length,st.shown+st.pageSize);
@@ -2986,17 +3033,37 @@ async function runManualCollectorSearch(){
   const total=String(setTotalInput.value||'').replace(/\D/g,'');
   const requestedName=String(nameInput.value||'').trim();
 
-  if(!num||!total){
-    searchMsg.textContent='Inserisci Numero carta e Totale set.';
+  if(!requestedName&&!num&&!total){
+    searchMsg.textContent='Inserisci Nome carta oppure Numero carta + Totale set.';
     return;
   }
 
-  searchMsg.textContent=`Identifico ${num}/${total}…`;
+  if((num&&!total)||(!num&&total)){
+    searchMsg.textContent='Inserisci sia Numero carta sia Totale set.';
+    return;
+  }
+
   results.innerHTML='';
   manualCandidateState={cards:[],shown:0,pageSize:6,route:'',message:''};
   clearSelection();
 
   try{
+    if(requestedName&&!num&&!total){
+      searchMsg.textContent=`Cerco le carte che contengono “${requestedName}”…`;
+      const cards=await queryManualCardsByName(requestedName);
+      if(!cards.length){
+        searchMsg.textContent='Nessuna carta trovata con questo nome.';
+        return;
+      }
+      startManualCandidatePagination(
+        cards,
+        'Solo nome',
+        `${cards.length} carte trovate per “${requestedName}”. Scegli quella corretta.`
+      );
+      return;
+    }
+
+    searchMsg.textContent=`Identifico ${num}/${total}…`;
     const cards=await queryByPrintedCode(num,total);
 
     if(!cards.length){
