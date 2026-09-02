@@ -99,7 +99,7 @@ def main():
     report={
       "schema":1,"testType":"ocr-name-ambiguity-validation","generatedAt":now(),"sourceMain":MAIN,
       "diagnosticCommit":os.environ.get("GITHUB_SHA","unknown"),
-      "previousAudit":{"runId":33616802992,"diagnosticSha":"9140248130b4d597606616f9a7b662a038771d55a",
+      "previousAudit":{"runId":33616802992,"diagnosticSha":"9140248130b4d597606616f9a7b662a038771d55",
         "expected":EXPECTED,"recomputed":recomputed,"discrepancies":discrepancy,"verified":not discrepancy},
       "ocrExisting":ocr,
       "photoEvidence":{**photos,"realPhotoCount":len(photos["realScannerPhotos"]),"realOCRAccuracyMeasured":False,
