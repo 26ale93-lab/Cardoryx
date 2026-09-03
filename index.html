@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#111827" />
+<meta name="theme-color" content="#07152d" />
+<script>(()=>{const K='cardoryx_ui_theme',V=new Set(['auto','light','dark']),M=matchMedia('(prefers-color-scheme: dark)');function pref(){const x=localStorage.getItem(K)||'auto';return V.has(x)?x:'auto'}function apply(x=pref()){document.documentElement.dataset.theme=x==='auto'?(M.matches?'dark':'light'):x;document.documentElement.dataset.themePreference=x;document.querySelector('meta[name="theme-color"]')?.setAttribute('content','#07152d');document.querySelectorAll('[data-theme-choice]').forEach(b=>{const a=b.dataset.themeChoice===x;b.classList.toggle('active',a);b.setAttribute('aria-pressed',String(a))})}window.setCardoryxTheme=x=>{if(V.has(x)){localStorage.setItem(K,x);apply(x)}};window.getCardoryxTheme=pref;M.addEventListener?.('change',()=>{if(pref()==='auto')apply('auto')});apply();addEventListener('DOMContentLoaded',()=>apply())})();</script>
 <title>Cardoryx V1.1.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -273,25 +274,96 @@
 .variant-price-warning{margin-top:7px;padding:8px 10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.35}
 
 .variant-badge+.variant-badge{margin-left:5px}
-.scanner-pro-panel{margin:12px 0;padding:12px;border:1px solid #dbe3ea;border-radius:14px;background:#fff}.scanner-pro-title{font-weight:800}.scanner-pro-split{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-top:10px}.scanner-pro-field label{display:block;font-size:12px;font-weight:800;color:#6b7280;margin-bottom:5px}.scanner-pro-field input{width:100%;min-width:0}.scanner-pro-slash{font-size:26px;font-weight:800;padding-bottom:12px}.scanner-pro-find{width:100%;margin-top:9px}.scanner-pro-candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.scanner-pro-card{border:1px solid #dbe3ea;border-radius:12px;padding:8px;background:#fff;text-align:left}.scanner-pro-card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#f5f7f9}.scanner-pro-card b{display:block;margin-top:5px}@media(min-width:700px){.scanner-pro-candidates{grid-template-columns:repeat(4,minmax(0,1fr))}}</style>
+.scanner-pro-panel{margin:12px 0;padding:12px;border:1px solid #dbe3ea;border-radius:14px;background:#fff}.scanner-pro-title{font-weight:800}.scanner-pro-split{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-top:10px}.scanner-pro-field label{display:block;font-size:12px;font-weight:800;color:#6b7280;margin-bottom:5px}.scanner-pro-field input{width:100%;min-width:0}.scanner-pro-slash{font-size:26px;font-weight:800;padding-bottom:12px}.scanner-pro-find{width:100%;margin-top:9px}.scanner-pro-candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.scanner-pro-card{border:1px solid #dbe3ea;border-radius:12px;padding:8px;background:#fff;text-align:left}.scanner-pro-card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;border-radius:8px;background:#f5f7f9}.scanner-pro-card b{display:block;margin-top:5px}@media(min-width:700px){.scanner-pro-candidates{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* Cardoryx approved UI alignment: visual layer only. */
+:root{color-scheme:light;--cx-bg:#e8edf6;--cx-panel:#fff;--cx-panel2:#f5f8fd;--cx-text:#0b1933;--cx-muted:#64748b;--cx-line:#ccd7e8;--cx-blue:#1769ff;--cx-indigo:#4338ca;--cx-violet:#7c3aed;--cx-green:#15803d;--cx-gold:#d89b17;--cx-red:#dc2626;--cx-shadow:0 12px 34px rgba(7,21,45,.10)}
+html[data-theme="dark"]{color-scheme:dark;--cx-bg:#071126;--cx-panel:#0b1933;--cx-panel2:#101f3d;--cx-text:#f8fbff;--cx-muted:#aabbd6;--cx-line:#233b65;--cx-shadow:0 16px 42px rgba(0,0,0,.28)}
+html,body{min-height:100%;background:var(--cx-bg);color:var(--cx-text)}body{overflow-x:hidden;background:radial-gradient(circle at 96% 2%,rgba(23,105,255,.12),transparent 30%),var(--cx-bg)}
+.app{max-width:1120px;padding:calc(env(safe-area-inset-top) + 94px) clamp(12px,3vw,28px) calc(96px + env(safe-area-inset-bottom))}
+.top{position:fixed;z-index:180;top:0;left:0;right:0;height:calc(82px + env(safe-area-inset-top));padding:calc(10px + env(safe-area-inset-top)) max(16px,calc((100vw - 1120px)/2 + 28px)) 10px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;background:linear-gradient(120deg,#07152d 0%,#091a36 62%,#102a58 100%);border-bottom:1px solid rgba(74,132,255,.28);box-shadow:0 10px 32px rgba(4,12,29,.24);color:#fff}
+.brand-lockup{display:flex;align-items:center;gap:12px;position:relative;z-index:2;min-width:0}.brand-logo{width:52px;height:52px;min-width:52px;max-width:52px;min-height:52px;max-height:52px;display:block;flex-shrink:0;object-fit:cover;border-radius:15px;box-shadow:0 0 0 1px rgba(255,255,255,.2),0 8px 18px rgba(0,0,0,.25)}.brand-copy h1{margin:0;font-size:24px;letter-spacing:-.035em;color:#fff}.brand-copy p{margin:4px 0 0;color:#9fc3ff;font-size:10px;font-weight:850;letter-spacing:.16em;white-space:nowrap}.brand-dragon{width:164px;height:auto;max-width:min(164px,32vw);max-height:76px;display:block;color:#4290ff;opacity:.9;filter:drop-shadow(0 0 10px rgba(23,105,255,.34));flex:0 1 164px;flex-shrink:1;overflow:visible}.brand-dragon path,.brand-dragon circle{vector-effect:non-scaling-stroke}
+.card,.home-rich-card,.home-recent-card,.home-cat,.home-stat,.stats-mini,.collection-card,.category-tile,.deck-card,.scanner-pro-panel,.quick-scan-card,.continuous-scan-card,.home-physical{background:var(--cx-panel);color:var(--cx-text);border-color:var(--cx-line);box-shadow:var(--cx-shadow)}.card{border:1px solid var(--cx-line);border-radius:22px;padding:16px}.small,.footer-note,.collection-sub,.detail-sub,.stats-mini .l,.home-stat span,.home-recent-card span{color:var(--cx-muted)}.section-title{letter-spacing:-.02em}
+.btn{min-height:44px;border-radius:14px;background:linear-gradient(135deg,var(--cx-blue),var(--cx-indigo));box-shadow:0 7px 18px rgba(23,105,255,.2);display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn.alt{background:var(--cx-panel2);color:var(--cx-text);border:1px solid var(--cx-line);box-shadow:none}.btn.green{background:linear-gradient(135deg,#15803d,#16a34a)}.btn.red{background:linear-gradient(135deg,#b91c1c,var(--cx-red))}
+input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-color:var(--cx-line);min-height:44px}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid rgba(23,105,255,.4);outline-offset:2px}
+.home-dashboard{gap:14px}.home-value-card{position:relative;overflow:hidden;padding:22px;border:1px solid rgba(102,157,255,.32);background:linear-gradient(135deg,#081a38 0%,#123d86 64%,#4338ca 130%);box-shadow:0 18px 42px rgba(7,21,45,.26)}.home-value-card:after{content:"";position:absolute;width:190px;height:190px;border:1px solid rgba(255,255,255,.14);border-radius:50%;right:-70px;top:-95px;box-shadow:0 0 0 28px rgba(255,255,255,.035),0 0 0 55px rgba(255,255,255,.025)}.home-value-label{letter-spacing:.12em}.home-value-number{font-size:clamp(34px,8vw,50px);position:relative;z-index:1}.home-value-actions{position:relative;z-index:1;display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.home-value-actions .btn{min-height:40px;padding:10px 13px;font-size:12px}
+.home-stat{min-height:84px;text-align:left;padding:12px;border-radius:18px;position:relative;overflow:hidden}.home-stat:after{content:"";position:absolute;inset:auto 0 0;height:3px;background:var(--stat,#1769ff)}.home-stat:nth-child(2){--stat:#7c3aed}.home-stat:nth-child(3){--stat:#d89b17}.home-stat:nth-child(4){--stat:#16a34a}.home-stat strong{font-size:24px}.home-stat span{font-size:10px;letter-spacing:.05em}.home-actions .btn{flex-direction:column;min-height:72px;font-size:12px}.home-actions svg{width:23px;height:23px}.home-highlights{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.25fr);gap:14px}.home-highlight-panel{min-width:0}.home-highlight-panel .home-section-title{margin-bottom:7px}.home-most-panel .home-rich-card{border-color:rgba(216,155,23,.48);box-shadow:0 12px 30px rgba(216,155,23,.12)}.home-most-panel .section-title{color:var(--cx-gold)}.home-rich-card{min-height:126px}.home-recent{scroll-snap-type:x proximity}.home-recent-card{scroll-snap-align:start;cursor:pointer}.home-cat-grid{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}.home-cat{min-height:56px;border-bottom:3px solid var(--cx-violet)}
+.scan-panel-primary{border-top:3px solid var(--cx-blue)}#singleScanFallback{border-top:3px solid var(--cx-violet)}.source-grid .btn{min-height:58px}.scan-stage{border:1px solid #274a7b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+#catalogView>.card{padding:18px}.catalog-grid{gap:12px}.collection-card{border-radius:18px;overflow:hidden}.collection-actions .btn{font-size:12px;min-height:40px}.collection-card-main h3{color:var(--cx-text)}
+.category-hero{background:linear-gradient(135deg,#07152d,#243c75);box-shadow:0 15px 35px rgba(7,21,45,.24)}.category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.category-tile{min-height:135px;border:1px solid var(--cx-line);border-bottom:4px solid var(--cat-accent,#1769ff);border-radius:19px;padding:14px;cursor:pointer}.category-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:var(--cat-soft,#eaf1ff);font-size:20px}.category-name{font-size:14px}.category-count{color:var(--cat-accent,#1769ff)}
+.deck-hero{background:linear-gradient(135deg,#07152d,#4338ca);border:1px solid rgba(118,156,255,.28)}.deck-card{border-left:4px solid var(--cx-violet)}.deck-progress{background:var(--cx-panel2)}
+.settings-dashboard{display:grid;gap:14px}.settings-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.settings-action{min-height:78px;flex-direction:column;text-align:center}.settings-action svg{width:22px;height:22px}.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-choice{border:1px solid var(--cx-line);background:var(--cx-panel2);color:var(--cx-text);border-radius:15px;min-height:68px;font-weight:800}.theme-choice.active{color:#fff;border-color:#4383ff;background:linear-gradient(135deg,var(--cx-blue),var(--cx-violet));box-shadow:0 8px 20px rgba(23,105,255,.24)}.settings-section-kicker{font-size:10px;letter-spacing:.13em;font-weight:900;color:var(--cx-blue);margin-bottom:5px}.danger-zone{border-color:rgba(220,38,38,.45)}
+.detail-modal{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));background:rgba(2,8,20,.78);backdrop-filter:blur(10px)}.detail-sheet{background:var(--cx-panel);color:var(--cx-text);border:1px solid var(--cx-line);max-height:calc(100dvh - 20px);border-radius:25px 25px 18px 18px;padding:0 18px 20px}.detail-head{position:sticky;top:0;z-index:4;margin:0 -18px;padding:15px 18px 12px;background:linear-gradient(135deg,#07152d,#102a58);color:#fff;border-radius:24px 24px 0 0}.detail-card{padding-top:14px}.detail-section{border:1px solid var(--cx-line);border-radius:16px;padding:13px;margin-top:12px;background:var(--cx-panel2)}.detail-market{border-left:4px solid var(--cx-blue)}.detail-retail{border-left:4px solid var(--cx-green)}.detail-protection{border-left:4px solid var(--cx-violet)}.detail-market-value{font-size:25px;font-weight:950;color:var(--cx-blue);margin:4px 0}.detail-retail-value{font-size:20px;font-weight:900;color:var(--cx-green)}.cardoryx-advice{border:1px solid var(--cx-line);border-left:4px solid var(--cx-violet);background:var(--cx-panel2);color:var(--cx-text)}
+.condition-modal{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));align-items:flex-end}.condition-sheet{background:var(--cx-panel);color:var(--cx-text);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--cx-line);border-radius:25px 25px 18px 18px}.condition-sheet-head{position:sticky;top:-18px;z-index:5;margin:-18px -18px 12px;padding:17px 18px 12px;background:linear-gradient(135deg,#07152d,#102a58);color:#fff}.condition-close{min-width:44px;min-height:44px}.edit-grid{gap:12px}
+.bottom{z-index:190;background:rgba(7,21,45,.97);border-top:1px solid rgba(77,132,231,.35);box-shadow:0 -12px 32px rgba(4,12,29,.28);backdrop-filter:blur(18px)}.bottom .tabs{max-width:760px}.bottom .tab{color:#91a4c4!important;min-height:55px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px}.bottom .tab svg{width:21px;height:21px;min-width:21px;min-height:21px;max-width:21px;max-height:21px;display:block;flex:0 0 21px;overflow:visible;stroke:currentColor;fill:none;stroke-width:1.8}.bottom .tab.active{color:#61a0ff!important;background:linear-gradient(180deg,rgba(23,105,255,.16),transparent);border-radius:13px}.bottom .tab span{font-size:9px!important;overflow:visible!important;text-overflow:clip!important}.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:699px){.app{padding-left:12px;padding-right:12px}.brand-dragon{width:min(132px,34vw);max-width:132px;height:58px;object-fit:contain;object-position:right center;margin-right:2px;flex:0 0 auto;opacity:1;display:block}.home-highlights{grid-template-columns:1fr}.home-stat-grid{grid-template-columns:repeat(4,1fr)}.home-actions{grid-template-columns:repeat(3,1fr)}.home-actions .home-primary{grid-column:auto}.detail-card{grid-template-columns:96px minmax(0,1fr)}.detail-card img{width:96px;max-height:140px}}
+@media(max-width:430px){.brand-logo{width:46px;height:46px;min-width:46px;max-width:46px;min-height:46px;max-height:46px;display:block;flex-shrink:0}.brand-copy h1{font-size:21px}.brand-copy p{font-size:8px;letter-spacing:.1em}.brand-dragon{width:min(124px,32vw);max-width:124px;height:56px;object-fit:contain;object-position:right center;margin-right:0;flex:0 0 auto}.home-stat-grid{grid-template-columns:repeat(2,1fr)}.home-actions .btn{padding:10px 5px}.settings-action-grid{grid-template-columns:repeat(2,1fr)}.bottom .tab span{font-size:8px!important}.category-tile{min-height:125px}.detail-sheet,.condition-sheet{width:100%}}
+@media(max-width:390px){.brand-dragon{width:min(112px,30vw);max-width:112px;height:52px;object-fit:contain;object-position:right center;margin-right:0;flex:0 0 auto}.brand-copy p{max-width:168px;white-space:normal;line-height:1.25}.bottom .tab{padding:7px 0!important}.bottom .tab svg{width:19px;height:19px;min-width:19px;min-height:19px;max-width:19px;max-height:19px;display:block;flex:0 0 19px;overflow:visible;stroke:currentColor;fill:none}.bottom .tab span{font-size:7.5px!important}.detail-card{grid-template-columns:82px minmax(0,1fr)}.detail-card img{width:82px}}
+@media(min-width:760px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+</style>
+<style id="cardoryx-category-accents">
+.category-tile[data-cat-key="fuoco"]{--cat-accent:#ef4444;--cat-soft:#fff1ed}.category-tile[data-cat-key="acqua"]{--cat-accent:#0ea5e9;--cat-soft:#e7f7ff}.category-tile[data-cat-key="erba"]{--cat-accent:#16a34a;--cat-soft:#eaf8ee}.category-tile[data-cat-key="lampo"],.category-tile[data-cat-key="energiebase"]{--cat-accent:#d89b17;--cat-soft:#fff7dc}.category-tile[data-cat-key="psico"]{--cat-accent:#a855f7;--cat-soft:#f7efff}.category-tile[data-cat-key="lotta"]{--cat-accent:#c2692d;--cat-soft:#fff1e7}.category-tile[data-cat-key="oscurita"]{--cat-accent:#5b21b6;--cat-soft:#f2edff}.category-tile[data-cat-key="metallo"],.category-tile[data-cat-key="incolore"]{--cat-accent:#64748b;--cat-soft:#eef2f6}.category-tile[data-cat-key="drago"]{--cat-accent:#4338ca;--cat-soft:#eeedff}.category-tile[data-cat-key="aiuto"]{--cat-accent:#2563eb;--cat-soft:#eaf1ff}.category-tile[data-cat-key="strumenti"],.category-tile[data-cat-key="oggettipokemon"]{--cat-accent:#0d9488;--cat-soft:#e8fbf8}.category-tile[data-cat-key="stadio"]{--cat-accent:#f97316;--cat-soft:#fff2e8}.category-tile[data-cat-key="energiespeciali"]{--cat-accent:#c026d3;--cat-soft:#fcecff}.category-tile[data-cat-key="protette"]{--cat-accent:#d89b17;--cat-soft:#fff7dc}
+.edit-identity-summary{display:flex;gap:11px;align-items:center;margin:2px 0 14px;padding:11px;border:1px solid var(--cx-line);border-radius:16px;background:var(--cx-panel2)}.edit-identity-summary img{width:58px;height:81px;object-fit:contain;border-radius:8px}.edit-identity-summary b{display:block;margin-bottom:4px}
+
+/* Final PR #10 mobile edit alignment — scoped to the edit modal. */
+#editModal{z-index:240;padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom))}
+#editModal .edit-modal-sheet{display:flex;flex-direction:column;width:min(620px,100%);height:min(780px,calc(100dvh - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom))));max-height:calc(100dvh - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom)));padding:0;overflow:hidden;border-radius:24px}
+#editModal .edit-modal-head{position:relative;top:auto;z-index:6;flex:0 0 auto;display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;margin:0;padding:12px 14px;background:linear-gradient(135deg,#07152d,#102a58);border-radius:23px 23px 0 0;color:#fff}
+#editModal .edit-modal-heading{text-align:center;min-width:0}#editModal .edit-modal-heading .condition-sheet-kicker{color:#9fc3ff;font-size:10px}#editModal .edit-modal-heading h3{margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:750;color:#fff}
+#editModal .edit-close{justify-self:start;margin:0;background:rgba(255,255,255,.1);color:#fff}
+#editModal .edit-header-save{min-width:58px;min-height:40px;padding:8px 10px;border:1px solid rgba(117,166,255,.55);border-radius:12px;background:linear-gradient(135deg,#1769ff,#4338ca);color:#fff;font-weight:850;font-size:13px}
+#editModal .edit-modal-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 14px calc(28px + env(safe-area-inset-bottom))}
+#editModal .edit-identity-summary{margin:0 0 12px;min-height:96px;box-shadow:none}#editModal .edit-identity-summary>div{min-width:0}#editModal .edit-identity-summary b{font-size:16px;line-height:1.2}
+#editModal .edit-section{margin:0 0 12px;padding:12px;border:1px solid var(--cx-line);border-radius:16px;background:var(--cx-panel2)}
+#editModal .edit-section-title{font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;margin-bottom:9px;color:var(--cx-text)}
+#editModal .edit-quantity-section{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#editModal .edit-quantity-section .label{margin:0 0 2px}
+#editModal .edit-qty-control{display:grid;grid-template-columns:42px 58px 42px;align-items:center;gap:6px;flex:0 0 auto}
+#editModal .edit-qty-control button{width:42px;height:42px;border:1px solid var(--cx-line);border-radius:12px;background:var(--cx-panel);color:var(--cx-text);font-size:22px;font-weight:900}
+#editModal .edit-qty-control input{width:58px;height:42px;min-height:42px;padding:6px;text-align:center;font-weight:900}
+#editModal .edit-allocation-grid{display:grid!important;grid-template-columns:minmax(0,1fr) 82px!important;gap:8px 10px!important;align-items:center!important}
+#editModal .edit-allocation-grid label{min-width:0;font-size:12px;font-weight:750;overflow-wrap:anywhere}
+#editModal .edit-allocation-grid input{width:82px;min-height:40px;text-align:center}
+#editModal .edit-allocation-note{margin-top:8px;line-height:1.4}
+#editModal .edit-field-list{display:grid;gap:8px}
+#editModal .edit-field-row{display:grid;grid-template-columns:minmax(105px,.7fr) minmax(0,1.3fr);align-items:center;gap:10px;margin:0;font-size:12px;font-weight:850}
+#editModal .edit-field-row select{min-width:0;margin:0}
+#editModal .edit-subfield{padding:10px;border:1px solid var(--cx-line);border-radius:13px;background:var(--cx-panel)}
+#editModal .edit-subfield>label{display:block;margin-bottom:6px;font-size:12px;font-weight:850}
+#editModal .edit-subfield .small{display:block;margin-top:6px;line-height:1.35}
+#editModal .edit-existing-details{border-left:4px solid var(--cx-violet)}
+#editModal .edit-final-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding-bottom:max(4px,env(safe-area-inset-bottom))}
+#editModal .edit-final-actions .btn{min-height:48px}
+@media(max-width:430px){#editModal .edit-modal-scroll{padding-left:12px;padding-right:12px}#editModal .edit-field-row{grid-template-columns:100px minmax(0,1fr)}}
+@media(max-width:390px){#editModal .edit-modal-head{grid-template-columns:42px minmax(0,1fr) 56px;padding-left:10px;padding-right:10px}#editModal .edit-field-row{grid-template-columns:1fr;gap:5px}#editModal .edit-qty-control{grid-template-columns:38px 54px 38px}#editModal .edit-qty-control button{width:38px}#editModal .edit-qty-control input{width:54px}#editModal .edit-final-actions{grid-template-columns:1fr 1fr}}
+#editModal .edit-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#editModal .edit-detail-grid>div{min-width:0;padding:9px;border:1px solid var(--cx-line);border-radius:12px;background:var(--cx-panel)}#editModal .edit-detail-grid span{display:block;font-size:9px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;color:var(--cx-muted);margin-bottom:3px}#editModal .edit-detail-grid strong{display:block;font-size:12px;overflow-wrap:anywhere}#editModal .edit-detail-notes{grid-column:1/-1}#editModal .edit-readonly-note{margin-top:8px}
+</style>
 </head>
 <body>
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none">
+<symbol id="cx-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V21h13V10.5M9.5 21v-6h5v6"/></symbol>
+<symbol id="cx-scan" viewBox="0 0 24 24"><path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M3 16v4a1 1 0 0 0 1 1h4M21 16v4a1 1 0 0 1-1 1h-4"/><rect x="7.5" y="5.5" width="9" height="13" rx="1.5"/></symbol>
+<symbol id="cx-cards" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="17" rx="2"/><path d="m6 7-2 .5A2 2 0 0 0 2.5 10l2.7 10.1A2 2 0 0 0 7.7 21l7.3-2"/></symbol>
+<symbol id="cx-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+<symbol id="cx-deck" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="17" rx="2"/><path d="M3 7v13a2 2 0 0 0 2 2h11M9 7h6M9 11h6"/></symbol>
+<symbol id="cx-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+<symbol id="cx-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 19h16"/></symbol><symbol id="cx-upload" viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M4 19h16"/></symbol>
+</svg>
 <div class="app">
-  <header class="top"><div style="display:flex;align-items:center;gap:12px"><img src="cardoryx-logo.png" alt="Cardoryx" style="width:52px;height:52px;border-radius:14px"><div><h1>Cardoryx</h1><p>Scan · Collect · Build · Value</p></div></div></header>
+  <header class="top"><div class="brand-lockup"><img class="brand-logo" src="cardoryx-logo.png" alt="Cardoryx"><div class="brand-copy"><h1>Cardoryx</h1><p>SCAN · COLLECT · BUILD · VALUE</p></div></div><img class="brand-dragon" src="cardoryx-dragon.png" alt="Drago Cardoryx" aria-hidden="true"></header>
 
   <section id="homeView"><div class="home-dashboard">
-<div class="home-value-card"><div class="home-value-label">💰 VALORE COLLEZIONE</div><div id="homeCollectionValue" class="home-value-number">€ 0,00</div><div id="homeCollectionValueMeta" class="home-value-meta">Valore indicativo Cardmarket</div></div>
+<div class="home-value-card"><div class="home-value-label">VALORE COLLEZIONE · CARDMARKET</div><div id="homeCollectionValue" class="home-value-number">€ 0,00</div><div id="homeCollectionValueMeta" class="home-value-meta">Valore indicativo Cardmarket</div><div class="home-value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">Aggiorna valori</button><button class="btn alt" type="button" onclick="showView('catalog')">Vedi carte</button></div></div>
 <div class="home-stat-grid"><div class="home-stat"><strong id="homeTotalCards">0</strong><span>🃏 CARTE</span></div><div class="home-stat"><strong id="homeTotalSets">0</strong><span>📚 SET</span></div><div class="home-stat"><strong id="homeHoloCards">0</strong><span>✨ HOLO/REV.</span></div><div class="home-stat"><strong id="homeProtectedCards">0</strong><span>🔒 PROTETTE</span></div></div>
-<div class="home-actions"><button class="btn home-primary" onclick="showView('scan')">📷 Scansiona carta</button><button class="btn alt" onclick="showView('catalog')">📚 Catalogo</button><button class="btn alt" onclick="showView('decks')">🃏 Mazzi</button></div>
-<div class="home-section-title"><div class="section-title">🏆 Carta più preziosa</div><span class="small">Cardmarket</span></div><div id="homeMostValuable" class="home-rich-card"></div>
-<div class="home-section-title"><div class="section-title">🕘 Ultime aggiunte</div><span class="small">Ultime 10</span></div><div id="homeRecentCards" class="home-recent"></div>
+<div class="home-actions"><button class="btn home-primary" onclick="showView('scan')"><svg class="icon"><use href="#cx-scan"></use></svg>Scansiona carta</button><button class="btn alt" onclick="showView('catalog')"><svg class="icon"><use href="#cx-cards"></use></svg>Catalogo</button><button class="btn alt" onclick="showView('decks')"><svg class="icon"><use href="#cx-deck"></use></svg>Mazzi</button></div>
+<div class="home-highlights"><div class="home-highlight-panel home-most-panel"><div class="home-section-title"><div class="section-title">Carta più preziosa</div><span class="small">Cardmarket</span></div><div id="homeMostValuable" class="home-rich-card"></div></div><div class="home-highlight-panel"><div class="home-section-title"><div class="section-title">Ultime aggiunte</div><span class="small">Ultime 10</span></div><div id="homeRecentCards" class="home-recent"></div></div></div>
 <div class="home-section-title"><div class="section-title">🗂️ La tua collezione</div><span class="small">Tocca per filtrare</span></div><div id="homeCategoryGrid" class="home-cat-grid"></div>
 <div class="home-physical"><b>📦 Divisione fisica</b><div class="small">Le categorie sopra mostrano subito come è distribuita la collezione.</div></div>
 </div></section>
 
   <section id="scanView" class="hidden">
-    <div class="card">
-      <div class="section-title">1. Aggiungi una carta</div>
+    <div class="card scan-panel-primary">
+      <div class="section-title">Scansiona carta</div>
       <div class="source-grid">
         <label class="btn file-btn">📷 Scatta foto<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden></label>
         <label class="btn alt file-btn">🖼️ Dal rullino<input id="galleryInput" type="file" accept="image/*" multiple hidden></label>
@@ -629,60 +701,14 @@
   </div>
 </section>
 
-<section id="settingsView" class="hidden">
-    <div class="card">
-      <div class="section-title">⚙️ Impostazioni</div>
-      <div class="footer-note">Gestione dati e strumenti di Cardoryx.</div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Backup e trasferimento</div>
-      <div class="settings-stack">
-        <div class="condition-intro" style="margin-bottom:10px"><b>Backup completo:</b> carte, quantità, varianti, condizioni, note, ID/immagini, prezzi e valori, mazzi e preferenze Scanner. Il CSV include anche valore unitario e totale.</div>
-        <button class="btn alt big" type="button" onclick="exportCSV()">📄 Esporta CSV completo</button>
-        <div class="card" style="margin:0;padding:12px">
-          <div class="section-title" style="font-size:15px">📄 Inventario collezione</div>
-          <div class="footer-note" style="margin-bottom:8px">Con prezzi, quantità, stato e allocazioni.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button class="btn alt" type="button" onclick="downloadCollectionPDF(true)">📥 Scarica PDF</button>
-            <button class="btn alt" type="button" onclick="printInventory(true)">🖨️ Stampa</button>
-          </div>
-        </div>
-        <div class="card" style="margin:0;padding:12px">
-          <div class="section-title" style="font-size:15px">📋 Lista collezione</div>
-          <div class="footer-note" style="margin-bottom:8px">Versione essenziale senza prezzi.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button class="btn alt" type="button" onclick="downloadCollectionPDF(false)">📥 Scarica PDF</button>
-            <button class="btn alt" type="button" onclick="printInventory(false)">🖨️ Stampa</button>
-          </div>
-        </div>
-        <div class="card" style="margin:0;padding:12px">
-          <div class="section-title" style="font-size:15px">🗂️ Esporta per tipo</div>
-          <div class="footer-note" style="margin-bottom:8px">PDF di una categoria oppure dell'intera collezione divisa per categorie.</div>
-          <select id="categoryPdfSelect" class="input" style="margin-bottom:8px"></select>
-          <button class="btn alt big" type="button" onclick="downloadCategoryPDF()">📥 Scarica PDF per tipo</button>
-        </div>
-        <button class="btn alt big" type="button" onclick="exportJSON()">💾 Backup completo JSON</button>
-        <label class="btn alt big settings-file-label">📥 Ripristina backup JSON
-          <input id="settingsImportFile" type="file" accept="application/json,.json" hidden>
-        </label>
-      </div>
-    </div>
-
-    <div class="card danger-zone">
-      <div class="danger-kicker">ZONA PROTETTA</div>
-      <div class="section-title">🗑️ Azzera catalogo</div>
-      <div class="footer-note">Elimina tutte le carte salvate su questo dispositivo. I mazzi restano, ma vengono svuotati. Richiede una seconda conferma.</div>
-      <div class="spacer"></div>
-      <button class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Stato archivio</div>
-      <div class="settings-stat"><span>Record</span><strong id="settingsRecords">0</strong></div>
-      <div class="settings-stat"><span>Carte totali</span><strong id="settingsTotal">0</strong></div>
-    </div>
-  </section>
+<section id="settingsView" class="hidden"><div class="settings-dashboard">
+<div class="card"><div class="settings-section-kicker">IMPOSTAZIONI</div><div class="section-title">Aspetto e strumenti</div><div class="footer-note">Personalizza Cardoryx e gestisci i dati salvati su questo dispositivo.</div></div>
+<div class="card"><div class="settings-section-kicker">ASPETTO</div><div class="theme-grid"><button class="theme-choice" type="button" data-theme-choice="auto" onclick="setCardoryxTheme('auto')" aria-pressed="false">Automatico</button><button class="theme-choice" type="button" data-theme-choice="light" onclick="setCardoryxTheme('light')" aria-pressed="false">Chiaro</button><button class="theme-choice" type="button" data-theme-choice="dark" onclick="setCardoryxTheme('dark')" aria-pressed="false">Scuro</button></div></div>
+<div class="card"><div class="settings-section-kicker">BACKUP E TRASFERIMENTO</div><div class="condition-intro" style="margin-bottom:10px"><b>Backup completo:</b> carte, quantità, varianti, condizioni, note, ID/immagini, prezzi e valori, mazzi e preferenze Scanner.</div><div class="settings-action-grid"><button class="btn alt settings-action" type="button" onclick="exportJSON()"><svg class="icon"><use href="#cx-download"></use></svg>Backup JSON</button><label class="btn alt settings-action settings-file-label"><svg class="icon"><use href="#cx-upload"></use></svg>Ripristina JSON<input id="settingsImportFile" type="file" accept="application/json,.json" hidden></label><button class="btn alt settings-action" type="button" onclick="exportCSV()">CSV completo</button><button class="btn alt settings-action" type="button" onclick="downloadCollectionPDF(true)">Inventario PDF</button></div></div>
+<div class="card"><div class="settings-section-kicker">REPORT PDF</div><div class="settings-action-grid"><button class="btn alt settings-action" type="button" onclick="downloadCollectionPDF(true)">Inventario</button><button class="btn alt settings-action" type="button" onclick="downloadCollectionPDF(false)">Lista collezione</button><div style="grid-column:1/-1"><select id="categoryPdfSelect" class="input" style="margin-bottom:8px"></select><button class="btn alt big" type="button" onclick="downloadCategoryPDF()">Esporta per tipo</button></div></div></div>
+<div class="card"><div class="settings-section-kicker">STATO ARCHIVIO</div><div class="settings-stat"><span>Record</span><strong id="settingsRecords">0</strong></div><div class="settings-stat"><span>Carte totali</span><strong id="settingsTotal">0</strong></div></div>
+<div class="card danger-zone"><div class="danger-kicker">ZONA PROTETTA</div><div class="section-title">Azzera catalogo</div><div class="footer-note">Elimina le carte salvate su questo dispositivo. I mazzi restano, ma vengono svuotati. È richiesta una seconda conferma.</div><div class="spacer"></div><button class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button></div>
+</div></section>
 
 </div>
 
@@ -692,81 +718,99 @@
 </div>
 
 <div id="editModal" class="condition-modal" aria-hidden="true">
-  <div class="condition-sheet">
-    <div class="condition-sheet-head">
-      <div>
+  <div class="condition-sheet edit-modal-sheet">
+    <div class="condition-sheet-head edit-modal-head">
+      <button type="button" class="condition-close edit-close" onclick="closeEditModal()" aria-label="Chiudi modifica carta">×</button>
+      <div class="edit-modal-heading">
         <div class="condition-sheet-kicker">MODIFICA CARTA</div>
         <h3 id="editTitle">Carta</h3>
       </div>
-      <button type="button" class="condition-close" onclick="closeEditModal()">×</button>
+      <button type="button" class="edit-header-save" onclick="saveEditModal()">Salva</button>
     </div>
-    <div class="edit-grid">
-      <div><div class="label">Quantità totale</div><input id="editQty" type="number" min="1" inputmode="numeric"></div>
-      <div id="editAllocationWrap" class="hidden" style="grid-column:1/-1">
-        <div class="label">Distribuzione copie</div>
-        <div id="editAllocationSummary" class="small" style="margin-bottom:8px"></div>
-        <div id="editAllocationGrid" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center"></div>
-        <div class="small" style="margin-top:8px">La somma delle allocazioni deve coincidere con la quantità totale.</div>
-      </div>
-      <div><div class="label">Finitura</div>
-        <select id="editVariant">
-<option value="Normal">Normale</option>
-<option value="Holo">Holo</option>
-<option value="Reverse Holo">Reverse Holo</option>
-<option value="Cosmos Holo">Cosmos Holo</option>
-<option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
-<option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
-<option value="Speciale / Altro">Speciale / Altro</option>
-<option value="Non so">Non so</option>
-</select>
-        <label>STAMP / EDIZIONE</label>
-        <select id="editStamp">
-          <option value="None">Nessuno</option>
-          <option value="Play! Pokémon">Play! Pokémon</option>
-          <option value="Pokémon Day">Pokémon Day</option>
-          <option value="30° Anniversario">30° Anniversario</option>
-          <option value="Pokémon Center">Pokémon Center</option>
-          <option value="Pre-release">Pre-release</option>
-          <option value="Staff">Staff</option>
-          <option value="Set Stamp">Set Stamp</option>
-          <option value="GameStop">GameStop</option>
-          <option value="Altro">Altro</option>
-        </select>
-        <div id="editPlaySeriesWrap" class="hidden">
-          <label>PRIZE PACK SERIES <span class="small">(opzionale)</span></label>
-          <select id="editPlaySeries">
-            <option value="">Non so / lascia automatico</option>
-            <option value="1">Series 1</option>
-            <option value="2">Series 2</option>
-            <option value="3">Series 3</option>
-            <option value="4">Series 4</option>
-            <option value="5">Series 5</option>
-            <option value="6">Series 6</option>
-            <option value="7">Series 7</option>
-            <option value="8">Series 8</option>
-            <option value="9">Series 9</option>
-          </select><div class="small" style="margin-top:5px">Non è obbligatoria: il logo Play! Pokémon sulla carta non indica da solo il numero della serie.</div>
+    <div class="edit-modal-scroll">
+      <div id="editIdentitySummary" class="edit-identity-summary"></div>
+
+      <div class="edit-section edit-quantity-section">
+        <div><div class="label">Quantità totale</div><div class="small">Numero complessivo di copie</div></div>
+        <div class="edit-qty-control">
+          <button type="button" aria-label="Riduci quantità" onclick="const q=document.getElementById('editQty');if(q&&!q.readOnly){q.stepDown();q.dispatchEvent(new Event('input',{bubbles:true}))}">−</button>
+          <input id="editQty" type="number" min="1" inputmode="numeric" aria-label="Quantità totale">
+          <button type="button" aria-label="Aumenta quantità" onclick="const q=document.getElementById('editQty');if(q&&!q.readOnly){q.stepUp();q.dispatchEvent(new Event('input',{bubbles:true}))}">+</button>
         </div>
       </div>
-      <div><div class="label">Stato</div>
-        <select id="editStatus">
-          <option>Disponibile</option><option>Protetta</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Vendita</option>
-        </select>
+
+      <div id="editAllocationWrap" class="edit-section hidden">
+        <div class="edit-section-title">Distribuzione copie</div>
+        <div id="editAllocationSummary" class="small"></div>
+        <div id="editAllocationGrid" class="edit-allocation-grid"></div>
+        <div class="small edit-allocation-note">La somma delle allocazioni deve coincidere con la quantità totale. Le righe dei mazzi restano separate.</div>
       </div>
-      <div><div class="label">Condizione</div>
-        <select id="editCondition">
-          <option value="NM">NM — Near Mint</option>
-          <option value="EX">EX — Excellent</option>
-          <option value="GD">GD — Good</option>
-          <option value="PL">PL — Played</option>
-          <option value="PO">PO — Poor</option>
-        </select>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Caratteristiche</div>
+        <div class="edit-field-list">
+          <label class="edit-field-row"><span>Finitura</span>
+            <select id="editVariant">
+              <option value="Normal">Normale</option>
+              <option value="Holo">Holo</option>
+              <option value="Reverse Holo">Reverse Holo</option>
+              <option value="Cosmos Holo">Cosmos Holo</option>
+              <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
+              <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+              <option value="Speciale / Altro">Speciale / Altro</option>
+              <option value="Non so">Non so</option>
+            </select>
+          </label>
+          <label class="edit-field-row"><span>Stamp / Edizione</span>
+            <select id="editStamp">
+              <option value="None">Nessuno</option>
+              <option value="Play! Pokémon">Play! Pokémon</option>
+              <option value="Pokémon Day">Pokémon Day</option>
+              <option value="30° Anniversario">30° Anniversario</option>
+              <option value="Pokémon Center">Pokémon Center</option>
+              <option value="Pre-release">Pre-release</option>
+              <option value="Staff">Staff</option>
+              <option value="Set Stamp">Set Stamp</option>
+              <option value="GameStop">GameStop</option>
+              <option value="Altro">Altro</option>
+            </select>
+          </label>
+          <div id="editPlaySeriesWrap" class="edit-subfield hidden">
+            <label for="editPlaySeries">Prize Pack Series <span class="small">(opzionale)</span></label>
+            <select id="editPlaySeries">
+              <option value="">Non so / lascia automatico</option>
+              <option value="1">Series 1</option><option value="2">Series 2</option><option value="3">Series 3</option>
+              <option value="4">Series 4</option><option value="5">Series 5</option><option value="6">Series 6</option>
+              <option value="7">Series 7</option><option value="8">Series 8</option><option value="9">Series 9</option>
+            </select>
+            <div class="small">Il logo Play! Pokémon sulla carta non indica da solo il numero della serie.</div>
+          </div>
+          <label class="edit-field-row"><span>Stato</span>
+            <select id="editStatus"><option>Disponibile</option><option>Protetta</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Vendita</option></select>
+          </label>
+          <label class="edit-field-row"><span>Condizione</span>
+            <select id="editCondition">
+              <option value="NM">NM — Near Mint</option><option value="EX">EX — Excellent</option>
+              <option value="GD">GD — Good</option><option value="PL">PL — Played</option><option value="PO">PO — Poor</option>
+            </select>
+          </label>
+        </div>
       </div>
-    </div>
-    <div class="spacer"></div>
-    <div class="grid">
-      <button class="btn alt" onclick="closeEditModal()">Annulla</button>
-      <button class="btn green" onclick="saveEditModal()">Salva modifiche</button>
+
+      <div class="edit-section edit-existing-details">
+        <div class="edit-section-title">Altri dettagli</div>
+        <div class="edit-detail-grid">
+          <div><span>Lingua</span><strong id="editDetailLanguage">—</strong></div>
+          <div><span>Data acquisizione</span><strong id="editDetailAcquired">—</strong></div>
+          <div class="edit-detail-notes"><span>Note</span><strong id="editDetailNotes">—</strong></div>
+        </div>
+        <div class="small edit-readonly-note">Informazioni in sola lettura: il salvataggio esistente non viene modificato.</div>
+      </div>
+
+      <div class="edit-final-actions">
+        <button class="btn red" type="button" onclick="if(editingKey){const k=encodeURIComponent(editingKey);closeEditModal();deleteRecord(k)}">Elimina carta</button>
+        <button class="btn" type="button" onclick="if(editingKey){const k=encodeURIComponent(editingKey);closeEditModal();changeQty(k,1)}">Duplica carta</button>
+      </div>
     </div>
   </div>
 </div>
@@ -802,16 +846,7 @@
   </div>
 </div>
 
-<nav class="bottom">
-  <div class="tabs">
-    <button class="tab active" data-v="home" onclick="showView('home')">🏠<br><span>Home</span></button>
-    <button class="tab" data-v="scan" onclick="showView('scan')">📷<br><span>Scanner</span></button>
-    <button class="tab" data-v="catalog" onclick="showView('catalog')">📚<br><span>Carte</span></button>
-    <button class="tab" data-v="stats" onclick="showView('stats')">📊<br><span>Categorie</span></button>
-    <button class="tab" data-v="decks" onclick="showView('decks')">🃏<br><span>Mazzi</span></button>
-    <button class="tab" data-v="settings" onclick="showView('settings')">⚙️<br><span>Impostaz.</span></button>
-  </div>
-</nav>
+<nav class="bottom" aria-label="Navigazione principale"><div class="tabs"><button class="tab active" data-v="home" onclick="showView('home')"><svg><use href="#cx-home"></use></svg><span>Home</span></button><button class="tab" data-v="scan" onclick="showView('scan')"><svg><use href="#cx-scan"></use></svg><span>Scanner</span></button><button class="tab" data-v="catalog" onclick="showView('catalog')"><svg><use href="#cx-cards"></use></svg><span>Carte</span></button><button class="tab" data-v="stats" onclick="showView('stats')"><svg><use href="#cx-grid"></use></svg><span>Categorie</span></button><button class="tab" data-v="decks" onclick="showView('decks')"><svg><use href="#cx-deck"></use></svg><span>Mazzi</span></button><button class="tab" data-v="settings" onclick="showView('settings')"><svg><use href="#cx-settings"></use></svg><span>Impostazioni</span></button></div></nav>
 <script>
 const API='https://api.tcgdex.net/v2/it';
 const OFFICIAL_TYPES=['Erba','Fuoco','Acqua','Lampo','Psico','Lotta','Oscurità','Metallo','Drago','Incolore'];
@@ -1351,7 +1386,8 @@ function renderHomeDashboard(){
     const cards=[...db].sort((a,b)=>String(b.addedAt||'').localeCompare(String(a.addedAt||''))).slice(0,10);
     recent.innerHTML=cards.length?cards.map(c=>{
       const img=cardImageSrc(c,'low');
-      return `<div class="home-recent-card" onclick="openCardDetail('${encodeURIComponent(recordKey(c))}')">${img?`<img src="${esc(img)}" alt="">`:''}<div><b>${esc(c.name||'')}</b><div class="small">${esc(c.set||'')}</div></div></div>`;
+      const key=encodeURIComponent(recordKey(c));
+      return `<div class="home-recent-card" data-card-key="${esc(key)}" onclick="openCardDetailFromElement(this)" role="button" tabindex="0">${img?`<img src="${esc(img)}" alt="">`:''}<div><b>${esc(c.name||'')}</b><div class="small">${esc(c.set||'')}</div></div></div>`;
     }).join(''):'<div class="small">Nessuna carta aggiunta.</div>';
   }
 
@@ -5182,12 +5218,24 @@ function syncEditAllocationTotal(){
   const qtyEl=document.getElementById('editQty');if(qtyEl)qtyEl.value=sum;
   const info=document.getElementById('editAllocationSummary');if(info)info.textContent=`Totale allocato: ${sum}`;
 }
+function renderEditIdentitySummary(c){
+  const el=document.getElementById('editIdentitySummary');if(!el||!c)return;
+  const img=cardImageSrc(c,'low');
+  el.innerHTML=`${img?`<img src="${esc(img)}" alt="">`:''}<div><b>${esc(c.name||'Carta')}</b><div class="small">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}${csvSetTotal(c)?'/'+esc(csvSetTotal(c)):''}</div><div class="small">${esc(c.rarity||'Rarità non indicata')} · ${esc(c.condition||'NM')}</div></div>`;
+  const language=document.getElementById('editDetailLanguage');
+  const acquired=document.getElementById('editDetailAcquired');
+  const notes=document.getElementById('editDetailNotes');
+  if(language)language.textContent=String(c.language||c.lang||'—');
+  if(acquired)acquired.textContent=String(c.acquiredAt||c.addedAt||'—').slice(0,10);
+  if(notes)notes.textContent=String(c.notes||'—');
+}
 function openGroupEditModal(encodedGroupKey){
   const gkey=decodeURIComponent(encodedGroupKey);
   const g=catalogGroups().find(x=>x.key===gkey);if(!g)return;
   const c=g.representative;
   editingGroupKey=gkey;editingKey=recordKey(c);editingCardRef=c;
   document.getElementById('editTitle').textContent=c.name;
+  renderEditIdentitySummary(c);
   const qtyEl=document.getElementById('editQty');qtyEl.value=g.qty;qtyEl.readOnly=true;
   document.getElementById('editVariant').value=canonicalVariant(c.variant||'Normal');
   if(document.getElementById('editStamp'))document.getElementById('editStamp').value=canonicalStamp(c.stamp||'None');
@@ -5219,6 +5267,7 @@ async function openEditModal(key){
   editingKey=recordKey(c);
   editingCardRef=c;
   document.getElementById('editTitle').textContent=c.name;
+  renderEditIdentitySummary(c);
   document.getElementById('editQty').value=Number(c.qty)||1;document.getElementById('editQty').readOnly=false;
   document.getElementById('editStatus').disabled=false;
   document.getElementById('editAllocationWrap')?.classList.add('hidden');
@@ -5488,6 +5537,18 @@ function findRecordByKey(key){
   const decoded=decodeURIComponent(key);
   return db.find(c=>recordKey(c)===decoded);
 }
+function openCardDetailFromElement(el){
+  const key=el?.dataset?.cardKey;
+  if(key)openCardDetail(key);
+}
+function openEditFromDetailElement(el){
+  const key=el?.dataset?.cardKey;
+  if(key)openEditModal(key);
+}
+function deleteFromDetailElement(el){
+  const key=el?.dataset?.cardKey;
+  if(key)deleteRecord(key);
+}
 
 
 function clearCatalogFilters(){
@@ -5554,7 +5615,7 @@ function renderCardoryxAdvice(c){
   if(qty>1)rows.push(['🃏 Più copie',`Hai ${qty} copie in questo record. Se vuoi proteggerne solo alcune, assegnale manualmente a Protetta dalla modifica della carta.`]);
   if((condition&&!/near mint|mint|nm/.test(condition))||(r.value!=null&&r.value>=10))rows.push(['🔎 Condizione importante','Controlla bordi, angoli, superficie e centratura: possono incidere sul valore reale della carta.']);
   const priority=r.level==='high'?'Alta':r.level==='recommended'?'Consigliata':'Standard';
-  return `<div class="cardoryx-advice"><div class="cardoryx-advice-head"><b>💡 Consiglio protezione</b><span class="advice-priority">${priority}</span></div>${rows.map(x=>`<div class="advice-row"><strong>${x[0]}</strong>${esc(x[1])}</div>`).join('')}</div>`;
+  return `<div class="cardoryx-advice detail-protection"><div class="cardoryx-advice-head"><b>Protezione</b><span class="advice-priority">${priority}</span></div>${rows.map(x=>`<div class="advice-row"><strong>${x[0]}</strong>${esc(x[1])}</div>`).join('')}</div>`;
 }
 
 // V1.1.2 — verified Italian retail observations shown only in Details.
@@ -5596,14 +5657,23 @@ function retailReferenceForCard(c){
   }
   return null;
 }
+function renderCardmarketReference(c){
+  const state=cardValuationState(c),info=state.info||{};
+  if(state.value==null){
+    return `<div class="detail-section detail-market"><h4>Cardmarket</h4><div class="detail-market-value">—</div><div class="small">${esc(state.message||'Valore Cardmarket non disponibile per questa variante.')}</div></div>`;
+  }
+  const source=info.source||'Cardmarket';
+  const updated=info.updated?` · aggiornato ${esc(info.updated)}`:'';
+  return `<div class="detail-section detail-market"><h4>Cardmarket</h4><div class="detail-market-value">${euro(state.value)}</div><div class="small">${esc(source)} · valore per copia${updated}</div></div>`;
+}
 function renderRetailReference(c){
   const r=retailReferenceForCard(c);
-  if(!r)return '';
+  if(!r)return '<div class="detail-section detail-retail"><h4>Retail italiano</h4><div class="small">Riferimento retail non disponibile.</div></div>';
   const offers=(r.observations||[]).map(s=>{
     const label=`${esc(s.name)} · ${euro(s.price)}${s.condition?' · '+esc(s.condition):''}`;
     return s.url?`<a class="mee-source-link" href="${esc(s.url)}" target="_blank" rel="noopener">${label} ↗</a>`:`<span class="small">${label}</span>`;
   }).join('<br>');
-  return `<div class="detail-section"><h4>🏪 Riferimento negozi italiani</h4><div style="font-size:20px;font-weight:800;margin-bottom:4px">${euro(r.min)} – ${euro(r.max)}</div><div style="font-size:16px;font-weight:750;margin-bottom:4px">Prezzo tipico: ${euro(r.typical)}</div><div class="small">${r.count} offerte verificate · ${esc(r.language)} · ${esc(r.condition)} · ultimo controllo ${esc(r.verified)}</div><div class="small" style="margin-top:7px">Prezzi osservati per la stessa variante presso negozi italiani. Sono separati dal valore Cardmarket, non modificano il valore della collezione e possono cambiare nel tempo.</div>${offers?`<div style="margin-top:8px">${offers}</div>`:''}</div>`;
+  return `<div class="detail-section detail-retail"><h4>Retail italiano</h4><div class="detail-retail-value">${euro(r.min)} – ${euro(r.max)}</div><div style="font-size:16px;font-weight:750;margin-bottom:4px">Prezzo tipico: ${euro(r.typical)}</div><div class="small">${r.count} offerte verificate · ${esc(r.language)} · ${esc(r.condition)} · ultimo controllo ${esc(r.verified)}</div><div class="small" style="margin-top:7px">Prezzi osservati per la stessa variante presso negozi italiani. Sono separati dal valore Cardmarket, non modificano il valore della collezione e possono cambiare nel tempo.</div>${offers?`<div style="margin-top:8px">${offers}</div>`:''}</div>`;
 }
 
 function openCardDetail(key){
@@ -5613,6 +5683,7 @@ function openCardDetail(key){
   document.getElementById('detailTitle').textContent=c.name||'Carta';
   const img=c.image?`${c.image}/high.webp`:'';
   const content=document.getElementById('detailContent');
+  const safeKey=encodeURIComponent(recordKey(c));
   content.innerHTML=`
     <div class="detail-card">
       <div>${img?`<img class="card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.display='none'" title="Tocca per ingrandire">`:''}</div>
@@ -5628,8 +5699,9 @@ function openCardDetail(key){
         </div>
       </div>
     </div>
-    ${renderCardoryxAdvice(c)}
+    ${renderCardmarketReference(c)}
     ${renderRetailReference(c)}
+    ${renderCardoryxAdvice(c)}
     <div class="detail-section">
       <h4>Note personali</h4>
       <textarea id="detailNotes" placeholder="Es. acquistata al mercatino, da controllare, possibile grading...">${esc(c.notes||'')}</textarea>
@@ -5637,8 +5709,8 @@ function openCardDetail(key){
     </div>
     <div class="detail-section">
       <div class="grid">
-        <button class="btn alt" onclick="closeCardDetail();openEditModal('${key}')">✏️ Modifica</button>
-        <button class="btn red" onclick="closeCardDetail();deleteRecord('${key}')">🗑️ Elimina</button>
+        <button class="btn alt" data-card-key="${esc(safeKey)}" onclick="closeCardDetail();openEditFromDetailElement(this)">Modifica</button>
+        <button class="btn red" data-card-key="${esc(safeKey)}" onclick="closeCardDetail();deleteFromDetailElement(this)">Elimina</button>
       </div>
     </div>`;
   const m=document.getElementById('cardDetailModal');
@@ -5893,11 +5965,11 @@ function renderCatalog(){
   ${groups.map(g=>{const c=g.representative,key=encodeURIComponent(recordKey(c)),gkey=encodeURIComponent(g.key),img=cardImageSrc(c,'low');return `<article class="collection-card">
     <div>${img?`<img class="collection-card-img card-zoomable" src="${img}" onclick="openCardZoom(this.src)" onerror="this.style.visibility='hidden'" title="Tocca per ingrandire">`:'<div class="collection-card-img"></div>'}
       <div class="qty-control"><button type="button" onclick="changeGroupQty('${gkey}',-1)">−</button><strong>×${g.qty}</strong><button type="button" onclick="changeGroupQty('${gkey}',1)">+</button></div></div>
-    <div class="collection-card-main"><h3 onclick="openCardDetail('${key}')" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
+    <div class="collection-card-main"><h3 data-card-key="${esc(key)}" onclick="openCardDetailFromElement(this)" style="cursor:pointer">${esc(c.name||'Carta')}${c.notes?'<span class="note-dot"></span>':''}</h3>
       <div class="collection-sub">${esc(c.set||'Set sconosciuto')} · N° ${esc(c.localId||'—')}${csvSetTotal(c)?'/'+esc(csvSetTotal(c)):''}<br>${esc(c.rarity||'Rarità non indicata')}</div>
       ${cardPriceHtml({...c,qty:g.qty})}
       <div class="collection-badges"><span class="collection-badge">${esc(cardCategory(c))}</span><span class="collection-badge">${esc(c.variant||'Normale')}</span><span class="collection-badge">${esc(c.condition||'NM')}</span>${groupAllocationHtml(g)}${protectionCatalogBadge(c,g)}</div>
-      <div class="collection-actions"><button class="btn alt" onclick="openCardDetail('${key}')">👁️ Dettagli</button><button class="btn alt" onclick="openGroupEditModal('${gkey}')">✏️ Modifica</button></div>
+      <div class="collection-actions"><button class="btn alt" data-card-key="${esc(key)}" onclick="openCardDetailFromElement(this)">Dettagli</button><button class="btn alt" onclick="openGroupEditModal('${gkey}')">Modifica</button></div>
     </div></article>`}).join('')}</div>`;
 }
 
@@ -5928,7 +6000,7 @@ function renderStats(){
       ? db.filter(c=>(c.status||'Disponibile')==='Protetta').reduce((a,c)=>a+(Number(c.qty)||1),0)
       : db.filter(c=>categoryFilterKey(cardCategory(c))===categoryFilterKey(cat)).reduce((a,c)=>a+(Number(c.qty)||1),0);
     const label=n===1?'1 carta':`${n} carte`;
-    return `<div class="category-tile ${n===0?'category-empty':''}" data-cat="${esc(cat)}" onclick="filterByCategory('${esc(cat)}')">
+    return `<div class="category-tile ${n===0?'category-empty':''}" data-cat="${esc(cat)}" data-cat-key="${esc(categoryFilterKey(cat))}" onclick="filterByCategory('${esc(cat)}')">
       <div class="category-tile-top">
         <div class="category-icon">${iconMap[cat]||'📁'}</div>
         <div class="category-count">${n}</div>
@@ -6402,6 +6474,7 @@ function printInventory(withPrices=true){
     .set-small{break-inside:avoid-page!important;page-break-inside:avoid!important}
     .set:has(tbody tr:nth-child(-n+2):last-child){break-inside:avoid-page;page-break-inside:avoid}
   }
+  
   </style></head><body><table class="print-shell"><thead><tr><td><div class="page-head"><img src="${printEsc(printLogoUrl())}" alt="Cardoryx"><div><div class="ph-word">Cardoryx</div><div class="ph-doc">${printEsc(title)}</div></div></div></td></tr></thead><tbody><tr><td><div class="page-body"><div class="first-summary">${printEsc(summary)}</div>${body}</div></td></tr></tbody></table><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
   const w=window.open('','_blank');
   if(!w){alert('Il browser ha bloccato la finestra di stampa. Consenti i popup per Cardoryx e riprova.');return}
