@@ -300,6 +300,41 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
 @media(max-width:390px){.brand-dragon{width:min(112px,30vw);max-width:112px;height:52px;object-fit:contain;object-position:right center;margin-right:0;flex:0 0 auto}.brand-copy p{max-width:168px;white-space:normal;line-height:1.25}.bottom .tab{padding:7px 0!important}.bottom .tab svg{width:19px;height:19px;min-width:19px;min-height:19px;max-width:19px;max-height:19px;display:block;flex:0 0 19px;overflow:visible;stroke:currentColor;fill:none}.bottom .tab span{font-size:7.5px!important}.detail-card{grid-template-columns:82px minmax(0,1fr)}.detail-card img{width:82px}}
 @media(min-width:760px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
+
+/* Scanner guidato: solo acquisizione immagine, pipeline OCR invariata. */
+.guided-camera-modal{position:fixed;inset:0;z-index:320;display:none;background:#020816;color:#fff;overflow:hidden}
+.guided-camera-modal.open{display:flex;flex-direction:column}
+.guided-camera-shell{display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;min-height:0;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));box-sizing:border-box}
+.guided-camera-top{flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:46px}
+.guided-camera-top strong{text-align:center;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.guided-camera-top .btn{min-height:40px;padding:8px 11px}
+.guided-camera-stage{position:relative;flex:1 1 auto;min-height:0;margin:8px 0 10px;border-radius:20px;overflow:hidden;background:#000;isolation:isolate}
+.guided-camera-stage video{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;background:#000}
+.guided-card-frame{position:absolute;left:50%;top:50%;width:min(76vw,360px,calc((100dvh - 190px)*.7159));max-width:84%;aspect-ratio:63/88;transform:translate(-50%,-50%);border:2px solid rgba(156,205,255,.92);border-radius:16px;box-shadow:0 0 0 9999px rgba(2,8,22,.48),0 0 0 1px rgba(255,255,255,.3) inset;pointer-events:none;transition:border-color .18s,box-shadow .18s}
+.guided-card-frame:before,.guided-card-frame:after{content:"";position:absolute;inset:-4px;border-radius:18px;pointer-events:none}
+.guided-card-frame:before{background:linear-gradient(#fff,#fff) left top/28px 4px no-repeat,linear-gradient(#fff,#fff) left top/4px 28px no-repeat,linear-gradient(#fff,#fff) right top/28px 4px no-repeat,linear-gradient(#fff,#fff) right top/4px 28px no-repeat,linear-gradient(#fff,#fff) left bottom/28px 4px no-repeat,linear-gradient(#fff,#fff) left bottom/4px 28px no-repeat,linear-gradient(#fff,#fff) right bottom/28px 4px no-repeat,linear-gradient(#fff,#fff) right bottom/4px 28px no-repeat;opacity:.92}
+.guided-card-frame.is-almost{border-color:#f5b72e;box-shadow:0 0 0 9999px rgba(2,8,22,.42),0 0 18px rgba(245,183,46,.42)}
+.guided-card-frame.is-ready{border-color:#22c55e;box-shadow:0 0 0 9999px rgba(2,8,22,.36),0 0 22px rgba(34,197,94,.55)}
+.guided-camera-status{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;max-width:calc(100% - 24px);padding:9px 14px;border-radius:999px;background:rgba(7,21,45,.86);border:1px solid rgba(156,205,255,.42);font-weight:800;font-size:13px;text-align:center;white-space:nowrap;backdrop-filter:blur(8px)}
+.guided-zoom-panel{position:absolute;z-index:4;left:50%;top:12px;transform:translateX(-50%);display:grid;grid-template-columns:36px minmax(112px,38vw) 36px auto;align-items:center;gap:6px;max-width:calc(100% - 20px);padding:6px 8px;border:1px solid rgba(156,205,255,.38);border-radius:999px;background:rgba(7,21,45,.84);backdrop-filter:blur(8px)}
+.guided-zoom-panel button{width:36px;height:36px;min-height:36px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px;font-weight:800}
+.guided-zoom-panel input[type="range"]{width:100%;min-width:0;margin:0;accent-color:#60a5fa;touch-action:pan-x}
+.guided-zoom-value{min-width:42px;font-size:12px;font-weight:900;text-align:center;color:#fff}
+.guided-zoom-mode{grid-column:1/-1;margin-top:-3px;font-size:9px;text-align:center;color:#c6d5ee;letter-spacing:.04em}
+.guided-camera-controls{flex:0 0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
+.guided-camera-controls .btn{min-height:50px}
+.guided-camera-hint{grid-column:1/-1;margin:0;color:#c6d5ee;text-align:center;font-size:11px;line-height:1.35}
+.guided-camera-fallback{display:none}
+.guided-camera-fallback.show{display:inline-flex}
+@media(max-width:390px){
+  .guided-camera-shell{padding-left:9px;padding-right:9px}
+  .guided-card-frame{width:min(74vw,calc((100dvh - 178px)*.7159));border-radius:14px}
+  .guided-camera-status{font-size:12px}
+}
+@media(orientation:landscape) and (max-height:520px){
+  .guided-card-frame{width:min(36vw,calc((100dvh - 120px)*.7159))}
+  .guided-camera-top{min-height:38px}.guided-camera-controls .btn{min-height:42px}
+}
 </style>
 <style id="cardoryx-category-accents">
 .category-tile[data-cat-key="fuoco"]{--cat-accent:#ef4444;--cat-soft:#fff1ed}.category-tile[data-cat-key="acqua"]{--cat-accent:#0ea5e9;--cat-soft:#e7f7ff}.category-tile[data-cat-key="erba"]{--cat-accent:#16a34a;--cat-soft:#eaf8ee}.category-tile[data-cat-key="lampo"],.category-tile[data-cat-key="energiebase"]{--cat-accent:#d89b17;--cat-soft:#fff7dc}.category-tile[data-cat-key="psico"]{--cat-accent:#a855f7;--cat-soft:#f7efff}.category-tile[data-cat-key="lotta"]{--cat-accent:#c2692d;--cat-soft:#fff1e7}.category-tile[data-cat-key="oscurita"]{--cat-accent:#5b21b6;--cat-soft:#f2edff}.category-tile[data-cat-key="metallo"],.category-tile[data-cat-key="incolore"]{--cat-accent:#64748b;--cat-soft:#eef2f6}.category-tile[data-cat-key="drago"]{--cat-accent:#4338ca;--cat-soft:#eeedff}.category-tile[data-cat-key="aiuto"]{--cat-accent:#2563eb;--cat-soft:#eaf1ff}.category-tile[data-cat-key="strumenti"],.category-tile[data-cat-key="oggettipokemon"]{--cat-accent:#0d9488;--cat-soft:#e8fbf8}.category-tile[data-cat-key="stadio"]{--cat-accent:#f97316;--cat-soft:#fff2e8}.category-tile[data-cat-key="energiespeciali"]{--cat-accent:#c026d3;--cat-soft:#fcecff}.category-tile[data-cat-key="protette"]{--cat-accent:#d89b17;--cat-soft:#fff7dc}
@@ -365,7 +400,8 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
     <div class="card scan-panel-primary">
       <div class="section-title">Scansiona carta</div>
       <div class="source-grid">
-        <label class="btn file-btn">📷 Scatta foto<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden></label>
+        <button class="btn file-btn" id="guidedCameraBtn" type="button" onclick="openGuidedCamera()">📷 Camera guidata</button>
+        <label class="btn alt file-btn">📸 Scatto manuale<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden></label>
         <label class="btn alt file-btn">🖼️ Dal rullino<input id="galleryInput" type="file" accept="image/*" multiple hidden></label>
       </div>
       <div id="queueWrap" class="queue hidden"></div>
@@ -1421,8 +1457,81 @@ function renderAll(){
   renderStats();
 }
 function fillTypeFilter(){const s=document.getElementById('typeFilter');if(!s)return;const cur=s.value;s.innerHTML='<option value="">Tutti i tipi</option>'+CATEGORIES.map(x=>`<option>${x}</option>`).join('');s.value=cur}
-cameraInput.addEventListener('change',()=>setQueue(cameraInput.files));
-galleryInput.addEventListener('change',()=>setQueue(galleryInput.files));
+cameraInput.addEventListener('change',()=>prepareScannerInputFiles(cameraInput.files,'manual'));
+galleryInput.addEventListener('change',()=>prepareScannerInputFiles(galleryInput.files,'gallery'));
+
+async function scannerInputFileCanvas(file){
+  let source=null,objectUrl='';
+  try{
+    if(typeof createImageBitmap==='function'){
+      try{source=await createImageBitmap(file,{imageOrientation:'from-image'})}
+      catch(error){source=null}
+    }
+    if(!source){
+      objectUrl=URL.createObjectURL(file);
+      source=await new Promise((resolve,reject)=>{
+        const image=new Image();
+        image.onload=()=>resolve(image);
+        image.onerror=reject;
+        image.src=objectUrl;
+      });
+    }
+    const width=source.naturalWidth||source.width;
+    const height=source.naturalHeight||source.height;
+    if(!width||!height)throw new Error('Dimensioni immagine non disponibili');
+    const maxSide=2600;
+    const scale=Math.min(1,maxSide/Math.max(width,height));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(width*scale));
+    canvas.height=Math.max(1,Math.round(height*scale));
+    const ctx=canvas.getContext('2d',{alpha:false});
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(source,0,0,canvas.width,canvas.height);
+    return canvas;
+  }finally{
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+    if(source&&typeof source.close==='function')source.close();
+  }
+}
+function prepareScannerCanvasForRecognition(canvas){
+  return autoFitGuidedCardCanvas(canvas);
+}
+async function autoPrepareScannerInputFile(file,source){
+  const canvas=await scannerInputFileCanvas(file);
+  const prepared=prepareScannerCanvasForRecognition(canvas);
+  if(!prepared.fitted)return {file,fitted:false};
+  const blob=await new Promise(resolve=>prepared.canvas.toBlob(resolve,'image/jpeg',.94));
+  if(!blob)return {file,fitted:false};
+  const baseName=String(file.name||'cardoryx').replace(/\.[^.]+$/,'');
+  return {
+    file:new File([blob],`${baseName}-autofit.jpg`,{type:'image/jpeg',lastModified:file.lastModified||Date.now()}),
+    fitted:true
+  };
+}
+async function prepareScannerInputFiles(fileList,source='gallery'){
+  const originals=[...fileList||[]];
+  if(!originals.length)return;
+  const status=document.getElementById('ocrStatus');
+  if(status)status.textContent=originals.length===1
+    ? 'Rilevo e raddrizzo automaticamente la carta…'
+    : `Preparo automaticamente ${originals.length} immagini…`;
+  const prepared=[];
+  let fittedCount=0;
+  for(const file of originals){
+    try{
+      const result=await autoPrepareScannerInputFile(file,source);
+      prepared.push(result.file);
+      if(result.fitted)fittedCount++;
+    }catch(error){
+      console.warn('Auto-ritaglio non disponibile: uso la foto originale.',error);
+      prepared.push(file);
+    }
+  }
+  setQueue(prepared);
+  if(status)status.textContent=fittedCount
+    ? `Auto-ritaglio applicato a ${fittedCount} di ${prepared.length} foto. Premi “Riconosci carta”.`
+    : 'Bordi non rilevati con sicurezza: uso la foto originale. Premi “Riconosci carta”.';
+}
 function setQueue(fileList){const files=[...fileList||[]];if(!files.length)return;scanQueue=files;queueIndex=0;renderQueue();loadQueueItem(0)}
 function renderQueue(){if(scanQueue.length<=1){queueWrap.classList.add('hidden');queueWrap.innerHTML='';return}queueWrap.classList.remove('hidden');queueWrap.innerHTML=scanQueue.map((f,i)=>`<img class="${i===queueIndex?'active':''}" src="${URL.createObjectURL(f)}" onclick="loadQueueItem(${i})">`).join('')}
 
@@ -6718,6 +6827,714 @@ document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scann
 
 
 document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}catch(e){}});
+
+/* Camera guidata. Non modifica OCR/TCGdex: produce un File e riusa setQueue/loadQueueItem. */
+const guidedCameraState={
+  active:false,stream:null,timer:0,captureLocked:false,previousLuma:null,
+  previousEdges:null,stableSince:0,presenceFrames:0,lastAnalysisAt:0,
+  stabilityWindow:[],absenceFrames:0,stabilityCredit:0,lastRealMovementAt:0,
+  zoom:1,zoomMode:'digital',zoomMin:1,zoomMax:2.5,zoomStep:.1
+};
+const GUIDED_SAMPLE_INTERVAL=220;
+const GUIDED_STABILITY_SAMPLES=8;
+const GUIDED_STABILITY_WINDOW=9;
+const GUIDED_STABILITY_TARGET=1500;
+
+function setGuidedCameraStatus(message,state='neutral'){
+  const status=document.getElementById('guidedCameraStatus');
+  const frame=document.getElementById('guidedCardFrame');
+  if(status)status.textContent=message;
+  if(frame){
+    frame.classList.toggle('is-almost',state==='almost');
+    frame.classList.toggle('is-ready',state==='ready');
+  }
+}
+function resetGuidedStability(){
+  guidedCameraState.previousLuma=null;
+  guidedCameraState.previousEdges=null;
+  guidedCameraState.stableSince=0;
+  guidedCameraState.presenceFrames=0;
+  guidedCameraState.stabilityWindow=[];
+  guidedCameraState.absenceFrames=0;
+  guidedCameraState.stabilityCredit=0;
+  guidedCameraState.lastRealMovementAt=0;
+}
+async function openGuidedCamera(){
+  const modal=document.getElementById('guidedCameraModal');
+  if(!modal)return;
+  guidedCameraState.active=true;
+  guidedCameraState.captureLocked=false;
+  resetGuidedStability();
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  setGuidedCameraStatus('Avvio fotocamera…');
+  await startGuidedCameraStream();
+}
+async function startGuidedCameraStream(){
+  const retry=document.getElementById('guidedRetryBtn');
+  const fallback=document.getElementById('guidedIOSFallbackBtn');
+  retry?.classList.remove('show');fallback?.classList.remove('show');
+  if(!navigator.mediaDevices?.getUserMedia){
+    setGuidedCameraStatus('Preview live non supportata: usa Fotocamera iOS.');
+    fallback?.classList.add('show');
+    return false;
+  }
+  stopGuidedCameraStream();
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920},
+        height:{ideal:1440}
+      }
+    });
+    if(!guidedCameraState.active){
+      stream.getTracks().forEach(track=>track.stop());
+      return false;
+    }
+    guidedCameraState.stream=stream;
+    const video=document.getElementById('guidedCameraVideo');
+    video.srcObject=stream;
+    video.setAttribute('playsinline','');
+    await video.play();
+    await configureGuidedZoom(stream);
+    resetGuidedStability();
+    setGuidedCameraStatus('Posiziona la carta');
+    scheduleGuidedAnalysis(250);
+    return true;
+  }catch(error){
+    console.warn('Camera guidata non disponibile:',error);
+    setGuidedCameraStatus(error?.name==='NotAllowedError'
+      ? 'Permesso fotocamera negato. Usa lo scatto iOS.'
+      : 'Fotocamera live non disponibile. Usa lo scatto iOS.');
+    retry?.classList.add('show');fallback?.classList.add('show');
+    return false;
+  }
+}
+function stopGuidedCameraStream(){
+  clearTimeout(guidedCameraState.timer);
+  guidedCameraState.timer=0;
+  if(guidedCameraState.stream){
+    guidedCameraState.stream.getTracks().forEach(track=>track.stop());
+    guidedCameraState.stream=null;
+  }
+  const video=document.getElementById('guidedCameraVideo');
+  if(video){video.srcObject=null;video.style.transform='none';}
+}
+function guidedDigitalZoom(){
+  return guidedCameraState.zoomMode==='digital'?Math.max(1,guidedCameraState.zoom):1;
+}
+function updateGuidedZoomUI(){
+  const range=document.getElementById('guidedZoomRange');
+  const value=document.getElementById('guidedZoomValue');
+  const mode=document.getElementById('guidedZoomMode');
+  if(range){
+    range.min=String(guidedCameraState.zoomMin);
+    range.max=String(guidedCameraState.zoomMax);
+    range.step=String(guidedCameraState.zoomStep);
+    range.value=String(guidedCameraState.zoom);
+  }
+  if(value)value.textContent=guidedCameraState.zoom.toFixed(1).replace('.',',')+'×';
+  if(mode)mode.textContent=guidedCameraState.zoomMode==='hardware'
+    ? 'Zoom fotocamera'
+    : 'Zoom digitale compatibile';
+}
+async function configureGuidedZoom(stream){
+  const track=stream?.getVideoTracks?.()[0];
+  const preferredZoom=1.5;
+  guidedCameraState.zoom=preferredZoom;
+  guidedCameraState.zoomMode='digital';
+  guidedCameraState.zoomMin=1;
+  guidedCameraState.zoomMax=2.5;
+  guidedCameraState.zoomStep=.1;
+  try{
+    const capabilities=track?.getCapabilities?.();
+    const zoom=capabilities?.zoom;
+    if(zoom&&Number.isFinite(zoom.min)&&Number.isFinite(zoom.max)&&zoom.max>zoom.min){
+      const min=Math.max(zoom.min,1);
+      const max=Math.min(zoom.max,3);
+      if(max>min){
+        const initial=Math.min(max,Math.max(min,preferredZoom));
+        await track.applyConstraints({advanced:[{zoom:initial}]});
+        guidedCameraState.zoomMode='hardware';
+        guidedCameraState.zoomMin=min;
+        guidedCameraState.zoomMax=max;
+        guidedCameraState.zoomStep=Math.max(.1,zoom.step||.1);
+        guidedCameraState.zoom=initial;
+      }
+    }
+  }catch(error){
+    console.warn('Zoom fotocamera non esposto: uso zoom digitale.',error);
+  }
+  const video=document.getElementById('guidedCameraVideo');
+  if(video)video.style.transform=guidedCameraState.zoomMode==='digital'
+    ? `scale(${guidedCameraState.zoom})`
+    : 'none';
+  updateGuidedZoomUI();
+}
+async function applyGuidedZoom(rawValue){
+  const requested=Math.min(guidedCameraState.zoomMax,Math.max(guidedCameraState.zoomMin,Number(rawValue)||1));
+  const video=document.getElementById('guidedCameraVideo');
+  if(guidedCameraState.zoomMode==='hardware'){
+    const track=guidedCameraState.stream?.getVideoTracks?.()[0];
+    try{
+      await track?.applyConstraints?.({advanced:[{zoom:requested}]});
+      guidedCameraState.zoom=requested;
+      if(video)video.style.transform='none';
+    }catch(error){
+      console.warn('Zoom hardware non applicabile: passo al fallback digitale.',error);
+      guidedCameraState.zoomMode='digital';
+      guidedCameraState.zoomMin=1;
+      guidedCameraState.zoomMax=2.5;
+      guidedCameraState.zoomStep=.1;
+      guidedCameraState.zoom=Math.min(2.5,Math.max(1,requested));
+      if(video)video.style.transform=`scale(${guidedCameraState.zoom})`;
+    }
+  }else{
+    guidedCameraState.zoom=requested;
+    if(video)video.style.transform=`scale(${guidedCameraState.zoom})`;
+  }
+  resetGuidedStability();
+  updateGuidedZoomUI();
+}
+function stepGuidedZoom(direction){
+  const next=guidedCameraState.zoom+direction*guidedCameraState.zoomStep;
+  applyGuidedZoom(next);
+}
+function closeGuidedCamera(){
+  guidedCameraState.active=false;
+  stopGuidedCameraStream();
+  resetGuidedStability();
+  document.getElementById('guidedCameraModal')?.classList.remove('open');
+  document.body.style.overflow='';
+}
+function openLegacyCameraFallback(){
+  closeGuidedCamera();
+  const input=document.getElementById('cameraInput');
+  if(input){input.value='';input.click();}
+}
+function scheduleGuidedAnalysis(delay=GUIDED_SAMPLE_INTERVAL){
+  clearTimeout(guidedCameraState.timer);
+  if(!guidedCameraState.active||guidedCameraState.captureLocked)return;
+  guidedCameraState.timer=setTimeout(analyzeGuidedCameraFrame,delay);
+}
+function guidedVisibleSourceRect(video,stage){
+  const vw=video.videoWidth,vh=video.videoHeight;
+  const sw=stage.clientWidth,sh=stage.clientHeight;
+  if(!vw||!vh||!sw||!sh)return null;
+  const videoAspect=vw/vh,targetAspect=sw/sh;
+  let x=0,y=0,width=vw,height=vh;
+  if(videoAspect>targetAspect){
+    width=vh*targetAspect;x=(vw-width)/2;
+  }else{
+    height=vw/targetAspect;y=(vh-height)/2;
+  }
+  const digitalZoom=guidedDigitalZoom();
+  if(digitalZoom>1){
+    const zoomedWidth=width/digitalZoom,zoomedHeight=height/digitalZoom;
+    x+=(width-zoomedWidth)/2;y+=(height-zoomedHeight)/2;
+    width=zoomedWidth;height=zoomedHeight;
+  }
+  return {x,y,width,height};
+}
+function guidedCaptureSourceRect(video,stage,frame,margin=.04){
+  const visible=guidedVisibleSourceRect(video,stage);
+  if(!visible)return null;
+  const stageRect=stage.getBoundingClientRect();
+  const frameRect=frame.getBoundingClientRect();
+  const left=(frameRect.left-stageRect.left)/stageRect.width;
+  const top=(frameRect.top-stageRect.top)/stageRect.height;
+  const width=frameRect.width/stageRect.width;
+  const height=frameRect.height/stageRect.height;
+  const marginX=width*margin,marginY=height*margin;
+  const normalizedLeft=Math.max(0,left-marginX);
+  const normalizedTop=Math.max(0,top-marginY);
+  const normalizedRight=Math.min(1,left+width+marginX);
+  const normalizedBottom=Math.min(1,top+height+marginY);
+  return {
+    x:visible.x+visible.width*normalizedLeft,
+    y:visible.y+visible.height*normalizedTop,
+    width:visible.width*(normalizedRight-normalizedLeft),
+    height:visible.height*(normalizedBottom-normalizedTop)
+  };
+}
+function guidedMedian(values){
+  if(!values.length)return 0;
+  const sorted=[...values].sort((a,b)=>a-b);
+  const middle=Math.floor(sorted.length/2);
+  return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;
+}
+function guidedProfilePeak(profile,startFraction,endFraction,direction='max'){
+  const start=Math.max(1,Math.floor(profile.length*startFraction));
+  const end=Math.min(profile.length-2,Math.ceil(profile.length*endFraction));
+  const region=profile.slice(start,end+1);
+  const baseline=guidedMedian(region);
+  const maximum=Math.max(...region);
+  const threshold=baseline+(maximum-baseline)*.62;
+  let index=-1;
+  if(direction==='first'){
+    for(let i=start;i<=end;i++)if(profile[i]>=threshold){index=i;break;}
+  }else if(direction==='last'){
+    for(let i=end;i>=start;i--)if(profile[i]>=threshold){index=i;break;}
+  }else{
+    for(let i=start;i<=end;i++)if(index<0||profile[i]>profile[index])index=i;
+  }
+  return {index,score:index>=0?profile[index]:0,baseline,contrast:maximum-baseline};
+}
+const GUIDED_AUTOFIT_MARGIN=1.18;
+function detectGuidedCardBounds(sourceCanvas){
+  const sample=document.createElement('canvas');
+  const sampleMaxSide=320;
+  const sampleScale=sampleMaxSide/Math.max(sourceCanvas.width,sourceCanvas.height);
+  sample.width=Math.max(1,Math.round(sourceCanvas.width*sampleScale));
+  sample.height=Math.max(1,Math.round(sourceCanvas.height*sampleScale));
+  const ctx=sample.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
+  const image=ctx.getImageData(0,0,sample.width,sample.height);
+  const luma=guidedLumaData(image);
+  const w=sample.width,h=sample.height;
+  const vertical=new Array(w).fill(0),horizontal=new Array(h).fill(0);
+  for(let x=2;x<w-2;x++){
+    let sum=0,count=0;
+    for(let y=Math.round(h*.06);y<Math.round(h*.94);y+=2){
+      let local=0;
+      for(let dx=-2;dx<=2;dx++){
+        local=Math.max(local,Math.abs(luma[y*w+x+dx+1]-luma[y*w+x+dx-1]));
+      }
+      sum+=local;count++;
+    }
+    vertical[x]=count?sum/count:0;
+  }
+  for(let y=2;y<h-2;y++){
+    let sum=0,count=0;
+    for(let x=Math.round(w*.06);x<Math.round(w*.94);x+=2){
+      let local=0;
+      for(let dy=-2;dy<=2;dy++){
+        local=Math.max(local,Math.abs(luma[(y+dy+1)*w+x]-luma[(y+dy-1)*w+x]));
+      }
+      sum+=local;count++;
+    }
+    horizontal[y]=count?sum/count:0;
+  }
+  const left=guidedProfilePeak(vertical,.02,.36);
+  const right=guidedProfilePeak(vertical,.64,.98);
+  const top=guidedProfilePeak(horizontal,.02,.34);
+  const bottom=guidedProfilePeak(horizontal,.66,.98);
+  if([left,right,top,bottom].some(edge=>edge.index<0||edge.contrast<2.2))return null;
+  const width=right.index-left.index,height=bottom.index-top.index;
+  const ratio=width/height;
+  if(width<w*.52||height<h*.58||ratio<.54||ratio>.92)return null;
+
+  let x1=left.index,y1=top.index,x2=right.index,y2=bottom.index;
+  const centerX=(x1+x2)/2,centerY=(y1+y2)/2,targetRatio=63/88;
+  let adjustedWidth=x2-x1,adjustedHeight=y2-y1;
+  if(adjustedWidth/adjustedHeight>targetRatio)adjustedHeight=adjustedWidth/targetRatio;
+  else adjustedWidth=adjustedHeight*targetRatio;
+  adjustedWidth*=GUIDED_AUTOFIT_MARGIN;adjustedHeight*=GUIDED_AUTOFIT_MARGIN;
+  x1=Math.max(0,centerX-adjustedWidth/2);x2=Math.min(w,centerX+adjustedWidth/2);
+  y1=Math.max(0,centerY-adjustedHeight/2);y2=Math.min(h,centerY+adjustedHeight/2);
+  const scaleX=sourceCanvas.width/w,scaleY=sourceCanvas.height/h;
+  return {x:x1*scaleX,y:y1*scaleY,width:(x2-x1)*scaleX,height:(y2-y1)*scaleY};
+}
+function guidedRobustEdgeAverage(values){
+  if(!values.length)return 0;
+  values.sort((a,b)=>b-a);
+  const count=Math.max(4,Math.ceil(values.length*.32));
+  let sum=0;
+  for(let i=0;i<count;i++)sum+=values[i];
+  return sum/count;
+}
+function detectGuidedCardBoundsRobust(sourceCanvas){
+  const sample=document.createElement('canvas');
+  const sampleMaxSide=320;
+  const sampleScale=sampleMaxSide/Math.max(sourceCanvas.width,sourceCanvas.height);
+  sample.width=Math.max(1,Math.round(sourceCanvas.width*sampleScale));
+  sample.height=Math.max(1,Math.round(sourceCanvas.height*sampleScale));
+  const ctx=sample.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
+  const image=ctx.getImageData(0,0,sample.width,sample.height);
+  const luma=guidedLumaData(image);
+  const w=sample.width,h=sample.height;
+  const vertical=new Array(w).fill(0),horizontal=new Array(h).fill(0);
+  for(let x=4;x<w-4;x++){
+    const values=[];
+    for(let y=Math.round(h*.08);y<Math.round(h*.92);y+=3){
+      let local=0;
+      for(let dx=-2;dx<=2;dx++){
+        local=Math.max(local,Math.abs(luma[y*w+x+dx+1]-luma[y*w+x+dx-1]));
+      }
+      values.push(local);
+    }
+    vertical[x]=guidedRobustEdgeAverage(values);
+  }
+  for(let y=4;y<h-4;y++){
+    const values=[];
+    for(let x=Math.round(w*.08);x<Math.round(w*.92);x+=3){
+      let local=0;
+      for(let dy=-2;dy<=2;dy++){
+        local=Math.max(local,Math.abs(luma[(y+dy+1)*w+x]-luma[(y+dy-1)*w+x]));
+      }
+      values.push(local);
+    }
+    horizontal[y]=guidedRobustEdgeAverage(values);
+  }
+  // Privilegia il perimetro esterno della carta: i bordi interni
+  // dell'illustrazione sono spesso più contrastati ma non sono la carta.
+  const left=guidedProfilePeak(vertical,.04,.40,'first');
+  const right=guidedProfilePeak(vertical,.60,.96,'last');
+  const top=guidedProfilePeak(horizontal,.04,.38,'first');
+  const bottom=guidedProfilePeak(horizontal,.62,.96,'last');
+  if([left,right,top,bottom].some(edge=>edge.index<0||edge.contrast<4))return null;
+  const width=right.index-left.index,height=bottom.index-top.index;
+  const ratio=width/height;
+  const centerX=(left.index+right.index)/2,centerY=(top.index+bottom.index)/2;
+  if(width<w*.28||width>w*.94||height<h*.35||height>h*.96||
+    ratio<.58||ratio>.84||
+    Math.abs(centerX-w/2)>w*.20||Math.abs(centerY-h/2)>h*.20)return null;
+
+  const targetRatio=63/88;
+  let adjustedWidth=width,adjustedHeight=height;
+  if(adjustedWidth/adjustedHeight>targetRatio)adjustedHeight=adjustedWidth/targetRatio;
+  else adjustedWidth=adjustedHeight*targetRatio;
+  adjustedWidth*=GUIDED_AUTOFIT_MARGIN;adjustedHeight*=GUIDED_AUTOFIT_MARGIN;
+  const x1=Math.max(0,centerX-adjustedWidth/2);
+  const x2=Math.min(w,centerX+adjustedWidth/2);
+  const y1=Math.max(0,centerY-adjustedHeight/2);
+  const y2=Math.min(h,centerY+adjustedHeight/2);
+  const scaleX=sourceCanvas.width/w,scaleY=sourceCanvas.height/h;
+  return {x:x1*scaleX,y:y1*scaleY,width:(x2-x1)*scaleX,height:(y2-y1)*scaleY,robust:true};
+}
+function guidedRegressionSlope(points){
+  if(points.length<6)return null;
+  const meanY=points.reduce((sum,point)=>sum+point.y,0)/points.length;
+  const meanX=points.reduce((sum,point)=>sum+point.x,0)/points.length;
+  let numerator=0,denominator=0;
+  for(const point of points){
+    numerator+=(point.y-meanY)*(point.x-meanX);
+    denominator+=(point.y-meanY)*(point.y-meanY);
+  }
+  return denominator?numerator/denominator:null;
+}
+function estimateGuidedDeskewAngle(sourceCanvas,bounds){
+  if(!bounds)return 0;
+  const sample=document.createElement('canvas');
+  const sampleMaxSide=320;
+  const sampleScale=sampleMaxSide/Math.max(sourceCanvas.width,sourceCanvas.height);
+  sample.width=Math.max(1,Math.round(sourceCanvas.width*sampleScale));
+  sample.height=Math.max(1,Math.round(sourceCanvas.height*sampleScale));
+  const ctx=sample.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
+  const image=ctx.getImageData(0,0,sample.width,sample.height);
+  const luma=guidedLumaData(image);
+  const scaleX=sample.width/sourceCanvas.width;
+  const scaleY=sample.height/sourceCanvas.height;
+  const leftExpected=bounds.x*scaleX;
+  const rightExpected=(bounds.x+bounds.width)*scaleX;
+  const top=bounds.y*scaleY;
+  const bottom=(bounds.y+bounds.height)*scaleY;
+  const searchRadius=Math.max(5,Math.round(bounds.width*scaleX*.055));
+  const leftPoints=[],rightPoints=[];
+  for(let y=Math.max(3,Math.round(top+(bottom-top)*.12));y<Math.min(sample.height-3,Math.round(bottom-(bottom-top)*.12));y+=4){
+    for(const [expected,points] of [[leftExpected,leftPoints],[rightExpected,rightPoints]]){
+      let bestX=-1,bestScore=0;
+      const start=Math.max(2,Math.round(expected-searchRadius));
+      const end=Math.min(sample.width-3,Math.round(expected+searchRadius));
+      for(let x=start;x<=end;x++){
+        const score=Math.abs(luma[y*sample.width+x+1]-luma[y*sample.width+x-1]);
+        if(score>bestScore){bestScore=score;bestX=x;}
+      }
+      if(bestX>=0&&bestScore>=10)points.push({x:bestX,y});
+    }
+  }
+  const leftSlope=guidedRegressionSlope(leftPoints);
+  const rightSlope=guidedRegressionSlope(rightPoints);
+  if(leftSlope===null||rightSlope===null)return 0;
+  const leftAngle=Math.atan(leftSlope)*180/Math.PI;
+  const rightAngle=Math.atan(rightSlope)*180/Math.PI;
+  if(Math.abs(leftAngle-rightAngle)>2.2)return 0;
+  const correction=(leftAngle+rightAngle)/2;
+  return Math.abs(correction)>=.35&&Math.abs(correction)<=6?correction:0;
+}
+function rotateGuidedCanvas(sourceCanvas,degrees){
+  if(!degrees)return sourceCanvas;
+  const radians=degrees*Math.PI/180;
+  const cosine=Math.abs(Math.cos(radians)),sine=Math.abs(Math.sin(radians));
+  const output=document.createElement('canvas');
+  output.width=Math.ceil(sourceCanvas.width*cosine+sourceCanvas.height*sine);
+  output.height=Math.ceil(sourceCanvas.width*sine+sourceCanvas.height*cosine);
+  const ctx=output.getContext('2d',{alpha:false});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,output.width,output.height);
+  ctx.translate(output.width/2,output.height/2);
+  ctx.rotate(radians);
+  ctx.drawImage(sourceCanvas,-sourceCanvas.width/2,-sourceCanvas.height/2);
+  return output;
+}
+function autoFitGuidedCardCanvas(sourceCanvas){
+  const initialBounds=detectGuidedCardBoundsRobust(sourceCanvas)||detectGuidedCardBounds(sourceCanvas);
+  const deskewAngle=estimateGuidedDeskewAngle(sourceCanvas,initialBounds);
+  const workingCanvas=rotateGuidedCanvas(sourceCanvas,deskewAngle);
+  const bounds=detectGuidedCardBoundsRobust(workingCanvas)||detectGuidedCardBounds(workingCanvas);
+  const output=document.createElement('canvas');
+  output.width=945;output.height=1320;
+  const ctx=output.getContext('2d',{alpha:false});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,output.width,output.height);
+  if(bounds){
+    ctx.drawImage(workingCanvas,bounds.x,bounds.y,bounds.width,bounds.height,0,0,output.width,output.height);
+    return {canvas:output,fitted:true,bounds,deskewAngle};
+  }
+  ctx.drawImage(sourceCanvas,0,0,sourceCanvas.width,sourceCanvas.height,0,0,output.width,output.height);
+  return {canvas:output,fitted:false,bounds:null,deskewAngle:0};
+}
+function drawGuidedVisibleVideo(video,stage,canvas){
+  const source=guidedVisibleSourceRect(video,stage);
+  if(!source)return false;
+  const sw=stage.clientWidth,sh=stage.clientHeight;
+  const targetW=180,targetH=Math.max(120,Math.round(targetW*sh/sw));
+  canvas.width=targetW;canvas.height=targetH;
+  canvas.getContext('2d',{willReadFrequently:true}).drawImage(
+    video,source.x,source.y,source.width,source.height,0,0,targetW,targetH
+  );
+  return true;
+}
+function guidedFrameCoordinates(stage,frame,canvas){
+  const sr=stage.getBoundingClientRect(),fr=frame.getBoundingClientRect();
+  return {
+    left:(fr.left-sr.left)/sr.width*canvas.width,
+    right:(fr.right-sr.left)/sr.width*canvas.width,
+    top:(fr.top-sr.top)/sr.height*canvas.height,
+    bottom:(fr.bottom-sr.top)/sr.height*canvas.height
+  };
+}
+function guidedLumaData(imageData){
+  const src=imageData.data,luma=new Float32Array(imageData.width*imageData.height);
+  for(let i=0,j=0;i<src.length;i+=4,j++)luma[j]=src[i]*.299+src[i+1]*.587+src[i+2]*.114;
+  return luma;
+}
+function guidedLineScore(luma,w,h,axis,pos,start,end){
+  let sum=0,count=0;
+  if(axis==='x'){
+    const x=Math.max(1,Math.min(w-2,Math.round(pos)));
+    for(let y=Math.max(1,Math.round(start));y<Math.min(h-1,Math.round(end));y+=2){
+      sum+=Math.abs(luma[y*w+x+1]-luma[y*w+x-1]);count++;
+    }
+  }else{
+    const y=Math.max(1,Math.min(h-2,Math.round(pos)));
+    for(let x=Math.max(1,Math.round(start));x<Math.min(w-1,Math.round(end));x+=2){
+      sum+=Math.abs(luma[(y+1)*w+x]-luma[(y-1)*w+x]);count++;
+    }
+  }
+  return count?sum/count:0;
+}
+function guidedBestEdge(luma,w,h,axis,expected,band,start,end){
+  let best={position:expected,score:0};
+  for(let p=Math.round(expected-band);p<=Math.round(expected+band);p++){
+    const score=guidedLineScore(luma,w,h,axis,p,start,end);
+    if(score>best.score)best={position:p,score};
+  }
+  return best;
+}
+function guidedMotion(current,previous,w,rect){
+  if(!previous||previous.length!==current.length)return Infinity;
+  const left=Math.max(0,Math.round(rect.left)),right=Math.min(w,Math.round(rect.right));
+  const top=Math.max(0,Math.round(rect.top)),bottom=Math.round(rect.bottom);
+  let deltaSum=0,count=0;
+  for(let y=top;y<bottom;y+=3){
+    for(let x=left;x<right;x+=3){
+      const i=y*w+x;if(i>=current.length)continue;
+      deltaSum+=current[i]-previous[i];count++;
+    }
+  }
+  if(!count)return Infinity;
+  // Compensa le variazioni globali di esposizione tipiche della camera iPhone.
+  const exposureShift=deltaSum/count;
+  let residual=0;
+  for(let y=top;y<bottom;y+=3){
+    for(let x=left;x<right;x+=3){
+      const i=y*w+x;if(i>=current.length)continue;
+      residual+=Math.abs((current[i]-previous[i])-exposureShift);
+    }
+  }
+  return residual/count;
+}
+function guidedTexture(luma,w,rect){
+  const left=Math.max(0,Math.round(rect.left)),right=Math.min(w,Math.round(rect.right));
+  const top=Math.max(0,Math.round(rect.top)),bottom=Math.round(rect.bottom);
+  let sum=0,sum2=0,count=0;
+  for(let y=top;y<bottom;y+=3){
+    for(let x=left;x<right;x+=3){
+      const v=luma[y*w+x];if(!Number.isFinite(v))continue;
+      sum+=v;sum2+=v*v;count++;
+    }
+  }
+  if(!count)return 0;
+  const mean=sum/count;
+  return Math.sqrt(Math.max(0,sum2/count-mean*mean));
+}
+function guidedEdgeDrift(edges,previous){
+  if(!previous)return Infinity;
+  const shifts=['left','right','top','bottom'].map(key=>
+    Math.abs(edges[key].position-previous[key].position)
+  ).sort((a,b)=>a-b);
+  // Un singolo bordo può oscillare per autofocus o riflessi: usa i tre più coerenti.
+  return (shifts[0]+shifts[1]+shifts[2])/3;
+}
+function guidedEdgesStable(edges,previous,tolerance=4){
+  return guidedEdgeDrift(edges,previous)<=tolerance;
+}
+function recordGuidedStability(score){
+  const window=guidedCameraState.stabilityWindow;
+  window.push(score);
+  while(window.length>GUIDED_STABILITY_WINDOW)window.shift();
+  return window;
+}
+function analyzeGuidedCameraFrame(){
+  if(!guidedCameraState.active||guidedCameraState.captureLocked)return;
+  const video=document.getElementById('guidedCameraVideo');
+  const stage=document.getElementById('guidedCameraStage');
+  const frame=document.getElementById('guidedCardFrame');
+  const canvas=document.getElementById('guidedAnalysisCanvas');
+  if(!video||!stage||!frame||!canvas||video.readyState<2){
+    scheduleGuidedAnalysis();return;
+  }
+  try{
+    if(!drawGuidedVisibleVideo(video,stage,canvas)){scheduleGuidedAnalysis();return;}
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const luma=guidedLumaData(imageData);
+    const rect=guidedFrameCoordinates(stage,frame,canvas);
+    const band=Math.max(4,Math.min(canvas.width*.055,(rect.right-rect.left)*.1));
+    const insetY=(rect.bottom-rect.top)*.1,insetX=(rect.right-rect.left)*.1;
+    const edges={
+      left:guidedBestEdge(luma,canvas.width,canvas.height,'x',rect.left,band,rect.top+insetY,rect.bottom-insetY),
+      right:guidedBestEdge(luma,canvas.width,canvas.height,'x',rect.right,band,rect.top+insetY,rect.bottom-insetY),
+      top:guidedBestEdge(luma,canvas.width,canvas.height,'y',rect.top,band,rect.left+insetX,rect.right-insetX),
+      bottom:guidedBestEdge(luma,canvas.width,canvas.height,'y',rect.bottom,band,rect.left+insetX,rect.right-insetX)
+    };
+    const minEdge=Math.min(edges.left.score,edges.right.score,edges.top.score,edges.bottom.score);
+    const texture=guidedTexture(luma,canvas.width,rect);
+    const motion=guidedMotion(luma,guidedCameraState.previousLuma,canvas.width,rect);
+    const edgeDrift=guidedEdgeDrift(edges,guidedCameraState.previousEdges);
+    const cardLikely=minEdge>=7.5&&texture>=18;
+    const strongStable=cardLikely&&motion<=5.5&&edgeDrift<=3.5;
+    const acceptableStable=cardLikely&&motion<=9&&edgeDrift<=6.5;
+    const realMovement=Number.isFinite(motion)&&(motion>14||edgeDrift>9);
+    const now=performance.now();
+
+    if(!cardLikely){
+      guidedCameraState.absenceFrames++;
+      guidedCameraState.presenceFrames=0;
+      guidedCameraState.stabilityCredit=Math.max(0,guidedCameraState.stabilityCredit-220);
+      if(guidedCameraState.absenceFrames>=2){
+        guidedCameraState.stabilityWindow=[];
+        guidedCameraState.stabilityCredit=0;
+      }
+      setGuidedCameraStatus(texture>=12?'Centra la carta':'Posiziona la carta');
+    }else{
+      guidedCameraState.absenceFrames=0;
+      guidedCameraState.presenceFrames++;
+      if(realMovement){
+        guidedCameraState.stabilityWindow=[];
+        guidedCameraState.stabilityCredit=0;
+        guidedCameraState.lastRealMovementAt=now;
+        recordGuidedStability(0);
+      }else{
+        const sampleScore=strongStable ? 1 : (acceptableStable ? .75 : .55);
+        recordGuidedStability(sampleScore);
+        // I piccoli disturbi rallentano l'avanzamento ma non lo azzerano.
+        const credit=strongStable?GUIDED_SAMPLE_INTERVAL:(acceptableStable?180:140);
+        guidedCameraState.stabilityCredit=Math.min(
+          GUIDED_STABILITY_TARGET+GUIDED_SAMPLE_INTERVAL,
+          guidedCameraState.stabilityCredit+credit
+        );
+      }
+      const quietLongEnough=!guidedCameraState.lastRealMovementAt||
+        now-guidedCameraState.lastRealMovementAt>=660;
+      const ready=guidedCameraState.stabilityCredit>=GUIDED_STABILITY_TARGET&&
+        guidedCameraState.presenceFrames>=5&&quietLongEnough;
+
+      if(ready){
+        setGuidedCameraStatus('Acquisizione…','ready');
+        guidedCameraState.previousLuma=luma;
+        guidedCameraState.previousEdges=edges;
+        captureGuidedFrame('auto');
+        return;
+      }
+      const progress=Math.min(99,Math.round(
+        guidedCameraState.stabilityCredit/GUIDED_STABILITY_TARGET*100
+      ));
+      setGuidedCameraStatus(`Mantieni fermo · ${progress}%`,
+        progress>=60?'ready':'almost');
+    }
+    guidedCameraState.previousLuma=luma;
+    guidedCameraState.previousEdges=edges;
+  }catch(error){
+    console.warn('Analisi camera guidata sospesa:',error);
+    resetGuidedStability();
+    setGuidedCameraStatus('Autoscatto non disponibile. Usa Scatta ora.');
+  }
+  scheduleGuidedAnalysis();
+}
+async function captureGuidedFrame(source='manual'){
+  if(guidedCameraState.captureLocked)return;
+  const video=document.getElementById('guidedCameraVideo');
+  if(!video?.videoWidth||!video?.videoHeight){
+    if(source==='manual')openLegacyCameraFallback();
+    return;
+  }
+  guidedCameraState.captureLocked=true;
+  clearTimeout(guidedCameraState.timer);
+  setGuidedCameraStatus('Acquisizione…','ready');
+  const canvas=document.getElementById('guidedCaptureCanvas');
+  const stage=document.getElementById('guidedCameraStage');
+  const frame=document.getElementById('guidedCardFrame');
+  const sourceRect=stage&&frame?guidedCaptureSourceRect(video,stage,frame,.04):null;
+  if(!sourceRect){
+    guidedCameraState.captureLocked=false;
+    setGuidedCameraStatus('Area carta non disponibile. Usa Scatta ora.');
+    scheduleGuidedAnalysis();
+    return;
+  }
+  const sourceX=Math.max(0,Math.round(sourceRect.x));
+  const sourceY=Math.max(0,Math.round(sourceRect.y));
+  const sourceW=Math.max(1,Math.min(video.videoWidth-sourceX,Math.round(sourceRect.width)));
+  const sourceH=Math.max(1,Math.min(video.videoHeight-sourceY,Math.round(sourceRect.height)));
+  canvas.width=sourceW;canvas.height=sourceH;
+  const ctx=canvas.getContext('2d',{alpha:false});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Acquisisce la sagoma 63:88 con un piccolo margine: l'OCR resta invariato.
+  ctx.drawImage(video,sourceX,sourceY,sourceW,sourceH,0,0,canvas.width,canvas.height);
+  const prepared=prepareScannerCanvasForRecognition(canvas);
+  const blob=await new Promise(resolve=>prepared.canvas.toBlob(resolve,'image/jpeg',.94));
+  if(!blob){
+    guidedCameraState.captureLocked=false;
+    setGuidedCameraStatus('Scatto non riuscito. Usa Scatta ora.');
+    scheduleGuidedAnalysis();
+    return;
+  }
+  const fittedLabel=prepared.fitted?'autofit':'guide';
+  const file=new File([blob],`cardoryx-${source}-${fittedLabel}.jpg`,{
+    type:'image/jpeg',lastModified:Date.now()
+  });
+  closeGuidedCamera();
+  setQueue([file]);
+  // Stesso avvio automatico già usato dallo Scanner continuo:
+  // loadQueueItem() tramite setQueue(), poi un'unica chiamata a runSmartOCR.
+  setTimeout(()=>runSmartOCR(),180);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!guidedCameraState.active||document.hidden)return;
+  const live=guidedCameraState.stream?.getVideoTracks?.().some(track=>track.readyState==='live');
+  if(!live){
+    resetGuidedStability();
+    setGuidedCameraStatus('Fotocamera sospesa. Tocca Riprova.');
+    document.getElementById('guidedRetryBtn')?.classList.add('show');
+    document.getElementById('guidedIOSFallbackBtn')?.classList.add('show');
+  }
+});
+window.addEventListener('orientationchange',()=>{
+  if(guidedCameraState.active)resetGuidedStability();
+});
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
@@ -6727,6 +7544,35 @@ document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}
 </div>
 
 
+
+<div id="guidedCameraModal" class="guided-camera-modal" role="dialog" aria-modal="true" aria-labelledby="guidedCameraTitle">
+  <div class="guided-camera-shell">
+    <div class="guided-camera-top">
+      <button class="btn alt" type="button" onclick="closeGuidedCamera()">Chiudi</button>
+      <strong id="guidedCameraTitle">Inquadra la carta</strong>
+      <button id="guidedRetryBtn" class="btn alt guided-camera-fallback" type="button" onclick="startGuidedCameraStream()">Riprova</button>
+    </div>
+    <div id="guidedCameraStage" class="guided-camera-stage">
+      <video id="guidedCameraVideo" autoplay muted playsinline></video>
+      <div id="guidedCardFrame" class="guided-card-frame" aria-hidden="true"></div>
+      <div id="guidedCameraStatus" class="guided-camera-status" role="status" aria-live="polite">Posiziona la carta</div>
+      <div class="guided-zoom-panel" aria-label="Controllo zoom fotocamera">
+        <button type="button" onclick="stepGuidedZoom(-1)" aria-label="Riduci zoom">−</button>
+        <input id="guidedZoomRange" type="range" min="1" max="2.5" step="0.1" value="1" oninput="applyGuidedZoom(this.value)" aria-label="Zoom">
+        <button type="button" onclick="stepGuidedZoom(1)" aria-label="Aumenta zoom">+</button>
+        <output id="guidedZoomValue" class="guided-zoom-value" for="guidedZoomRange">1,0×</output>
+        <span id="guidedZoomMode" class="guided-zoom-mode">Zoom digitale compatibile</span>
+      </div>
+    </div>
+    <canvas id="guidedAnalysisCanvas" width="180" height="260" hidden></canvas>
+    <canvas id="guidedCaptureCanvas" hidden></canvas>
+    <div class="guided-camera-controls">
+      <button id="guidedManualCaptureBtn" class="btn big" type="button" onclick="captureGuidedFrame('manual')">Scatta ora</button>
+      <button id="guidedIOSFallbackBtn" class="btn alt guided-camera-fallback" type="button" onclick="openLegacyCameraFallback()">Fotocamera iOS</button>
+      <p class="guided-camera-hint">Usa lo zoom per riempire il riquadro. Autoscatto dopo circa 1,6–2,4 s; Scatta ora resta sempre disponibile.</p>
+    </div>
+  </div>
+</div>
 <div id="photoCropModal" class="photo-crop-modal">
   <div class="crop-head"><b>Ritaglia e raddrizza la carta</b><button class="btn alt" type="button" onclick="closeCardCropper()">✕</button></div>
   <div class="crop-stage"><canvas id="cropCanvas" width="630" height="880"></canvas></div>
