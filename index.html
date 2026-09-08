@@ -4627,9 +4627,30 @@ function cardmarketValueForVariant(cm,variant){
 // We only map it to Reverse Holo when the card's documented physical finishes
 // prove that Reverse exists and a regular Holo does not. If both are possible,
 // Cardoryx fails closed instead of guessing.
+// Known upstream identity conflicts are blocked only while the conflicting
+// Cardmarket product id is still present.  If TCGdex corrects the mapping, the
+// guard automatically stops applying instead of substituting a guessed price.
+function knownCardmarketIdentityConflict(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+  const local=canonicalPrintedLocalId(card?.localId||'');
+  const name=normText(card?.name||'');
+  const product=Number(card?.pricing?.cardmarket?.idProduct||0);
+  const isTorkoal29=id==='sm12-29'||(setId==='sm12'&&local==='29'&&name==='torkoal');
+  if(isTorkoal29 && product===398524){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · associazione prodotto da verificare',
+      reason:'TCGdex associa lo stesso prodotto Cardmarket a Torkoal 29/236 e 237/236'
+    };
+  }
+  return null;
+}
 function cardmarketValueForCardVariant(card,variant){
   const cm=card?.pricing?.cardmarket;
   if(!cm)return {value:0,kind:'none'};
+  const identityConflict=knownCardmarketIdentityConflict(card);
+  if(identityConflict)return {value:0,...identityConflict};
   const v=canonicalVariant(variant||'Normal');
   const n=k=>{const x=Number(cm[k]||0);return Number.isFinite(x)&&x>0?x:0};
   const standard=()=>n('trend')||n('avg7')||n('avg30')||n('avg')||n('low');
@@ -4947,10 +4968,13 @@ async function renderScanValue(card){
 
     const info=cardmarketValueForCardVariant(scanPriceCard||card,selVariant);
     const cmStats=cardmarketStatsForCardVariant(scanPriceCard||card,selVariant);
-    const exactNeeded=info.kind==='needs-exact-variant';
+    const identityConflict=info.kind==='identity-mismatch';
+    const exactNeeded=info.kind==='needs-exact-variant'||identityConflict;
     valueEl.textContent=info.value?scanEuro(info.value):(exactNeeded?'Valore da verificare':'Valore non disponibile');
 
-    if(exactNeeded){
+    if(identityConflict){
+      metaEl.textContent=info.reason||'Cardmarket · associazione prodotto da verificare';
+    }else if(exactNeeded){
       metaEl.textContent='Cardmarket · serve il prezzo specifico della variante selezionata';
     }else if(!cm){
       metaEl.textContent='Nessun prezzo Cardmarket disponibile per questa carta';
@@ -5773,7 +5797,8 @@ function renderCardmarketReference(c){
   }
   const source=info.source||'Cardmarket';
   const updated=info.updated?` · aggiornato ${esc(info.updated)}`:'';
-  return `<div class="detail-section detail-market"><h4>Cardmarket</h4><div class="detail-market-value">${euro(state.value)}</div><div class="small">${esc(source)} · valore per copia${updated}</div></div>`;
+  const conditionNote=` · Price Guide non specifico per condizione (${esc(c?.condition||'NM')})`;
+  return `<div class="detail-section detail-market"><h4>Cardmarket</h4><div class="detail-market-value">${euro(state.value)}</div><div class="small">${esc(source)} · valore per copia${conditionNote}${updated}</div></div>`;
 }
 function renderRetailReference(c){
   const r=retailReferenceForCard(c);
@@ -5854,6 +5879,7 @@ function euro(v){return Number.isFinite(Number(v))?Number(v).toLocaleString('it-
 function cardValuationState(c){
   const info=cardPriceInfo(c);
   if(info.value!=null)return {status:info.ambiguous?'estimated':'priced',value:info.value,info,message:info.ambiguous?`Serie compatibili ${info.seriesCandidates.join(' / ')} · trend ${euro(info.minValue)}–${euro(info.maxValue)}`:''};
+  if(info.kind==='identity-mismatch')return {status:'unavailable',value:null,info,message:info.reason||'Associazione Cardmarket da verificare'};
   if(info.kind==='play-offers-only')return {status:'estimated',value:null,info,message:`Series ${info.seriesCandidates.join(' / ')} · offerte Cardmarket da ${euro(info.offerLow)} a ${euro(info.offerHigh)} · trend non disponibile`};
   if(info.kind==='play-live-ambiguous')return {status:'estimated',value:null,info,message:`Più versioni Cardmarket · ${info.minValue!=null&&info.maxValue!=null?`${euro(info.minValue)}–${euro(info.maxValue)}`:'seleziona la finitura corretta'}`};
   const stamp=canonicalStamp(c?.stamp||'None'),ps=normalizedPlaySeries(c?.playSeries||'');
@@ -5911,7 +5937,7 @@ function cardPriceInfo(c){
   const energyFallback=verifiedStandardEnergyPrice(c,variant);
   if(energyFallback && !c?.pricing?.cardmarket){const value=Number(energyFallback.trend||energyFallback.avg7||energyFallback.avg30||energyFallback.low||0);return {value:value>0?value:null,exact:true,source:energyFallback.source||'Cardmarket',updated:energyFallback.verified||'',stamp,series}}
   const info=cardmarketValueForCardVariant(c,variant),value=Number(info?.value||0);
-  return {value:value>0?value:null,exact:false,source:'Cardmarket',updated:c?.priceUpdatedAt||'',kind:info?.kind||'none',stamp,series};
+  return {value:value>0?value:null,exact:false,source:info?.source||'Cardmarket',reason:info?.reason||'',updated:c?.priceUpdatedAt||'',kind:info?.kind||'none',conditionSpecific:false,stamp,series};
 }
 function cardUnitPrice(c){return cardPriceInfo(c).value}
 function cardPriceHtml(c){
@@ -5925,7 +5951,7 @@ function cardPriceHtml(c){
     const title=state.status==='estimated'?'Valore indicativo':(state.status==='ambiguous'?'Valore da verificare':'Valore non disponibile');return `<div class="price-main" style="color:#6b7280">${title}</div><div class="price-sub">${esc(state.message||'Cardmarket · nessun prezzo associato')}</div>`
   }
   const total=u*q,label=info.ambiguous?'Stima da trend Cardmarket':(info.exact?'Cardmarket · versione verificata':'Trend Cardmarket'),range=info.ambiguous&&info.minValue!=null?` · range ${euro(info.minValue)}–${euro(info.maxValue)}`:'',series=info.seriesCandidates?.length?` · Series ${info.seriesCandidates.join('/')}`:'';
-  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">${label} · ${esc(combo)}${series}${range}</div>`;
+  return `<div class="price-main">${euro(total)}${q>1?` <span class="small">(${euro(u)} × ${q})</span>`:''}</div><div class="price-sub">${label} · ${esc(combo)}${series}${range} · non specifico per condizione</div>`;
 }
 function collectionMarketValue(){return db.reduce((sum,c)=>{const u=cardUnitPrice(c);return sum+(u==null?0:u*(Number(c.qty)||1))},0)}
 function pricedCopies(){return db.reduce((n,c)=>n+(cardUnitPrice(c)==null?0:(Number(c.qty)||1)),0)}
@@ -5943,22 +5969,33 @@ async function fetchFullCardForPrice(id){
 }
 function priceSetMatches(saved,candidate){
   const a=normText(saved?.set||''),b=normText(candidate?.set?.name||'');
-  return !a||!b||a===b||a.includes(b)||b.includes(a);
+  const savedSetId=String(saved?._cardoryxSetId||'').trim().toLowerCase();
+  const candidateSetId=String(candidate?.set?.id||'').trim().toLowerCase();
+  if(savedSetId&&candidateSetId)return savedSetId===candidateSetId;
+  return !!a&&!!b&&a===b;
 }
 async function resolveTcgdexIdForRecord(c){
   if(c?.tcgdexId)return c.tcgdexId;
   if(c?.id && !String(c.id).startsWith('mee-local-')){
     try{const r=await fetch(`${API}/cards/${encodeURIComponent(c.id)}`);if(r.ok){const f=await r.json();if(f?.id){c.tcgdexId=f.id;return f.id}}}catch(e){}
   }
-  const name=String(c?.name||'').trim();if(!name)return null;
+  const name=String(c?.name||'').trim();if(!name||!c?.localId||!c?.set)return null;
   let briefs=await apiCardsQuery({name});if(!briefs.length)return null;
-  let pool=briefs;
-  if(c.localId){const exact=pool.filter(x=>sameCollectorNumber(x.localId,c.localId));if(exact.length)pool=exact}
+  // A price refresh must never reconstruct identity from a partial best score.
+  // Require the complete collector id, preserving alphabetic prefixes.
+  let pool=briefs.filter(x=>sameExactLocalId(x.localId,c.localId));
+  if(!pool.length)return null;
   const fulls=[];
   for(const br of pool.slice(0,35)){try{const f=await fetchFullCandidate(br);if(f?.id)fulls.push(f)}catch(e){}}
   if(!fulls.length)return null;
-  const ranked=fulls.map(f=>{let score=0;if(normText(f.name||'')===normText(name))score+=100;if(c.localId&&sameCollectorNumber(f.localId,c.localId))score+=80;if(priceSetMatches(c,f))score+=120;return {f,score}}).sort((x,y)=>y.score-x.score);
-  const best=ranked[0]?.f;if(!best?.id)return null;
+  const exact=fulls.filter(f=>
+    normText(f.name||'')===normText(name) &&
+    sameExactLocalId(f.localId,c.localId) &&
+    priceSetMatches(c,f)
+  );
+  const unique=[...new Map(exact.map(f=>[f.id,f])).values()];
+  if(unique.length!==1)return null;
+  const best=unique[0];
   c.id=best.id;c.tcgdexId=best.id;if(!c.set&&best.set?.name)c.set=best.set.name;return best.id;
 }
 async function refreshPriceForRecord(c){
@@ -5982,9 +6019,15 @@ async function refreshAllPrices(){
 // V2.1.36 — dynamic deck allocations + sale deck lifecycle. V2.1.35 catalog grouping remains: identical physical printing/condition records are
 // shown as one card even when copies have different allocations/statuses.
 // Storage remains unchanged: no migration and no loss of per-copy allocation.
-function collectionIdentityKey(c){
+function physicalCardIdentityKey(c){
   const identity=String(c?.id||c?.tcgdexId||`${c?.set||''}::${c?.localId||''}::${c?.name||''}`).toLowerCase();
-  return [identity,canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),normalizedPlaySeries(c?.playSeries||''),c?.condition||'NM'].join('|||');
+  return [identity,canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),normalizedPlaySeries(c?.playSeries||''),normText(c?.language||'Italiano')].join('|||');
+}
+function collectionIdentityKey(c){
+  // Condition describes the stored copy, not its physical printing identity.
+  // It remains a catalogue grouping dimension so existing editing/allocation
+  // behaviour is preserved without changing the storage schema.
+  return [physicalCardIdentityKey(c),c?.condition||'NM'].join('|||');
 }
 function catalogGroups(records=db){
   const m=new Map();
