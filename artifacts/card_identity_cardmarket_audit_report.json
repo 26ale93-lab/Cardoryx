@@ -1,0 +1,522 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-09-08T22:58:34.532679+00:00",
+  "mainSha": "367d91663a219349a503baa0c7f89b3515f24a3b",
+  "source": {
+    "tcgdex": [
+      "https://api.tcgdex.net/v2/it",
+      "https://api.tcgdex.net/v2/en"
+    ],
+    "cardmarket": "official Product Catalogue + Price Guide",
+    "indexHtml": "main/index.html",
+    "productionDataWritten": false
+  },
+  "scope": {
+    "tcgdexRecordsInspected": 6,
+    "cardmarketProductsRequested": [
+      398524,
+      780970
+    ],
+    "catalogCoverageBaseline": {
+      "source": "Full Catalog Coverage Post-Merge audit (reused; scanner merge did not change matching)",
+      "physicalEligible": 21534,
+      "recognizedUnique": 9466,
+      "recognizedAmbiguous": 11249,
+      "notRecognized": 819,
+      "regressions": 0
+    }
+  },
+  "torkoal": {
+    "number29": [
+      {
+        "locale": "it",
+        "id": "sm12-29",
+        "name": "Torkoal",
+        "localId": "29",
+        "setId": "sm12",
+        "setName": "Eclissi Cosmica",
+        "rarity": "Non comune",
+        "variants": {
+          "firstEdition": false,
+          "holo": false,
+          "normal": true,
+          "reverse": false,
+          "wPromo": false
+        },
+        "variants_detailed": [
+          {
+            "type": "normal",
+            "size": "Standard",
+            "variantId": "generated"
+          }
+        ],
+        "cardmarket": {
+          "updated": "2026-09-08T17:33:02.663Z",
+          "unit": "EUR",
+          "idProduct": 398524,
+          "avg": 10.41,
+          "low": 4,
+          "trend": 8.92,
+          "avg1": 9.99,
+          "avg7": 8.98,
+          "avg30": 10.13,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 6.09,
+          "avg1-holo": 6.75,
+          "avg7-holo": 5.43,
+          "avg30-holo": 6.25
+        },
+        "cardmarketProductId": 398524
+      },
+      {
+        "locale": "en",
+        "id": "sm12-29",
+        "name": "Torkoal",
+        "localId": "29",
+        "setId": "sm12",
+        "setName": "Cosmic Eclipse",
+        "rarity": "Uncommon",
+        "variants": {
+          "firstEdition": false,
+          "holo": false,
+          "normal": true,
+          "reverse": false,
+          "wPromo": false
+        },
+        "variants_detailed": [
+          {
+            "type": "normal",
+            "size": "standard",
+            "variantId": "generated"
+          }
+        ],
+        "cardmarket": {
+          "updated": "2026-09-08T17:33:02.663Z",
+          "unit": "EUR",
+          "idProduct": 398524,
+          "avg": 10.41,
+          "low": 4,
+          "trend": 8.92,
+          "avg1": 9.99,
+          "avg7": 8.98,
+          "avg30": 10.13,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 6.09,
+          "avg1-holo": 6.75,
+          "avg7-holo": 5.43,
+          "avg30-holo": 6.25
+        },
+        "cardmarketProductId": 398524
+      }
+    ],
+    "number237": [
+      {
+        "locale": "it",
+        "id": "sm12-237",
+        "name": "Torkoal",
+        "localId": "237",
+        "setId": "sm12",
+        "setName": "Eclissi Cosmica",
+        "rarity": "Segreto rara",
+        "variants": {
+          "firstEdition": false,
+          "holo": false,
+          "normal": true,
+          "reverse": false,
+          "wPromo": false
+        },
+        "variants_detailed": [
+          {
+            "type": "normal",
+            "size": "Standard",
+            "variantId": "generated"
+          }
+        ],
+        "cardmarket": {
+          "updated": "2026-09-08T17:33:02.663Z",
+          "unit": "EUR",
+          "idProduct": 398524,
+          "avg": 10.41,
+          "low": 4,
+          "trend": 8.92,
+          "avg1": 9.99,
+          "avg7": 8.98,
+          "avg30": 10.13,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 6.09,
+          "avg1-holo": 6.75,
+          "avg7-holo": 5.43,
+          "avg30-holo": 6.25
+        },
+        "cardmarketProductId": 398524
+      },
+      {
+        "locale": "en",
+        "id": "sm12-237",
+        "name": "Torkoal",
+        "localId": "237",
+        "setId": "sm12",
+        "setName": "Cosmic Eclipse",
+        "rarity": "Secret Rare",
+        "variants": {
+          "firstEdition": false,
+          "holo": false,
+          "normal": true,
+          "reverse": false,
+          "wPromo": false
+        },
+        "variants_detailed": [
+          {
+            "type": "normal",
+            "size": "standard",
+            "variantId": "generated"
+          }
+        ],
+        "cardmarket": {
+          "updated": "2026-09-08T17:33:02.663Z",
+          "unit": "EUR",
+          "idProduct": 398524,
+          "avg": 10.41,
+          "low": 4,
+          "trend": 8.92,
+          "avg1": 9.99,
+          "avg7": 8.98,
+          "avg30": 10.13,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 6.09,
+          "avg1-holo": 6.75,
+          "avg7-holo": 5.43,
+          "avg30-holo": 6.25
+        },
+        "cardmarketProductId": 398524
+      }
+    ],
+    "distinctCardmarketProducts": false,
+    "number29ProductIds": [
+      398524
+    ],
+    "number237ProductIds": [
+      398524
+    ],
+    "priceRows": {
+      "398524": {
+        "updated": "2026-09-08T17:33:02.663Z",
+        "unit": "EUR",
+        "idProduct": 398524,
+        "avg": 10.41,
+        "low": 4,
+        "trend": 8.92,
+        "avg1": 9.99,
+        "avg7": 8.98,
+        "avg30": 10.13,
+        "avg-holo": null,
+        "low-holo": null,
+        "trend-holo": 6.09,
+        "avg1-holo": 6.75,
+        "avg7-holo": 5.43,
+        "avg30-holo": 6.25
+      },
+      "780970": {
+        "updated": "2026-09-08T17:33:02.461Z",
+        "unit": "EUR",
+        "idProduct": 780970,
+        "avg": 16.02,
+        "low": 6,
+        "trend": 15.13,
+        "avg1": 16.56,
+        "avg7": 15.07,
+        "avg30": 15.92,
+        "avg-holo": null,
+        "low-holo": null,
+        "trend-holo": 0,
+        "avg1-holo": null,
+        "avg7-holo": null,
+        "avg30-holo": null
+      }
+    },
+    "errors": []
+  },
+  "zorua": {
+    "number075": [
+      {
+        "locale": "it",
+        "id": "sv06.5-075",
+        "name": "Zorua",
+        "localId": "075",
+        "setId": "sv06.5",
+        "setName": "Segreto Fiabesco",
+        "rarity": "Rara illustrazione",
+        "variants": {
+          "firstEdition": false,
+          "holo": true,
+          "normal": false,
+          "reverse": false,
+          "wPromo": false
+        },
+        "variants_detailed": [
+          {
+            "type": "Olografica",
+            "size": "Standard",
+            "thirdParty": {
+              "cardmarket": 780970,
+              "tcgplayer": 560386
+            },
+            "variantId": "jr7oetx1mqug9",
+            "pricing": {
+              "cardmarket": {
+                "updated": "2026-09-08T17:33:02.461Z",
+                "unit": "EUR",
+                "idProduct": 780970,
+                "avg": 16.02,
+                "low": 6,
+                "trend": 15.13,
+                "avg1": 16.56,
+                "avg7": 15.07,
+                "avg30": 15.92,
+                "avg-holo": null,
+                "low-holo": null,
+                "trend-holo": 0,
+                "avg1-holo": null,
+                "avg7-holo": null,
+                "avg30-holo": null
+              },
+              "tcgplayer": {
+                "unit": "USD",
+                "updated": "2026-09-08T17:33:10.761Z",
+                "holofoil": {
+                  "productId": 560386,
+                  "lowPrice": 22.5,
+                  "midPrice": 29.04,
+                  "highPrice": 999,
+                  "marketPrice": 27.22,
+                  "directLowPrice": 29.28
+                }
+              }
+            }
+          }
+        ],
+        "cardmarket": {
+          "updated": "2026-09-08T17:33:02.461Z",
+          "unit": "EUR",
+          "idProduct": 780970,
+          "avg": 16.02,
+          "low": 6,
+          "trend": 15.13,
+          "avg1": 16.56,
+          "avg7": 15.07,
+          "avg30": 15.92,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "cardmarketProductId": 780970
+      },
+      {
+        "locale": "en",
+        "id": "sv06.5-075",
+        "name": "Zorua",
+        "localId": "075",
+        "setId": "sv06.5",
+        "setName": "Shrouded Fable",
+        "rarity": "Illustration rare",
+        "variants": {
+          "firstEdition": false,
+          "holo": true,
+          "normal": false,
+          "reverse": false,
+          "wPromo": false
+        },
+        "variants_detailed": [
+          {
+            "type": "holo",
+            "size": "standard",
+            "thirdParty": {
+              "cardmarket": 780970,
+              "tcgplayer": 560386
+            },
+            "variantId": "jr7oetx1mqug9",
+            "pricing": {
+              "cardmarket": {
+                "updated": "2026-09-08T17:33:02.461Z",
+                "unit": "EUR",
+                "idProduct": 780970,
+                "avg": 16.02,
+                "low": 6,
+                "trend": 15.13,
+                "avg1": 16.56,
+                "avg7": 15.07,
+                "avg30": 15.92,
+                "avg-holo": null,
+                "low-holo": null,
+                "trend-holo": 0,
+                "avg1-holo": null,
+                "avg7-holo": null,
+                "avg30-holo": null
+              },
+              "tcgplayer": {
+                "unit": "USD",
+                "updated": "2026-09-08T17:33:10.761Z",
+                "holofoil": {
+                  "productId": 560386,
+                  "lowPrice": 22.5,
+                  "midPrice": 29.04,
+                  "highPrice": 999,
+                  "marketPrice": 27.22,
+                  "directLowPrice": 29.28
+                }
+              }
+            }
+          }
+        ],
+        "cardmarket": {
+          "updated": "2026-09-08T17:33:02.461Z",
+          "unit": "EUR",
+          "idProduct": 780970,
+          "avg": 16.02,
+          "low": 6,
+          "trend": 15.13,
+          "avg1": 16.56,
+          "avg7": 15.07,
+          "avg30": 15.92,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "cardmarketProductId": 780970
+      }
+    ],
+    "officialPriceGuideConditionFields": [],
+    "priceGuideSupportsConditionSpecificValues": false,
+    "priceRows": {
+      "780970": {
+        "updated": "2026-09-08T17:33:02.461Z",
+        "unit": "EUR",
+        "idProduct": 780970,
+        "avg": 16.02,
+        "low": 6,
+        "trend": 15.13,
+        "avg1": 16.56,
+        "avg7": 15.07,
+        "avg30": 15.92,
+        "avg-holo": null,
+        "low-holo": null,
+        "trend-holo": 0,
+        "avg1-holo": null,
+        "avg7-holo": null,
+        "avg30-holo": null
+      }
+    },
+    "errors": []
+  },
+  "sourceCodeAudit": {
+    "identity": {
+      "collectionKeyIncludesCondition": true,
+      "collectionKeyIncludesLanguage": false,
+      "tcgdexIdPrimary": true
+    },
+    "resolver": {
+      "refreshRanksCandidates": true,
+      "refreshRequiresUniqueWinner": false,
+      "setMatchUsesContains": true,
+      "collectorComparisonDropsAlphaPrefix": true,
+      "priceRefreshUsesResolvedTcgdexCard": true
+    },
+    "pricing": {
+      "conditionReadByCardPriceInfo": false,
+      "reverseFailsClosed": true,
+      "ballVariantsRequireExactMapping": true,
+      "collectionUsesCardPriceInfo": true
+    },
+    "search": {
+      "numberTotal": true,
+      "nameOnly": true,
+      "numberTotalExactName": true,
+      "numberName": false,
+      "setName": false,
+      "numberOnly": false,
+      "setOnly": false,
+      "paginationSix": true,
+      "nameOnlyNeverAutoSelect": true
+    }
+  },
+  "variantAudit": {
+    "canonicalFinishesPresent": {
+      "Normal": true,
+      "Holo": true,
+      "Reverse Holo": true,
+      "Master Ball Reverse Holo": true,
+      "Poké Ball Reverse Holo": true,
+      "Cosmos Holo": true
+    },
+    "normalHoloFallbackBlocked": true,
+    "ballVariantsExactOnly": true,
+    "conditionChangesPhysicalIdentityKey": true
+  },
+  "searchAudit": {
+    "numberTotal": true,
+    "nameOnly": true,
+    "numberTotalExactName": true,
+    "numberName": false,
+    "setName": false,
+    "numberOnly": false,
+    "setOnly": false,
+    "paginationSix": true,
+    "nameOnlyNeverAutoSelect": true
+  },
+  "catalogAudit": {
+    "knownBaseline": {
+      "unique": 9466,
+      "ambiguous": 11249,
+      "notRecognized": 819
+    },
+    "highRiskRefreshFallback": true,
+    "alphaNumericCollisionRisk": true
+  },
+  "duplicatesAmongRegressionQueries": [],
+  "cardmarketPriceGuideFields": [
+    "avg",
+    "avg-holo",
+    "avg1",
+    "avg1-holo",
+    "avg30",
+    "avg30-holo",
+    "avg7",
+    "avg7-holo",
+    "idProduct",
+    "low",
+    "low-holo",
+    "trend",
+    "trend-holo",
+    "unit",
+    "updated"
+  ],
+  "safety": {
+    "scannerModified": false,
+    "retailModified": false,
+    "cardmarketDataModified": false,
+    "collectionDataModified": false,
+    "fuzzyIdentityMatchingAdded": false
+  },
+  "findings": {
+    "torkoalCrossNumberRiskConfirmed": true,
+    "conditionSpecificPriceUnavailable": true,
+    "conditionIgnoredByCurrentPriceResolver": true,
+    "legacyRefreshCanAutoResolveAmbiguousCandidate": true,
+    "manualSearchMissingRequestedPartialModes": [
+      "numberName",
+      "setName",
+      "numberOnly",
+      "setOnly"
+    ]
+  }
+}
