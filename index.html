@@ -6759,10 +6759,12 @@ document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}
 const guidedCameraState={
   active:false,stream:null,timer:0,captureLocked:false,previousLuma:null,
   previousEdges:null,stableSince:0,presenceFrames:0,lastAnalysisAt:0,
+  stabilityWindow:[],absenceFrames:0,
   zoom:1,zoomMode:'digital',zoomMin:1,zoomMax:2.5,zoomStep:.1
 };
 const GUIDED_SAMPLE_INTERVAL=220;
-const GUIDED_STABLE_MS=1600;
+const GUIDED_STABILITY_SAMPLES=8;
+const GUIDED_STABILITY_WINDOW=9;
 
 function setGuidedCameraStatus(message,state='neutral'){
   const status=document.getElementById('guidedCameraStatus');
@@ -6778,6 +6780,8 @@ function resetGuidedStability(){
   guidedCameraState.previousEdges=null;
   guidedCameraState.stableSince=0;
   guidedCameraState.presenceFrames=0;
+  guidedCameraState.stabilityWindow=[];
+  guidedCameraState.absenceFrames=0;
 }
 async function openGuidedCamera(){
   const modal=document.getElementById('guidedCameraModal');
@@ -7026,11 +7030,20 @@ function guidedTexture(luma,w,rect){
   const mean=sum/count;
   return Math.sqrt(Math.max(0,sum2/count-mean*mean));
 }
-function guidedEdgesStable(edges,previous){
-  if(!previous)return false;
-  return ['left','right','top','bottom'].every(key=>
-    Math.abs(edges[key].position-previous[key].position)<=2
-  );
+function guidedEdgeDrift(edges,previous){
+  if(!previous)return Infinity;
+  return Math.max(...['left','right','top','bottom'].map(key=>
+    Math.abs(edges[key].position-previous[key].position)
+  ));
+}
+function guidedEdgesStable(edges,previous,tolerance=4){
+  return guidedEdgeDrift(edges,previous)<=tolerance;
+}
+function recordGuidedStability(score){
+  const window=guidedCameraState.stabilityWindow;
+  window.push(score);
+  while(window.length>GUIDED_STABILITY_WINDOW)window.shift();
+  return window;
 }
 function analyzeGuidedCameraFrame(){
   if(!guidedCameraState.active||guidedCameraState.captureLocked)return;
@@ -7058,29 +7071,41 @@ function analyzeGuidedCameraFrame(){
     const minEdge=Math.min(edges.left.score,edges.right.score,edges.top.score,edges.bottom.score);
     const texture=guidedTexture(luma,canvas.width,rect);
     const motion=guidedMotion(luma,guidedCameraState.previousLuma,canvas.width,rect);
-    const edgeStable=guidedEdgesStable(edges,guidedCameraState.previousEdges);
+    const edgeDrift=guidedEdgeDrift(edges,guidedCameraState.previousEdges);
     const cardLikely=minEdge>=7.5&&texture>=18;
-    const sceneStable=motion<=3.8&&edgeStable;
+    const strongStable=cardLikely&&motion<=7.5&&edgeDrift<=4;
+    const acceptableStable=cardLikely&&motion<=11&&edgeDrift<=6;
+    const realMovement=Number.isFinite(motion)&&(motion>16||edgeDrift>10);
 
     if(!cardLikely){
-      guidedCameraState.presenceFrames=0;guidedCameraState.stableSince=0;
+      guidedCameraState.absenceFrames++;
+      guidedCameraState.presenceFrames=0;
+      if(guidedCameraState.absenceFrames>=2)guidedCameraState.stabilityWindow=[];
+      else recordGuidedStability(0);
       setGuidedCameraStatus(texture>=12?'Centra la carta':'Posiziona la carta');
     }else{
+      guidedCameraState.absenceFrames=0;
       guidedCameraState.presenceFrames++;
-      if(sceneStable&&guidedCameraState.presenceFrames>=2){
-        if(!guidedCameraState.stableSince)guidedCameraState.stableSince=performance.now();
-        const held=performance.now()-guidedCameraState.stableSince;
-        if(held>=GUIDED_STABLE_MS){
-          setGuidedCameraStatus('Acquisizione…','ready');
-          guidedCameraState.previousLuma=luma;guidedCameraState.previousEdges=edges;
-          captureGuidedFrame('auto');
-          return;
-        }
-        setGuidedCameraStatus('Mantieni fermo',held>700?'ready':'almost');
+      if(realMovement){
+        guidedCameraState.stabilityWindow=[];
+        recordGuidedStability(0);
       }else{
-        guidedCameraState.stableSince=0;
-        setGuidedCameraStatus('Mantieni fermo','almost');
+        recordGuidedStability(strongStable ? 1 : (acceptableStable ? .65 : 0));
       }
+      const stability=guidedCameraState.stabilityWindow;
+      const score=stability.reduce((sum,value)=>sum+value,0);
+      const strongFrames=stability.filter(value=>value===1).length;
+      const lastTwo=stability.length>=2&&stability.slice(-2).every(value=>value>=.65);
+      const ready=stability.length>=GUIDED_STABILITY_SAMPLES&&score>=5.9&&strongFrames>=4&&lastTwo;
+
+      if(ready){
+        setGuidedCameraStatus('Acquisizione…','ready');
+        guidedCameraState.previousLuma=luma;guidedCameraState.previousEdges=edges;
+        captureGuidedFrame('auto');
+        return;
+      }
+      const progress=Math.min(1,score/5.9);
+      setGuidedCameraStatus('Mantieni fermo',progress>=.62?'ready':'almost');
     }
     guidedCameraState.previousLuma=luma;
     guidedCameraState.previousEdges=edges;
@@ -7123,6 +7148,9 @@ async function captureGuidedFrame(source='manual'){
   });
   closeGuidedCamera();
   setQueue([file]);
+  // Stesso avvio automatico già usato dallo Scanner continuo:
+  // loadQueueItem() tramite setQueue(), poi un'unica chiamata a runSmartOCR.
+  setTimeout(()=>runSmartOCR(),180);
 }
 document.addEventListener('visibilitychange',()=>{
   if(!guidedCameraState.active||document.hidden)return;
