@@ -6986,6 +6986,94 @@ function guidedCaptureSourceRect(video,stage,frame,margin=.04){
     height:visible.height*(normalizedBottom-normalizedTop)
   };
 }
+function guidedMedian(values){
+  if(!values.length)return 0;
+  const sorted=[...values].sort((a,b)=>a-b);
+  const middle=Math.floor(sorted.length/2);
+  return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;
+}
+function guidedProfilePeak(profile,startFraction,endFraction,direction='max'){
+  const start=Math.max(1,Math.floor(profile.length*startFraction));
+  const end=Math.min(profile.length-2,Math.ceil(profile.length*endFraction));
+  const region=profile.slice(start,end+1);
+  const baseline=guidedMedian(region);
+  const maximum=Math.max(...region);
+  const threshold=baseline+(maximum-baseline)*.62;
+  let index=-1;
+  if(direction==='first'){
+    for(let i=start;i<=end;i++)if(profile[i]>=threshold){index=i;break;}
+  }else if(direction==='last'){
+    for(let i=end;i>=start;i--)if(profile[i]>=threshold){index=i;break;}
+  }else{
+    for(let i=start;i<=end;i++)if(index<0||profile[i]>profile[index])index=i;
+  }
+  return {index,score:index>=0?profile[index]:0,baseline,contrast:maximum-baseline};
+}
+function detectGuidedCardBounds(sourceCanvas){
+  const sample=document.createElement('canvas');
+  sample.width=240;
+  sample.height=Math.max(280,Math.round(240*sourceCanvas.height/sourceCanvas.width));
+  const ctx=sample.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
+  const image=ctx.getImageData(0,0,sample.width,sample.height);
+  const luma=guidedLumaData(image);
+  const w=sample.width,h=sample.height;
+  const vertical=new Array(w).fill(0),horizontal=new Array(h).fill(0);
+  for(let x=2;x<w-2;x++){
+    let sum=0,count=0;
+    for(let y=Math.round(h*.06);y<Math.round(h*.94);y+=2){
+      let local=0;
+      for(let dx=-2;dx<=2;dx++){
+        local=Math.max(local,Math.abs(luma[y*w+x+dx+1]-luma[y*w+x+dx-1]));
+      }
+      sum+=local;count++;
+    }
+    vertical[x]=count?sum/count:0;
+  }
+  for(let y=2;y<h-2;y++){
+    let sum=0,count=0;
+    for(let x=Math.round(w*.06);x<Math.round(w*.94);x+=2){
+      let local=0;
+      for(let dy=-2;dy<=2;dy++){
+        local=Math.max(local,Math.abs(luma[(y+dy+1)*w+x]-luma[(y+dy-1)*w+x]));
+      }
+      sum+=local;count++;
+    }
+    horizontal[y]=count?sum/count:0;
+  }
+  const left=guidedProfilePeak(vertical,.02,.36);
+  const right=guidedProfilePeak(vertical,.64,.98);
+  const top=guidedProfilePeak(horizontal,.02,.34);
+  const bottom=guidedProfilePeak(horizontal,.66,.98);
+  if([left,right,top,bottom].some(edge=>edge.index<0||edge.contrast<2.2))return null;
+  const width=right.index-left.index,height=bottom.index-top.index;
+  const ratio=width/height;
+  if(width<w*.52||height<h*.58||ratio<.54||ratio>.92)return null;
+
+  let x1=left.index,y1=top.index,x2=right.index,y2=bottom.index;
+  const centerX=(x1+x2)/2,centerY=(y1+y2)/2,targetRatio=63/88;
+  let adjustedWidth=x2-x1,adjustedHeight=y2-y1;
+  if(adjustedWidth/adjustedHeight>targetRatio)adjustedHeight=adjustedWidth/targetRatio;
+  else adjustedWidth=adjustedHeight*targetRatio;
+  adjustedWidth*=1.025;adjustedHeight*=1.025;
+  x1=Math.max(0,centerX-adjustedWidth/2);x2=Math.min(w,centerX+adjustedWidth/2);
+  y1=Math.max(0,centerY-adjustedHeight/2);y2=Math.min(h,centerY+adjustedHeight/2);
+  const scaleX=sourceCanvas.width/w,scaleY=sourceCanvas.height/h;
+  return {x:x1*scaleX,y:y1*scaleY,width:(x2-x1)*scaleX,height:(y2-y1)*scaleY};
+}
+function autoFitGuidedCardCanvas(sourceCanvas){
+  const bounds=detectGuidedCardBounds(sourceCanvas);
+  const output=document.createElement('canvas');
+  output.width=945;output.height=1320;
+  const ctx=output.getContext('2d',{alpha:false});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,output.width,output.height);
+  if(bounds){
+    ctx.drawImage(sourceCanvas,bounds.x,bounds.y,bounds.width,bounds.height,0,0,output.width,output.height);
+    return {canvas:output,fitted:true,bounds};
+  }
+  ctx.drawImage(sourceCanvas,0,0,sourceCanvas.width,sourceCanvas.height,0,0,output.width,output.height);
+  return {canvas:output,fitted:false,bounds:null};
+}
 function drawGuidedVisibleVideo(video,stage,canvas){
   const source=guidedVisibleSourceRect(video,stage);
   if(!source)return false;
@@ -7204,14 +7292,16 @@ async function captureGuidedFrame(source='manual'){
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
   // Acquisisce la sagoma 63:88 con un piccolo margine: l'OCR resta invariato.
   ctx.drawImage(video,sourceX,sourceY,sourceW,sourceH,0,0,canvas.width,canvas.height);
-  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.92));
+  const prepared=autoFitGuidedCardCanvas(canvas);
+  const blob=await new Promise(resolve=>prepared.canvas.toBlob(resolve,'image/jpeg',.94));
   if(!blob){
     guidedCameraState.captureLocked=false;
     setGuidedCameraStatus('Scatto non riuscito. Usa Scatta ora.');
     scheduleGuidedAnalysis();
     return;
   }
-  const file=new File([blob],source==='auto'?'cardoryx-auto.jpg':'cardoryx-manual.jpg',{
+  const fittedLabel=prepared.fitted?'autofit':'guide';
+  const file=new File([blob],`cardoryx-${source}-${fittedLabel}.jpg`,{
     type:'image/jpeg',lastModified:Date.now()
   });
   closeGuidedCamera();
