@@ -7081,8 +7081,10 @@ function guidedProfilePeak(profile,startFraction,endFraction,direction='max'){
 }
 function detectGuidedCardBounds(sourceCanvas){
   const sample=document.createElement('canvas');
-  sample.width=240;
-  sample.height=Math.max(280,Math.round(240*sourceCanvas.height/sourceCanvas.width));
+  const sampleMaxSide=320;
+  const sampleScale=sampleMaxSide/Math.max(sourceCanvas.width,sourceCanvas.height);
+  sample.width=Math.max(1,Math.round(sourceCanvas.width*sampleScale));
+  sample.height=Math.max(1,Math.round(sourceCanvas.height*sampleScale));
   const ctx=sample.getContext('2d',{willReadFrequently:true});
   ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
   const image=ctx.getImageData(0,0,sample.width,sample.height);
@@ -7141,8 +7143,10 @@ function guidedRobustEdgeAverage(values){
 }
 function detectGuidedCardBoundsRobust(sourceCanvas){
   const sample=document.createElement('canvas');
-  sample.width=240;
-  sample.height=Math.max(280,Math.round(240*sourceCanvas.height/sourceCanvas.width));
+  const sampleMaxSide=320;
+  const sampleScale=sampleMaxSide/Math.max(sourceCanvas.width,sourceCanvas.height);
+  sample.width=Math.max(1,Math.round(sourceCanvas.width*sampleScale));
+  sample.height=Math.max(1,Math.round(sourceCanvas.height*sampleScale));
   const ctx=sample.getContext('2d',{willReadFrequently:true});
   ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
   const image=ctx.getImageData(0,0,sample.width,sample.height);
@@ -7179,9 +7183,9 @@ function detectGuidedCardBoundsRobust(sourceCanvas){
   const width=right.index-left.index,height=bottom.index-top.index;
   const ratio=width/height;
   const centerX=(left.index+right.index)/2,centerY=(top.index+bottom.index)/2;
-  if(width<w*.46||width>w*.94||height<h*.54||height>h*.96||
-    ratio<.54||ratio>.90||
-    Math.abs(centerX-w/2)>w*.13||Math.abs(centerY-h/2)>h*.13)return null;
+  if(width<w*.28||width>w*.94||height<h*.35||height>h*.96||
+    ratio<.58||ratio>.84||
+    Math.abs(centerX-w/2)>w*.20||Math.abs(centerY-h/2)>h*.20)return null;
 
   const targetRatio=63/88;
   let adjustedWidth=width,adjustedHeight=height;
@@ -7209,8 +7213,10 @@ function guidedRegressionSlope(points){
 function estimateGuidedDeskewAngle(sourceCanvas,bounds){
   if(!bounds)return 0;
   const sample=document.createElement('canvas');
-  sample.width=240;
-  sample.height=Math.max(280,Math.round(240*sourceCanvas.height/sourceCanvas.width));
+  const sampleMaxSide=320;
+  const sampleScale=sampleMaxSide/Math.max(sourceCanvas.width,sourceCanvas.height);
+  sample.width=Math.max(1,Math.round(sourceCanvas.width*sampleScale));
+  sample.height=Math.max(1,Math.round(sourceCanvas.height*sampleScale));
   const ctx=sample.getContext('2d',{willReadFrequently:true});
   ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
   const image=ctx.getImageData(0,0,sample.width,sample.height);
@@ -7259,10 +7265,10 @@ function rotateGuidedCanvas(sourceCanvas,degrees){
   return output;
 }
 function autoFitGuidedCardCanvas(sourceCanvas){
-  const initialBounds=detectGuidedCardBounds(sourceCanvas)||detectGuidedCardBoundsRobust(sourceCanvas);
+  const initialBounds=detectGuidedCardBoundsRobust(sourceCanvas)||detectGuidedCardBounds(sourceCanvas);
   const deskewAngle=estimateGuidedDeskewAngle(sourceCanvas,initialBounds);
   const workingCanvas=rotateGuidedCanvas(sourceCanvas,deskewAngle);
-  const bounds=detectGuidedCardBounds(workingCanvas)||detectGuidedCardBoundsRobust(workingCanvas);
+  const bounds=detectGuidedCardBoundsRobust(workingCanvas)||detectGuidedCardBounds(workingCanvas);
   const output=document.createElement('canvas');
   output.width=945;output.height=1320;
   const ctx=output.getContext('2d',{alpha:false});
