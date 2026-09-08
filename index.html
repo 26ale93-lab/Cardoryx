@@ -6759,12 +6759,13 @@ document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}
 const guidedCameraState={
   active:false,stream:null,timer:0,captureLocked:false,previousLuma:null,
   previousEdges:null,stableSince:0,presenceFrames:0,lastAnalysisAt:0,
-  stabilityWindow:[],absenceFrames:0,
+  stabilityWindow:[],absenceFrames:0,stabilityCredit:0,lastRealMovementAt:0,
   zoom:1,zoomMode:'digital',zoomMin:1,zoomMax:2.5,zoomStep:.1
 };
 const GUIDED_SAMPLE_INTERVAL=220;
 const GUIDED_STABILITY_SAMPLES=8;
 const GUIDED_STABILITY_WINDOW=9;
+const GUIDED_STABILITY_TARGET=1500;
 
 function setGuidedCameraStatus(message,state='neutral'){
   const status=document.getElementById('guidedCameraStatus');
@@ -6782,6 +6783,8 @@ function resetGuidedStability(){
   guidedCameraState.presenceFrames=0;
   guidedCameraState.stabilityWindow=[];
   guidedCameraState.absenceFrames=0;
+  guidedCameraState.stabilityCredit=0;
+  guidedCameraState.lastRealMovementAt=0;
 }
 async function openGuidedCamera(){
   const modal=document.getElementById('guidedCameraModal');
@@ -7007,14 +7010,24 @@ function guidedMotion(current,previous,w,rect){
   if(!previous||previous.length!==current.length)return Infinity;
   const left=Math.max(0,Math.round(rect.left)),right=Math.min(w,Math.round(rect.right));
   const top=Math.max(0,Math.round(rect.top)),bottom=Math.round(rect.bottom);
-  let sum=0,count=0;
+  let deltaSum=0,count=0;
   for(let y=top;y<bottom;y+=3){
     for(let x=left;x<right;x+=3){
       const i=y*w+x;if(i>=current.length)continue;
-      sum+=Math.abs(current[i]-previous[i]);count++;
+      deltaSum+=current[i]-previous[i];count++;
     }
   }
-  return count?sum/count:Infinity;
+  if(!count)return Infinity;
+  // Compensa le variazioni globali di esposizione tipiche della camera iPhone.
+  const exposureShift=deltaSum/count;
+  let residual=0;
+  for(let y=top;y<bottom;y+=3){
+    for(let x=left;x<right;x+=3){
+      const i=y*w+x;if(i>=current.length)continue;
+      residual+=Math.abs((current[i]-previous[i])-exposureShift);
+    }
+  }
+  return residual/count;
 }
 function guidedTexture(luma,w,rect){
   const left=Math.max(0,Math.round(rect.left)),right=Math.min(w,Math.round(rect.right));
@@ -7032,9 +7045,11 @@ function guidedTexture(luma,w,rect){
 }
 function guidedEdgeDrift(edges,previous){
   if(!previous)return Infinity;
-  return Math.max(...['left','right','top','bottom'].map(key=>
+  const shifts=['left','right','top','bottom'].map(key=>
     Math.abs(edges[key].position-previous[key].position)
-  ));
+  ).sort((a,b)=>a-b);
+  // Un singolo bordo può oscillare per autofocus o riflessi: usa i tre più coerenti.
+  return (shifts[0]+shifts[1]+shifts[2])/3;
 }
 function guidedEdgesStable(edges,previous,tolerance=4){
   return guidedEdgeDrift(edges,previous)<=tolerance;
@@ -7073,39 +7088,55 @@ function analyzeGuidedCameraFrame(){
     const motion=guidedMotion(luma,guidedCameraState.previousLuma,canvas.width,rect);
     const edgeDrift=guidedEdgeDrift(edges,guidedCameraState.previousEdges);
     const cardLikely=minEdge>=7.5&&texture>=18;
-    const strongStable=cardLikely&&motion<=7.5&&edgeDrift<=4;
-    const acceptableStable=cardLikely&&motion<=11&&edgeDrift<=6;
-    const realMovement=Number.isFinite(motion)&&(motion>16||edgeDrift>10);
+    const strongStable=cardLikely&&motion<=5.5&&edgeDrift<=3.5;
+    const acceptableStable=cardLikely&&motion<=9&&edgeDrift<=6.5;
+    const realMovement=Number.isFinite(motion)&&(motion>14||edgeDrift>9);
+    const now=performance.now();
 
     if(!cardLikely){
       guidedCameraState.absenceFrames++;
       guidedCameraState.presenceFrames=0;
-      if(guidedCameraState.absenceFrames>=2)guidedCameraState.stabilityWindow=[];
-      else recordGuidedStability(0);
+      guidedCameraState.stabilityCredit=Math.max(0,guidedCameraState.stabilityCredit-220);
+      if(guidedCameraState.absenceFrames>=2){
+        guidedCameraState.stabilityWindow=[];
+        guidedCameraState.stabilityCredit=0;
+      }
       setGuidedCameraStatus(texture>=12?'Centra la carta':'Posiziona la carta');
     }else{
       guidedCameraState.absenceFrames=0;
       guidedCameraState.presenceFrames++;
       if(realMovement){
         guidedCameraState.stabilityWindow=[];
+        guidedCameraState.stabilityCredit=0;
+        guidedCameraState.lastRealMovementAt=now;
         recordGuidedStability(0);
       }else{
-        recordGuidedStability(strongStable ? 1 : (acceptableStable ? .65 : 0));
+        const sampleScore=strongStable ? 1 : (acceptableStable ? .75 : .55);
+        recordGuidedStability(sampleScore);
+        // I piccoli disturbi rallentano l'avanzamento ma non lo azzerano.
+        const credit=strongStable?GUIDED_SAMPLE_INTERVAL:(acceptableStable?180:140);
+        guidedCameraState.stabilityCredit=Math.min(
+          GUIDED_STABILITY_TARGET+GUIDED_SAMPLE_INTERVAL,
+          guidedCameraState.stabilityCredit+credit
+        );
       }
-      const stability=guidedCameraState.stabilityWindow;
-      const score=stability.reduce((sum,value)=>sum+value,0);
-      const strongFrames=stability.filter(value=>value===1).length;
-      const lastTwo=stability.length>=2&&stability.slice(-2).every(value=>value>=.65);
-      const ready=stability.length>=GUIDED_STABILITY_SAMPLES&&score>=5.9&&strongFrames>=4&&lastTwo;
+      const quietLongEnough=!guidedCameraState.lastRealMovementAt||
+        now-guidedCameraState.lastRealMovementAt>=660;
+      const ready=guidedCameraState.stabilityCredit>=GUIDED_STABILITY_TARGET&&
+        guidedCameraState.presenceFrames>=5&&quietLongEnough;
 
       if(ready){
         setGuidedCameraStatus('Acquisizione…','ready');
-        guidedCameraState.previousLuma=luma;guidedCameraState.previousEdges=edges;
+        guidedCameraState.previousLuma=luma;
+        guidedCameraState.previousEdges=edges;
         captureGuidedFrame('auto');
         return;
       }
-      const progress=Math.min(1,score/5.9);
-      setGuidedCameraStatus('Mantieni fermo',progress>=.62?'ready':'almost');
+      const progress=Math.min(99,Math.round(
+        guidedCameraState.stabilityCredit/GUIDED_STABILITY_TARGET*100
+      ));
+      setGuidedCameraStatus(`Mantieni fermo · ${progress}%`,
+        progress>=60?'ready':'almost');
     }
     guidedCameraState.previousLuma=luma;
     guidedCameraState.previousEdges=edges;
