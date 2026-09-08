@@ -1,0 +1,36 @@
+name: Card Identity and Cardmarket Audit
+
+on:
+  push:
+    branches:
+      - feature/card-identity-cardmarket-audit-20260909
+    paths:
+      - scripts/test_card_identity_cardmarket_audit.py
+      - .github/workflows/card-identity-cardmarket-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify diagnostic-only pre-audit diff
+        run: |
+          git diff --name-only origin/main...HEAD | tee /tmp/changed.txt
+          test "$(grep -Ev '^(scripts/test_card_identity_cardmarket_audit.py|.github/workflows/card-identity-cardmarket-audit.yml)$' /tmp/changed.txt | wc -l)" -eq 0
+      - name: Run read-only audit
+        env:
+          AUDITED_MAIN_SHA: 367d91663a219349a503baa0c7f89b3515f24a3b
+        run: python scripts/test_card_identity_cardmarket_audit.py
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-identity-cardmarket-audit-report
+          path: artifacts/card_identity_cardmarket_audit_report.json
+          if-no-files-found: error
