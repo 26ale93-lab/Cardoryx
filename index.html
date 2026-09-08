@@ -6869,7 +6869,8 @@ function updateGuidedZoomUI(){
 }
 async function configureGuidedZoom(stream){
   const track=stream?.getVideoTracks?.()[0];
-  guidedCameraState.zoom=1;
+  const preferredZoom=1.5;
+  guidedCameraState.zoom=preferredZoom;
   guidedCameraState.zoomMode='digital';
   guidedCameraState.zoomMin=1;
   guidedCameraState.zoomMax=2.5;
@@ -6881,7 +6882,7 @@ async function configureGuidedZoom(stream){
       const min=Math.max(zoom.min,1);
       const max=Math.min(zoom.max,3);
       if(max>min){
-        const initial=Math.min(max,Math.max(min,track.getSettings?.().zoom||min));
+        const initial=Math.min(max,Math.max(min,preferredZoom));
         await track.applyConstraints({advanced:[{zoom:initial}]});
         guidedCameraState.zoomMode='hardware';
         guidedCameraState.zoomMin=min;
@@ -6945,27 +6946,54 @@ function scheduleGuidedAnalysis(delay=GUIDED_SAMPLE_INTERVAL){
   if(!guidedCameraState.active||guidedCameraState.captureLocked)return;
   guidedCameraState.timer=setTimeout(analyzeGuidedCameraFrame,delay);
 }
-function drawGuidedVisibleVideo(video,stage,canvas){
+function guidedVisibleSourceRect(video,stage){
   const vw=video.videoWidth,vh=video.videoHeight;
   const sw=stage.clientWidth,sh=stage.clientHeight;
-  if(!vw||!vh||!sw||!sh)return false;
-  const targetW=180,targetH=Math.max(120,Math.round(targetW*sh/sw));
-  canvas.width=targetW;canvas.height=targetH;
+  if(!vw||!vh||!sw||!sh)return null;
   const videoAspect=vw/vh,targetAspect=sw/sh;
-  let sx=0,sy=0,sourceW=vw,sourceH=vh;
+  let x=0,y=0,width=vw,height=vh;
   if(videoAspect>targetAspect){
-    sourceW=vh*targetAspect;sx=(vw-sourceW)/2;
+    width=vh*targetAspect;x=(vw-width)/2;
   }else{
-    sourceH=vw/targetAspect;sy=(vh-sourceH)/2;
+    height=vw/targetAspect;y=(vh-height)/2;
   }
   const digitalZoom=guidedDigitalZoom();
   if(digitalZoom>1){
-    const zoomedW=sourceW/digitalZoom,zoomedH=sourceH/digitalZoom;
-    sx+=(sourceW-zoomedW)/2;sy+=(sourceH-zoomedH)/2;
-    sourceW=zoomedW;sourceH=zoomedH;
+    const zoomedWidth=width/digitalZoom,zoomedHeight=height/digitalZoom;
+    x+=(width-zoomedWidth)/2;y+=(height-zoomedHeight)/2;
+    width=zoomedWidth;height=zoomedHeight;
   }
+  return {x,y,width,height};
+}
+function guidedCaptureSourceRect(video,stage,frame,margin=.04){
+  const visible=guidedVisibleSourceRect(video,stage);
+  if(!visible)return null;
+  const stageRect=stage.getBoundingClientRect();
+  const frameRect=frame.getBoundingClientRect();
+  const left=(frameRect.left-stageRect.left)/stageRect.width;
+  const top=(frameRect.top-stageRect.top)/stageRect.height;
+  const width=frameRect.width/stageRect.width;
+  const height=frameRect.height/stageRect.height;
+  const marginX=width*margin,marginY=height*margin;
+  const normalizedLeft=Math.max(0,left-marginX);
+  const normalizedTop=Math.max(0,top-marginY);
+  const normalizedRight=Math.min(1,left+width+marginX);
+  const normalizedBottom=Math.min(1,top+height+marginY);
+  return {
+    x:visible.x+visible.width*normalizedLeft,
+    y:visible.y+visible.height*normalizedTop,
+    width:visible.width*(normalizedRight-normalizedLeft),
+    height:visible.height*(normalizedBottom-normalizedTop)
+  };
+}
+function drawGuidedVisibleVideo(video,stage,canvas){
+  const source=guidedVisibleSourceRect(video,stage);
+  if(!source)return false;
+  const sw=stage.clientWidth,sh=stage.clientHeight;
+  const targetW=180,targetH=Math.max(120,Math.round(targetW*sh/sw));
+  canvas.width=targetW;canvas.height=targetH;
   canvas.getContext('2d',{willReadFrequently:true}).drawImage(
-    video,sx,sy,sourceW,sourceH,0,0,targetW,targetH
+    video,source.x,source.y,source.width,source.height,0,0,targetW,targetH
   );
   return true;
 }
@@ -7158,14 +7186,23 @@ async function captureGuidedFrame(source='manual'){
   clearTimeout(guidedCameraState.timer);
   setGuidedCameraStatus('Acquisizione…','ready');
   const canvas=document.getElementById('guidedCaptureCanvas');
-  const digitalZoom=guidedDigitalZoom();
-  const sourceW=Math.max(1,Math.round(video.videoWidth/digitalZoom));
-  const sourceH=Math.max(1,Math.round(video.videoHeight/digitalZoom));
-  const sourceX=Math.round((video.videoWidth-sourceW)/2);
-  const sourceY=Math.round((video.videoHeight-sourceH)/2);
+  const stage=document.getElementById('guidedCameraStage');
+  const frame=document.getElementById('guidedCardFrame');
+  const sourceRect=stage&&frame?guidedCaptureSourceRect(video,stage,frame,.04):null;
+  if(!sourceRect){
+    guidedCameraState.captureLocked=false;
+    setGuidedCameraStatus('Area carta non disponibile. Usa Scatta ora.');
+    scheduleGuidedAnalysis();
+    return;
+  }
+  const sourceX=Math.max(0,Math.round(sourceRect.x));
+  const sourceY=Math.max(0,Math.round(sourceRect.y));
+  const sourceW=Math.max(1,Math.min(video.videoWidth-sourceX,Math.round(sourceRect.width)));
+  const sourceH=Math.max(1,Math.min(video.videoHeight-sourceY,Math.round(sourceRect.height)));
   canvas.width=sourceW;canvas.height=sourceH;
   const ctx=canvas.getContext('2d',{alpha:false});
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Acquisisce la sagoma 63:88 con un piccolo margine: l'OCR resta invariato.
   ctx.drawImage(video,sourceX,sourceY,sourceW,sourceH,0,0,canvas.width,canvas.height);
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.92));
   if(!blob){
@@ -7230,7 +7267,7 @@ window.addEventListener('orientationchange',()=>{
     <div class="guided-camera-controls">
       <button id="guidedManualCaptureBtn" class="btn big" type="button" onclick="captureGuidedFrame('manual')">Scatta ora</button>
       <button id="guidedIOSFallbackBtn" class="btn alt guided-camera-fallback" type="button" onclick="openLegacyCameraFallback()">Fotocamera iOS</button>
-      <p class="guided-camera-hint">Autoscatto conservativo dopo circa 1,6 s di carta centrata e stabile. Lo scatto manuale resta sempre disponibile.</p>
+      <p class="guided-camera-hint">Usa lo zoom per riempire il riquadro. Autoscatto dopo circa 1,6–2,4 s; Scatta ora resta sempre disponibile.</p>
     </div>
   </div>
 </div>
