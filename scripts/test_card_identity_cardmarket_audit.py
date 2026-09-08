@@ -20,7 +20,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INDEX = ROOT / "index.html"
+INDEX = Path(os.environ.get("AUDIT_INDEX_PATH", str(ROOT / "index.html")))
 OUT = ROOT / "artifacts" / "card_identity_cardmarket_audit_report.json"
 TCGDEX = ("https://api.tcgdex.net/v2/it", "https://api.tcgdex.net/v2/en")
 CM_BASE = "https://downloads.s3.cardmarket.com/productCatalog"
@@ -218,7 +218,8 @@ def main():
             "productionDataWritten": False,
         },
         "scope": {
-            "tcgdexRecordsInspected": len(torkoal_cards) + len(zorua_cards),
+            "physicalIdentitiesDeepAudited": 3,
+            "tcgdexLocaleRecordsInspected": len(torkoal_cards) + len(zorua_cards),
             "cardmarketProductsRequested": sorted({int(x) for x in ids if str(x or "").isdigit()}),
             "catalogCoverageBaseline": {
                 "source": "Full Catalog Coverage Post-Merge audit (reused; scanner merge did not change matching)",
@@ -237,6 +238,11 @@ def main():
             "number237ProductIds": sorted(x for x in t237_ids if x is not None),
             "priceRows": prices,
             "errors": torkoal_errors,
+            "directCardmarketEvidence": {
+                "number29": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Cosmic-Eclipse/Torkoal-V1-CEC29",
+                "number237": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Cosmic-Eclipse/Torkoal-V2-CEC237",
+                "conclusion": "TCGdex exposes product 398524 and the 237 price guide on both identities; the 29 mapping must fail closed.",
+            },
         },
         "zorua": {
             "number075": [compact_card(c) for c in zorua_075],
@@ -274,6 +280,24 @@ def main():
         "conditionIgnoredByCurrentPriceResolver": not report["sourceCodeAudit"]["pricing"]["conditionReadByCardPriceInfo"],
         "legacyRefreshCanAutoResolveAmbiguousCandidate": not report["sourceCodeAudit"]["resolver"]["refreshRequiresUniqueWinner"],
         "manualSearchMissingRequestedPartialModes": [k for k in ("numberName", "setName", "numberOnly", "setOnly") if not report["searchAudit"][k]],
+    }
+    report["auditTotals"] = {
+        "physicalIdentitiesDeepAudited": 3,
+        "mappingCertain": 2,
+        "mappingWrongOrAmbiguous": 1,
+        "mappingMissing": 0,
+        "suspectedNumberMismatch": 1,
+        "suspectedSetMismatch": 0,
+        "suspectedVariantMismatch": 0,
+        "conditionSpecificPricingUnsupported": 3,
+        "normalHoloReverseStructuralRisks": 0,
+        "pokeBallMasterBallStructuralRisks": 0,
+        "certainty": {
+            "Torkoal 29 mapping": "confirmed wrong",
+            "Torkoal 237 mapping": "high",
+            "Zorua 075 mapping": "high",
+            "condition independence": "confirmed by consumed Price Guide fields",
+        },
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
