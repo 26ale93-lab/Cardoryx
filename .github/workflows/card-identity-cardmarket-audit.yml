@@ -5,7 +5,9 @@ on:
     branches:
       - feature/card-identity-cardmarket-audit-20260909
     paths:
+      - index.html
       - scripts/test_card_identity_cardmarket_audit.py
+      - artifacts/card_identity_cardmarket_audit_report.json
       - .github/workflows/card-identity-cardmarket-audit.yml
   workflow_dispatch:
 
@@ -20,13 +22,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify diagnostic-only pre-audit diff
+      - name: Verify authorized diff only
         run: |
           git diff --name-only origin/main...HEAD | tee /tmp/changed.txt
-          test "$(grep -Ev '^(scripts/test_card_identity_cardmarket_audit.py|.github/workflows/card-identity-cardmarket-audit.yml)$' /tmp/changed.txt | wc -l)" -eq 0
+          test "$(grep -Ev '^(index.html|scripts/test_card_identity_cardmarket_audit.py|artifacts/card_identity_cardmarket_audit_report.json|.github/workflows/card-identity-cardmarket-audit.yml)$' /tmp/changed.txt | wc -l)" -eq 0
+          git diff --exit-code origin/main...HEAD -- data/retail_prices.json data/cardmarket_play_index.json scripts/build_retail_index.py .github/workflows/update-retail-prices.yml
+      - name: Read main index for pre-fix audit
+        env:
+          AUDITED_MAIN_SHA: 367d91663a219349a503baa0c7f89b3515f24a3b
+        run: git show "$AUDITED_MAIN_SHA:index.html" > /tmp/cardoryx-main-index.html
       - name: Run read-only audit
         env:
           AUDITED_MAIN_SHA: 367d91663a219349a503baa0c7f89b3515f24a3b
+          AUDIT_INDEX_PATH: /tmp/cardoryx-main-index.html
         run: python scripts/test_card_identity_cardmarket_audit.py
       - name: Upload report
         uses: actions/upload-artifact@v4
