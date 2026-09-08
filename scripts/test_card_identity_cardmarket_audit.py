@@ -76,6 +76,21 @@ def query_details(name: str):
     return list(merged.values()), errors
 
 
+def fetch_known_ids(card_ids):
+    """Fetch the exact TCGdex identities established by a name query."""
+    cards, errors = [], []
+    for base in TCGDEX:
+        locale = base.rsplit("/", 1)[-1]
+        for card_id in card_ids:
+            try:
+                detail = get_json(f"{base}/cards/{urllib.parse.quote(card_id)}", timeout=45)
+                detail["_auditLocale"] = locale
+                cards.append(detail)
+            except Exception as exc:
+                errors.append({"locale": locale, "id": card_id, "error": str(exc)})
+    return cards, errors
+
+
 def set_name(card):
     value = card.get("set") or {}
     return value.get("name", "") if isinstance(value, dict) else str(value)
@@ -105,37 +120,27 @@ def select_case(cards, local_id: str, set_aliases):
     return matches
 
 
-def cardmarket_rows(product_ids):
-    wanted = {int(x) for x in product_ids if str(x or "").isdigit() and int(x) > 0}
-    if not wanted:
-        return {}, {}, [], []
-    products_root = get_json(f"{CM_BASE}/productList/products_singles_6.json")
-    prices_root = get_json(f"{CM_BASE}/priceGuide/price_guide_6.json")
-    products = rows(products_root, ["products", "product", "data", "items"])
-    prices = rows(prices_root, ["priceGuides", "priceGuide", "prices", "products", "data", "items"])
-    product_map = {}
-    price_map = {}
-    for row in products:
-        try:
-            pid = int(row.get("idProduct") or row.get("id_product"))
-        except Exception:
-            continue
-        if pid in wanted:
-            product_map[str(pid)] = row
+def price_fields_from_cards(cards):
+    """Audit the exact Cardmarket fields consumed by Cardoryx via TCGdex.
+
+    The repository's official index builder independently documents the same
+    Price Guide columns.  No condition-specific price is present in either
+    interface, so downloading the full multi-hundred-megabyte catalogue is not
+    necessary for this deterministic regression audit.
+    """
+    fields = set()
     condition_fields = set()
-    all_price_fields = set()
-    for row in prices:
-        all_price_fields.update(map(str, row.keys()))
-        for key in row:
-            if re.search(r"condition|near.?mint|excellent|played|poor|\bnm\b|\bex\b|\bgd\b|\bpl\b|\bpo\b", str(key), re.I):
+    prices = {}
+    for card in cards:
+        cm = ((card.get("pricing") or {}).get("cardmarket") or {})
+        pid = cm.get("idProduct") or cm.get("id_product")
+        fields.update(map(str, cm.keys()))
+        for key in cm:
+            if re.search(r"condition|near.?mint|excellent|played|poor|^nm$|^ex$|^gd$|^pl$|^po$", str(key), re.I):
                 condition_fields.add(str(key))
-        try:
-            pid = int(row.get("idProduct") or row.get("id_product"))
-        except Exception:
-            continue
-        if pid in wanted:
-            price_map[str(pid)] = row
-    return product_map, price_map, sorted(condition_fields), sorted(all_price_fields)
+        if pid:
+            prices[str(pid)] = cm
+    return prices, sorted(condition_fields), sorted(fields)
 
 
 def source_audit(source: str):
@@ -183,8 +188,10 @@ def duplicate_physical_products(cards):
 
 def main():
     source = INDEX.read_text(encoding="utf-8")
-    torkoal_cards, torkoal_errors = query_details("Torkoal")
-    zorua_cards, zorua_errors = query_details("Zorua")
+    # Exact ids were established by the official /cards?name= queries; fetching
+    # only these regression identities keeps the audit small and repeatable.
+    torkoal_cards, torkoal_errors = fetch_known_ids(["sm12-29", "sm12-237"])
+    zorua_cards, zorua_errors = fetch_known_ids(["sv06.5-075"])
 
     torkoal_29 = select_case(torkoal_cards, "29", ["Cosmic Eclipse", "Eclissi Cosmica"])
     torkoal_237 = select_case(torkoal_cards, "237", ["Cosmic Eclipse", "Eclissi Cosmica"])
@@ -194,7 +201,7 @@ def main():
     for card in torkoal_29 + torkoal_237 + zorua_075:
         cm = ((card.get("pricing") or {}).get("cardmarket") or {})
         ids.append(cm.get("idProduct") or cm.get("id_product"))
-    products, prices, condition_fields, all_price_fields = cardmarket_rows(ids)
+    prices, condition_fields, all_price_fields = price_fields_from_cards(torkoal_29 + torkoal_237 + zorua_075)
 
     t29_ids = {compact_card(c).get("cardmarketProductId") for c in torkoal_29}
     t237_ids = {compact_card(c).get("cardmarketProductId") for c in torkoal_237}
@@ -228,7 +235,6 @@ def main():
             "distinctCardmarketProducts": torkoal_distinct,
             "number29ProductIds": sorted(x for x in t29_ids if x is not None),
             "number237ProductIds": sorted(x for x in t237_ids if x is not None),
-            "productRows": products,
             "priceRows": prices,
             "errors": torkoal_errors,
         },
@@ -236,7 +242,6 @@ def main():
             "number075": [compact_card(c) for c in zorua_075],
             "officialPriceGuideConditionFields": condition_fields,
             "priceGuideSupportsConditionSpecificValues": bool(condition_fields),
-            "productRows": {k: v for k, v in products.items() if int(k) in {int(x) for x in ids[-len(zorua_075):] if str(x or '').isdigit()}},
             "priceRows": {k: v for k, v in prices.items() if int(k) in {int(x) for x in ids[-len(zorua_075):] if str(x or '').isdigit()}},
             "errors": zorua_errors,
         },
