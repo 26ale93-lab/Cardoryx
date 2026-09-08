@@ -6019,9 +6019,15 @@ async function refreshAllPrices(){
 // V2.1.36 — dynamic deck allocations + sale deck lifecycle. V2.1.35 catalog grouping remains: identical physical printing/condition records are
 // shown as one card even when copies have different allocations/statuses.
 // Storage remains unchanged: no migration and no loss of per-copy allocation.
-function collectionIdentityKey(c){
+function physicalCardIdentityKey(c){
   const identity=String(c?.id||c?.tcgdexId||`${c?.set||''}::${c?.localId||''}::${c?.name||''}`).toLowerCase();
-  return [identity,canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),normalizedPlaySeries(c?.playSeries||''),normText(c?.language||'Italiano'),c?.condition||'NM'].join('|||');
+  return [identity,canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),normalizedPlaySeries(c?.playSeries||''),normText(c?.language||'Italiano')].join('|||');
+}
+function collectionIdentityKey(c){
+  // Condition describes the stored copy, not its physical printing identity.
+  // It remains a catalogue grouping dimension so existing editing/allocation
+  // behaviour is preserved without changing the storage schema.
+  return [physicalCardIdentityKey(c),c?.condition||'NM'].join('|||');
 }
 function catalogGroups(records=db){
   const m=new Map();
