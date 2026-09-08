@@ -1493,9 +1493,12 @@ async function scannerInputFileCanvas(file){
     if(source&&typeof source.close==='function')source.close();
   }
 }
+function prepareScannerCanvasForRecognition(canvas){
+  return autoFitGuidedCardCanvas(canvas);
+}
 async function autoPrepareScannerInputFile(file,source){
   const canvas=await scannerInputFileCanvas(file);
-  const prepared=autoFitGuidedCardCanvas(canvas);
+  const prepared=prepareScannerCanvasForRecognition(canvas);
   if(!prepared.fitted)return {file,fitted:false};
   const blob=await new Promise(resolve=>prepared.canvas.toBlob(resolve,'image/jpeg',.94));
   if(!blob)return {file,fitted:false};
@@ -7501,7 +7504,7 @@ async function captureGuidedFrame(source='manual'){
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
   // Acquisisce la sagoma 63:88 con un piccolo margine: l'OCR resta invariato.
   ctx.drawImage(video,sourceX,sourceY,sourceW,sourceH,0,0,canvas.width,canvas.height);
-  const prepared=autoFitGuidedCardCanvas(canvas);
+  const prepared=prepareScannerCanvasForRecognition(canvas);
   const blob=await new Promise(resolve=>prepared.canvas.toBlob(resolve,'image/jpeg',.94));
   if(!blob){
     guidedCameraState.captureLocked=false;
