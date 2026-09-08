@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Read-only audit of Cardoryx card identity and Cardmarket resolution.
 
-The script never writes production data.  It reads index.html, queries the
-official TCGdex API for the two regression cases and verifies the referenced
-Cardmarket products against Cardmarket's official downloadable catalogues.
+The script never writes production data. It reads index.html and queries the
+official TCGdex API for the two regression cases. The consumed Cardmarket
+Price Guide schema is cross-checked against the repository's official builder.
 """
 
 from __future__ import annotations
