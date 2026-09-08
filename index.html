@@ -316,6 +316,11 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
 .guided-card-frame.is-almost{border-color:#f5b72e;box-shadow:0 0 0 9999px rgba(2,8,22,.42),0 0 18px rgba(245,183,46,.42)}
 .guided-card-frame.is-ready{border-color:#22c55e;box-shadow:0 0 0 9999px rgba(2,8,22,.36),0 0 22px rgba(34,197,94,.55)}
 .guided-camera-status{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;max-width:calc(100% - 24px);padding:9px 14px;border-radius:999px;background:rgba(7,21,45,.86);border:1px solid rgba(156,205,255,.42);font-weight:800;font-size:13px;text-align:center;white-space:nowrap;backdrop-filter:blur(8px)}
+.guided-zoom-panel{position:absolute;z-index:4;left:50%;top:12px;transform:translateX(-50%);display:grid;grid-template-columns:36px minmax(112px,38vw) 36px auto;align-items:center;gap:6px;max-width:calc(100% - 20px);padding:6px 8px;border:1px solid rgba(156,205,255,.38);border-radius:999px;background:rgba(7,21,45,.84);backdrop-filter:blur(8px)}
+.guided-zoom-panel button{width:36px;height:36px;min-height:36px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px;font-weight:800}
+.guided-zoom-panel input[type="range"]{width:100%;min-width:0;margin:0;accent-color:#60a5fa;touch-action:pan-x}
+.guided-zoom-value{min-width:42px;font-size:12px;font-weight:900;text-align:center;color:#fff}
+.guided-zoom-mode{grid-column:1/-1;margin-top:-3px;font-size:9px;text-align:center;color:#c6d5ee;letter-spacing:.04em}
 .guided-camera-controls{flex:0 0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
 .guided-camera-controls .btn{min-height:50px}
 .guided-camera-hint{grid-column:1/-1;margin:0;color:#c6d5ee;text-align:center;font-size:11px;line-height:1.35}
@@ -6753,7 +6758,8 @@ document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}
 /* Camera guidata. Non modifica OCR/TCGdex: produce un File e riusa setQueue/loadQueueItem. */
 const guidedCameraState={
   active:false,stream:null,timer:0,captureLocked:false,previousLuma:null,
-  previousEdges:null,stableSince:0,presenceFrames:0,lastAnalysisAt:0
+  previousEdges:null,stableSince:0,presenceFrames:0,lastAnalysisAt:0,
+  zoom:1,zoomMode:'digital',zoomMin:1,zoomMax:2.5,zoomStep:.1
 };
 const GUIDED_SAMPLE_INTERVAL=220;
 const GUIDED_STABLE_MS=1600;
@@ -6812,6 +6818,7 @@ async function startGuidedCameraStream(){
     video.srcObject=stream;
     video.setAttribute('playsinline','');
     await video.play();
+    await configureGuidedZoom(stream);
     resetGuidedStability();
     setGuidedCameraStatus('Posiziona la carta');
     scheduleGuidedAnalysis(250);
@@ -6833,7 +6840,86 @@ function stopGuidedCameraStream(){
     guidedCameraState.stream=null;
   }
   const video=document.getElementById('guidedCameraVideo');
-  if(video)video.srcObject=null;
+  if(video){video.srcObject=null;video.style.transform='none';}
+}
+function guidedDigitalZoom(){
+  return guidedCameraState.zoomMode==='digital'?Math.max(1,guidedCameraState.zoom):1;
+}
+function updateGuidedZoomUI(){
+  const range=document.getElementById('guidedZoomRange');
+  const value=document.getElementById('guidedZoomValue');
+  const mode=document.getElementById('guidedZoomMode');
+  if(range){
+    range.min=String(guidedCameraState.zoomMin);
+    range.max=String(guidedCameraState.zoomMax);
+    range.step=String(guidedCameraState.zoomStep);
+    range.value=String(guidedCameraState.zoom);
+  }
+  if(value)value.textContent=guidedCameraState.zoom.toFixed(1).replace('.',',')+'×';
+  if(mode)mode.textContent=guidedCameraState.zoomMode==='hardware'
+    ? 'Zoom fotocamera'
+    : 'Zoom digitale compatibile';
+}
+async function configureGuidedZoom(stream){
+  const track=stream?.getVideoTracks?.()[0];
+  guidedCameraState.zoom=1;
+  guidedCameraState.zoomMode='digital';
+  guidedCameraState.zoomMin=1;
+  guidedCameraState.zoomMax=2.5;
+  guidedCameraState.zoomStep=.1;
+  try{
+    const capabilities=track?.getCapabilities?.();
+    const zoom=capabilities?.zoom;
+    if(zoom&&Number.isFinite(zoom.min)&&Number.isFinite(zoom.max)&&zoom.max>zoom.min){
+      const min=Math.max(zoom.min,1);
+      const max=Math.min(zoom.max,3);
+      if(max>min){
+        const initial=Math.min(max,Math.max(min,track.getSettings?.().zoom||min));
+        await track.applyConstraints({advanced:[{zoom:initial}]});
+        guidedCameraState.zoomMode='hardware';
+        guidedCameraState.zoomMin=min;
+        guidedCameraState.zoomMax=max;
+        guidedCameraState.zoomStep=Math.max(.1,zoom.step||.1);
+        guidedCameraState.zoom=initial;
+      }
+    }
+  }catch(error){
+    console.warn('Zoom fotocamera non esposto: uso zoom digitale.',error);
+  }
+  const video=document.getElementById('guidedCameraVideo');
+  if(video)video.style.transform=guidedCameraState.zoomMode==='digital'
+    ? `scale(${guidedCameraState.zoom})`
+    : 'none';
+  updateGuidedZoomUI();
+}
+async function applyGuidedZoom(rawValue){
+  const requested=Math.min(guidedCameraState.zoomMax,Math.max(guidedCameraState.zoomMin,Number(rawValue)||1));
+  const video=document.getElementById('guidedCameraVideo');
+  if(guidedCameraState.zoomMode==='hardware'){
+    const track=guidedCameraState.stream?.getVideoTracks?.()[0];
+    try{
+      await track?.applyConstraints?.({advanced:[{zoom:requested}]});
+      guidedCameraState.zoom=requested;
+      if(video)video.style.transform='none';
+    }catch(error){
+      console.warn('Zoom hardware non applicabile: passo al fallback digitale.',error);
+      guidedCameraState.zoomMode='digital';
+      guidedCameraState.zoomMin=1;
+      guidedCameraState.zoomMax=2.5;
+      guidedCameraState.zoomStep=.1;
+      guidedCameraState.zoom=Math.min(2.5,Math.max(1,requested));
+      if(video)video.style.transform=`scale(${guidedCameraState.zoom})`;
+    }
+  }else{
+    guidedCameraState.zoom=requested;
+    if(video)video.style.transform=`scale(${guidedCameraState.zoom})`;
+  }
+  resetGuidedStability();
+  updateGuidedZoomUI();
+}
+function stepGuidedZoom(direction){
+  const next=guidedCameraState.zoom+direction*guidedCameraState.zoomStep;
+  applyGuidedZoom(next);
 }
 function closeGuidedCamera(){
   guidedCameraState.active=false;
@@ -6864,6 +6950,12 @@ function drawGuidedVisibleVideo(video,stage,canvas){
     sourceW=vh*targetAspect;sx=(vw-sourceW)/2;
   }else{
     sourceH=vw/targetAspect;sy=(vh-sourceH)/2;
+  }
+  const digitalZoom=guidedDigitalZoom();
+  if(digitalZoom>1){
+    const zoomedW=sourceW/digitalZoom,zoomedH=sourceH/digitalZoom;
+    sx+=(sourceW-zoomedW)/2;sy+=(sourceH-zoomedH)/2;
+    sourceW=zoomedW;sourceH=zoomedH;
   }
   canvas.getContext('2d',{willReadFrequently:true}).drawImage(
     video,sx,sy,sourceW,sourceH,0,0,targetW,targetH
@@ -7010,10 +7102,15 @@ async function captureGuidedFrame(source='manual'){
   clearTimeout(guidedCameraState.timer);
   setGuidedCameraStatus('Acquisizione…','ready');
   const canvas=document.getElementById('guidedCaptureCanvas');
-  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  const digitalZoom=guidedDigitalZoom();
+  const sourceW=Math.max(1,Math.round(video.videoWidth/digitalZoom));
+  const sourceH=Math.max(1,Math.round(video.videoHeight/digitalZoom));
+  const sourceX=Math.round((video.videoWidth-sourceW)/2);
+  const sourceY=Math.round((video.videoHeight-sourceH)/2);
+  canvas.width=sourceW;canvas.height=sourceH;
   const ctx=canvas.getContext('2d',{alpha:false});
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  ctx.drawImage(video,sourceX,sourceY,sourceW,sourceH,0,0,canvas.width,canvas.height);
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.92));
   if(!blob){
     guidedCameraState.captureLocked=false;
@@ -7061,6 +7158,13 @@ window.addEventListener('orientationchange',()=>{
       <video id="guidedCameraVideo" autoplay muted playsinline></video>
       <div id="guidedCardFrame" class="guided-card-frame" aria-hidden="true"></div>
       <div id="guidedCameraStatus" class="guided-camera-status" role="status" aria-live="polite">Posiziona la carta</div>
+      <div class="guided-zoom-panel" aria-label="Controllo zoom fotocamera">
+        <button type="button" onclick="stepGuidedZoom(-1)" aria-label="Riduci zoom">−</button>
+        <input id="guidedZoomRange" type="range" min="1" max="2.5" step="0.1" value="1" oninput="applyGuidedZoom(this.value)" aria-label="Zoom">
+        <button type="button" onclick="stepGuidedZoom(1)" aria-label="Aumenta zoom">+</button>
+        <output id="guidedZoomValue" class="guided-zoom-value" for="guidedZoomRange">1,0×</output>
+        <span id="guidedZoomMode" class="guided-zoom-mode">Zoom digitale compatibile</span>
+      </div>
     </div>
     <canvas id="guidedAnalysisCanvas" width="180" height="260" hidden></canvas>
     <canvas id="guidedCaptureCanvas" hidden></canvas>
