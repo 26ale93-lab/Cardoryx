@@ -12,7 +12,6 @@
     "productionDataWritten": false
   },
   "scope": {
-    "tcgdexRecordsInspected": 6,
     "cardmarketProductsRequested": [
       398524,
       780970
@@ -24,7 +23,9 @@
       "recognizedAmbiguous": 11249,
       "notRecognized": 819,
       "regressions": 0
-    }
+    },
+    "physicalIdentitiesDeepAudited": 3,
+    "tcgdexLocaleRecordsInspected": 6
   },
   "torkoal": {
     "number29": [
@@ -238,7 +239,12 @@
         "avg30-holo": null
       }
     },
-    "errors": []
+    "errors": [],
+    "directCardmarketEvidence": {
+      "number29": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Cosmic-Eclipse/Torkoal-V1-CEC29",
+      "number237": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Cosmic-Eclipse/Torkoal-V2-CEC237",
+      "conclusion": "TCGdex exposes product 398524 and the 237 price guide on both identities; the 29 mapping must fail closed."
+    }
   },
   "zorua": {
     "number075": [
@@ -517,6 +523,38 @@
       "setName",
       "numberOnly",
       "setOnly"
+    ]
+  },
+  "auditTotals": {
+    "physicalIdentitiesDeepAudited": 3,
+    "mappingCertain": 2,
+    "mappingWrongOrAmbiguous": 1,
+    "mappingMissing": 0,
+    "suspectedNumberMismatch": 1,
+    "suspectedSetMismatch": 0,
+    "suspectedVariantMismatch": 0,
+    "conditionSpecificPricingUnsupported": 3,
+    "normalHoloReverseStructuralRisks": 0,
+    "pokeBallMasterBallStructuralRisks": 0,
+    "certainty": {
+      "Torkoal 29 mapping": "confirmed wrong",
+      "Torkoal 237 mapping": "high",
+      "Zorua 075 mapping": "high",
+      "condition independence": "confirmed by consumed Price Guide fields"
+    }
+  },
+  "finalAssessment": {
+    "highConfidenceCorrections": [
+      "Block product 398524 for sm12-29 only while conflict persists",
+      "Require exact unique identity for legacy price refresh",
+      "Include language in catalog grouping key",
+      "Label Cardmarket Price Guide as not condition-specific"
+    ],
+    "leftForVerification": [
+      "Correct Cardmarket product id/price for Torkoal 29",
+      "Set-name/only-set manual search UI",
+      "Only-number global search",
+      "Physical finish gaps not explicitly documented by TCGdex"
     ]
   }
 }
