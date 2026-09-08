@@ -300,6 +300,36 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
 @media(max-width:390px){.brand-dragon{width:min(112px,30vw);max-width:112px;height:52px;object-fit:contain;object-position:right center;margin-right:0;flex:0 0 auto}.brand-copy p{max-width:168px;white-space:normal;line-height:1.25}.bottom .tab{padding:7px 0!important}.bottom .tab svg{width:19px;height:19px;min-width:19px;min-height:19px;max-width:19px;max-height:19px;display:block;flex:0 0 19px;overflow:visible;stroke:currentColor;fill:none}.bottom .tab span{font-size:7.5px!important}.detail-card{grid-template-columns:82px minmax(0,1fr)}.detail-card img{width:82px}}
 @media(min-width:760px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
+
+/* Scanner guidato: solo acquisizione immagine, pipeline OCR invariata. */
+.guided-camera-modal{position:fixed;inset:0;z-index:320;display:none;background:#020816;color:#fff;overflow:hidden}
+.guided-camera-modal.open{display:flex;flex-direction:column}
+.guided-camera-shell{display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;min-height:0;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));box-sizing:border-box}
+.guided-camera-top{flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:46px}
+.guided-camera-top strong{text-align:center;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.guided-camera-top .btn{min-height:40px;padding:8px 11px}
+.guided-camera-stage{position:relative;flex:1 1 auto;min-height:0;margin:8px 0 10px;border-radius:20px;overflow:hidden;background:#000;isolation:isolate}
+.guided-camera-stage video{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;background:#000}
+.guided-card-frame{position:absolute;left:50%;top:50%;width:min(76vw,360px,calc((100dvh - 190px)*.7159));max-width:84%;aspect-ratio:63/88;transform:translate(-50%,-50%);border:2px solid rgba(156,205,255,.92);border-radius:16px;box-shadow:0 0 0 9999px rgba(2,8,22,.48),0 0 0 1px rgba(255,255,255,.3) inset;pointer-events:none;transition:border-color .18s,box-shadow .18s}
+.guided-card-frame:before,.guided-card-frame:after{content:"";position:absolute;inset:-4px;border-radius:18px;pointer-events:none}
+.guided-card-frame:before{background:linear-gradient(#fff,#fff) left top/28px 4px no-repeat,linear-gradient(#fff,#fff) left top/4px 28px no-repeat,linear-gradient(#fff,#fff) right top/28px 4px no-repeat,linear-gradient(#fff,#fff) right top/4px 28px no-repeat,linear-gradient(#fff,#fff) left bottom/28px 4px no-repeat,linear-gradient(#fff,#fff) left bottom/4px 28px no-repeat,linear-gradient(#fff,#fff) right bottom/28px 4px no-repeat,linear-gradient(#fff,#fff) right bottom/4px 28px no-repeat;opacity:.92}
+.guided-card-frame.is-almost{border-color:#f5b72e;box-shadow:0 0 0 9999px rgba(2,8,22,.42),0 0 18px rgba(245,183,46,.42)}
+.guided-card-frame.is-ready{border-color:#22c55e;box-shadow:0 0 0 9999px rgba(2,8,22,.36),0 0 22px rgba(34,197,94,.55)}
+.guided-camera-status{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;max-width:calc(100% - 24px);padding:9px 14px;border-radius:999px;background:rgba(7,21,45,.86);border:1px solid rgba(156,205,255,.42);font-weight:800;font-size:13px;text-align:center;white-space:nowrap;backdrop-filter:blur(8px)}
+.guided-camera-controls{flex:0 0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
+.guided-camera-controls .btn{min-height:50px}
+.guided-camera-hint{grid-column:1/-1;margin:0;color:#c6d5ee;text-align:center;font-size:11px;line-height:1.35}
+.guided-camera-fallback{display:none}
+.guided-camera-fallback.show{display:inline-flex}
+@media(max-width:390px){
+  .guided-camera-shell{padding-left:9px;padding-right:9px}
+  .guided-card-frame{width:min(74vw,calc((100dvh - 178px)*.7159));border-radius:14px}
+  .guided-camera-status{font-size:12px}
+}
+@media(orientation:landscape) and (max-height:520px){
+  .guided-card-frame{width:min(36vw,calc((100dvh - 120px)*.7159))}
+  .guided-camera-top{min-height:38px}.guided-camera-controls .btn{min-height:42px}
+}
 </style>
 <style id="cardoryx-category-accents">
 .category-tile[data-cat-key="fuoco"]{--cat-accent:#ef4444;--cat-soft:#fff1ed}.category-tile[data-cat-key="acqua"]{--cat-accent:#0ea5e9;--cat-soft:#e7f7ff}.category-tile[data-cat-key="erba"]{--cat-accent:#16a34a;--cat-soft:#eaf8ee}.category-tile[data-cat-key="lampo"],.category-tile[data-cat-key="energiebase"]{--cat-accent:#d89b17;--cat-soft:#fff7dc}.category-tile[data-cat-key="psico"]{--cat-accent:#a855f7;--cat-soft:#f7efff}.category-tile[data-cat-key="lotta"]{--cat-accent:#c2692d;--cat-soft:#fff1e7}.category-tile[data-cat-key="oscurita"]{--cat-accent:#5b21b6;--cat-soft:#f2edff}.category-tile[data-cat-key="metallo"],.category-tile[data-cat-key="incolore"]{--cat-accent:#64748b;--cat-soft:#eef2f6}.category-tile[data-cat-key="drago"]{--cat-accent:#4338ca;--cat-soft:#eeedff}.category-tile[data-cat-key="aiuto"]{--cat-accent:#2563eb;--cat-soft:#eaf1ff}.category-tile[data-cat-key="strumenti"],.category-tile[data-cat-key="oggettipokemon"]{--cat-accent:#0d9488;--cat-soft:#e8fbf8}.category-tile[data-cat-key="stadio"]{--cat-accent:#f97316;--cat-soft:#fff2e8}.category-tile[data-cat-key="energiespeciali"]{--cat-accent:#c026d3;--cat-soft:#fcecff}.category-tile[data-cat-key="protette"]{--cat-accent:#d89b17;--cat-soft:#fff7dc}
@@ -365,7 +395,8 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
     <div class="card scan-panel-primary">
       <div class="section-title">Scansiona carta</div>
       <div class="source-grid">
-        <label class="btn file-btn">📷 Scatta foto<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden></label>
+        <button class="btn file-btn" id="guidedCameraBtn" type="button" onclick="openGuidedCamera()">📷 Camera guidata</button>
+        <label class="btn alt file-btn">📸 Scatto manuale<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden></label>
         <label class="btn alt file-btn">🖼️ Dal rullino<input id="galleryInput" type="file" accept="image/*" multiple hidden></label>
       </div>
       <div id="queueWrap" class="queue hidden"></div>
@@ -6718,6 +6749,297 @@ document.getElementById('scannerProFindBtn')?.addEventListener('click',()=>scann
 
 
 document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}catch(e){}});
+
+/* Camera guidata. Non modifica OCR/TCGdex: produce un File e riusa setQueue/loadQueueItem. */
+const guidedCameraState={
+  active:false,stream:null,timer:0,captureLocked:false,previousLuma:null,
+  previousEdges:null,stableSince:0,presenceFrames:0,lastAnalysisAt:0
+};
+const GUIDED_SAMPLE_INTERVAL=220;
+const GUIDED_STABLE_MS=1600;
+
+function setGuidedCameraStatus(message,state='neutral'){
+  const status=document.getElementById('guidedCameraStatus');
+  const frame=document.getElementById('guidedCardFrame');
+  if(status)status.textContent=message;
+  if(frame){
+    frame.classList.toggle('is-almost',state==='almost');
+    frame.classList.toggle('is-ready',state==='ready');
+  }
+}
+function resetGuidedStability(){
+  guidedCameraState.previousLuma=null;
+  guidedCameraState.previousEdges=null;
+  guidedCameraState.stableSince=0;
+  guidedCameraState.presenceFrames=0;
+}
+async function openGuidedCamera(){
+  const modal=document.getElementById('guidedCameraModal');
+  if(!modal)return;
+  guidedCameraState.active=true;
+  guidedCameraState.captureLocked=false;
+  resetGuidedStability();
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  setGuidedCameraStatus('Avvio fotocamera…');
+  await startGuidedCameraStream();
+}
+async function startGuidedCameraStream(){
+  const retry=document.getElementById('guidedRetryBtn');
+  const fallback=document.getElementById('guidedIOSFallbackBtn');
+  retry?.classList.remove('show');fallback?.classList.remove('show');
+  if(!navigator.mediaDevices?.getUserMedia){
+    setGuidedCameraStatus('Preview live non supportata: usa Fotocamera iOS.');
+    fallback?.classList.add('show');
+    return false;
+  }
+  stopGuidedCameraStream();
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920},
+        height:{ideal:1440}
+      }
+    });
+    if(!guidedCameraState.active){
+      stream.getTracks().forEach(track=>track.stop());
+      return false;
+    }
+    guidedCameraState.stream=stream;
+    const video=document.getElementById('guidedCameraVideo');
+    video.srcObject=stream;
+    video.setAttribute('playsinline','');
+    await video.play();
+    resetGuidedStability();
+    setGuidedCameraStatus('Posiziona la carta');
+    scheduleGuidedAnalysis(250);
+    return true;
+  }catch(error){
+    console.warn('Camera guidata non disponibile:',error);
+    setGuidedCameraStatus(error?.name==='NotAllowedError'
+      ? 'Permesso fotocamera negato. Usa lo scatto iOS.'
+      : 'Fotocamera live non disponibile. Usa lo scatto iOS.');
+    retry?.classList.add('show');fallback?.classList.add('show');
+    return false;
+  }
+}
+function stopGuidedCameraStream(){
+  clearTimeout(guidedCameraState.timer);
+  guidedCameraState.timer=0;
+  if(guidedCameraState.stream){
+    guidedCameraState.stream.getTracks().forEach(track=>track.stop());
+    guidedCameraState.stream=null;
+  }
+  const video=document.getElementById('guidedCameraVideo');
+  if(video)video.srcObject=null;
+}
+function closeGuidedCamera(){
+  guidedCameraState.active=false;
+  stopGuidedCameraStream();
+  resetGuidedStability();
+  document.getElementById('guidedCameraModal')?.classList.remove('open');
+  document.body.style.overflow='';
+}
+function openLegacyCameraFallback(){
+  closeGuidedCamera();
+  const input=document.getElementById('cameraInput');
+  if(input){input.value='';input.click();}
+}
+function scheduleGuidedAnalysis(delay=GUIDED_SAMPLE_INTERVAL){
+  clearTimeout(guidedCameraState.timer);
+  if(!guidedCameraState.active||guidedCameraState.captureLocked)return;
+  guidedCameraState.timer=setTimeout(analyzeGuidedCameraFrame,delay);
+}
+function drawGuidedVisibleVideo(video,stage,canvas){
+  const vw=video.videoWidth,vh=video.videoHeight;
+  const sw=stage.clientWidth,sh=stage.clientHeight;
+  if(!vw||!vh||!sw||!sh)return false;
+  const targetW=180,targetH=Math.max(120,Math.round(targetW*sh/sw));
+  canvas.width=targetW;canvas.height=targetH;
+  const videoAspect=vw/vh,targetAspect=sw/sh;
+  let sx=0,sy=0,sourceW=vw,sourceH=vh;
+  if(videoAspect>targetAspect){
+    sourceW=vh*targetAspect;sx=(vw-sourceW)/2;
+  }else{
+    sourceH=vw/targetAspect;sy=(vh-sourceH)/2;
+  }
+  canvas.getContext('2d',{willReadFrequently:true}).drawImage(
+    video,sx,sy,sourceW,sourceH,0,0,targetW,targetH
+  );
+  return true;
+}
+function guidedFrameCoordinates(stage,frame,canvas){
+  const sr=stage.getBoundingClientRect(),fr=frame.getBoundingClientRect();
+  return {
+    left:(fr.left-sr.left)/sr.width*canvas.width,
+    right:(fr.right-sr.left)/sr.width*canvas.width,
+    top:(fr.top-sr.top)/sr.height*canvas.height,
+    bottom:(fr.bottom-sr.top)/sr.height*canvas.height
+  };
+}
+function guidedLumaData(imageData){
+  const src=imageData.data,luma=new Float32Array(imageData.width*imageData.height);
+  for(let i=0,j=0;i<src.length;i+=4,j++)luma[j]=src[i]*.299+src[i+1]*.587+src[i+2]*.114;
+  return luma;
+}
+function guidedLineScore(luma,w,h,axis,pos,start,end){
+  let sum=0,count=0;
+  if(axis==='x'){
+    const x=Math.max(1,Math.min(w-2,Math.round(pos)));
+    for(let y=Math.max(1,Math.round(start));y<Math.min(h-1,Math.round(end));y+=2){
+      sum+=Math.abs(luma[y*w+x+1]-luma[y*w+x-1]);count++;
+    }
+  }else{
+    const y=Math.max(1,Math.min(h-2,Math.round(pos)));
+    for(let x=Math.max(1,Math.round(start));x<Math.min(w-1,Math.round(end));x+=2){
+      sum+=Math.abs(luma[(y+1)*w+x]-luma[(y-1)*w+x]);count++;
+    }
+  }
+  return count?sum/count:0;
+}
+function guidedBestEdge(luma,w,h,axis,expected,band,start,end){
+  let best={position:expected,score:0};
+  for(let p=Math.round(expected-band);p<=Math.round(expected+band);p++){
+    const score=guidedLineScore(luma,w,h,axis,p,start,end);
+    if(score>best.score)best={position:p,score};
+  }
+  return best;
+}
+function guidedMotion(current,previous,w,rect){
+  if(!previous||previous.length!==current.length)return Infinity;
+  const left=Math.max(0,Math.round(rect.left)),right=Math.min(w,Math.round(rect.right));
+  const top=Math.max(0,Math.round(rect.top)),bottom=Math.round(rect.bottom);
+  let sum=0,count=0;
+  for(let y=top;y<bottom;y+=3){
+    for(let x=left;x<right;x+=3){
+      const i=y*w+x;if(i>=current.length)continue;
+      sum+=Math.abs(current[i]-previous[i]);count++;
+    }
+  }
+  return count?sum/count:Infinity;
+}
+function guidedTexture(luma,w,rect){
+  const left=Math.max(0,Math.round(rect.left)),right=Math.min(w,Math.round(rect.right));
+  const top=Math.max(0,Math.round(rect.top)),bottom=Math.round(rect.bottom);
+  let sum=0,sum2=0,count=0;
+  for(let y=top;y<bottom;y+=3){
+    for(let x=left;x<right;x+=3){
+      const v=luma[y*w+x];if(!Number.isFinite(v))continue;
+      sum+=v;sum2+=v*v;count++;
+    }
+  }
+  if(!count)return 0;
+  const mean=sum/count;
+  return Math.sqrt(Math.max(0,sum2/count-mean*mean));
+}
+function guidedEdgesStable(edges,previous){
+  if(!previous)return false;
+  return ['left','right','top','bottom'].every(key=>
+    Math.abs(edges[key].position-previous[key].position)<=2
+  );
+}
+function analyzeGuidedCameraFrame(){
+  if(!guidedCameraState.active||guidedCameraState.captureLocked)return;
+  const video=document.getElementById('guidedCameraVideo');
+  const stage=document.getElementById('guidedCameraStage');
+  const frame=document.getElementById('guidedCardFrame');
+  const canvas=document.getElementById('guidedAnalysisCanvas');
+  if(!video||!stage||!frame||!canvas||video.readyState<2){
+    scheduleGuidedAnalysis();return;
+  }
+  try{
+    if(!drawGuidedVisibleVideo(video,stage,canvas)){scheduleGuidedAnalysis();return;}
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const luma=guidedLumaData(imageData);
+    const rect=guidedFrameCoordinates(stage,frame,canvas);
+    const band=Math.max(4,Math.min(canvas.width*.055,(rect.right-rect.left)*.1));
+    const insetY=(rect.bottom-rect.top)*.1,insetX=(rect.right-rect.left)*.1;
+    const edges={
+      left:guidedBestEdge(luma,canvas.width,canvas.height,'x',rect.left,band,rect.top+insetY,rect.bottom-insetY),
+      right:guidedBestEdge(luma,canvas.width,canvas.height,'x',rect.right,band,rect.top+insetY,rect.bottom-insetY),
+      top:guidedBestEdge(luma,canvas.width,canvas.height,'y',rect.top,band,rect.left+insetX,rect.right-insetX),
+      bottom:guidedBestEdge(luma,canvas.width,canvas.height,'y',rect.bottom,band,rect.left+insetX,rect.right-insetX)
+    };
+    const minEdge=Math.min(edges.left.score,edges.right.score,edges.top.score,edges.bottom.score);
+    const texture=guidedTexture(luma,canvas.width,rect);
+    const motion=guidedMotion(luma,guidedCameraState.previousLuma,canvas.width,rect);
+    const edgeStable=guidedEdgesStable(edges,guidedCameraState.previousEdges);
+    const cardLikely=minEdge>=7.5&&texture>=18;
+    const sceneStable=motion<=3.8&&edgeStable;
+
+    if(!cardLikely){
+      guidedCameraState.presenceFrames=0;guidedCameraState.stableSince=0;
+      setGuidedCameraStatus(texture>=12?'Centra la carta':'Posiziona la carta');
+    }else{
+      guidedCameraState.presenceFrames++;
+      if(sceneStable&&guidedCameraState.presenceFrames>=2){
+        if(!guidedCameraState.stableSince)guidedCameraState.stableSince=performance.now();
+        const held=performance.now()-guidedCameraState.stableSince;
+        if(held>=GUIDED_STABLE_MS){
+          setGuidedCameraStatus('Acquisizione…','ready');
+          guidedCameraState.previousLuma=luma;guidedCameraState.previousEdges=edges;
+          captureGuidedFrame('auto');
+          return;
+        }
+        setGuidedCameraStatus('Mantieni fermo',held>700?'ready':'almost');
+      }else{
+        guidedCameraState.stableSince=0;
+        setGuidedCameraStatus('Mantieni fermo','almost');
+      }
+    }
+    guidedCameraState.previousLuma=luma;
+    guidedCameraState.previousEdges=edges;
+  }catch(error){
+    console.warn('Analisi camera guidata sospesa:',error);
+    resetGuidedStability();
+    setGuidedCameraStatus('Autoscatto non disponibile. Usa Scatta ora.');
+  }
+  scheduleGuidedAnalysis();
+}
+async function captureGuidedFrame(source='manual'){
+  if(guidedCameraState.captureLocked)return;
+  const video=document.getElementById('guidedCameraVideo');
+  if(!video?.videoWidth||!video?.videoHeight){
+    if(source==='manual')openLegacyCameraFallback();
+    return;
+  }
+  guidedCameraState.captureLocked=true;
+  clearTimeout(guidedCameraState.timer);
+  setGuidedCameraStatus('Acquisizione…','ready');
+  const canvas=document.getElementById('guidedCaptureCanvas');
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d',{alpha:false});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.92));
+  if(!blob){
+    guidedCameraState.captureLocked=false;
+    setGuidedCameraStatus('Scatto non riuscito. Usa Scatta ora.');
+    scheduleGuidedAnalysis();
+    return;
+  }
+  const file=new File([blob],source==='auto'?'cardoryx-auto.jpg':'cardoryx-manual.jpg',{
+    type:'image/jpeg',lastModified:Date.now()
+  });
+  closeGuidedCamera();
+  setQueue([file]);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!guidedCameraState.active||document.hidden)return;
+  const live=guidedCameraState.stream?.getVideoTracks?.().some(track=>track.readyState==='live');
+  if(!live){
+    resetGuidedStability();
+    setGuidedCameraStatus('Fotocamera sospesa. Tocca Riprova.');
+    document.getElementById('guidedRetryBtn')?.classList.add('show');
+    document.getElementById('guidedIOSFallbackBtn')?.classList.add('show');
+  }
+});
+window.addEventListener('orientationchange',()=>{
+  if(guidedCameraState.active)resetGuidedStability();
+});
 </script>
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeCardZoom()">
@@ -6727,6 +7049,28 @@ document.addEventListener('DOMContentLoaded',()=>{try{renderCategoryPdfSelect()}
 </div>
 
 
+
+<div id="guidedCameraModal" class="guided-camera-modal" role="dialog" aria-modal="true" aria-labelledby="guidedCameraTitle">
+  <div class="guided-camera-shell">
+    <div class="guided-camera-top">
+      <button class="btn alt" type="button" onclick="closeGuidedCamera()">Chiudi</button>
+      <strong id="guidedCameraTitle">Inquadra la carta</strong>
+      <button id="guidedRetryBtn" class="btn alt guided-camera-fallback" type="button" onclick="startGuidedCameraStream()">Riprova</button>
+    </div>
+    <div id="guidedCameraStage" class="guided-camera-stage">
+      <video id="guidedCameraVideo" autoplay muted playsinline></video>
+      <div id="guidedCardFrame" class="guided-card-frame" aria-hidden="true"></div>
+      <div id="guidedCameraStatus" class="guided-camera-status" role="status" aria-live="polite">Posiziona la carta</div>
+    </div>
+    <canvas id="guidedAnalysisCanvas" width="180" height="260" hidden></canvas>
+    <canvas id="guidedCaptureCanvas" hidden></canvas>
+    <div class="guided-camera-controls">
+      <button id="guidedManualCaptureBtn" class="btn big" type="button" onclick="captureGuidedFrame('manual')">Scatta ora</button>
+      <button id="guidedIOSFallbackBtn" class="btn alt guided-camera-fallback" type="button" onclick="openLegacyCameraFallback()">Fotocamera iOS</button>
+      <p class="guided-camera-hint">Autoscatto conservativo dopo circa 1,6 s di carta centrata e stabile. Lo scatto manuale resta sempre disponibile.</p>
+    </div>
+  </div>
+</div>
 <div id="photoCropModal" class="photo-crop-modal">
   <div class="crop-head"><b>Ritaglia e raddrizza la carta</b><button class="btn alt" type="button" onclick="closeCardCropper()">✕</button></div>
   <div class="crop-stage"><canvas id="cropCanvas" width="630" height="880"></canvas></div>
