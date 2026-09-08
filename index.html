@@ -1457,8 +1457,78 @@ function renderAll(){
   renderStats();
 }
 function fillTypeFilter(){const s=document.getElementById('typeFilter');if(!s)return;const cur=s.value;s.innerHTML='<option value="">Tutti i tipi</option>'+CATEGORIES.map(x=>`<option>${x}</option>`).join('');s.value=cur}
-cameraInput.addEventListener('change',()=>setQueue(cameraInput.files));
-galleryInput.addEventListener('change',()=>setQueue(galleryInput.files));
+cameraInput.addEventListener('change',()=>prepareScannerInputFiles(cameraInput.files,'manual'));
+galleryInput.addEventListener('change',()=>prepareScannerInputFiles(galleryInput.files,'gallery'));
+
+async function scannerInputFileCanvas(file){
+  let source=null,objectUrl='';
+  try{
+    if(typeof createImageBitmap==='function'){
+      try{source=await createImageBitmap(file,{imageOrientation:'from-image'})}
+      catch(error){source=null}
+    }
+    if(!source){
+      objectUrl=URL.createObjectURL(file);
+      source=await new Promise((resolve,reject)=>{
+        const image=new Image();
+        image.onload=()=>resolve(image);
+        image.onerror=reject;
+        image.src=objectUrl;
+      });
+    }
+    const width=source.naturalWidth||source.width;
+    const height=source.naturalHeight||source.height;
+    if(!width||!height)throw new Error('Dimensioni immagine non disponibili');
+    const maxSide=2600;
+    const scale=Math.min(1,maxSide/Math.max(width,height));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(width*scale));
+    canvas.height=Math.max(1,Math.round(height*scale));
+    const ctx=canvas.getContext('2d',{alpha:false});
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(source,0,0,canvas.width,canvas.height);
+    return canvas;
+  }finally{
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+    if(source&&typeof source.close==='function')source.close();
+  }
+}
+async function autoPrepareScannerInputFile(file,source){
+  const canvas=await scannerInputFileCanvas(file);
+  const prepared=autoFitGuidedCardCanvas(canvas);
+  if(!prepared.fitted)return {file,fitted:false};
+  const blob=await new Promise(resolve=>prepared.canvas.toBlob(resolve,'image/jpeg',.94));
+  if(!blob)return {file,fitted:false};
+  const baseName=String(file.name||'cardoryx').replace(/\.[^.]+$/,'');
+  return {
+    file:new File([blob],`${baseName}-autofit.jpg`,{type:'image/jpeg',lastModified:file.lastModified||Date.now()}),
+    fitted:true
+  };
+}
+async function prepareScannerInputFiles(fileList,source='gallery'){
+  const originals=[...fileList||[]];
+  if(!originals.length)return;
+  const status=document.getElementById('ocrStatus');
+  if(status)status.textContent=originals.length===1
+    ? 'Rilevo e raddrizzo automaticamente la carta…'
+    : `Preparo automaticamente ${originals.length} immagini…`;
+  const prepared=[];
+  let fittedCount=0;
+  for(const file of originals){
+    try{
+      const result=await autoPrepareScannerInputFile(file,source);
+      prepared.push(result.file);
+      if(result.fitted)fittedCount++;
+    }catch(error){
+      console.warn('Auto-ritaglio non disponibile: uso la foto originale.',error);
+      prepared.push(file);
+    }
+  }
+  setQueue(prepared);
+  if(status)status.textContent=fittedCount
+    ? `Auto-ritaglio applicato a ${fittedCount} di ${prepared.length} foto. Premi “Riconosci carta”.`
+    : 'Bordi non rilevati con sicurezza: uso la foto originale. Premi “Riconosci carta”.';
+}
 function setQueue(fileList){const files=[...fileList||[]];if(!files.length)return;scanQueue=files;queueIndex=0;renderQueue();loadQueueItem(0)}
 function renderQueue(){if(scanQueue.length<=1){queueWrap.classList.add('hidden');queueWrap.innerHTML='';return}queueWrap.classList.remove('hidden');queueWrap.innerHTML=scanQueue.map((f,i)=>`<img class="${i===queueIndex?'active':''}" src="${URL.createObjectURL(f)}" onclick="loadQueueItem(${i})">`).join('')}
 
