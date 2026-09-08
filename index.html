@@ -7061,18 +7061,84 @@ function detectGuidedCardBounds(sourceCanvas){
   const scaleX=sourceCanvas.width/w,scaleY=sourceCanvas.height/h;
   return {x:x1*scaleX,y:y1*scaleY,width:(x2-x1)*scaleX,height:(y2-y1)*scaleY};
 }
+function guidedRegressionSlope(points){
+  if(points.length<6)return null;
+  const meanY=points.reduce((sum,point)=>sum+point.y,0)/points.length;
+  const meanX=points.reduce((sum,point)=>sum+point.x,0)/points.length;
+  let numerator=0,denominator=0;
+  for(const point of points){
+    numerator+=(point.y-meanY)*(point.x-meanX);
+    denominator+=(point.y-meanY)*(point.y-meanY);
+  }
+  return denominator?numerator/denominator:null;
+}
+function estimateGuidedDeskewAngle(sourceCanvas,bounds){
+  if(!bounds)return 0;
+  const sample=document.createElement('canvas');
+  sample.width=240;
+  sample.height=Math.max(280,Math.round(240*sourceCanvas.height/sourceCanvas.width));
+  const ctx=sample.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(sourceCanvas,0,0,sample.width,sample.height);
+  const image=ctx.getImageData(0,0,sample.width,sample.height);
+  const luma=guidedLumaData(image);
+  const scaleX=sample.width/sourceCanvas.width;
+  const scaleY=sample.height/sourceCanvas.height;
+  const leftExpected=bounds.x*scaleX;
+  const rightExpected=(bounds.x+bounds.width)*scaleX;
+  const top=bounds.y*scaleY;
+  const bottom=(bounds.y+bounds.height)*scaleY;
+  const searchRadius=Math.max(5,Math.round(bounds.width*scaleX*.055));
+  const leftPoints=[],rightPoints=[];
+  for(let y=Math.max(3,Math.round(top+(bottom-top)*.12));y<Math.min(sample.height-3,Math.round(bottom-(bottom-top)*.12));y+=4){
+    for(const [expected,points] of [[leftExpected,leftPoints],[rightExpected,rightPoints]]){
+      let bestX=-1,bestScore=0;
+      const start=Math.max(2,Math.round(expected-searchRadius));
+      const end=Math.min(sample.width-3,Math.round(expected+searchRadius));
+      for(let x=start;x<=end;x++){
+        const score=Math.abs(luma[y*sample.width+x+1]-luma[y*sample.width+x-1]);
+        if(score>bestScore){bestScore=score;bestX=x;}
+      }
+      if(bestX>=0&&bestScore>=10)points.push({x:bestX,y});
+    }
+  }
+  const leftSlope=guidedRegressionSlope(leftPoints);
+  const rightSlope=guidedRegressionSlope(rightPoints);
+  if(leftSlope===null||rightSlope===null)return 0;
+  const leftAngle=Math.atan(leftSlope)*180/Math.PI;
+  const rightAngle=Math.atan(rightSlope)*180/Math.PI;
+  if(Math.abs(leftAngle-rightAngle)>2.2)return 0;
+  const correction=(leftAngle+rightAngle)/2;
+  return Math.abs(correction)>=.35&&Math.abs(correction)<=6?correction:0;
+}
+function rotateGuidedCanvas(sourceCanvas,degrees){
+  if(!degrees)return sourceCanvas;
+  const radians=degrees*Math.PI/180;
+  const cosine=Math.abs(Math.cos(radians)),sine=Math.abs(Math.sin(radians));
+  const output=document.createElement('canvas');
+  output.width=Math.ceil(sourceCanvas.width*cosine+sourceCanvas.height*sine);
+  output.height=Math.ceil(sourceCanvas.width*sine+sourceCanvas.height*cosine);
+  const ctx=output.getContext('2d',{alpha:false});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,output.width,output.height);
+  ctx.translate(output.width/2,output.height/2);
+  ctx.rotate(radians);
+  ctx.drawImage(sourceCanvas,-sourceCanvas.width/2,-sourceCanvas.height/2);
+  return output;
+}
 function autoFitGuidedCardCanvas(sourceCanvas){
-  const bounds=detectGuidedCardBounds(sourceCanvas);
+  const initialBounds=detectGuidedCardBounds(sourceCanvas);
+  const deskewAngle=estimateGuidedDeskewAngle(sourceCanvas,initialBounds);
+  const workingCanvas=rotateGuidedCanvas(sourceCanvas,deskewAngle);
+  const bounds=detectGuidedCardBounds(workingCanvas);
   const output=document.createElement('canvas');
   output.width=945;output.height=1320;
   const ctx=output.getContext('2d',{alpha:false});
   ctx.fillStyle='#fff';ctx.fillRect(0,0,output.width,output.height);
   if(bounds){
-    ctx.drawImage(sourceCanvas,bounds.x,bounds.y,bounds.width,bounds.height,0,0,output.width,output.height);
-    return {canvas:output,fitted:true,bounds};
+    ctx.drawImage(workingCanvas,bounds.x,bounds.y,bounds.width,bounds.height,0,0,output.width,output.height);
+    return {canvas:output,fitted:true,bounds,deskewAngle};
   }
   ctx.drawImage(sourceCanvas,0,0,sourceCanvas.width,sourceCanvas.height,0,0,output.width,output.height);
-  return {canvas:output,fitted:false,bounds:null};
+  return {canvas:output,fitted:false,bounds:null,deskewAngle:0};
 }
 function drawGuidedVisibleVideo(video,stage,canvas){
   const source=guidedVisibleSourceRect(video,stage);
