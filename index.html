@@ -491,11 +491,11 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
 
     <div id="singleScanFallback" class="card">
   <div class="section-title">🔢 Ricerca senza foto</div>
-  <div class="small">Puoi cercare direttamente una carta con <b>Numero carta</b> e <b>Totale set</b>, oppure esplorare il catalogo inserendo soltanto il <b>Nome carta</b>.</div>
+  <div class="small">Cerca con <b>Numero + Totale set</b>, con <b>Numero + Nome esatto</b>, oppure esplora il catalogo inserendo soltanto il <b>Nome carta</b>.</div>
   <div class="row" style="margin-top:10px">
     <div>
       <div class="label">Numero carta</div>
-      <input id="numberInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="146">
+      <input id="numberInput" inputmode="text" autocapitalize="characters" autocomplete="off" placeholder="146, TG01, SVP001">
     </div>
     <div>
       <div class="label">Totale set</div>
@@ -1934,11 +1934,6 @@ async function querySetsByOfficialCount(total){
   return out;
 }
 
-const PRINTED_CODE_HINTS={
-  "146/159":{setId:"sv09",localId:"146"},
-  "98/159":{setId:"sv09",localId:"098"}
-};
-
 async function fetchCardFromExactSet(setId,localId){
   for(const variant of localIdVariants(localId)){
     for(const base of [API,'https://api.tcgdex.net/v2/en']){
@@ -1961,23 +1956,10 @@ async function verifiedNumberTotalCandidate(card,num,total){
   if(Number(setDetail?.cardCount?.official||0)!==Number(total))return null;
   return {...card,set:{...(card.set||{}),...setDetail}};
 }
-async function fetchHintedPrintedCard(num,total){
-  const key=`${String(Number(num))}/${String(Number(total))}`;
-  const hint=PRINTED_CODE_HINTS[key];
-  if(!hint)return null;
-  const card=await fetchCardFromExactSet(hint.setId,hint.localId);
-  return verifiedNumberTotalCandidate(card,num,total);
-}
 async function queryByPrintedCode(num,total){
   const cleanNum=String(num||'').replace(/\D/g,'');
   const cleanTotal=Number(String(total||'').replace(/\D/g,''));
   if(!cleanNum||!cleanTotal)return [];
-
-  // Hints are shortcuts only. They must pass the exact same validation.
-  try{
-    const hinted=await fetchHintedPrintedCard(cleanNum,cleanTotal);
-    if(hinted?.id)return [hinted];
-  }catch(e){}
 
   const found=new Map();
   // Narrow by the exact official set count before applying an operational cap.
@@ -3090,6 +3072,75 @@ function manualExactNameMatches(cards,name){
   return (cards||[]).filter(c=>normalizeManualExactName(c?.name||'')===target);
 }
 
+function manualLocalIdKey(value=''){
+  const raw=canonicalPrintedLocalId(value);
+  const match=raw.match(/^([A-Z]{0,5})(\d{1,3})([A-Z]{0,2})$/);
+  if(!match)return raw;
+  return `${match[1]}${Number(match[2])}${match[3]}`;
+}
+
+function sameManualLocalId(a,b){
+  return !!a&&!!b&&manualLocalIdKey(a)===manualLocalIdKey(b);
+}
+
+function manualLocalIdVariants(value=''){
+  const raw=canonicalPrintedLocalId(value);
+  const match=raw.match(/^([A-Z]{0,5})(\d{1,3})([A-Z]{0,2})$/);
+  if(!match)return raw?[raw]:[];
+  const number=String(Number(match[2]));
+  return [...new Set([
+    raw,
+    `${match[1]}${number}${match[3]}`,
+    `${match[1]}${number.padStart(2,'0')}${match[3]}`,
+    `${match[1]}${number.padStart(3,'0')}${match[3]}`
+  ])];
+}
+
+async function queryManualCardsByExactLocalId(value,allowedIds=null){
+  const merged=new Map();
+  for(const variant of manualLocalIdVariants(value)){
+    const cards=await apiCardsQuery({localId:variant});
+    for(const card of cards||[]){
+      if(card?.id&&(!allowedIds||allowedIds.has(card.id))&&sameManualLocalId(card.localId,value))merged.set(card.id,card);
+    }
+  }
+
+  const physical=[];
+  const briefs=[...merged.values()];
+  const batchSize=12;
+  for(let i=0;i<briefs.length;i+=batchSize){
+    const batch=await Promise.all(briefs.slice(i,i+batchSize).map(async brief=>{
+      const card=await fetchFullCandidate(brief);
+      if(!card?.id||!sameManualLocalId(card.localId,value))return null;
+      const setId=card?.set?.id||brief?.set?.id||String(card.id).split('-')[0]||'';
+      const setDetail=await fetchSetDetail(setId);
+      if(!setDetail||!isPhysicalTCGSet(setDetail))return null;
+      return {...brief,...card,set:{...(card?.set||{}),...setDetail}};
+    }));
+    for(const card of batch)if(card?.id)physical.push(card);
+  }
+  return [...new Map(physical.map(card=>[card.id,card])).values()];
+}
+
+async function queryManualCardsByNumberTotal(number,total){
+  const localId=canonicalPrintedLocalId(number);
+  const special=printedLocalIdParts(localId);
+  if(special){
+    return queryBySpecialPrintedCode(localId,`${special.prefix}${Number(total)}`);
+  }
+  if(/^\d+$/.test(localId))return queryByPrintedCode(localId,total);
+  const cards=await queryManualCardsByExactLocalId(localId);
+  return cards.filter(card=>Number(card?.set?.cardCount?.official||0)===Number(total));
+}
+
+async function queryManualCardsByNumberAndName(number,name){
+  const nameBriefs=await apiCardsQuery({name});
+  const nameIds=new Set((nameBriefs||[]).filter(card=>card?.id).map(card=>card.id));
+  if(!nameIds.size)return [];
+  const cards=await queryManualCardsByExactLocalId(number,nameIds);
+  return manualExactNameMatches(cards,name);
+}
+
 function manualNameContainsMatches(cards,name){
   const target=normalizeManualExactName(name);
   if(!target)return [];
@@ -3174,7 +3225,7 @@ function startManualCandidatePagination(cards,route,message=''){
 
 
 async function runManualCollectorSearch(){
-  const num=String(numberInput.value||'').replace(/\D/g,'');
+  const num=canonicalPrintedLocalId(numberInput.value||'');
   const total=String(setTotalInput.value||'').replace(/\D/g,'');
   const requestedName=String(nameInput.value||'').trim();
 
@@ -3183,8 +3234,13 @@ async function runManualCollectorSearch(){
     return;
   }
 
-  if((num&&!total)||(!num&&total)){
-    searchMsg.textContent='Inserisci sia Numero carta sia Totale set.';
+  if(!num&&total){
+    searchMsg.textContent='Aggiungi Numero carta oppure usa la ricerca Solo nome.';
+    return;
+  }
+
+  if(num&&!total&&!requestedName){
+    searchMsg.textContent='Il solo numero è troppo ambiguo. Aggiungi Nome carta oppure Totale set.';
     return;
   }
 
@@ -3208,8 +3264,29 @@ async function runManualCollectorSearch(){
       return;
     }
 
+    if(requestedName&&num&&!total){
+      searchMsg.textContent=`Verifico numero ${num} e nome esatto “${requestedName}”…`;
+      const cards=await queryManualCardsByNumberAndName(num,requestedName);
+      if(!cards.length){
+        searchMsg.textContent='Nessuna identità esatta con questo Numero e Nome. Aggiungi il Totale set o controlla i dati.';
+        return;
+      }
+      if(cards.length===1){
+        const card=cards[0];
+        searchMsg.textContent=`✓ ${card.name} · ${card.localId}${setOfficialCount(card)?'/'+setOfficialCount(card):''}`;
+        await chooseCard(card);
+        return;
+      }
+      startManualCandidatePagination(
+        cards,
+        'Numero + Nome esatti',
+        `${cards.length} identità condividono Numero e Nome. Scegli manualmente.`
+      );
+      return;
+    }
+
     searchMsg.textContent=`Identifico ${num}/${total}…`;
-    const cards=await queryByPrintedCode(num,total);
+    const cards=await queryManualCardsByNumberTotal(num,total);
 
     if(!cards.length){
       searchMsg.textContent=`Nessuna carta trovata per ${num}/${total}. Controlla i due numeri.`;
