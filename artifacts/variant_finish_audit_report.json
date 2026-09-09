@@ -1,13 +1,13 @@
 {
   "source": {
     "repository": "26ale93-lab/Cardoryx",
-    "mainSha": "8290e1cf9b5d3fc656f1676a9503b9acfdfb839f",
-    "indexSha256": "aaa612743f135f4c9d18b082105355b09a0cb46f19f4265413960672b84ee4f1",
+    "mainSha": "8f019a2e2d6047fad4381718a0ede02381d08abe",
+    "indexSha256": "8dee2eb4cbdc7cb52adc34fd09c0741dd3066dd326f43b1051abd41525af5562",
     "tcgdex": "official cards-database snapshot e36a155168d02590b69b1c92429a9877e04377d8",
     "tcgdexDatabaseSha": "e36a155168d02590b69b1c92429a9877e04377d8",
     "upstreamParseErrors": 0,
     "cardmarketPlayIndex": "data/cardmarket_play_index.json",
-    "generatedAt": "2026-09-09T11:03:25.918607+00:00"
+    "generatedAt": "2026-09-09T15:25:34.225712+00:00"
   },
   "methodology": {
     "mode": "read-only",
@@ -35,7 +35,9 @@
       "VERIFIED_PLAY_SERIES_PRICES",
       "PLAY_AUTO_CATALOG",
       "VERIFIED_REVERSE_CARDMARKET_CONFLICTS",
-      "knownReverseCardmarketProductConflict"
+      "knownReverseCardmarketProductConflict",
+      "VERIFIED_NORMAL_FINISHES",
+      "verifiedNormalFinish"
     ]
   },
   "italianEnglishPayloadAudit": {
@@ -227,9 +229,9 @@
     "totalIdentitiesTested": 4252,
     "italianRecordsUnavailable": 2546,
     "classifications": {
-      "CORRETTA": 3814,
+      "CORRETTA": 3840,
       "FALSO POSITIVO": 0,
-      "FALSO NEGATIVO": 26,
+      "FALSO NEGATIVO": 0,
       "AMBIGUA": 404,
       "SOURCE CONFLICT": 8
     },
@@ -253,13 +255,13 @@
         "totalIdentitiesTested": 4252,
         "italianRecordsUnavailable": 2546,
         "classifications": {
-          "CORRETTA": 3367,
+          "CORRETTA": 3814,
+          "FALSO POSITIVO": 0,
+          "FALSO NEGATIVO": 26,
           "AMBIGUA": 404,
-          "FALSO POSITIVO": 281,
-          "FALSO NEGATIVO": 192,
           "SOURCE CONFLICT": 8
         },
-        "pricingP0": 6,
+        "pricingP0": 0,
         "playVariantRowsSeen": 242,
         "unavailableExplicitTargets": [
           "mee-009",
@@ -272,49 +274,6 @@
           "mee-016"
         ]
       },
-      "totalsByFinish": {
-        "Normal": {
-          "documented": 2694,
-          "proposed": 2660,
-          "falseNegative": 43,
-          "falsePositive": 2
-        },
-        "Holo": {
-          "documented": 1061,
-          "proposed": 1328,
-          "falsePositive": 130,
-          "falseNegative": 24
-        },
-        "Reverse Holo": {
-          "documented": 1135,
-          "proposed": 1276,
-          "falsePositive": 149
-        },
-        "Cosmos Holo": {
-          "documented": 375,
-          "proposed": 75,
-          "falseNegative": 300
-        },
-        "Poké Ball Reverse Holo": {
-          "documented": 302,
-          "proposed": 302
-        },
-        "Master Ball Reverse Holo": {
-          "documented": 211,
-          "proposed": 211
-        }
-      }
-    },
-    "after": {
-      "totalIdentitiesTested": 4252,
-      "classifications": {
-        "CORRETTA": 3814,
-        "FALSO POSITIVO": 0,
-        "FALSO NEGATIVO": 26,
-        "AMBIGUA": 404,
-        "SOURCE CONFLICT": 8
-      },
-      "pricingP0": 0,
       "totalsByFinish": {
         "Normal": {
           "documented": 2694,
@@ -354,12 +313,61 @@
         }
       }
     },
+    "after": {
+      "totalIdentitiesTested": 4252,
+      "classifications": {
+        "CORRETTA": 3840,
+        "FALSO POSITIVO": 0,
+        "FALSO NEGATIVO": 0,
+        "AMBIGUA": 404,
+        "SOURCE CONFLICT": 8
+      },
+      "pricingP0": 0,
+      "totalsByFinish": {
+        "Normal": {
+          "documented": 2694,
+          "proposed": 2694,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        "Holo": {
+          "documented": 1061,
+          "proposed": 1099,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        "Reverse Holo": {
+          "documented": 1135,
+          "proposed": 1127,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        "Cosmos Holo": {
+          "documented": 375,
+          "proposed": 375,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        "Poké Ball Reverse Holo": {
+          "documented": 302,
+          "proposed": 302,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        "Master Ball Reverse Holo": {
+          "documented": 211,
+          "proposed": 211,
+          "falsePositive": 0,
+          "falseNegative": 0
+        }
+      }
+    },
     "classificationDelta": {
-      "FALSO NEGATIVO": -166,
+      "FALSO NEGATIVO": -26,
+      "CORRETTA": 26,
       "AMBIGUA": 0,
       "SOURCE CONFLICT": 0,
-      "FALSO POSITIVO": -281,
-      "CORRETTA": 447
+      "FALSO POSITIVO": 0
     }
   },
   "totalsByEra": {
@@ -408,8 +416,7 @@
       "AMBIGUA": 1
     },
     "SV promo": {
-      "CORRETTA": 14,
-      "FALSO NEGATIVO": 1,
+      "CORRETTA": 15,
       "AMBIGUA": 3
     },
     "SV special": {
@@ -424,9 +431,8 @@
       "AMBIGUA": 4
     },
     "Special parallel/stamp": {
-      "CORRETTA": 2890,
-      "AMBIGUA": 242,
-      "FALSO NEGATIVO": 25
+      "CORRETTA": 2915,
+      "AMBIGUA": 242
     },
     "Trainer Gallery": {
       "CORRETTA": 18
@@ -488,14 +494,12 @@
       "AMBIGUA": 85
     },
     "Promo": {
-      "CORRETTA": 226,
-      "AMBIGUA": 132,
-      "FALSO NEGATIVO": 5
+      "CORRETTA": 231,
+      "AMBIGUA": 132
     },
     "Rare": {
-      "CORRETTA": 932,
-      "AMBIGUA": 37,
-      "FALSO NEGATIVO": 21
+      "CORRETTA": 953,
+      "AMBIGUA": 37
     },
     "Rare Holo": {
       "CORRETTA": 19
@@ -528,9 +532,9 @@
   "totalsByFinish": {
     "Normal": {
       "documented": 2694,
-      "proposed": 2668,
+      "proposed": 2694,
       "falsePositive": 0,
-      "falseNegative": 26
+      "falseNegative": 0
     },
     "Holo": {
       "documented": 1061,
@@ -34914,13 +34918,14 @@
       "documentedFinishes": [
         "Normal"
       ],
-      "cardoryxProposedFinishes": [],
+      "cardoryxProposedFinishes": [
+        "Normal"
+      ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo",
         "Reverse Holo"
       ],
@@ -34928,16 +34933,21 @@
         "Speciale / Altro",
         "Non so"
       ],
-      "cardmarketPriceByProposedFinish": {},
+      "cardmarketPriceByProposedFinish": {
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        }
+      },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "SV promo"
     },
@@ -220591,13 +220601,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -220610,6 +220620,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -220617,14 +220632,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -223885,13 +223899,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -223904,6 +223918,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -223911,14 +223930,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -223983,13 +224001,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -224002,6 +224020,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -224009,14 +224032,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -226163,12 +226185,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -226186,6 +226208,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -226193,14 +226220,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -227103,13 +227129,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -227122,6 +227148,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -227129,14 +227160,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -227219,13 +227249,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -227238,6 +227268,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -227245,14 +227280,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -227335,13 +227369,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -227354,6 +227388,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -227361,14 +227400,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -228119,12 +228157,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -228142,6 +228180,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -228149,14 +228192,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -228228,12 +228270,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -228251,6 +228293,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -228258,14 +228305,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -272212,13 +272258,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -272231,6 +272277,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -272238,14 +272289,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -272413,13 +272463,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -272432,6 +272482,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -272439,14 +272494,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -272525,12 +272579,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -272548,6 +272602,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -272555,14 +272614,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -272865,12 +272923,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -272888,6 +272946,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -272895,14 +272958,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -273956,13 +274018,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -273975,6 +274037,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -273982,14 +274049,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -291776,13 +291842,14 @@
       "documentedFinishes": [
         "Normal"
       ],
-      "cardoryxProposedFinishes": [],
+      "cardoryxProposedFinishes": [
+        "Normal"
+      ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo",
         "Reverse Holo"
       ],
@@ -291790,16 +291857,21 @@
         "Speciale / Altro",
         "Non so"
       ],
-      "cardmarketPriceByProposedFinish": {},
+      "cardmarketPriceByProposedFinish": {
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        }
+      },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp"
     },
@@ -292482,13 +292554,14 @@
       "documentedFinishes": [
         "Normal"
       ],
-      "cardoryxProposedFinishes": [],
+      "cardoryxProposedFinishes": [
+        "Normal"
+      ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo",
         "Reverse Holo"
       ],
@@ -292496,16 +292569,21 @@
         "Speciale / Altro",
         "Non so"
       ],
-      "cardmarketPriceByProposedFinish": {},
+      "cardmarketPriceByProposedFinish": {
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        }
+      },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp"
     },
@@ -292549,13 +292627,14 @@
       "documentedFinishes": [
         "Normal"
       ],
-      "cardoryxProposedFinishes": [],
+      "cardoryxProposedFinishes": [
+        "Normal"
+      ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo",
         "Reverse Holo"
       ],
@@ -292563,16 +292642,21 @@
         "Speciale / Altro",
         "Non so"
       ],
-      "cardmarketPriceByProposedFinish": {},
+      "cardmarketPriceByProposedFinish": {
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        }
+      },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp"
     },
@@ -292616,13 +292700,14 @@
       "documentedFinishes": [
         "Normal"
       ],
-      "cardoryxProposedFinishes": [],
+      "cardoryxProposedFinishes": [
+        "Normal"
+      ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo",
         "Reverse Holo"
       ],
@@ -292630,16 +292715,21 @@
         "Speciale / Altro",
         "Non so"
       ],
-      "cardmarketPriceByProposedFinish": {},
+      "cardmarketPriceByProposedFinish": {
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        }
+      },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp"
     },
@@ -296193,12 +296283,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -296216,6 +296306,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -296223,14 +296318,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -297030,13 +297124,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -297049,6 +297143,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -297056,14 +297155,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -298539,13 +298637,13 @@
       ],
       "cardoryxProposedFinishes": [
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Cosmos Holo",
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -298558,6 +298656,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -298565,14 +298668,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -298740,12 +298842,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -298763,6 +298865,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -298770,14 +298877,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -299485,12 +299591,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -299508,6 +299614,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -299515,14 +299626,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -299598,6 +299708,7 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [
@@ -299611,7 +299722,6 @@
       ],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -299629,6 +299739,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -299636,14 +299751,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -302223,12 +302337,12 @@
       "cardoryxProposedFinishes": [
         "Cosmos Holo",
         "Holo",
+        "Normal",
         "Reverse Holo"
       ],
       "unmodelledVariantRows": [],
       "excludedFinishes": [
         "Master Ball Reverse Holo",
-        "Normal",
         "Poké Ball Reverse Holo"
       ],
       "manualSafetyChoices": [
@@ -302246,6 +302360,11 @@
           "kind": "none",
           "exact": false
         },
+        "Normal": {
+          "value": null,
+          "kind": "none",
+          "exact": false
+        },
         "Reverse Holo": {
           "value": null,
           "kind": "none",
@@ -302253,14 +302372,13 @@
         }
       },
       "failClosedFinishes": [],
-      "classification": "FALSO NEGATIVO",
-      "missingFinishes": [
-        "Normal"
-      ],
+      "classification": "CORRETTA",
+      "missingFinishes": [],
       "extraFinishes": [],
-      "reason": "explicit variant row not selectable",
+      "reason": "explicit variants agree",
       "resolverEvidence": [
-        "modern-explicit-detailed-priority"
+        "modern-explicit-detailed-priority",
+        "verified-normal-finish-registry"
       ],
       "era": "Special parallel/stamp",
       "liveCardmarketMismatchProbe": {
@@ -324845,9 +324963,9 @@
     "counts": {
       "Normal": {
         "documented": 2694,
-        "proposed": 2668,
+        "proposed": 2694,
         "falsePositive": 0,
-        "falseNegative": 26
+        "falseNegative": 0
       },
       "Holo": {
         "documented": 1061,
@@ -324863,344 +324981,6 @@
       }
     },
     "exceptions": [
-      {
-        "severity": "P2",
-        "tcgdexId": "me01-064",
-        "name": "Xerneas",
-        "set": "Mega Evolution",
-        "localId": "064",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me01-073",
-        "name": "Hariyama",
-        "set": "Mega Evolution",
-        "localId": "073",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me02-045",
-        "name": "Zacian",
-        "set": "Phantasmal Flames",
-        "localId": "045",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me02-053",
-        "name": "Flygon",
-        "set": "Phantasmal Flames",
-        "localId": "053",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-045",
-        "name": "Tyrantrum",
-        "set": "Perfect Order",
-        "localId": "045",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-086",
-        "name": "Growing Grass Energy",
-        "set": "Perfect Order",
-        "localId": "086",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-087",
-        "name": "Rocky Fighting Energy",
-        "set": "Perfect Order",
-        "localId": "087",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-088",
-        "name": "Telepathic Psychic Energy",
-        "set": "Perfect Order",
-        "localId": "088",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me04-013",
-        "name": "Delphox",
-        "set": "Chaos Rising",
-        "localId": "013",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-041",
-        "name": "Feraligatr",
-        "set": "Temporal Forces",
-        "localId": "041",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-062",
-        "name": "Iron Thorns",
-        "set": "Temporal Forces",
-        "localId": "062",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-119",
-        "name": "Koraidon",
-        "set": "Temporal Forces",
-        "localId": "119",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-121",
-        "name": "Miraidon",
-        "set": "Temporal Forces",
-        "localId": "121",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv06-100",
-        "name": "Hisuian Arcanine",
-        "set": "Twilight Masquerade",
-        "localId": "100",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv08-014",
-        "name": "Rabsca",
-        "set": "Surging Sparks",
-        "localId": "014",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv08-065",
-        "name": "Tapu Koko",
-        "set": "Surging Sparks",
-        "localId": "065",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv09-055",
-        "name": "Iono's Kilowattrel",
-        "set": "Journey Together",
-        "localId": "055",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-034",
-        "name": "Ethan's Typhlosion",
-        "set": "Destined Rivals",
-        "localId": "034",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-049",
-        "name": "Misty's Gyarados",
-        "set": "Destined Rivals",
-        "localId": "049",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-051",
-        "name": "Team Rocket's Articuno",
-        "set": "Destined Rivals",
-        "localId": "051",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-096",
-        "name": "Team Rocket's Tyranitar",
-        "set": "Destined Rivals",
-        "localId": "096",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-107",
-        "name": "Mareep",
-        "set": "SVP Black Star Promos",
-        "localId": "107",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-190",
-        "name": "Pikachu",
-        "set": "SVP Black Star Promos",
-        "localId": "190",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-221",
-        "name": "Professor's Research",
-        "set": "SVP Black Star Promos",
-        "localId": "221",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-222",
-        "name": "Professor's Research",
-        "set": "SVP Black Star Promos",
-        "localId": "222",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-223",
-        "name": "Professor's Research",
-        "set": "SVP Black Star Promos",
-        "localId": "223",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
       {
         "severity": "P3",
         "tcgdexId": "bw11-RC24",
@@ -325857,7 +325637,7 @@
   "playPrizePackAudit": {
     "indexStats": {
       "singles": 73196,
-      "priceRows": 78243,
+      "priceRows": 78244,
       "playProducts": 1295,
       "baseProductsMapped": 11674,
       "metacardsMapped": 715,
@@ -325963,16 +325743,16 @@
     "tested": 150,
     "beforeAfter": {
       "before": {
-        "CORRETTA": 116,
-        "FALSO POSITIVO": 8,
-        "FALSO NEGATIVO": 4,
+        "CORRETTA": 125,
+        "FALSO POSITIVO": 0,
+        "FALSO NEGATIVO": 3,
         "AMBIGUA": 14,
         "SOURCE CONFLICT": 8
       },
       "after": {
-        "CORRETTA": 125,
+        "CORRETTA": 128,
         "FALSO POSITIVO": 0,
-        "FALSO NEGATIVO": 3,
+        "FALSO NEGATIVO": 0,
         "AMBIGUA": 14,
         "SOURCE CONFLICT": 8
       }
@@ -326545,6 +326325,7 @@
   },
   "registryAudit": {
     "sizes": {
+      "normal": 26,
       "variant": 5,
       "stamp": 2,
       "play": 9,
@@ -326553,11 +326334,312 @@
     },
     "issues": []
   },
+  "verifiedNormalResidualAudit": {
+    "expectedIdentities": 26,
+    "recoveredIdentities": 26,
+    "appliedIds": [
+      "me01-064",
+      "me01-073",
+      "me02-045",
+      "me02-053",
+      "me03-045",
+      "me03-086",
+      "me03-087",
+      "me03-088",
+      "me04-013",
+      "sv05-041",
+      "sv05-062",
+      "sv05-119",
+      "sv05-121",
+      "sv06-100",
+      "sv08-014",
+      "sv08-065",
+      "sv09-055",
+      "sv10-034",
+      "sv10-049",
+      "sv10-051",
+      "sv10-096",
+      "svp-107",
+      "svp-190",
+      "svp-221",
+      "svp-222",
+      "svp-223"
+    ],
+    "outsideListInheritedRule": false,
+    "unstampedOnly": true,
+    "priceFieldsPresent": false,
+    "stampedAndPlayPathsUnchanged": true,
+    "energyRuleGeneralized": false,
+    "otherFinishesAddedByRegistry": [],
+    "identityChecks": [
+      {
+        "tcgdexId": "svp-107",
+        "setId": "svp",
+        "localId": "107",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me04-013",
+        "setId": "me04",
+        "localId": "013",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me01-064",
+        "setId": "me01",
+        "localId": "064",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me01-073",
+        "setId": "me01",
+        "localId": "073",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me03-045",
+        "setId": "me03",
+        "localId": "045",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me03-086",
+        "setId": "me03",
+        "localId": "086",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me03-087",
+        "setId": "me03",
+        "localId": "087",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me03-088",
+        "setId": "me03",
+        "localId": "088",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me02-045",
+        "setId": "me02",
+        "localId": "045",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "me02-053",
+        "setId": "me02",
+        "localId": "053",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv10-034",
+        "setId": "sv10",
+        "localId": "034",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv10-049",
+        "setId": "sv10",
+        "localId": "049",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv10-051",
+        "setId": "sv10",
+        "localId": "051",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv10-096",
+        "setId": "sv10",
+        "localId": "096",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv09-055",
+        "setId": "sv09",
+        "localId": "055",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "svp-190",
+        "setId": "svp",
+        "localId": "190",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "svp-221",
+        "setId": "svp",
+        "localId": "221",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "svp-222",
+        "setId": "svp",
+        "localId": "222",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "svp-223",
+        "setId": "svp",
+        "localId": "223",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv08-014",
+        "setId": "sv08",
+        "localId": "014",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv08-065",
+        "setId": "sv08",
+        "localId": "065",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv05-041",
+        "setId": "sv05",
+        "localId": "041",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv05-062",
+        "setId": "sv05",
+        "localId": "062",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv05-119",
+        "setId": "sv05",
+        "localId": "119",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv05-121",
+        "setId": "sv05",
+        "localId": "121",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      },
+      {
+        "tcgdexId": "sv06-100",
+        "setId": "sv06",
+        "localId": "100",
+        "unstampedNormalRows": 1,
+        "exactMatch": true,
+        "wrongIdRejected": true,
+        "wrongSetRejected": true,
+        "wrongLocalIdRejected": true
+      }
+    ],
+    "assessment": "All 26 audited identities gain only Normal through exact tcgdexId + setId + normalized localId matching."
+  },
   "cardmarketPricingAudit": {
     "proposedFinishRoutes": {
       "numeric": 4,
       "failClosed": 0,
-      "noSnapshotPrice": 5778
+      "noSnapshotPrice": 5804
     },
     "wrongPhysicalProductRisks": [],
     "resolvedExactReverseProductConflicts": [
@@ -326649,344 +326731,6 @@
     "assessment": "6 confirmed P0 conflicts now fail closed; 0 unresolved P0 risks remain. Numeric current standard Price Guide fields are not stored in the upstream Git snapshot; live access is limited to this exact mismatch candidate set. Local verified registries and the Play index are evaluated numerically where available."
   },
   "issuesByPriority": [
-    {
-      "severity": "P2",
-      "tcgdexId": "me01-064",
-      "name": "Xerneas",
-      "set": "Mega Evolution",
-      "localId": "064",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me01-073",
-      "name": "Hariyama",
-      "set": "Mega Evolution",
-      "localId": "073",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me02-045",
-      "name": "Zacian",
-      "set": "Phantasmal Flames",
-      "localId": "045",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me02-053",
-      "name": "Flygon",
-      "set": "Phantasmal Flames",
-      "localId": "053",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me03-045",
-      "name": "Tyrantrum",
-      "set": "Perfect Order",
-      "localId": "045",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me03-086",
-      "name": "Growing Grass Energy",
-      "set": "Perfect Order",
-      "localId": "086",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me03-087",
-      "name": "Rocky Fighting Energy",
-      "set": "Perfect Order",
-      "localId": "087",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me03-088",
-      "name": "Telepathic Psychic Energy",
-      "set": "Perfect Order",
-      "localId": "088",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "me04-013",
-      "name": "Delphox",
-      "set": "Chaos Rising",
-      "localId": "013",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv05-041",
-      "name": "Feraligatr",
-      "set": "Temporal Forces",
-      "localId": "041",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv05-062",
-      "name": "Iron Thorns",
-      "set": "Temporal Forces",
-      "localId": "062",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv05-119",
-      "name": "Koraidon",
-      "set": "Temporal Forces",
-      "localId": "119",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv05-121",
-      "name": "Miraidon",
-      "set": "Temporal Forces",
-      "localId": "121",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv06-100",
-      "name": "Hisuian Arcanine",
-      "set": "Twilight Masquerade",
-      "localId": "100",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv08-014",
-      "name": "Rabsca",
-      "set": "Surging Sparks",
-      "localId": "014",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv08-065",
-      "name": "Tapu Koko",
-      "set": "Surging Sparks",
-      "localId": "065",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv09-055",
-      "name": "Iono's Kilowattrel",
-      "set": "Journey Together",
-      "localId": "055",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv10-034",
-      "name": "Ethan's Typhlosion",
-      "set": "Destined Rivals",
-      "localId": "034",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv10-049",
-      "name": "Misty's Gyarados",
-      "set": "Destined Rivals",
-      "localId": "049",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv10-051",
-      "name": "Team Rocket's Articuno",
-      "set": "Destined Rivals",
-      "localId": "051",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "sv10-096",
-      "name": "Team Rocket's Tyranitar",
-      "set": "Destined Rivals",
-      "localId": "096",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "svp-107",
-      "name": "Mareep",
-      "set": "SVP Black Star Promos",
-      "localId": "107",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "svp-190",
-      "name": "Pikachu",
-      "set": "SVP Black Star Promos",
-      "localId": "190",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "svp-221",
-      "name": "Professor's Research",
-      "set": "SVP Black Star Promos",
-      "localId": "221",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "svp-222",
-      "name": "Professor's Research",
-      "set": "SVP Black Star Promos",
-      "localId": "222",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
-    {
-      "severity": "P2",
-      "tcgdexId": "svp-223",
-      "name": "Professor's Research",
-      "set": "SVP Black Star Promos",
-      "localId": "223",
-      "classification": "FALSO NEGATIVO",
-      "missing": [
-        "Normal"
-      ],
-      "extra": [],
-      "reason": "explicit variant row not selectable"
-    },
     {
       "severity": "P3",
       "tcgdexId": "2012bw-1",
@@ -331614,6 +331358,18 @@
   ],
   "appliedHighConfidenceFixes": [
     {
+      "id": "exact-verified-normal-residuals",
+      "confidence": "high",
+      "status": "applied",
+      "evidence": "Twenty-six exact unstamped variants_detailed Normal rows audited by tcgdexId, setId and localId",
+      "observedImpact": {
+        "normalFalseNegativeBefore": 26,
+        "normalFalseNegativeAfter": 0,
+        "outsideListInheritedRule": false,
+        "priceFieldsAdded": false
+      }
+    },
+    {
       "id": "canonicalize-it-variant-enums",
       "confidence": "high",
       "status": "applied",
@@ -331656,349 +331412,10 @@
     }
   ],
   "normalDocumentedNotSelectableAudit": {
-    "before": 43,
-    "after": 26,
-    "scope": "No general Normal rule was added; changes, if any, are only the direct consequence of lexical Normale/Normal normalization and explicit detailed-row priority.",
-    "remainingCases": [
-      {
-        "severity": "P2",
-        "tcgdexId": "me01-064",
-        "name": "Xerneas",
-        "set": "Mega Evolution",
-        "localId": "064",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me01-073",
-        "name": "Hariyama",
-        "set": "Mega Evolution",
-        "localId": "073",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me02-045",
-        "name": "Zacian",
-        "set": "Phantasmal Flames",
-        "localId": "045",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me02-053",
-        "name": "Flygon",
-        "set": "Phantasmal Flames",
-        "localId": "053",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-045",
-        "name": "Tyrantrum",
-        "set": "Perfect Order",
-        "localId": "045",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-086",
-        "name": "Growing Grass Energy",
-        "set": "Perfect Order",
-        "localId": "086",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-087",
-        "name": "Rocky Fighting Energy",
-        "set": "Perfect Order",
-        "localId": "087",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me03-088",
-        "name": "Telepathic Psychic Energy",
-        "set": "Perfect Order",
-        "localId": "088",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "me04-013",
-        "name": "Delphox",
-        "set": "Chaos Rising",
-        "localId": "013",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-041",
-        "name": "Feraligatr",
-        "set": "Temporal Forces",
-        "localId": "041",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-062",
-        "name": "Iron Thorns",
-        "set": "Temporal Forces",
-        "localId": "062",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-119",
-        "name": "Koraidon",
-        "set": "Temporal Forces",
-        "localId": "119",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv05-121",
-        "name": "Miraidon",
-        "set": "Temporal Forces",
-        "localId": "121",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv06-100",
-        "name": "Hisuian Arcanine",
-        "set": "Twilight Masquerade",
-        "localId": "100",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv08-014",
-        "name": "Rabsca",
-        "set": "Surging Sparks",
-        "localId": "014",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv08-065",
-        "name": "Tapu Koko",
-        "set": "Surging Sparks",
-        "localId": "065",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv09-055",
-        "name": "Iono's Kilowattrel",
-        "set": "Journey Together",
-        "localId": "055",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-034",
-        "name": "Ethan's Typhlosion",
-        "set": "Destined Rivals",
-        "localId": "034",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-049",
-        "name": "Misty's Gyarados",
-        "set": "Destined Rivals",
-        "localId": "049",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-051",
-        "name": "Team Rocket's Articuno",
-        "set": "Destined Rivals",
-        "localId": "051",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "sv10-096",
-        "name": "Team Rocket's Tyranitar",
-        "set": "Destined Rivals",
-        "localId": "096",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-107",
-        "name": "Mareep",
-        "set": "SVP Black Star Promos",
-        "localId": "107",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-190",
-        "name": "Pikachu",
-        "set": "SVP Black Star Promos",
-        "localId": "190",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-221",
-        "name": "Professor's Research",
-        "set": "SVP Black Star Promos",
-        "localId": "221",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-222",
-        "name": "Professor's Research",
-        "set": "SVP Black Star Promos",
-        "localId": "222",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      },
-      {
-        "severity": "P2",
-        "tcgdexId": "svp-223",
-        "name": "Professor's Research",
-        "set": "SVP Black Star Promos",
-        "localId": "223",
-        "classification": "FALSO NEGATIVO",
-        "missing": [
-          "Normal"
-        ],
-        "extra": [],
-        "reason": "explicit variant row not selectable"
-      }
-    ]
+    "before": 26,
+    "after": 0,
+    "scope": "No general Normal rule was added; only the 26 audited tcgdexId + setId + normalized localId identities gain Normal.",
+    "remainingCases": []
   },
   "mustRemainToVerify": [
     {
