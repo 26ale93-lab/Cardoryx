@@ -4782,6 +4782,31 @@ function cardmarketValueForVariant(cm,variant){
 // Known upstream identity conflicts are blocked only while the conflicting
 // Cardmarket product id is still present.  If TCGdex corrects the mapping, the
 // guard automatically stops applying instead of substituting a guessed price.
+const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
+  // Surging Sparks / Scintille Folgoranti — Cardmarket V1 is the base product;
+  // TCGdex currently exposes the Pokémon Horizons V2 product at top level.
+  // Each rule is independent and applies only while that exact conflicting
+  // top-level product is still present.
+  'sv08-029':{setId:'sv08',localId:'029',conflictingProduct:794946,baseProduct:794286},
+  'sv08-050':{setId:'sv08',localId:'050',conflictingProduct:794947,baseProduct:794316},
+  'sv08-161':{setId:'sv08',localId:'161',conflictingProduct:794948,baseProduct:794534}
+};
+function verifiedBaseCardmarketProductOverride(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES[id];
+  if(!rule)return null;
+  const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+  const local=canonicalPrintedLocalId(card?.localId||'');
+  const currentProduct=Number(card?.pricing?.cardmarket?.idProduct||0);
+  if(setId!==rule.setId || local!==canonicalPrintedLocalId(rule.localId) ||
+     currentProduct!==rule.conflictingProduct)return null;
+  const exactRow=tcgdexVariantDetails(card).find(row=>
+    Number(row?.thirdParty?.cardmarket||0)===rule.baseProduct &&
+    Number(row?.pricing?.cardmarket?.idProduct||0)===rule.baseProduct
+  );
+  const pricing=exactRow?.pricing?.cardmarket||null;
+  return {matched:true,rule,pricing};
+}
 function knownCardmarketIdentityConflict(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
@@ -4828,7 +4853,10 @@ function knownReverseCardmarketProductConflict(card){
   return null;
 }
 function cardmarketValueForCardVariant(card,variant){
-  const cm=card?.pricing?.cardmarket;
+  const baseOverride=verifiedBaseCardmarketProductOverride(card);
+  const cm=baseOverride?.matched?baseOverride.pricing:card?.pricing?.cardmarket;
+  if(baseOverride?.matched&&!cm)return {value:0,kind:'base-product-price-unavailable',
+    source:'Cardmarket · prodotto base esatto non disponibile'};
   if(!cm)return {value:0,kind:'none'};
   const identityConflict=knownCardmarketIdentityConflict(card);
   if(identityConflict)return {value:0,...identityConflict};
@@ -4858,6 +4886,7 @@ function cardmarketValueForCardVariant(card,variant){
     if(productConflict)return {value:0,...productConflict};
     const x=reverse();
     return x?{value:x,kind:'reverse-cardmarket',exact:true,
+      productId:Number(cm.idProduct||0)||undefined,
       source:'Cardmarket · quotazione Reverse Holo'}:{value:0,kind:'needs-exact-variant'};
   }
 
@@ -4867,6 +4896,7 @@ function cardmarketValueForCardVariant(card,variant){
     if(!hasNormal){
       const x=standard();
       return x?{value:x,kind:'holo-standard-cardmarket',exact:true,
+        productId:Number(cm.idProduct||0)||undefined,
         source:'Cardmarket · quotazione standard della carta Holo'}:{value:0,kind:'none'};
     }
     // Se TCGdex documenta contemporaneamente Normal e Holo, non assumiamo che
@@ -4878,6 +4908,7 @@ function cardmarketValueForCardVariant(card,variant){
     if(hasNormal || !hasHolo){
       const x=standard();
       return x?{value:x,kind:'normal',exact:true,
+        productId:Number(cm.idProduct||0)||undefined,
         source:'Cardmarket · quotazione standard'}:{value:0,kind:'none'};
     }
     return {value:0,kind:'needs-exact-variant'};
@@ -4886,7 +4917,8 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
-  const cm=card?.pricing?.cardmarket||{};
+  const baseOverride=verifiedBaseCardmarketProductOverride(card);
+  const cm=(baseOverride?.matched?baseOverride.pricing:card?.pricing?.cardmarket)||{};
   const info=cardmarketValueForCardVariant(card,variant);
   const v=canonicalVariant(variant||'Normal');
   if(info?.kind==='reverse-cardmarket' || v==='Reverse Holo'){
