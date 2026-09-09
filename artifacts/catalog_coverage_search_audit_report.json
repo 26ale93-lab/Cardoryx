@@ -1,0 +1,1103 @@
+{
+  "schema": 1,
+  "testType": "catalog-coverage-search-audit",
+  "generatedAt": "2026-09-09T04:04:00.377857Z",
+  "source": {
+    "path": "live TCGdex IT+EN snapshot",
+    "sourceCommit": "8ef01a6e932939b9b1ef2185e9dde7f8b9e66a72",
+    "catalogSnapshot": "2026-09-09T04:03:53.379617Z",
+    "networkErrors": 0
+  },
+  "safety": {
+    "readOnlyAudit": true,
+    "noFuzzyMatching": true,
+    "noAutomaticAmbiguousSelection": true,
+    "scannerAcquisitionModified": false,
+    "cardmarketModified": false,
+    "retailModified": false,
+    "retailPricesModified": false,
+    "collectionDataModified": false,
+    "workflowAdded": false
+  },
+  "baseline": {
+    "physicalEligible": 21536,
+    "recognizedUnique": 9468,
+    "recognizedAmbiguous": 11249,
+    "notRecognized": 819,
+    "coveragePercent": 96.2,
+    "regressions": 0
+  },
+  "notRecognizedAudit": {
+    "total": 819,
+    "byReason": {
+      "targetBeyondDisplayCap6": 339,
+      "numericPromoWithoutDenominator": 408,
+      "localIdNotInterrogable": 64,
+      "promoLocalIdNotInterrogable": 6,
+      "hintShortCircuitDifferentIdentity": 2
+    },
+    "byCategory": {
+      "standard": 341,
+      "promo": 414,
+      "other": 64
+    },
+    "byLocalIdShape": {
+      "numeric": 749,
+      "suffixed": 37,
+      "other": 33
+    },
+    "highConfidenceRecoverable": {
+      "unsafeHintShortCircuits": 2,
+      "manualSuffixedLocalIds": 37,
+      "note": "Suffixed localIds are recoverable only from explicit manual input; OCR extraction remains unchanged."
+    },
+    "mustRemainUnresolved": {
+      "numericPromoWithoutDenominator": 408,
+      "targetBeyondScannerDisplayCap": 339,
+      "nonStructuredLocalId": 33
+    },
+    "examplesByReason": {
+      "targetBeyondDisplayCap6": [
+        {
+          "id": "2015xy-1",
+          "name": "Treecko",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "1",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-1",
+            "tk-ex-p-1",
+            "tk-dp-m-1",
+            "2011bw-1",
+            "2012bw-1",
+            "2014xy-1",
+            "2015xy-1",
+            "2016xy-1",
+            "2017sm-1",
+            "2018sm-1",
+            "2019sm-1"
+          ]
+        },
+        {
+          "id": "2015xy-10",
+          "name": "Marill",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "10",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-10",
+            "tk-ex-p-10",
+            "tk-dp-m-10",
+            "2011bw-10",
+            "2012bw-10",
+            "2014xy-10",
+            "2015xy-10",
+            "2016xy-10",
+            "2017sm-10",
+            "2018sm-10",
+            "2019sm-10"
+          ]
+        },
+        {
+          "id": "2015xy-11",
+          "name": "Zigzagoon",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "11",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-11",
+            "tk-ex-p-11",
+            "tk-dp-m-11",
+            "2011bw-11",
+            "2012bw-11",
+            "2014xy-11",
+            "2015xy-11",
+            "2016xy-11",
+            "2017sm-11",
+            "2018sm-11",
+            "2019sm-11"
+          ]
+        },
+        {
+          "id": "2015xy-12",
+          "name": "Skitty",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "12",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-12",
+            "tk-ex-p-12",
+            "tk-dp-m-12",
+            "2011bw-12",
+            "2012bw-12",
+            "2014xy-12",
+            "2015xy-12",
+            "2016xy-12",
+            "2017sm-12",
+            "2018sm-12",
+            "2019sm-12"
+          ]
+        },
+        {
+          "id": "2015xy-2",
+          "name": "Lotad",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "2",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-2",
+            "tk-ex-p-2",
+            "tk-dp-m-2",
+            "2011bw-2",
+            "2012bw-2",
+            "2014xy-2",
+            "2015xy-2",
+            "2016xy-2",
+            "2017sm-2",
+            "2018sm-2",
+            "2019sm-2"
+          ]
+        },
+        {
+          "id": "2015xy-3",
+          "name": "Torchic",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "3",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-3",
+            "tk-ex-p-3",
+            "tk-dp-m-3",
+            "2011bw-3",
+            "2012bw-3",
+            "2014xy-3",
+            "2015xy-3",
+            "2016xy-3",
+            "2017sm-3",
+            "2018sm-3",
+            "2019sm-3"
+          ]
+        },
+        {
+          "id": "2015xy-4",
+          "name": "Staryu",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "4",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-4",
+            "tk-ex-p-4",
+            "tk-dp-m-4",
+            "2011bw-4",
+            "2012bw-4",
+            "2014xy-4",
+            "2015xy-4",
+            "2016xy-4",
+            "2017sm-4",
+            "2018sm-4",
+            "2019sm-4"
+          ]
+        },
+        {
+          "id": "2015xy-5",
+          "name": "Mudkip",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "5",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-5",
+            "tk-ex-p-5",
+            "tk-dp-m-5",
+            "2011bw-5",
+            "2012bw-5",
+            "2014xy-5",
+            "2015xy-5",
+            "2016xy-5",
+            "2017sm-5",
+            "2018sm-5",
+            "2019sm-5"
+          ]
+        },
+        {
+          "id": "2015xy-6",
+          "name": "Pikachu",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "6",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-6",
+            "tk-ex-p-6",
+            "tk-dp-m-6",
+            "2011bw-6",
+            "2012bw-6",
+            "2014xy-6",
+            "2015xy-6",
+            "2016xy-6",
+            "2017sm-6",
+            "2018sm-6",
+            "2019sm-6"
+          ]
+        },
+        {
+          "id": "2015xy-7",
+          "name": "Electrike",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "7",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-7",
+            "tk-ex-p-7",
+            "tk-dp-m-7",
+            "2011bw-7",
+            "2012bw-7",
+            "2014xy-7",
+            "2015xy-7",
+            "2016xy-7",
+            "2017sm-7",
+            "2018sm-7",
+            "2019sm-7"
+          ]
+        },
+        {
+          "id": "2015xy-8",
+          "name": "Rhyhorn",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "8",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-8",
+            "tk-ex-p-8",
+            "tk-dp-m-8",
+            "2011bw-8",
+            "2012bw-8",
+            "2014xy-8",
+            "2015xy-8",
+            "2016xy-8",
+            "2017sm-8",
+            "2018sm-8",
+            "2019sm-8"
+          ]
+        },
+        {
+          "id": "2015xy-9",
+          "name": "Meditite",
+          "setId": "2015xy",
+          "set": "McDonald's Collection 2015",
+          "localId": "9",
+          "cardCountOfficial": 12,
+          "reason": "targetBeyondDisplayCap6",
+          "candidateCount": 11,
+          "candidateIds": [
+            "tk-ex-m-9",
+            "tk-ex-p-9",
+            "tk-dp-m-9",
+            "2011bw-9",
+            "2012bw-9",
+            "2014xy-9",
+            "2015xy-9",
+            "2016xy-9",
+            "2017sm-9",
+            "2018sm-9",
+            "2019sm-9"
+          ]
+        }
+      ],
+      "numericPromoWithoutDenominator": [
+        {
+          "id": "basep-1",
+          "name": "Pikachu",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "1",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-10",
+          "name": "Meowth",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "10",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-11",
+          "name": "Eevee",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "11",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-12",
+          "name": "Mewtwo",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "12",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-13",
+          "name": "Venusaur",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "13",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-14",
+          "name": "Mewtwo",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "14",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-15",
+          "name": "Cool Porygon",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "15",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-16",
+          "name": "Computer Error",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "16",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-17",
+          "name": "Dark Persian",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "17",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-18",
+          "name": "Team Rocket's Meowth",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "18",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-19",
+          "name": "Sabrina's Abra",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "19",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "basep-2",
+          "name": "Electabuzz",
+          "setId": "basep",
+          "set": "Wizards Black Star Promos",
+          "localId": "2",
+          "cardCountOfficial": 53,
+          "reason": "numericPromoWithoutDenominator",
+          "candidateCount": 0,
+          "candidateIds": []
+        }
+      ],
+      "localIdNotInterrogable": [
+        {
+          "id": "ecard2-103a",
+          "name": "Porygon",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "103a",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-103b",
+          "name": "Porygon",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "103b",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-50a",
+          "name": "Golduck",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "50a",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-50b",
+          "name": "Golduck",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "50b",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-74a",
+          "name": "Drowzee",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "74a",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-74b",
+          "name": "Drowzee",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "74b",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-95a",
+          "name": "Mr. Mime",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "95a",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "ecard2-95b",
+          "name": "Mr. Mime",
+          "setId": "ecard2",
+          "set": "Aquapolis",
+          "localId": "95b",
+          "cardCountOfficial": 147,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "exu-!",
+          "name": "Unown",
+          "setId": "exu",
+          "set": "EX Forze Segrete Unown",
+          "localId": "!",
+          "cardCountOfficial": 28,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "exu-%3F",
+          "name": "Unown",
+          "setId": "exu",
+          "set": "EX Forze Segrete Unown",
+          "localId": "%3F",
+          "cardCountOfficial": 28,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "exu-A",
+          "name": "Unown",
+          "setId": "exu",
+          "set": "EX Forze Segrete Unown",
+          "localId": "A",
+          "cardCountOfficial": 28,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "exu-B",
+          "name": "Unown",
+          "setId": "exu",
+          "set": "EX Forze Segrete Unown",
+          "localId": "B",
+          "cardCountOfficial": 28,
+          "reason": "localIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        }
+      ],
+      "promoLocalIdNotInterrogable": [
+        {
+          "id": "mep-Museum",
+          "name": "Pikachu at the Museum",
+          "setId": "mep",
+          "set": "MEP Black Star Promos",
+          "localId": "Museum",
+          "cardCountOfficial": 0,
+          "reason": "promoLocalIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "xyp-XY150a",
+          "name": "Yveltal-EX",
+          "setId": "xyp",
+          "set": "XY Promo",
+          "localId": "XY150a",
+          "cardCountOfficial": 211,
+          "reason": "promoLocalIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "xyp-XY177a",
+          "name": "Karen",
+          "setId": "xyp",
+          "set": "XY Promo",
+          "localId": "XY177a",
+          "cardCountOfficial": 211,
+          "reason": "promoLocalIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "xyp-XY198a",
+          "name": "M Camerupt-EX",
+          "setId": "xyp",
+          "set": "XY Promo",
+          "localId": "XY198a",
+          "cardCountOfficial": 211,
+          "reason": "promoLocalIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "xyp-XY200a",
+          "name": "M Sharpedo-EX",
+          "setId": "xyp",
+          "set": "XY Promo",
+          "localId": "XY200a",
+          "cardCountOfficial": 211,
+          "reason": "promoLocalIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        },
+        {
+          "id": "xyp-XY67a",
+          "name": "Jirachi",
+          "setId": "xyp",
+          "set": "XY Promo",
+          "localId": "XY67a",
+          "cardCountOfficial": 211,
+          "reason": "promoLocalIdNotInterrogable",
+          "candidateCount": 0,
+          "candidateIds": []
+        }
+      ],
+      "hintShortCircuitDifferentIdentity": [
+        {
+          "id": "swsh12.5-098",
+          "name": "Zamazenta V",
+          "setId": "swsh12.5",
+          "set": "Zenit Regale",
+          "localId": "098",
+          "cardCountOfficial": 159,
+          "reason": "hintShortCircuitDifferentIdentity",
+          "candidateCount": 1,
+          "candidateIds": [
+            "sv09-098"
+          ]
+        },
+        {
+          "id": "swsh12.5-146",
+          "name": "Ultra Ball",
+          "setId": "swsh12.5",
+          "set": "Zenit Regale",
+          "localId": "146",
+          "cardCountOfficial": 159,
+          "reason": "hintShortCircuitDifferentIdentity",
+          "candidateCount": 1,
+          "candidateIds": [
+            "sv09-146"
+          ]
+        }
+      ]
+    }
+  },
+  "ambiguousAudit": {
+    "total": 11249,
+    "crossSetSamePrintedIdentity": 11249,
+    "resolvableWithExactNormalizedName": 11152,
+    "stillAmbiguousWithExactName": 97,
+    "resolutionClasses": {
+      "A_existingExactNameCanResolve": 11152,
+      "B_requiresAdditionalVerifiedData": 97,
+      "C_notSafelyResolvableEvenWithVerifiedSet": 0
+    },
+    "candidateCountDistribution": {
+      "11": 72,
+      "2": 6908,
+      "3": 1659,
+      "4": 2328,
+      "9": 102,
+      "14": 108,
+      "13": 72
+    },
+    "stillAmbiguousExamples": [
+      {
+        "id": "2014xy-3",
+        "name": "Fennekin",
+        "setId": "2014xy",
+        "set": "McDonald's Collection 2014",
+        "localId": "3",
+        "cardCountOfficial": 12,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 11,
+        "candidateIds": [
+          "tk-ex-m-3",
+          "tk-ex-p-3",
+          "tk-dp-m-3",
+          "2011bw-3",
+          "2012bw-3",
+          "2014xy-3",
+          "2015xy-3",
+          "2016xy-3",
+          "2017sm-3",
+          "2018sm-3",
+          "2019sm-3"
+        ]
+      },
+      {
+        "id": "2014xy-5",
+        "name": "Pikachu",
+        "setId": "2014xy",
+        "set": "McDonald's Collection 2014",
+        "localId": "5",
+        "cardCountOfficial": 12,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 11,
+        "candidateIds": [
+          "tk-ex-m-5",
+          "tk-ex-p-5",
+          "tk-dp-m-5",
+          "2011bw-5",
+          "2012bw-5",
+          "2014xy-5",
+          "2015xy-5",
+          "2016xy-5",
+          "2017sm-5",
+          "2018sm-5",
+          "2019sm-5"
+        ]
+      },
+      {
+        "id": "base1-19",
+        "name": "Dugtrio",
+        "setId": "base1",
+        "set": "Set Base",
+        "localId": "19",
+        "cardCountOfficial": 102,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 2,
+        "candidateIds": [
+          "base1-19",
+          "hgss4-19"
+        ]
+      },
+      {
+        "id": "bw1-32",
+        "name": "Samurott",
+        "setId": "bw1",
+        "set": "Nero e Bianco",
+        "localId": "32",
+        "cardCountOfficial": 114,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 2,
+        "candidateIds": [
+          "bw1-32",
+          "xy11-32"
+        ]
+      },
+      {
+        "id": "bw10-24",
+        "name": "Relicanth",
+        "setId": "bw10",
+        "set": "Esplosione Plasma",
+        "localId": "24",
+        "cardCountOfficial": 101,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 4,
+        "candidateIds": [
+          "ex5-24",
+          "ex15-24",
+          "bw3-24",
+          "bw10-24"
+        ]
+      },
+      {
+        "id": "det1-16",
+        "name": "Lickitung",
+        "setId": "det1",
+        "set": "Detective Pikachu",
+        "localId": "16",
+        "cardCountOfficial": 18,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 2,
+        "candidateIds": [
+          "det1-16",
+          "si1-16"
+        ]
+      },
+      {
+        "id": "dp4-1",
+        "name": "Blaziken",
+        "setId": "dp4",
+        "set": "Incontri Leggendari",
+        "localId": "1",
+        "cardCountOfficial": 106,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 3,
+        "candidateIds": [
+          "ex9-1",
+          "dp4-1",
+          "xy2-1"
+        ]
+      },
+      {
+        "id": "dp5-63",
+        "name": "Eevee",
+        "setId": "dp5",
+        "set": "Alba Suprema",
+        "localId": "63",
+        "cardCountOfficial": 100,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 4,
+        "candidateIds": [
+          "ex2-63",
+          "ex14-63",
+          "dp5-63",
+          "dp7-63"
+        ]
+      },
+      {
+        "id": "dp5-70",
+        "name": "Pikachu",
+        "setId": "dp5",
+        "set": "Alba Suprema",
+        "localId": "70",
+        "cardCountOfficial": 100,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 4,
+        "candidateIds": [
+          "ex2-70",
+          "ex14-70",
+          "dp5-70",
+          "dp7-70"
+        ]
+      },
+      {
+        "id": "dp5-75",
+        "name": "Starly",
+        "setId": "dp5",
+        "set": "Alba Suprema",
+        "localId": "75",
+        "cardCountOfficial": 100,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 4,
+        "candidateIds": [
+          "ex2-75",
+          "ex14-75",
+          "dp5-75",
+          "dp7-75"
+        ]
+      },
+      {
+        "id": "dp5-76",
+        "name": "Stunky",
+        "setId": "dp5",
+        "set": "Alba Suprema",
+        "localId": "76",
+        "cardCountOfficial": 100,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 4,
+        "candidateIds": [
+          "ex2-76",
+          "ex14-76",
+          "dp5-76",
+          "dp7-76"
+        ]
+      },
+      {
+        "id": "dp7-70",
+        "name": "Pikachu",
+        "setId": "dp7",
+        "set": "Fronte di Tempesta",
+        "localId": "70",
+        "cardCountOfficial": 100,
+        "reason": "exactOfficialSetThenCap",
+        "candidateCount": 4,
+        "candidateIds": [
+          "ex2-70",
+          "ex14-70",
+          "dp5-70",
+          "dp7-70"
+        ]
+      }
+    ]
+  },
+  "numberingAudit": {
+    "prefixesRemainDistinct": [
+      "TG01",
+      "GG01",
+      "SVP001",
+      "SWSH001"
+    ],
+    "leadingZeroEquivalenceOnlyWithinSamePrefixAndSuffix": true,
+    "suffixedLocalIdsInFailures": 37,
+    "suffixedExactUniqueManualRecoveries": 37,
+    "specialPrefixIdentitiesAlreadyCovered": 590
+  },
+  "shortcutAudit": {
+    "unsafeCases": [
+      {
+        "target": {
+          "id": "swsh12.5-098",
+          "name": "Zamazenta V",
+          "setId": "swsh12.5",
+          "set": "Zenit Regale",
+          "localId": "098",
+          "cardCountOfficial": 159,
+          "reason": "hintShortCircuitDifferentIdentity",
+          "candidateCount": 1,
+          "candidateIds": [
+            "sv09-098"
+          ]
+        },
+        "exactCandidatesWithoutShortcut": [
+          {
+            "id": "sv09-098",
+            "name": "Zoroark-ex di N",
+            "setId": "sv09",
+            "set": "Avventure Insieme",
+            "localId": "098",
+            "cardCountOfficial": 159,
+            "reason": "verifiedHint",
+            "candidateCount": 1,
+            "candidateIds": [
+              "sv09-098"
+            ]
+          },
+          {
+            "id": "swsh12.5-098",
+            "name": "Zamazenta V",
+            "setId": "swsh12.5",
+            "set": "Zenit Regale",
+            "localId": "098",
+            "cardCountOfficial": 159,
+            "reason": "hintShortCircuitDifferentIdentity",
+            "candidateCount": 1,
+            "candidateIds": [
+              "sv09-098"
+            ]
+          }
+        ],
+        "proposedOutcome": "recognizedAmbiguous"
+      },
+      {
+        "target": {
+          "id": "swsh12.5-146",
+          "name": "Ultra Ball",
+          "setId": "swsh12.5",
+          "set": "Zenit Regale",
+          "localId": "146",
+          "cardCountOfficial": 159,
+          "reason": "hintShortCircuitDifferentIdentity",
+          "candidateCount": 1,
+          "candidateIds": [
+            "sv09-146"
+          ]
+        },
+        "exactCandidatesWithoutShortcut": [
+          {
+            "id": "sv09-146",
+            "name": "Ricerca di Brock",
+            "setId": "sv09",
+            "set": "Avventure Insieme",
+            "localId": "146",
+            "cardCountOfficial": 159,
+            "reason": "verifiedHint",
+            "candidateCount": 1,
+            "candidateIds": [
+              "sv09-146"
+            ]
+          },
+          {
+            "id": "swsh12.5-146",
+            "name": "Ultra Ball",
+            "setId": "swsh12.5",
+            "set": "Zenit Regale",
+            "localId": "146",
+            "cardCountOfficial": 159,
+            "reason": "hintShortCircuitDifferentIdentity",
+            "candidateCount": 1,
+            "candidateIds": [
+              "sv09-146"
+            ]
+          }
+        ],
+        "proposedOutcome": "recognizedAmbiguous"
+      }
+    ],
+    "recommendedAction": "Remove shortcut return; run the complete exact localId + exact official-count candidate query."
+  },
+  "manualSearchAudit": {
+    "existing": [
+      "number+total",
+      "number+total+exactName",
+      "nameOnlyManual",
+      "pagination6"
+    ],
+    "numberName": {
+      "theoreticalExactUnique": 19055,
+      "theoreticalStillAmbiguous": 2481,
+      "rule": "intersection of exact localId and exact normalized full name; ambiguous results remain manual"
+    },
+    "numberOnly": {
+      "implemented": false,
+      "medianCandidateCount": 123.0,
+      "p95CandidateCount": 182,
+      "maxCandidateCount": 186,
+      "reason": "Global number-only search is too broad for a bounded, high-precision path."
+    },
+    "setName": {
+      "implemented": false,
+      "reason": "No set ID/verified alias input exists in the current manual form."
+    },
+    "setOnly": {
+      "implemented": false,
+      "reason": "Would require a separate exploratory set selector and is outside the surgical change."
+    }
+  },
+  "setAliasAudit": {
+    "newAliasesAdded": 0,
+    "policy": "TCGdex set ID first; no contains-based or similarity-based aliasing.",
+    "finding": "No high-confidence missing alias was required by the measured failure groups."
+  },
+  "variantAudit": {
+    "changes": 0,
+    "subsetTreatedAsFinish": false,
+    "note": "Coverage and manual-search changes do not derive or expand physical finishes."
+  },
+  "proposedAfter": {
+    "physicalEligible": 21536,
+    "recognizedUnique": 9468,
+    "recognizedAmbiguous": 11251,
+    "notRecognized": 817,
+    "newUnique": 0,
+    "ambiguousRecovered": 2,
+    "regressions": 0,
+    "falsePositives": 0
+  },
+  "implementedAfter": {
+    "active": true,
+    "physicalEligible": 21536,
+    "recognizedUnique": 9468,
+    "recognizedAmbiguous": 11251,
+    "notRecognized": 817,
+    "newUnique": 0,
+    "ambiguousRecovered": 2,
+    "regressions": 0,
+    "falsePositives": 0
+  },
+  "sourceChecks": {
+    "manualInputDropsLetters": false,
+    "unsafePrintedHintsPresent": false,
+    "manualPaginationPresent": true,
+    "numberNameExactIntersectionPresent": true,
+    "nameOnlyNeverAutoSelects": true
+  },
+  "recommendedChanges": [
+    "Remove the two unsafe printed-code hint short circuits.",
+    "Preserve the complete manually typed localId instead of deleting letters.",
+    "Add number+name as an exact intersection within TCGdex candidates; fail closed on zero or multiple exact owners.",
+    "Keep only-number, set+name and set-only out of this change."
+  ],
+  "finalAssessment": "PRONTA PER REVIEW"
+}
