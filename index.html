@@ -3650,12 +3650,28 @@ function canonicalVariant(v){
   const n=normText(v||'');
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
   if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
-  if(n.includes('cosmos'))return 'Cosmos Holo';
+  if(n==='cosmo'||n.includes('cosmos'))return 'Cosmos Holo';
   if(n.includes('reverse'))return 'Reverse Holo';
-  if(n.includes('holo'))return 'Holo';
+  if(n.includes('holo')||n==='olografica'||n==='olografico')return 'Holo';
   if(n.includes('speciale')||n.includes('special / other'))return 'Speciale / Altro';
   if(n.includes('non so')||n.includes('unknown'))return 'Non so';
   return 'Normal';
+}
+// TCGdex localizes enum labels in REST payloads. Keep this translation lexical:
+// it must never infer a physical finish from a generic "foil" word or stamp.
+function canonicalFinishTypeLabel(v){
+  const n=normText(v||'');
+  if(n==='normal'||n==='normale')return 'normal';
+  if(n==='holo'||n==='olografica'||n==='olografico')return 'holo';
+  if(n==='reverse')return 'reverse';
+  return n;
+}
+function canonicalFinishFoilLabel(v){
+  const n=normText(v||'');
+  if(n==='cosmo'||n==='cosmos')return 'cosmos';
+  if(n==='pokeball'||n==='poke ball')return 'pokeball';
+  if(n==='masterball'||n==='master ball')return 'masterball';
+  return n;
 }
 function isManualVariantChoice(v){
   const x=canonicalVariant(v);
@@ -3697,7 +3713,7 @@ function recommendedVariantFromTCGdex(card){
   const hasStamp=(x,name)=>(x?.stamp||[]).some(v=>normText(v)===normText(name));
   if(pool.some(x=>hasStamp(x,'pokemon-day')))return 'Pokémon Day Stamp';
   if(pool.some(x=>hasStamp(x,'player-rewards-program')||x?.foil==='player-reward'||x?.foil==='league'))return 'Play! Pokémon Prize Pack';
-  const types=[...new Set(pool.map(x=>x?.type).filter(Boolean))];
+  const types=[...new Set(pool.map(x=>canonicalFinishTypeLabel(x?.type)).filter(Boolean))];
   if(types.length===1){
     if(types[0]==='holo')return 'Holo';
     if(types[0]==='reverse')return 'Reverse Holo';
@@ -3721,9 +3737,9 @@ function tcgdexMarketplaceVariant(card,variant){
   else if(target==='Pokémon Day Stamp') matches=pool.filter(x=>hasStamp(x,'pokemon-day'));
   else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='pokeball');
   else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='masterball');
-  else if(target==='Holo') matches=pool.filter(x=>x?.type==='holo'&&!x?.stamp?.length);
-  else if(target==='Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&!x?.stamp?.length);
-  else if(target==='Normal') matches=pool.filter(x=>x?.type==='normal'&&!x?.stamp?.length);
+  else if(target==='Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Normal') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='normal'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
   const withCM=matches.find(x=>Number(x?.thirdParty?.cardmarket)>0);
   return withCM||matches[0]||null;
 }
@@ -3788,14 +3804,14 @@ function explicitPlayFinishes(card){
   const out=new Set();
   for(const x of list){
     const stamps=Array.isArray(x?.stamp)?x.stamp.map(normText):[];
-    const foil=normText(x?.foil||'');
+    const foil=canonicalFinishFoilLabel(x?.foil);
     const name=normText(x?.name||x?.variant||'');
     const isPlay=stamps.some(v=>v.includes('playerrewards')||v.includes('playpokemon')||v.includes('prizepack')||v.includes('league')) ||
                  ['playerreward','league'].includes(foil) || name.includes('playpokemon') || name.includes('prizepack');
     if(!isPlay)continue;
-    const type=normText(x?.type||'');
+    const type=canonicalFinishTypeLabel(x?.type);
     if(type==='normal')out.add('Normal');
-    if(type==='holo' && foil==='cosmos')out.add('Cosmos Holo');
+    if(['normal','holo','reverse'].includes(type) && foil==='cosmos')out.add('Cosmos Holo');
     else if(type==='holo')out.add('Holo');
     if(type==='reverse' && foil==='pokeball')out.add('Poké Ball Reverse Holo');
     else if(type==='reverse' && foil==='masterball')out.add('Master Ball Reverse Holo');
@@ -3879,24 +3895,41 @@ function prizePackFinishPlan(card,series){
 
 function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
   for(const x of (Array.isArray(rows)?rows:[])){
-    const type=normText(x?.type||'');
-    const foil=normText(x?.foil||'');
+    const type=canonicalFinishTypeLabel(x?.type);
+    const foil=canonicalFinishFoilLabel(x?.foil);
     if(base){
       if(type==='normal')allowed.add('Normal');
       if(type==='holo' && !foil)allowed.add('Holo');
       if(type==='reverse' && !foil)allowed.add('Reverse Holo');
     }
     if(special){
-      if(type==='holo' && foil==='cosmos')allowed.add('Cosmos Holo');
+      if(['normal','holo','reverse'].includes(type) && foil==='cosmos')allowed.add('Cosmos Holo');
       if(type==='reverse'&&foil==='pokeball')allowed.add('Poké Ball Reverse Holo');
       if(type==='reverse'&&foil==='masterball')allowed.add('Master Ball Reverse Holo');
     }
   }
 }
 
-function addModernStandardStructure(allowed,card){
+function addModernStandardStructure(allowed,card,baseRows=[],allRows=[]){
   if(!isModernParallelEra(card))return false;
   const r=normText(card?.rarity||'');
+
+  // Explicit rows outrank structural inference. This preserves named special
+  // parallels (Energy/Friend/Love/Quick/Dusk/Poké/Master Ball, etc.) instead of
+  // coercing them to a generic Reverse, and prevents promo/reprint foil rows
+  // from manufacturing a Holo for the unstamped base printing.
+  if((Array.isArray(allRows)?allRows:[]).length){
+    const explicitStandard=new Set();
+    addDetailedFinishes(explicitStandard,baseRows,{base:true,special:false});
+    for(const finish of explicitStandard){
+      // The 43 audited modern Normal/reprint cases remain intentionally out of
+      // scope; this correction does not broaden Normal availability.
+      if(finish==='Normal')continue;
+      allowed.add(finish);
+    }
+    if(['common','comune','uncommon','noncomune','non comune'].map(normText).includes(r))allowed.add('Normal');
+    return true;
+  }
 
   // Since regulation G, regular Common/Uncommon cards use a non-holo base plus
   // reverse parallel. Regular Rare cards use holo base plus reverse parallel.
@@ -3988,13 +4021,13 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
       // For modern cards the set-era + rarity structure is more reliable than
       // the coarse variants booleans, which TCGdex itself has open data issues
       // for and can be polluted by reprints.
-      const structured=addModernStandardStructure(allowed,card);
+      const structured=addModernStandardStructure(allowed,card,basePool,pool);
       if(!structured){
         // Unknown modern rarity: explicit unstamped detailed rows first, then
         // coarse flags as a conservative fallback.
         const before=allowed.size;
         addDetailedFinishes(allowed,basePool,{base:true,special:false});
-        if(allowed.size===before)addCoarseStandardFinishes(allowed,card);
+        if(allowed.size===before && !pool.length)addCoarseStandardFinishes(allowed,card);
       }
     }else{
       // Older eras vary by set. Explicit unstamped detailed rows are primary;
@@ -4002,7 +4035,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
       const explicitBase=new Set();
       addDetailedFinishes(explicitBase,basePool,{base:true,special:false});
       if(explicitBase.size){for(const x of explicitBase)allowed.add(x)}
-      else{
+      else if(!pool.length){
         const before=allowed.size;
         addCoarseStandardFinishes(allowed,card);
         if(allowed.size===before)addMarketplaceStandardFinishes(allowed,card);
@@ -4723,6 +4756,35 @@ function knownCardmarketIdentityConflict(card){
   }
   return null;
 }
+const VERIFIED_REVERSE_CARDMARKET_CONFLICTS = {
+  // Exact TCGdex identities whose explicit Reverse row points to a different
+  // Cardmarket product than the current base-product Price Guide mapping.
+  'pl2-102':{setId:'pl2',localId:'102',baseProduct:278676,reverseProduct:450453},
+  'pl3-26':{setId:'pl3',localId:'26',baseProduct:371552,reverseProduct:278717},
+  'pl3-5':{setId:'pl3',localId:'5',baseProduct:449568,reverseProduct:278696},
+  'pl3-59':{setId:'pl3',localId:'59',baseProduct:449558,reverseProduct:278750},
+  'pl3-83':{setId:'pl3',localId:'83',baseProduct:371550,reverseProduct:278774},
+  'sv10.5b-013':{setId:'sv10.5b',localId:'013',baseProduct:835929,reverseProduct:835928}
+};
+function knownReverseCardmarketProductConflict(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_REVERSE_CARDMARKET_CONFLICTS[id];
+  if(!rule)return null;
+  const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+  const local=canonicalPrintedLocalId(card?.localId||'');
+  const product=Number(card?.pricing?.cardmarket?.idProduct||0);
+  const exactReverse=tcgdexMarketplaceVariant(card,'Reverse Holo');
+  const exactProduct=Number(exactReverse?.thirdParty?.cardmarket||0);
+  if(setId===rule.setId && local===canonicalPrintedLocalId(rule.localId) &&
+     product===rule.baseProduct && exactProduct===rule.reverseProduct){
+    return {
+      kind:'reverse-product-identity-mismatch',
+      source:'Cardmarket · prodotto Reverse esatto distinto',
+      reason:`Il prodotto base ${rule.baseProduct} non è il prodotto Reverse ${rule.reverseProduct}`
+    };
+  }
+  return null;
+}
 function cardmarketValueForCardVariant(card,variant){
   const cm=card?.pricing?.cardmarket;
   if(!cm)return {value:0,kind:'none'};
@@ -4750,6 +4812,8 @@ function cardmarketValueForCardVariant(card,variant){
   // Una Holo di rarità è quindi la stampa base quando non esiste anche una Normal.
   if(v==='Reverse Holo'){
     if(!hasReverse)return {value:0,kind:'needs-exact-variant'};
+    const productConflict=knownReverseCardmarketProductConflict(card);
+    if(productConflict)return {value:0,...productConflict};
     const x=reverse();
     return x?{value:x,kind:'reverse-cardmarket',exact:true,
       source:'Cardmarket · quotazione Reverse Holo'}:{value:0,kind:'needs-exact-variant'};
