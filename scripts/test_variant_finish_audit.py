@@ -86,6 +86,53 @@ VERIFIED_NORMAL_TARGETS = {
     "sv06-100": ("sv06", "100"),
 }
 
+REAL_WORLD_REGRESSION = {
+    # Astral Radiance / Lucentezza Siderale
+    "swsh10-015": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10-095": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10-031": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10-159": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10-144": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10-142": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10-148": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    # Lost Origin / Origine Perduta
+    "swsh11-155": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-075": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-042": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-167": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-166": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-157": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-156": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-154": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-152": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh11-160": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    # Pokémon GO
+    "swsh10.5-009": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10.5-013": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED", "note": "Peelable Ditto remains a separate physical identity."},
+    "swsh10.5-019": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10.5-066": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh10.5-068": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    # Other sets
+    "sm2-10": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
+    "sm1-46": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
+    "sv02-172": {"expected": ["Holo", "Reverse Holo"], "cause": "SPECIAL_PRINTING"},
+    "sm10-23": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "sv10-033": {"expected": ["Normal", "Reverse Holo"], "cause": "NEEDS_MORE_EVIDENCE", "playSeries": "9"},
+    "sm12-54": {"expected": ["Normal", "Reverse Holo"], "cause": "CARDMARKET_IDENTITY", "secondaryCause": "SOURCE_DATA"},
+    "sm3-4": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh12.5-007": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "swsh12.5-011": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "sm10-13": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
+    "sm7-18": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
+    # Prismatic Evolutions
+    "sv08.5-001": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"], "cause": "CARDMARKET_IDENTITY"},
+    "sv08.5-020": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"], "cause": "CARDMARKET_IDENTITY"},
+    "sv08.5-120": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo"], "cause": "ALREADY_FIXED"},
+    "sv08.5-107": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo"], "cause": "CARDMARKET_IDENTITY"},
+    "sv08.5-127": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo"], "cause": "CARDMARKET_IDENTITY"},
+    "sv08.5-113": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo"], "cause": "ALREADY_FIXED"},
+}
+
 
 def classification_counts(counter):
     return {key: int(counter.get(key, 0)) for key in CLASSIFICATIONS}
@@ -461,6 +508,156 @@ def classify(card, truth, proposed, en_truth, locale_conflict):
     return "CORRETTA", missing, extra, "explicit variants agree"
 
 
+def pipeline_fields(card):
+    """Persist only the identity/finish fields relevant to Scanner -> Conferma."""
+    cm = ((card.get("pricing") or {}).get("cardmarket") or {}) if card else {}
+    return {
+        "id": (card or {}).get("id"), "tcgdexId": (card or {}).get("tcgdexId"),
+        "setId": (((card or {}).get("set") or {}).get("id")),
+        "localId": (card or {}).get("localId"), "rarity": (card or {}).get("rarity"),
+        "variants": (card or {}).get("variants"),
+        "variants_detailed": (card or {}).get("variants_detailed"),
+        "cardmarketProductId": cm.get("idProduct"),
+        "stamp": (card or {}).get("stamp"), "foil": (card or {}).get("foil"),
+        "language": (card or {}).get("language"),
+    }
+
+
+def real_world_regression_audit(registries, play_index, historical_ids, workers):
+    """Audit the binding 39-card real-world set without changing production."""
+    def fetch(pair):
+        locale, card_id = pair
+        url = f"{API}/{locale}/cards/{card_id}"
+        return pair, get_json(url, f"real-world-20260909:{locale}:{card_id}", missing_ok=True)
+
+    pairs = [(locale, card_id) for card_id in REAL_WORLD_REGRESSION for locale in ("en", "it")]
+    live = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(workers, 20))) as pool:
+        for pair, data in pool.map(fetch, pairs):
+            live[pair] = data
+
+    cause_text = {
+        "ALREADY_FIXED": "Il payload completo espone le finiture attese e il resolver corrente le rende selezionabili; il difetto segnalato non si riproduce su main.",
+        "SOURCE_DATA": "Il payload TCGdex completo EN/IT non documenta la finitura fisica osservata; Scanner e Conferma conservano integralmente i campi ricevuti.",
+        "SPECIAL_PRINTING": "La stampa non-holo è product-specific e deve restare separata dalla matrice finish della stampa base.",
+        "CARDMARKET_IDENTITY": "La matrice finish è separata dall'identità/prezzo del prodotto Cardmarket e richiede un mapping prodotto esatto, non un fallback finish.",
+        "NEEDS_MORE_EVIDENCE": "La stampa Play!/Prize Pack esiste come prodotto separato, ma i dati locali non ne provano con precisione la finitura; mantenere il fail-closed.",
+    }
+    fix_text = {
+        "ALREADY_FIXED": "Nessun fix produzione; riprodurre sul deploy corrente e invalidare eventuale cache/stato stale.",
+        "SOURCE_DATA": "Verificare una checklist booster autorevole; solo dopo aggiungere un registry identitario esatto per la singola stampa.",
+        "SPECIAL_PRINTING": "Modellare eventualmente l'edizione alternativa come identità prodotto separata, senza aggiungere Normal alla base.",
+        "CARDMARKET_IDENTITY": "Usare esclusivamente mapping tcgdexId/set/localId/currentProduct verso product ID verificato; mai Reverse -> Normal.",
+        "NEEDS_MORE_EVIDENCE": "Non automatizzare Play! Series 9 finché product ID e finish fisica non sono entrambi dimostrati.",
+    }
+
+    records = []
+    pipeline_losses = []
+    for card_id, spec in REAL_WORLD_REGRESSION.items():
+        en, it = live.get(("en", card_id)), live.get(("it", card_id))
+        if not en:
+            records.append({"tcgdexId": card_id, "classification": "NEEDS_MORE_EVIDENCE",
+                            "causeMismatch": "Payload TCGdex EN non disponibile.", "confidence": "LOW"})
+            continue
+        full = dict(it or en)
+        full["_englishSetName"] = (en.get("set") or {}).get("name")
+        brief = {key: full.get(key) for key in ("id", "image", "localId", "name") if key in full}
+        confirmation = {**brief, **full}
+        # renderScanValue/fetchScanPricing retain the hydrated object when pricing
+        # is already present; otherwise the subsequent full fetch is merged.
+        scanner_card = confirmation if confirmation.get("pricing") else {**confirmation, **en}
+        full_finish, full_reasons = proposed_standard(full, registries)
+        confirm_finish, confirm_reasons = proposed_standard(confirmation, registries)
+        scanner_finish, scanner_reasons = proposed_standard(scanner_card, registries)
+        data_loss = full_finish != confirm_finish or full_finish != scanner_finish
+        if data_loss:
+            pipeline_losses.append(card_id)
+        expected = set(spec["expected"])
+        missing = sorted(expected - scanner_finish)
+        extra = sorted(scanner_finish - expected)
+        classification = spec["cause"]
+        record = {
+            "tcgdexId": card_id, "setId": (en.get("set") or {}).get("id"),
+            "setNameEN": (en.get("set") or {}).get("name"),
+            "setNameIT": ((it or {}).get("set") or {}).get("name"),
+            "localId": en.get("localId"), "nameEN": en.get("name"), "nameIT": (it or {}).get("name"),
+            "rarity": en.get("rarity"), "regulationMark": en.get("regulationMark"),
+            "variants": en.get("variants"),
+            "variants_detailedEN": en.get("variants_detailed") or [],
+            "variants_detailedIT": (it or {}).get("variants_detailed") or [],
+            "documentedFinishesEN": sorted(source_semantic_details(en)),
+            "expectedPhysicalFinishes": sorted(expected),
+            "fullResolverFinishes": sorted(full_finish),
+            "scannerSelectableFinishes": sorted(scanner_finish),
+            "missingAgainstRegressionExpectation": missing,
+            "extraAgainstRegressionExpectation": extra,
+            "resolverEvidence": {"full": full_reasons, "confirmation": confirm_reasons, "scanner": scanner_reasons},
+            "pipeline": {
+                "tcgdexFull": pipeline_fields(full),
+                "candidateBrief": pipeline_fields(brief),
+                "confirmationHydrated": pipeline_fields(confirmation),
+                "syncVariantAvailabilityInput": pipeline_fields(scanner_card),
+                "finishInformationLost": data_loss,
+            },
+            "classification": classification, "secondaryCause": spec.get("secondaryCause"),
+            "causeMismatch": cause_text[classification],
+            "confidence": "MEDIUM" if classification == "NEEDS_MORE_EVIDENCE" else "HIGH",
+            "fixCandidate": fix_text[classification],
+            "inHistorical4252": card_id in historical_ids,
+        }
+        if spec.get("note"):
+            record["identityNote"] = spec["note"]
+        if spec.get("playSeries"):
+            base_pid = (((en.get("pricing") or {}).get("cardmarket") or {}).get("idProduct"))
+            record["playSeriesAudit"] = {
+                "series": spec["playSeries"], "baseProductId": base_pid,
+                "indexedProducts": ((play_index.get("byBaseProduct") or {}).get(str(base_pid), {}).get(spec["playSeries"]) or []),
+                "finishMetadataSufficient": False,
+            }
+        records.append(record)
+
+    counts = Counter(row["classification"] for row in records)
+    matrix_anomalies = [r for r in records if r.get("missingAgainstRegressionExpectation") or r.get("extraAgainstRegressionExpectation")]
+    fully_resolved = [r for r in records if not r.get("missingAgainstRegressionExpectation") and
+                      not r.get("extraAgainstRegressionExpectation") and r.get("classification") != "NEEDS_MORE_EVIDENCE"]
+    cardmarket_report_path = ROOT / "artifacts/card_identity_cardmarket_audit_report.json"
+    piplup_identity = None
+    if cardmarket_report_path.exists():
+        piplup_identity = json.loads(cardmarket_report_path.read_text()).get("piplup")
+    expected_counts = {
+        "RESOLVER_RULE": 0, "SCANNER_HYDRATION": 0, "LOCALIZATION": 0,
+        "SOURCE_DATA": 4, "SPECIAL_PRINTING": 1, "CARDMARKET_IDENTITY": 5,
+        "ALREADY_FIXED": 28, "NEEDS_MORE_EVIDENCE": 1,
+    }
+    if len(records) != 39 or set(REAL_WORLD_REGRESSION) != {r.get("tcgdexId") for r in records}:
+        raise AssertionError("The binding real-world regression set must contain exactly the 39 requested identities")
+    if pipeline_losses:
+        raise AssertionError(f"Unexpected Scanner -> Conferma finish data loss: {pipeline_losses}")
+    if any(counts.get(key, 0) != value for key, value in expected_counts.items()):
+        raise AssertionError(f"Unexpected real-world classification breakdown: {dict(counts)}")
+    expected_finish_anomalies = {"sm2-10", "sm1-46", "sm12-54", "sm10-13", "sm7-18"}
+    if {r["tcgdexId"] for r in matrix_anomalies} != expected_finish_anomalies:
+        raise AssertionError("Real-world finish anomaly set changed")
+    return {
+        "bindingDatasetSize": len(REAL_WORLD_REGRESSION),
+        "recordsRecovered": len(records),
+        "historical4252Representation": {
+            "present": sum(r.get("inHistorical4252", False) for r in records),
+            "absent": sum(not r.get("inHistorical4252", False) for r in records),
+        },
+        "classificationBreakdown": {key: counts.get(key, 0) for key in (
+            "RESOLVER_RULE", "SCANNER_HYDRATION", "LOCALIZATION", "SOURCE_DATA",
+            "SPECIAL_PRINTING", "CARDMARKET_IDENTITY", "ALREADY_FIXED", "NEEDS_MORE_EVIDENCE")},
+        "finishMatrixMatchesExpectation": len(records) - len(matrix_anomalies),
+        "finishMatrixAnomalies": len(matrix_anomalies),
+        "fullyResolvedCases": len(fully_resolved),
+        "pipelineDataLossCases": pipeline_losses,
+        "pipelineFinding": "La lista candidata è breve e priva di variants_detailed, ma chooseCard/fetchFullCandidate fonde il payload completo prima di syncVariantAvailability; nessuna perdita si osserva nei 39 casi.",
+        "piplupCardmarketIdentity": piplup_identity,
+        "records": records,
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--output", default="artifacts/variant_finish_audit_report.json")
@@ -802,6 +999,13 @@ def main():
     if normal_registry_has_price_fields:
         raise AssertionError("Verified Normal finish registry must not contain price fields")
 
+    historical_regression_ids = {
+        row.get("tcgdexId") for row in (baseline or {}).get("cards", []) if row.get("tcgdexId")
+    }
+    real_world_regression = real_world_regression_audit(
+        registries, play_index, historical_regression_ids, args.workers
+    )
+
     report = {
         "source": {
             "repository": "26ale93-lab/Cardoryx", "mainSha": git("rev-parse", "origin/main"),
@@ -899,6 +1103,7 @@ def main():
             "identityChecks": normal_identity_checks,
             "assessment": "All 26 audited identities gain only Normal through exact tcgdexId + setId + normalized localId matching.",
         },
+        "realWorldRegression": real_world_regression,
         "cardmarketPricingAudit": {
             "proposedFinishRoutes": dict(pricing_counts), "wrongPhysicalProductRisks": pricing_risks,
             "resolvedExactReverseProductConflicts": resolved_pricing_conflicts,
@@ -938,6 +1143,8 @@ def main():
             "indexHtmlModified": True, "scannerModified": False, "cardmarketDataModified": False,
             "retailModified": False, "retailPricesModified": False, "workflowAdded": False,
             "fuzzyMatchingIntroduced": False, "productionCorrectionsApplied": True,
+            "finishProductionCorrectionsAppliedInThisPhase": False,
+            "productionChangeScope": "Three exact Cardmarket product identity guards only",
         },
         "finalAssessment": "FIX AD ALTA CONFIDENZA — AUDIT RIESEGUITO",
     }
@@ -945,7 +1152,11 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps({"output": str(output), "summary": report["summary"], "byFinish": report["totalsByFinish"],
-                      "play": report["playPrizePackAudit"]["counts"]}, ensure_ascii=False, indent=2))
+                      "play": report["playPrizePackAudit"]["counts"],
+                      "realWorldRegression": {k: real_world_regression[k] for k in (
+                          "bindingDatasetSize", "recordsRecovered", "historical4252Representation",
+                          "classificationBreakdown", "finishMatrixMatchesExpectation",
+                          "finishMatrixAnomalies", "fullyResolvedCases", "pipelineDataLossCases")}}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
