@@ -57,6 +57,34 @@ FINISHES = (
 MANUAL_FINISHES = ("Speciale / Altro", "Non so")
 CLASSIFICATIONS = ("CORRETTA", "FALSO POSITIVO", "FALSO NEGATIVO", "AMBIGUA", "SOURCE CONFLICT")
 FINISH_METRICS = ("documented", "proposed", "falsePositive", "falseNegative")
+VERIFIED_NORMAL_TARGETS = {
+    "svp-107": ("svp", "107"),
+    "me04-013": ("me04", "013"),
+    "me01-064": ("me01", "064"),
+    "me01-073": ("me01", "073"),
+    "me03-045": ("me03", "045"),
+    "me03-086": ("me03", "086"),
+    "me03-087": ("me03", "087"),
+    "me03-088": ("me03", "088"),
+    "me02-045": ("me02", "045"),
+    "me02-053": ("me02", "053"),
+    "sv10-034": ("sv10", "034"),
+    "sv10-049": ("sv10", "049"),
+    "sv10-051": ("sv10", "051"),
+    "sv10-096": ("sv10", "096"),
+    "sv09-055": ("sv09", "055"),
+    "svp-190": ("svp", "190"),
+    "svp-221": ("svp", "221"),
+    "svp-222": ("svp", "222"),
+    "svp-223": ("svp", "223"),
+    "sv08-014": ("sv08", "014"),
+    "sv08-065": ("sv08", "065"),
+    "sv05-041": ("sv05", "041"),
+    "sv05-062": ("sv05", "062"),
+    "sv05-119": ("sv05", "119"),
+    "sv05-121": ("sv05", "121"),
+    "sv06-100": ("sv06", "100"),
+}
 
 
 def classification_counts(counter):
@@ -256,7 +284,7 @@ def simulate_italian_rest_payload(card):
     rows = card.get("variants_detailed") or []
     for original in rows:
         row = dict(original)
-        row["type"] = {"normal": "Normale", "holo": "Olografica"}.get(row.get("type"), row.get("type"))
+        row["type"] = {"normal": "Normale", "holo": "Olografica", "reverse": "Reverse"}.get(row.get("type"), row.get("type"))
         row["foil"] = {"cosmos": "Cosmo", "pokeball": "Poké Ball", "masterball": "Master Ball"}.get(row.get("foil"), row.get("foil"))
         if row.get("foil") is None: row.pop("foil", None)
         translated.append(row)
@@ -303,6 +331,18 @@ def registry_matches(registry, card, finish, series=None, stamp=None):
             continue
         return registry[key]
     return None
+
+
+def verified_normal_matches(registry, card):
+    """Mirror the production tcgdexId + setId + safely normalized localId guard."""
+    card_id = str(card.get("tcgdexId") or card.get("id") or "").strip().lower()
+    rule = registry.get(card_id)
+    if not rule:
+        return False
+    set_id = str(card.get("_cardoryxSetId") or (card.get("set") or {}).get("id") or "").strip().lower()
+    local = str(card.get("localId") or "").lstrip("0") or str(card.get("localId") or "")
+    rule_local = str(rule.get("localId") or "").lstrip("0") or str(rule.get("localId") or "")
+    return set_id == str(rule.get("setId") or "").strip().lower() and local == rule_local
 
 
 def proposed_standard(card, registries):
@@ -361,6 +401,8 @@ def proposed_standard(card, registries):
                 if allowed: reasons.append("marketplace-key-fallback")
                 elif rarity_forces_holo(card):
                     allowed.add("Holo"); reasons.append("rarity-holo-fallback")
+    if verified_normal_matches(registries["normal"], card):
+        allowed.add("Normal"); reasons.append("verified-normal-finish-registry")
     for finish in FINISHES:
         if registry_matches(registries["variant"], card, finish):
             allowed.add(finish); reasons.append("verified-variant-registry")
@@ -434,17 +476,28 @@ def main():
         "prizePackFoilFinish", "VERIFIED_VARIANT_PRICES", "VERIFIED_STAMP_PRICES",
         "VERIFIED_PLAY_SERIES_PRICES", "PLAY_AUTO_CATALOG",
         "VERIFIED_REVERSE_CARDMARKET_CONFLICTS", "knownReverseCardmarketProductConflict",
+        "VERIFIED_NORMAL_FINISHES", "verifiedNormalFinish",
     ]
     missing_logic = [x for x in required if x not in source]
     if missing_logic:
         raise SystemExit(f"Required production logic missing: {missing_logic}")
     registries = {
+        "normal": extract_js_object(source, "VERIFIED_NORMAL_FINISHES"),
         "variant": extract_js_object(source, "VERIFIED_VARIANT_PRICES"),
         "stamp": extract_js_object(source, "VERIFIED_STAMP_PRICES"),
         "play": extract_js_object(source, "VERIFIED_PLAY_SERIES_PRICES"),
         "playAuto": extract_js_object(source, "PLAY_AUTO_CATALOG"),
         "reverseConflict": extract_js_object(source, "VERIFIED_REVERSE_CARDMARKET_CONFLICTS"),
     }
+    normal_registry = registries["normal"]
+    expected_normal_registry = {
+        card_id: {"setId": set_id, "localId": local_id}
+        for card_id, (set_id, local_id) in VERIFIED_NORMAL_TARGETS.items()
+    }
+    if normal_registry != expected_normal_registry:
+        raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the audited 26-identity dataset")
+    if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
+        raise AssertionError("Verified Normal finish must remain restricted to the unstamped path")
     play_index = json.loads(PLAY_INDEX.read_text())
 
     set_specs = dict(SAMPLED_SETS); set_specs.update(FULL_SETS)
@@ -512,10 +565,39 @@ def main():
         with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
             for pair, data in pool.map(fetch_card, pairs): fetched[pair] = data
 
+    normal_identity_checks = []
+    for card_id, (set_id, local_id) in VERIFIED_NORMAL_TARGETS.items():
+        en = fetched.get(("en", card_id))
+        if not en:
+            raise AssertionError(f"Verified Normal target missing from the audited dataset: {card_id}")
+        exact_rows = [r for r in en.get("variants_detailed") or []
+                      if canonical_finish_type_label(r.get("type")) == "normal"
+                      and not r.get("foil") and not r.get("stamp") and not is_play_row(r)]
+        if not exact_rows:
+            raise AssertionError(f"Verified Normal target lacks an unstamped Normal row: {card_id}")
+        if not verified_normal_matches(normal_registry, en):
+            raise AssertionError(f"Verified Normal exact identity does not match: {card_id}")
+        wrong_id = dict(en, id=f"{card_id}-other", tcgdexId=f"{card_id}-other")
+        wrong_set = dict(en, set={**(en.get("set") or {}), "id": f"{set_id}-other"})
+        wrong_local = dict(en, localId=f"{local_id}9")
+        if any(verified_normal_matches(normal_registry, probe) for probe in (wrong_id, wrong_set, wrong_local)):
+            raise AssertionError(f"Verified Normal guard leaked beyond exact identity: {card_id}")
+        normal_identity_checks.append({
+            "tcgdexId": card_id, "setId": set_id, "localId": local_id,
+            "unstampedNormalRows": len(exact_rows), "exactMatch": True,
+            "wrongIdRejected": True, "wrongSetRejected": True, "wrongLocalIdRejected": True,
+        })
+
     locale_probes = []
     for cid in ("mee-001", "sv08.5-057", "sv03.5-026", "swsh6-145"):
-        en_live = get_json(f"{API}/en/cards/{cid}", f"locale-probe:en:{cid}", missing_ok=True)
-        it_live = get_json(f"{API}/it/cards/{cid}", f"locale-probe:it:{cid}", missing_ok=True)
+        if args.tcgdex_db:
+            # Keep an offline snapshot run deterministic and internally coherent:
+            # these cards were already loaded from the exact same EN/IT database SHA.
+            en_live = fetched.get(("en", cid))
+            it_live = fetched.get(("it", cid))
+        else:
+            en_live = get_json(f"{API}/en/cards/{cid}", f"locale-probe:en:{cid}", missing_ok=True)
+            it_live = get_json(f"{API}/it/cards/{cid}", f"locale-probe:it:{cid}", missing_ok=True)
         if not en_live or not it_live:
             locale_probes.append({"tcgdexId": cid, "available": False})
             continue
@@ -705,6 +787,20 @@ def main():
         "unmappedExplicitPlayCards": explicit_play_cards - explicit_play_cards_indexed,
         "registryConflicts": len(registry_issues),
     }
+    normal_registry_applied_ids = sorted(
+        c["tcgdexId"] for c in cards_out
+        if "verified-normal-finish-registry" in c.get("resolverEvidence", [])
+    )
+    if normal_registry_applied_ids != sorted(VERIFIED_NORMAL_TARGETS):
+        raise AssertionError("Verified Normal registry did not apply to exactly the 26 audited identities")
+    if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
+           if c["tcgdexId"] in VERIFIED_NORMAL_TARGETS):
+        raise AssertionError("At least one verified Normal target is still not selectable")
+    normal_registry_has_price_fields = any(
+        set(rule) - {"setId", "localId"} for rule in normal_registry.values()
+    )
+    if normal_registry_has_price_fields:
+        raise AssertionError("Verified Normal finish registry must not contain price fields")
 
     report = {
         "source": {
@@ -790,6 +886,19 @@ def main():
             "assessment": "MEE001-008 is a deliberate source conflict: TCGdex exposes Reverse while Cardoryx exact edition policy allows Normal; Prize Pack S8/S9 is separately modelled as Normal + Cosmos. MEE009-016 cannot be API-verified in the current TCGdex catalogue.",
         },
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
+        "verifiedNormalResidualAudit": {
+            "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
+            "recoveredIdentities": len(normal_registry_applied_ids),
+            "appliedIds": normal_registry_applied_ids,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "stampedAndPlayPathsUnchanged": True,
+            "energyRuleGeneralized": False,
+            "otherFinishesAddedByRegistry": [],
+            "identityChecks": normal_identity_checks,
+            "assessment": "All 26 audited identities gain only Normal through exact tcgdexId + setId + normalized localId matching.",
+        },
         "cardmarketPricingAudit": {
             "proposedFinishRoutes": dict(pricing_counts), "wrongPhysicalProductRisks": pricing_risks,
             "resolvedExactReverseProductConflicts": resolved_pricing_conflicts,
@@ -799,6 +908,11 @@ def main():
         },
         "issuesByPriority": issues,
         "appliedHighConfidenceFixes": [
+            {"id": "exact-verified-normal-residuals", "confidence": "high", "status": "applied",
+             "evidence": "Twenty-six exact unstamped variants_detailed Normal rows audited by tcgdexId, setId and localId",
+             "observedImpact": {"normalFalseNegativeBefore": ((baseline or {}).get("totalsByFinish", {}).get("Normal", {}).get("falseNegative")),
+                                "normalFalseNegativeAfter": finish_counts["Normal"].get("falseNegative", 0),
+                                "outsideListInheritedRule": False, "priceFieldsAdded": False}},
             {"id": "canonicalize-it-variant-enums", "confidence": "high", "status": "applied",
              "evidence": "Live IT payloads use Normale, Olografica and Cosmo while helpers compare normal, holo and cosmos",
              "observedImpact": {"cosmosFalseNegativeBefore": 300, "cosmosFalseNegativeAfter": finish_counts["Cosmos Holo"].get("falseNegative", 0)}},
@@ -816,7 +930,7 @@ def main():
         "normalDocumentedNotSelectableAudit": {
             "before": ((baseline or {}).get("totalsByFinish", {}).get("Normal", {}).get("falseNegative")),
             "after": finish_counts["Normal"].get("falseNegative", 0),
-            "scope": "No general Normal rule was added; changes, if any, are only the direct consequence of lexical Normale/Normal normalization and explicit detailed-row priority.",
+            "scope": "No general Normal rule was added; only the 26 audited tcgdexId + setId + normalized localId identities gain Normal.",
             "remainingCases": [x for x in issues if "Normal" in x.get("missing", [])],
         },
         "mustRemainToVerify": [x for x in issues if x["severity"] == "P3"] + [{"targets": unavailable_targets, "reason": "not present in current TCGdex API"}],

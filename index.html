@@ -3788,6 +3788,45 @@ function isModernParallelEra(card){
   return /^(sv|me)/.test(sid) || /^(sv|me)/.test(cid);
 }
 
+// V2.1.40 — Normal finishes verified against exact TCGdex physical identities.
+// This registry is finish evidence only: it contains no marketplace ids or prices
+// and must never be broadened to a rarity, era, set prefix, name, or fuzzy match.
+const VERIFIED_NORMAL_FINISHES = {
+  'svp-107':{setId:'svp',localId:'107'},
+  'me04-013':{setId:'me04',localId:'013'},
+  'me01-064':{setId:'me01',localId:'064'},
+  'me01-073':{setId:'me01',localId:'073'},
+  'me03-045':{setId:'me03',localId:'045'},
+  'me03-086':{setId:'me03',localId:'086'},
+  'me03-087':{setId:'me03',localId:'087'},
+  'me03-088':{setId:'me03',localId:'088'},
+  'me02-045':{setId:'me02',localId:'045'},
+  'me02-053':{setId:'me02',localId:'053'},
+  'sv10-034':{setId:'sv10',localId:'034'},
+  'sv10-049':{setId:'sv10',localId:'049'},
+  'sv10-051':{setId:'sv10',localId:'051'},
+  'sv10-096':{setId:'sv10',localId:'096'},
+  'sv09-055':{setId:'sv09',localId:'055'},
+  'svp-190':{setId:'svp',localId:'190'},
+  'svp-221':{setId:'svp',localId:'221'},
+  'svp-222':{setId:'svp',localId:'222'},
+  'svp-223':{setId:'svp',localId:'223'},
+  'sv08-014':{setId:'sv08',localId:'014'},
+  'sv08-065':{setId:'sv08',localId:'065'},
+  'sv05-041':{setId:'sv05',localId:'041'},
+  'sv05-062':{setId:'sv05',localId:'062'},
+  'sv05-119':{setId:'sv05',localId:'119'},
+  'sv05-121':{setId:'sv05',localId:'121'},
+  'sv06-100':{setId:'sv06',localId:'100'}
+};
+function verifiedNormalFinish(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_NORMAL_FINISHES[id];
+  if(!rule)return false;
+  return cardSetId(card)===rule.setId &&
+         exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
+}
+
 
 // V2.1.14 — Prize Pack Series 1–9 resolver + exact product refresh.
 // The official Cardmarket catalogue exposes one product for a single printing
@@ -4056,6 +4095,9 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     const lpFinish=canonicalVariant(card.livePlayPrice.finish||'');
     if(lpFinish && (!series || !lpSeries || lpSeries===series))allowed.add(lpFinish);
   }
+
+  // Exact finish-only evidence. Stamped/Play! editions remain on their own path.
+  if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');
 
   // Exact verified registries may add a finish for the exact edition.
   for(const name of ['Normal','Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo']){
