@@ -85,6 +85,13 @@ VERIFIED_NORMAL_TARGETS = {
     "sv05-121": ("sv05", "121"),
     "sv06-100": ("sv06", "100"),
 }
+VERIFIED_REVERSE_TARGETS = {
+    "sm2-10": {"setId": "sm2", "localId": "010", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm2_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-guardians-rising/victini-reverse-holo-10"},
+    "sm1-46": {"setId": "sm1", "localId": "046", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm1_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-sun-%26-moon/araquanid-reverse-holo-46"},
+    "sm12-54": {"setId": "sm12", "localId": "054", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm12_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-cosmic-eclipse/piplup-reverse-holo-54"},
+    "sm10-13": {"setId": "sm10", "localId": "013", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm10_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-unbroken-bonds/bellsprout-reverse-holo-13"},
+    "sm7-18": {"setId": "sm7", "localId": "018", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm7_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-celestial-storm/illumise-reverse-holo-18"},
+}
 
 REAL_WORLD_REGRESSION = {
     # Astral Radiance / Lucentezza Siderale
@@ -113,17 +120,17 @@ REAL_WORLD_REGRESSION = {
     "swsh10.5-066": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "swsh10.5-068": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     # Other sets
-    "sm2-10": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
-    "sm1-46": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
+    "sm2-10": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD"},
+    "sm1-46": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD"},
     "sv02-172": {"expected": ["Holo", "Reverse Holo"], "cause": "SPECIAL_PRINTING"},
     "sm10-23": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "sv10-033": {"expected": ["Normal", "Reverse Holo"], "cause": "NEEDS_MORE_EVIDENCE", "playSeries": "9"},
-    "sm12-54": {"expected": ["Normal", "Reverse Holo"], "cause": "CARDMARKET_IDENTITY", "secondaryCause": "SOURCE_DATA"},
+    "sm12-54": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD", "secondaryCause": "CARDMARKET_IDENTITY_RESOLVED"},
     "sm3-4": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "swsh12.5-007": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "swsh12.5-011": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
-    "sm10-13": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
-    "sm7-18": {"expected": ["Normal", "Reverse Holo"], "cause": "SOURCE_DATA"},
+    "sm10-13": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD"},
+    "sm7-18": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD"},
     # Prismatic Evolutions
     "sv08.5-001": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"], "cause": "CARDMARKET_IDENTITY"},
     "sv08.5-020": {"expected": ["Normal", "Reverse Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"], "cause": "CARDMARKET_IDENTITY"},
@@ -380,7 +387,7 @@ def registry_matches(registry, card, finish, series=None, stamp=None):
     return None
 
 
-def verified_normal_matches(registry, card):
+def verified_finish_matches(registry, card):
     """Mirror the production tcgdexId + setId + safely normalized localId guard."""
     card_id = str(card.get("tcgdexId") or card.get("id") or "").strip().lower()
     rule = registry.get(card_id)
@@ -448,8 +455,10 @@ def proposed_standard(card, registries):
                 if allowed: reasons.append("marketplace-key-fallback")
                 elif rarity_forces_holo(card):
                     allowed.add("Holo"); reasons.append("rarity-holo-fallback")
-    if verified_normal_matches(registries["normal"], card):
+    if verified_finish_matches(registries["normal"], card):
         allowed.add("Normal"); reasons.append("verified-normal-finish-registry")
+    if verified_finish_matches(registries["reverse"], card):
+        allowed.add("Reverse Holo"); reasons.append("verified-reverse-finish-registry")
     for finish in FINISHES:
         if registry_matches(registries["variant"], card, finish):
             allowed.add(finish); reasons.append("verified-variant-registry")
@@ -542,6 +551,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         "SPECIAL_PRINTING": "La stampa non-holo è product-specific e deve restare separata dalla matrice finish della stampa base.",
         "CARDMARKET_IDENTITY": "La matrice finish è separata dall'identità/prezzo del prodotto Cardmarket e richiede un mapping prodotto esatto, non un fallback finish.",
         "NEEDS_MORE_EVIDENCE": "La stampa Play!/Prize Pack esiste come prodotto separato, ma i dati locali non ne provano con precisione la finitura; mantenere il fail-closed.",
+        "VERIFIED_REVERSE_STANDARD": "Checklist ufficiale e catalogo indipendente confermano la Reverse Holo standard della stessa identità fisica; TCGdex non la documenta nel payload completo.",
     }
     fix_text = {
         "ALREADY_FIXED": "Nessun fix produzione; riprodurre sul deploy corrente e invalidare eventuale cache/stato stale.",
@@ -549,6 +559,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         "SPECIAL_PRINTING": "Modellare eventualmente l'edizione alternativa come identità prodotto separata, senza aggiungere Normal alla base.",
         "CARDMARKET_IDENTITY": "Usare esclusivamente mapping tcgdexId/set/localId/currentProduct verso product ID verificato; mai Reverse -> Normal.",
         "NEEDS_MORE_EVIDENCE": "Non automatizzare Play! Series 9 finché product ID e finish fisica non sono entrambi dimostrati.",
+        "VERIFIED_REVERSE_STANDARD": "Applicare solo il registry Reverse esatto tcgdexId/setId/localId sul percorso unstamped.",
     }
 
     records = []
@@ -626,8 +637,8 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         piplup_identity = json.loads(cardmarket_report_path.read_text()).get("piplup")
     expected_counts = {
         "RESOLVER_RULE": 0, "SCANNER_HYDRATION": 0, "LOCALIZATION": 0,
-        "SOURCE_DATA": 4, "SPECIAL_PRINTING": 1, "CARDMARKET_IDENTITY": 5,
-        "ALREADY_FIXED": 28, "NEEDS_MORE_EVIDENCE": 1,
+        "SOURCE_DATA": 0, "SPECIAL_PRINTING": 1, "CARDMARKET_IDENTITY": 4,
+        "ALREADY_FIXED": 28, "NEEDS_MORE_EVIDENCE": 1, "VERIFIED_REVERSE_STANDARD": 5,
     }
     if len(records) != 39 or set(REAL_WORLD_REGRESSION) != {r.get("tcgdexId") for r in records}:
         raise AssertionError("The binding real-world regression set must contain exactly the 39 requested identities")
@@ -635,7 +646,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         raise AssertionError(f"Unexpected Scanner -> Conferma finish data loss: {pipeline_losses}")
     if any(counts.get(key, 0) != value for key, value in expected_counts.items()):
         raise AssertionError(f"Unexpected real-world classification breakdown: {dict(counts)}")
-    expected_finish_anomalies = {"sm2-10", "sm1-46", "sm12-54", "sm10-13", "sm7-18"}
+    expected_finish_anomalies = set()
     if {r["tcgdexId"] for r in matrix_anomalies} != expected_finish_anomalies:
         raise AssertionError("Real-world finish anomaly set changed")
     return {
@@ -647,13 +658,19 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         },
         "classificationBreakdown": {key: counts.get(key, 0) for key in (
             "RESOLVER_RULE", "SCANNER_HYDRATION", "LOCALIZATION", "SOURCE_DATA",
-            "SPECIAL_PRINTING", "CARDMARKET_IDENTITY", "ALREADY_FIXED", "NEEDS_MORE_EVIDENCE")},
+            "SPECIAL_PRINTING", "CARDMARKET_IDENTITY", "ALREADY_FIXED", "NEEDS_MORE_EVIDENCE",
+            "VERIFIED_REVERSE_STANDARD")},
         "finishMatrixMatchesExpectation": len(records) - len(matrix_anomalies),
         "finishMatrixAnomalies": len(matrix_anomalies),
         "fullyResolvedCases": len(fully_resolved),
         "pipelineDataLossCases": pipeline_losses,
         "pipelineFinding": "La lista candidata è breve e priva di variants_detailed, ma chooseCard/fetchFullCandidate fonde il payload completo prima di syncVariantAvailability; nessuna perdita si osserva nei 39 casi.",
         "piplupCardmarketIdentity": piplup_identity,
+        "verifiedReverseEvidence": {
+            card_id: {**evidence, "classification": "VERIFIED_REVERSE_STANDARD",
+                      "standardBoosterIdentity": True, "promoOrStamped": False}
+            for card_id, evidence in VERIFIED_REVERSE_TARGETS.items()
+        },
         "records": records,
     }
 
@@ -674,12 +691,14 @@ def main():
         "VERIFIED_PLAY_SERIES_PRICES", "PLAY_AUTO_CATALOG",
         "VERIFIED_REVERSE_CARDMARKET_CONFLICTS", "knownReverseCardmarketProductConflict",
         "VERIFIED_NORMAL_FINISHES", "verifiedNormalFinish",
+        "VERIFIED_REVERSE_FINISHES", "verifiedReverseFinish",
     ]
     missing_logic = [x for x in required if x not in source]
     if missing_logic:
         raise SystemExit(f"Required production logic missing: {missing_logic}")
     registries = {
         "normal": extract_js_object(source, "VERIFIED_NORMAL_FINISHES"),
+        "reverse": extract_js_object(source, "VERIFIED_REVERSE_FINISHES"),
         "variant": extract_js_object(source, "VERIFIED_VARIANT_PRICES"),
         "stamp": extract_js_object(source, "VERIFIED_STAMP_PRICES"),
         "play": extract_js_object(source, "VERIFIED_PLAY_SERIES_PRICES"),
@@ -695,6 +714,30 @@ def main():
         raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the audited 26-identity dataset")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
         raise AssertionError("Verified Normal finish must remain restricted to the unstamped path")
+    expected_reverse_registry = {
+        card_id: {"setId": row["setId"], "localId": row["localId"]}
+        for card_id, row in VERIFIED_REVERSE_TARGETS.items()
+    }
+    if registries["reverse"] != expected_reverse_registry:
+        raise AssertionError("VERIFIED_REVERSE_FINISHES differs from the five independently verified identities")
+    if "if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');" not in source:
+        raise AssertionError("Verified Reverse finish must remain restricted to the unstamped path")
+    reverse_identity_checks = []
+    for card_id, row in VERIFIED_REVERSE_TARGETS.items():
+        probe = {"id": card_id, "tcgdexId": card_id,
+                 "set": {"id": row["setId"]}, "localId": row["localId"]}
+        wrong_id = {**probe, "id": f"{card_id}-other", "tcgdexId": f"{card_id}-other"}
+        wrong_set = {**probe, "set": {"id": f"{row['setId']}-other"}}
+        wrong_local = {**probe, "localId": f"{row['localId']}9"}
+        if not verified_finish_matches(registries["reverse"], probe):
+            raise AssertionError(f"Verified Reverse exact identity does not match: {card_id}")
+        if any(verified_finish_matches(registries["reverse"], x) for x in (wrong_id, wrong_set, wrong_local)):
+            raise AssertionError(f"Verified Reverse guard leaked beyond exact identity: {card_id}")
+        reverse_identity_checks.append({
+            "tcgdexId": card_id, "setId": row["setId"], "localId": row["localId"],
+            "exactMatch": True, "wrongIdRejected": True,
+            "wrongSetRejected": True, "wrongLocalIdRejected": True,
+        })
     play_index = json.loads(PLAY_INDEX.read_text())
 
     set_specs = dict(SAMPLED_SETS); set_specs.update(FULL_SETS)
@@ -772,12 +815,12 @@ def main():
                       and not r.get("foil") and not r.get("stamp") and not is_play_row(r)]
         if not exact_rows:
             raise AssertionError(f"Verified Normal target lacks an unstamped Normal row: {card_id}")
-        if not verified_normal_matches(normal_registry, en):
+        if not verified_finish_matches(normal_registry, en):
             raise AssertionError(f"Verified Normal exact identity does not match: {card_id}")
         wrong_id = dict(en, id=f"{card_id}-other", tcgdexId=f"{card_id}-other")
         wrong_set = dict(en, set={**(en.get("set") or {}), "id": f"{set_id}-other"})
         wrong_local = dict(en, localId=f"{local_id}9")
-        if any(verified_normal_matches(normal_registry, probe) for probe in (wrong_id, wrong_set, wrong_local)):
+        if any(verified_finish_matches(normal_registry, probe) for probe in (wrong_id, wrong_set, wrong_local)):
             raise AssertionError(f"Verified Normal guard leaked beyond exact identity: {card_id}")
         normal_identity_checks.append({
             "tcgdexId": card_id, "setId": set_id, "localId": local_id,
@@ -831,6 +874,11 @@ def main():
         card["_englishSetName"] = (en.get("set") or {}).get("name")
         truth = source_semantic_details(en)
         it_truth = source_semantic_details(it) if it else truth
+        # Exact independently verified checklist evidence supplements missing
+        # TCGdex rows without broadening the historical truth model.
+        if verified_finish_matches(registries["reverse"], en):
+            truth.add("Reverse Holo")
+            it_truth.add("Reverse Holo")
         locale_conflict = bool(it and truth != it_truth)
         proposed, reasons = proposed_standard(card, registries)
         classification, missing, extra, why = classify(card, truth, proposed, truth, locale_conflict)
@@ -998,6 +1046,11 @@ def main():
     )
     if normal_registry_has_price_fields:
         raise AssertionError("Verified Normal finish registry must not contain price fields")
+    reverse_registry_has_price_fields = any(
+        set(rule) - {"setId", "localId"} for rule in registries["reverse"].values()
+    )
+    if reverse_registry_has_price_fields:
+        raise AssertionError("Verified Reverse finish registry must not contain price fields")
 
     historical_regression_ids = {
         row.get("tcgdexId") for row in (baseline or {}).get("cards", []) if row.get("tcgdexId")
@@ -1041,7 +1094,11 @@ def main():
         "totalsByEra": {k: dict(v) for k, v in sorted(by_era.items())},
         "totalsByRarity": {k: dict(v) for k, v in sorted(by_rarity.items())},
         "totalsByFinish": {k: finish_metric_counts(v) for k, v in finish_counts.items()},
-        "cards": cards_out,
+        # Persist the complete audited identity set without duplicating every
+        # diagnostic field; detailed findings remain in the dedicated sections.
+        "cards": [{"tcgdexId": c["tcgdexId"],
+                   "cardmarketIdProduct": c.get("cardmarketIdProduct")}
+                  for c in cards_out],
         "normalHoloReverseAudit": {
             "modernRule": "Common/Uncommon => Normal + Reverse; Rare => Holo + Reverse; intrinsic foil => Holo only",
             "counts": {f: finish_metric_counts(finish_counts[f]) for f in ("Normal", "Holo", "Reverse Holo")},
@@ -1103,6 +1160,17 @@ def main():
             "identityChecks": normal_identity_checks,
             "assessment": "All 26 audited identities gain only Normal through exact tcgdexId + setId + normalized localId matching.",
         },
+        "verifiedReverseFinishAudit": {
+            "expectedIdentities": len(VERIFIED_REVERSE_TARGETS),
+            "integratedIds": sorted(VERIFIED_REVERSE_TARGETS),
+            "classification": "VERIFIED_REVERSE_STANDARD",
+            "unstampedOnly": True, "priceFieldsPresent": False,
+            "outsideListInheritedRule": False,
+            "stampedAndPlayPathsUnchanged": True,
+            "evidence": VERIFIED_REVERSE_TARGETS,
+            "identityChecks": reverse_identity_checks,
+            "assessment": "Five exact identities gain only Reverse Holo through tcgdexId + setId + normalized localId matching on stamp=None.",
+        },
         "realWorldRegression": real_world_regression,
         "cardmarketPricingAudit": {
             "proposedFinishRoutes": dict(pricing_counts), "wrongPhysicalProductRisks": pricing_risks,
@@ -1131,6 +1199,11 @@ def main():
              "evidence": "Six exact Reverse rows use a distinct Cardmarket product while the current base product exposes a non-zero *-holo slot",
              "observedImpact": {"pricingP0Before": 6, "pricingP0After": len(pricing_risks),
                                 "failClosed": len(resolved_pricing_conflicts)}},
+            {"id": "exact-verified-reverse-finishes", "confidence": "high", "status": "applied",
+             "evidence": "Official set checklists plus independent exact set/number Reverse Holo catalog entries",
+             "observedImpact": {"realWorldRegressionBefore": {"matching": 34, "anomalous": 5},
+                                "realWorldRegressionAfter": {"matching": 39, "anomalous": 0},
+                                "outsideListInheritedRule": False, "priceFieldsAdded": False}},
         ],
         "normalDocumentedNotSelectableAudit": {
             "before": ((baseline or {}).get("totalsByFinish", {}).get("Normal", {}).get("falseNegative")),
@@ -1143,8 +1216,8 @@ def main():
             "indexHtmlModified": True, "scannerModified": False, "cardmarketDataModified": False,
             "retailModified": False, "retailPricesModified": False, "workflowAdded": False,
             "fuzzyMatchingIntroduced": False, "productionCorrectionsApplied": True,
-            "finishProductionCorrectionsAppliedInThisPhase": False,
-            "productionChangeScope": "Three exact Cardmarket product identity guards only",
+            "finishProductionCorrectionsAppliedInThisPhase": True,
+            "productionChangeScope": "One exact Piplup Cardmarket identity guard plus five exact unstamped Reverse finish identities",
         },
         "finalAssessment": "FIX AD ALTA CONFIDENZA — AUDIT RIESEGUITO",
     }
