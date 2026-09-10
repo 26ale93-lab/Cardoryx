@@ -918,7 +918,65 @@ function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
 function selectedCondition(){return ui('condition')?.value||'NM'}
-function persist(){localStorage.setItem('cardoryx_db',JSON.stringify(db));try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render:',e)}}
+let persistedCollectionJson=JSON.stringify(db);
+let lastCollectionStorageError='';
+function collectionStorageErrorMessage(error){
+  const quota=error?.name==='QuotaExceededError'||error?.name==='NS_ERROR_DOM_QUOTA_REACHED'||error?.code===22||error?.code===1014;
+  if(quota)return 'Spazio di archiviazione locale esaurito. La modifica non è stata applicata e la collezione precedente è rimasta intatta. Esporta subito un Backup JSON prima di aggiungere altre carte.';
+  return `Salvataggio della collezione non riuscito (${error?.name||'errore sconosciuto'}). La modifica non è stata applicata e i dati precedenti sono rimasti intatti.`;
+}
+function renderAfterCollectionPersistence(){
+  try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render:',e)}
+}
+function reportCollectionStorageError(error){
+  lastCollectionStorageError=collectionStorageErrorMessage(error);
+  console.error('Cardoryx collection persistence:',error);
+  alert(lastCollectionStorageError);
+}
+function restorePersistedCollection(){
+  try{db=JSON.parse(persistedCollectionJson)}catch(e){console.error('Cardoryx collection rollback:',e)}
+}
+function persist(){
+  let nextJson;
+  try{
+    nextJson=JSON.stringify(db);
+    localStorage.setItem('cardoryx_db',nextJson);
+  }catch(error){
+    restorePersistedCollection();
+    reportCollectionStorageError(error);
+    renderAfterCollectionPersistence();
+    return false;
+  }
+  persistedCollectionJson=nextJson;
+  lastCollectionStorageError='';
+  renderAfterCollectionPersistence();
+  return true;
+}
+function persistCollectionAndDecks(previousDecksJson){
+  const previousDbJson=persistedCollectionJson;
+  let nextDbJson,nextDecksJson;
+  try{
+    nextDbJson=JSON.stringify(db);
+    nextDecksJson=JSON.stringify(decks);
+    localStorage.setItem('cardoryx_db',nextDbJson);
+    localStorage.setItem(DECK_KEY,nextDecksJson);
+  }catch(error){
+    try{db=JSON.parse(previousDbJson)}catch(e){console.error('Cardoryx collection rollback:',e)}
+    try{decks=JSON.parse(previousDecksJson)}catch(e){console.error('Cardoryx deck rollback:',e)}
+    try{
+      localStorage.setItem('cardoryx_db',previousDbJson);
+      localStorage.setItem(DECK_KEY,previousDecksJson);
+    }catch(rollbackError){console.error('Cardoryx durable rollback:',rollbackError)}
+    persistedCollectionJson=previousDbJson;
+    reportCollectionStorageError(error);
+    renderAfterCollectionPersistence();
+    return false;
+  }
+  persistedCollectionJson=nextDbJson;
+  lastCollectionStorageError='';
+  renderAfterCollectionPersistence();
+  return true;
+}
 function showView(v){
   ['home','scan','catalog','stats','decks','settings'].forEach(x=>{
     const el=document.getElementById(x+'View'); if(el)el.classList.toggle('hidden',x!==v)
@@ -5410,7 +5468,11 @@ priceUpdatedAt:
       const current=Number(same.qty)||1;
       if(confirm(`${rec.name} è già presente nel catalogo (×${current}). Vuoi aggiungerne un'altra copia?`)){
         same.qty=current+1;
-        persist();
+        if(!persist()){
+          saveMsg.textContent=lastCollectionStorageError;
+          saveMsg.className='footer-note notice';
+          return;
+        }
         saveMsg.textContent=`Aggiunta un'altra copia. Quantità: ×${same.qty}`;
         if(continuousScanEnabled() && continuousSession){
           setTimeout(()=>{clearSelection();reopenContinuousCamera();},280);
@@ -5426,7 +5488,11 @@ priceUpdatedAt:
     }
 
     db.push(rec);
-    persist();
+    if(!persist()){
+      saveMsg.textContent=lastCollectionStorageError;
+      saveMsg.className='footer-note notice';
+      return;
+    }
     saveMsg.textContent=`Salvata. Posizione: ${cardCategory(rec)}`;
     if(continuousScanEnabled() && continuousSession){
       setTimeout(()=>{clearSelection();reopenContinuousCamera();},280);
@@ -5714,6 +5780,7 @@ async function saveEditModal(){
     if(stamp==='Play! Pokémon'&&playSeries&&!isManualVariantChoice(editFinish)){
       try{live=await resolveOfficialPlayPrice({...c,variant:editFinish,stamp,playSeries},playSeries,editFinish)}catch(e){console.warn('Group Prize Pack exact price refresh failed:',e)}
     }
+    const previousDecksJson=JSON.stringify(decks);
     const oldRecords=[...g.records];
     const oldKeys=new Set(oldRecords.map(deckRecordKey));
     const base={...g.representative,variant:editFinish,stamp,playSeries,condition};
@@ -5741,8 +5808,8 @@ async function saveEditModal(){
         d.entries.push({cardKey:newKey,cardId:availableRecord.id||'',variant:availableRecord.variant||'Normale',qty:q});
       }
     }
-    localStorage.setItem('cardoryx_db',JSON.stringify(db));localStorage.setItem(DECK_KEY,JSON.stringify(decks));closeEditModal();
-    try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render after group edit:',e)}
+    if(!persistCollectionAndDecks(previousDecksJson))return;
+    closeEditModal();
     return;
   }
   const qty=parseInt(document.getElementById('editQty').value,10);
@@ -5791,9 +5858,8 @@ async function saveEditModal(){
     if(c.stamp!=='Play! Pokémon'||isManualVariantChoice(c.variant))c.priceUpdatedAt='';
   }
 
-  localStorage.setItem('cardoryx_db',JSON.stringify(db));
+  if(!persist())return;
   closeEditModal();
-  try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render after edit:',e)}
 }
 function renderSettings(){
   const r=document.getElementById('settingsRecords'),t=document.getElementById('settingsTotal');
@@ -6099,9 +6165,7 @@ function saveCardNotes(){
   if(!c)return;
   const noteEl=document.getElementById('detailNotes');
   c.notes=(noteEl?.value||'').trim();
-  localStorage.setItem('cardoryx_db',JSON.stringify(db));
-  renderAll();
-  renderSettings();
+  if(!persist())return;
   const btn=[...document.querySelectorAll('#detailContent button')].find(b=>b.textContent.includes('Salva note'));
   if(btn){
     const old=btn.textContent;
