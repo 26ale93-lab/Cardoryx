@@ -742,7 +742,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
 <div class="card"><div class="settings-section-kicker">ASPETTO</div><div class="theme-grid"><button class="theme-choice" type="button" data-theme-choice="auto" onclick="setCardoryxTheme('auto')" aria-pressed="false">Automatico</button><button class="theme-choice" type="button" data-theme-choice="light" onclick="setCardoryxTheme('light')" aria-pressed="false">Chiaro</button><button class="theme-choice" type="button" data-theme-choice="dark" onclick="setCardoryxTheme('dark')" aria-pressed="false">Scuro</button></div></div>
 <div class="card"><div class="settings-section-kicker">BACKUP E TRASFERIMENTO</div><div class="condition-intro" style="margin-bottom:10px"><b>Backup completo:</b> carte, quantità, varianti, condizioni, note, ID/immagini, prezzi e valori, mazzi e preferenze Scanner.</div><div class="settings-action-grid"><button class="btn alt settings-action" type="button" onclick="exportJSON()"><svg class="icon"><use href="#cx-download"></use></svg>Backup JSON</button><label class="btn alt settings-action settings-file-label"><svg class="icon"><use href="#cx-upload"></use></svg>Ripristina JSON<input id="settingsImportFile" type="file" accept="application/json,.json" hidden></label><button class="btn alt settings-action" type="button" onclick="exportCSV()">CSV completo</button><button class="btn alt settings-action" type="button" onclick="downloadCollectionPDF(true)">Inventario PDF</button></div></div>
 <div class="card"><div class="settings-section-kicker">REPORT PDF</div><div class="settings-action-grid"><button class="btn alt settings-action" type="button" onclick="downloadCollectionPDF(true)">Inventario</button><button class="btn alt settings-action" type="button" onclick="downloadCollectionPDF(false)">Lista collezione</button><div style="grid-column:1/-1"><select id="categoryPdfSelect" class="input" style="margin-bottom:8px"></select><button class="btn alt big" type="button" onclick="downloadCategoryPDF()">Esporta per tipo</button></div></div></div>
-<div class="card"><div class="settings-section-kicker">STATO ARCHIVIO</div><div class="settings-stat"><span>Record</span><strong id="settingsRecords">0</strong></div><div class="settings-stat"><span>Carte totali</span><strong id="settingsTotal">0</strong></div></div>
+<div class="card"><div class="settings-section-kicker">STATO ARCHIVIO</div><div class="settings-stat"><span>Record</span><strong id="settingsRecords">0</strong></div><div class="settings-stat"><span>Carte totali</span><strong id="settingsTotal">0</strong></div><div class="settings-stat"><span>Backend attivo</span><strong id="settingsStorageBackend">Avvio…</strong></div><div class="settings-stat"><span>Storage usato</span><strong id="settingsStorageUsed">—</strong></div><div class="settings-stat"><span>Quota disponibile</span><strong id="settingsStorageQuota">—</strong></div><div class="settings-stat"><span>Persistenza dispositivo</span><strong id="settingsStoragePersistent">—</strong></div><div id="settingsStorageMigration" class="footer-note" style="margin-top:10px"></div></div>
 <div class="card danger-zone"><div class="danger-kicker">ZONA PROTETTA</div><div class="section-title">Azzera catalogo</div><div class="footer-note">Elimina le carte salvate su questo dispositivo. I mazzi restano, ma vengono svuotati. È richiesta una seconda conferma.</div><div class="spacer"></div><button class="btn red big" type="button" onclick="openResetModal()">Azzera catalogo</button></div>
 </div></section>
 
@@ -900,7 +900,7 @@ db.forEach(c=>{
   else if(old==='Reverse Master Ball'||old==='Master Ball Reverse'){c.variant='Master Ball Reverse Holo';variantMigrationChanged=true}
   else if(old==='1ª Edizione'){c.variant='First Edition';variantMigrationChanged=true}
 });
-if(variantMigrationChanged){try{localStorage.setItem('cardoryx_db',JSON.stringify(db))}catch(e){}}
+if(variantMigrationChanged){/* Persisted only through the verified active backend after initialization. */}
 let trainerSubtypeMigrationChanged=false;
 db.forEach(c=>{
   const cat=normText(c?.category||'');
@@ -912,21 +912,149 @@ db.forEach(c=>{
     trainerSubtypeMigrationChanged=true;
   }
 });
-if(trainerSubtypeMigrationChanged){try{localStorage.setItem('cardoryx_db',JSON.stringify(db))}catch(e){}}
+if(trainerSubtypeMigrationChanged){/* Preserve the untouched localStorage fallback during automatic migration. */}
 let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function ui(id){return document.getElementById(id)}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
 function selectedStatus(){return ui('status')?.value||'Disponibile'}
 function selectedCondition(){return ui('condition')?.value||'NM'}
+// Storage V1 — IndexedDB primary with verified localStorage migration and safe fallback.
+const CARDORYX_IDB_NAME='cardoryx_storage';
+const CARDORYX_IDB_VERSION=1;
+const CARDORYX_IDB_STATE_STORE='state';
+const CARDORYX_IDB_META_STORE='meta';
+const CARDORYX_IDB_MIGRATION_KEY='localstorage-to-indexeddb';
+const CARDORYX_IDB_MIGRATION_VERSION=1;
+let storageDb=null;
+let storageBackend='localStorage-fallback';
+let storageMigrationState='In attesa';
+let storagePersistentState='Non richiesto';
+let storageEstimateState={usage:null,quota:null};
+let storageInitializationPromise=Promise.resolve();
+let storageWriteQueue=Promise.resolve();
 let persistedCollectionJson=JSON.stringify(db);
+let persistedDecksJson='[]';
 let lastCollectionStorageError='';
+
+function collectionTotals(records){
+  return {records:Array.isArray(records)?records.length:0,total:Array.isArray(records)?records.reduce((sum,c)=>sum+Math.max(1,Number(c?.qty)||1),0):0};
+}
+function storageFingerprint(value){
+  const text=JSON.stringify(value);
+  let hash=2166136261;
+  for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619)}
+  return `${text.length}:${(hash>>>0).toString(16).padStart(8,'0')}`;
+}
+function idbRequest(request){
+  return new Promise((resolve,reject)=>{
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error||new Error('Richiesta IndexedDB non riuscita'));
+  });
+}
+function idbTransactionDone(tx){
+  return new Promise((resolve,reject)=>{
+    tx.oncomplete=()=>resolve();
+    tx.onabort=()=>reject(tx.error||new Error('Transazione IndexedDB annullata'));
+    tx.onerror=()=>reject(tx.error||new Error('Transazione IndexedDB non riuscita'));
+  });
+}
+function openCardoryxIndexedDb(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){reject(new Error('IndexedDB non disponibile'));return}
+    const request=indexedDB.open(CARDORYX_IDB_NAME,CARDORYX_IDB_VERSION);
+    request.onupgradeneeded=()=>{
+      const database=request.result;
+      if(!database.objectStoreNames.contains(CARDORYX_IDB_STATE_STORE))database.createObjectStore(CARDORYX_IDB_STATE_STORE,{keyPath:'key'});
+      if(!database.objectStoreNames.contains(CARDORYX_IDB_META_STORE))database.createObjectStore(CARDORYX_IDB_META_STORE,{keyPath:'key'});
+    };
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error||new Error('Apertura IndexedDB non riuscita'));
+    request.onblocked=()=>reject(new Error('Aggiornamento IndexedDB bloccato da un’altra scheda'));
+  });
+}
+async function idbGet(storeName,key){
+  const tx=storageDb.transaction(storeName,'readonly');
+  return idbRequest(tx.objectStore(storeName).get(key));
+}
+function indexedStateRow(key,value){
+  const row={key,value,fingerprint:storageFingerprint(value),updatedAt:new Date().toISOString()};
+  if(key==='collection')row.totals=collectionTotals(value);
+  else row.count=Array.isArray(value)?value.length:0;
+  return row;
+}
+function verifiedIndexedStateRow(row,key){
+  if(!row||row.key!==key||!Array.isArray(row.value)||row.fingerprint!==storageFingerprint(row.value))return false;
+  if(key==='collection'){
+    const totals=collectionTotals(row.value);
+    return row.totals?.records===totals.records&&row.totals?.total===totals.total;
+  }
+  return row.count===row.value.length;
+}
+async function idbWriteState(collectionValue,decksValue){
+  const tx=storageDb.transaction(CARDORYX_IDB_STATE_STORE,'readwrite');
+  const done=idbTransactionDone(tx),store=tx.objectStore(CARDORYX_IDB_STATE_STORE);
+  store.put(indexedStateRow('collection',collectionValue));
+  store.put(indexedStateRow('decks',decksValue));
+  await done;
+}
+async function idbWriteCollection(collectionValue){
+  const tx=storageDb.transaction(CARDORYX_IDB_STATE_STORE,'readwrite');
+  const done=idbTransactionDone(tx);
+  tx.objectStore(CARDORYX_IDB_STATE_STORE).put(indexedStateRow('collection',collectionValue));
+  await done;
+}
+async function idbWriteDecks(decksValue){
+  const tx=storageDb.transaction(CARDORYX_IDB_STATE_STORE,'readwrite');
+  const done=idbTransactionDone(tx);
+  tx.objectStore(CARDORYX_IDB_STATE_STORE).put(indexedStateRow('decks',decksValue));
+  await done;
+}
+async function idbWriteMigrationMarker(marker){
+  const tx=storageDb.transaction(CARDORYX_IDB_META_STORE,'readwrite');
+  const done=idbTransactionDone(tx);
+  tx.objectStore(CARDORYX_IDB_META_STORE).put(marker);
+  await done;
+}
+function verifiedMigrationMarker(marker){
+  return marker?.key===CARDORYX_IDB_MIGRATION_KEY&&
+    marker.version===CARDORYX_IDB_MIGRATION_VERSION&&marker.status==='complete'&&
+    Number.isFinite(marker.records)&&Number.isFinite(marker.total)&&
+    typeof marker.sourceCollectionFingerprint==='string'&&typeof marker.sourceDecksFingerprint==='string';
+}
+async function readIndexedDbState(){
+  const [collectionRow,decksRow,marker]=await Promise.all([
+    idbGet(CARDORYX_IDB_STATE_STORE,'collection'),
+    idbGet(CARDORYX_IDB_STATE_STORE,'decks'),
+    idbGet(CARDORYX_IDB_META_STORE,CARDORYX_IDB_MIGRATION_KEY)
+  ]);
+  return {collectionRow,decksRow,collection:collectionRow?.value,decks:decksRow?.value,marker};
+}
+function verifiedIndexedState(state){
+  return verifiedIndexedStateRow(state?.collectionRow,'collection')&&verifiedIndexedStateRow(state?.decksRow,'decks');
+}
+function sameMigrationPayload(aCollection,aDecks,bCollection,bDecks){
+  const at=collectionTotals(aCollection),bt=collectionTotals(bCollection);
+  return at.records===bt.records&&at.total===bt.total&&
+    storageFingerprint(aCollection)===storageFingerprint(bCollection)&&
+    storageFingerprint(aDecks)===storageFingerprint(bDecks);
+}
+function migrationMarkerFor(collectionValue,decksValue){
+  const totals=collectionTotals(collectionValue);
+  return {
+    key:CARDORYX_IDB_MIGRATION_KEY,version:CARDORYX_IDB_MIGRATION_VERSION,status:'complete',
+    records:totals.records,total:totals.total,decks:decksValue.length,
+    sourceCollectionFingerprint:storageFingerprint(collectionValue),
+    sourceDecksFingerprint:storageFingerprint(decksValue),
+    verifiedAt:new Date().toISOString()
+  };
+}
 function collectionStorageErrorMessage(error){
   const quota=error?.name==='QuotaExceededError'||error?.name==='NS_ERROR_DOM_QUOTA_REACHED'||error?.code===22||error?.code===1014;
-  if(quota)return 'Spazio di archiviazione locale esaurito. La modifica non è stata applicata e la collezione precedente è rimasta intatta. Esporta subito un Backup JSON prima di aggiungere altre carte.';
+  if(quota)return 'Spazio di archiviazione esaurito. La modifica non è stata applicata e la collezione precedente è rimasta intatta. Il backup JSON già esportato resta utilizzabile.';
   return `Salvataggio della collezione non riuscito (${error?.name||'errore sconosciuto'}). La modifica non è stata applicata e i dati precedenti sono rimasti intatti.`;
 }
 function renderAfterCollectionPersistence(){
-  try{renderAll();renderSettings()}catch(e){console.error('Cardoryx render:',e)}
+  try{renderAll();renderSettings();renderDecks();renderHomeDashboard()}catch(e){console.error('Cardoryx render:',e)}
 }
 function reportCollectionStorageError(error){
   lastCollectionStorageError=collectionStorageErrorMessage(error);
@@ -936,12 +1064,42 @@ function reportCollectionStorageError(error){
 function restorePersistedCollection(){
   try{db=JSON.parse(persistedCollectionJson)}catch(e){console.error('Cardoryx collection rollback:',e)}
 }
-function persist(){
-  let nextJson;
+function restorePersistedDecks(){
+  try{decks=JSON.parse(persistedDecksJson)}catch(e){console.error('Cardoryx deck rollback:',e)}
+}
+function queueStorageWrite(work){
+  const run=storageWriteQueue.then(work,work);
+  storageWriteQueue=run.catch(()=>{});
+  return run;
+}
+async function writePrimaryCollection(value){
+  if(storageBackend==='indexeddb')return idbWriteCollection(value);
+  localStorage.setItem('cardoryx_db',JSON.stringify(value));
+}
+async function writePrimaryDecks(value){
+  if(storageBackend==='indexeddb')return idbWriteDecks(value);
+  localStorage.setItem(DECK_KEY,JSON.stringify(value));
+}
+async function writePrimaryState(collectionValue,decksValue){
+  if(storageBackend==='indexeddb')return idbWriteState(collectionValue,decksValue);
+  const previousDb=localStorage.getItem('cardoryx_db');
+  const previousDecks=localStorage.getItem(DECK_KEY);
   try{
-    nextJson=JSON.stringify(db);
-    localStorage.setItem('cardoryx_db',nextJson);
+    localStorage.setItem('cardoryx_db',JSON.stringify(collectionValue));
+    localStorage.setItem(DECK_KEY,JSON.stringify(decksValue));
   }catch(error){
+    try{
+      if(previousDb===null)localStorage.removeItem('cardoryx_db');else localStorage.setItem('cardoryx_db',previousDb);
+      if(previousDecks===null)localStorage.removeItem(DECK_KEY);else localStorage.setItem(DECK_KEY,previousDecks);
+    }catch(rollbackError){console.error('Cardoryx durable rollback:',rollbackError)}
+    throw error;
+  }
+}
+async function persist(){
+  await storageInitializationPromise;
+  const nextJson=JSON.stringify(db),nextValue=JSON.parse(nextJson);
+  try{await queueStorageWrite(()=>writePrimaryCollection(nextValue))}
+  catch(error){
     restorePersistedCollection();
     reportCollectionStorageError(error);
     renderAfterCollectionPersistence();
@@ -950,32 +1108,127 @@ function persist(){
   persistedCollectionJson=nextJson;
   lastCollectionStorageError='';
   renderAfterCollectionPersistence();
+  refreshStorageDiagnostics();
   return true;
 }
-function persistCollectionAndDecks(previousDecksJson){
+async function persistDecks(){
+  await storageInitializationPromise;
+  const nextJson=JSON.stringify(decks),nextValue=JSON.parse(nextJson);
+  try{await queueStorageWrite(()=>writePrimaryDecks(nextValue))}
+  catch(error){
+    restorePersistedDecks();
+    reportCollectionStorageError(error);
+    renderAfterCollectionPersistence();
+    return false;
+  }
+  persistedDecksJson=nextJson;
+  lastCollectionStorageError='';
+  renderAfterCollectionPersistence();
+  refreshStorageDiagnostics();
+  return true;
+}
+async function persistCollectionAndDecks(previousDecksJson=persistedDecksJson){
+  await storageInitializationPromise;
   const previousDbJson=persistedCollectionJson;
-  let nextDbJson,nextDecksJson;
-  try{
-    nextDbJson=JSON.stringify(db);
-    nextDecksJson=JSON.stringify(decks);
-    localStorage.setItem('cardoryx_db',nextDbJson);
-    localStorage.setItem(DECK_KEY,nextDecksJson);
-  }catch(error){
+  const nextDbJson=JSON.stringify(db),nextDecksJson=JSON.stringify(decks);
+  const nextDb=JSON.parse(nextDbJson),nextDecks=JSON.parse(nextDecksJson);
+  try{await queueStorageWrite(()=>writePrimaryState(nextDb,nextDecks))}
+  catch(error){
     try{db=JSON.parse(previousDbJson)}catch(e){console.error('Cardoryx collection rollback:',e)}
-    try{decks=JSON.parse(previousDecksJson)}catch(e){console.error('Cardoryx deck rollback:',e)}
-    try{
-      localStorage.setItem('cardoryx_db',previousDbJson);
-      localStorage.setItem(DECK_KEY,previousDecksJson);
-    }catch(rollbackError){console.error('Cardoryx durable rollback:',rollbackError)}
+    try{decks=JSON.parse(previousDecksJson||persistedDecksJson)}catch(e){console.error('Cardoryx deck rollback:',e)}
     persistedCollectionJson=previousDbJson;
     reportCollectionStorageError(error);
     renderAfterCollectionPersistence();
     return false;
   }
   persistedCollectionJson=nextDbJson;
+  persistedDecksJson=nextDecksJson;
   lastCollectionStorageError='';
   renderAfterCollectionPersistence();
+  refreshStorageDiagnostics();
   return true;
+}
+function formatStorageBytes(value){
+  if(!Number.isFinite(Number(value)))return 'Non disponibile';
+  const units=['B','KB','MB','GB'];let n=Number(value),i=0;
+  while(n>=1024&&i<units.length-1){n/=1024;i++}
+  return `${n.toLocaleString('it-IT',{maximumFractionDigits:i?1:0})} ${units[i]}`;
+}
+function renderStorageDiagnostics(){
+  const backend=ui('settingsStorageBackend'),used=ui('settingsStorageUsed'),quota=ui('settingsStorageQuota'),persistent=ui('settingsStoragePersistent'),migration=ui('settingsStorageMigration');
+  if(backend)backend.textContent=storageBackend==='indexeddb'?'IndexedDB':'Fallback localStorage';
+  if(used)used.textContent=formatStorageBytes(storageEstimateState.usage);
+  if(quota)quota.textContent=Number.isFinite(storageEstimateState.quota)?`${formatStorageBytes(storageEstimateState.quota)} totali · ${formatStorageBytes(Math.max(0,storageEstimateState.quota-(storageEstimateState.usage||0)))} liberi`:'Non disponibile';
+  if(persistent)persistent.textContent=storagePersistentState;
+  if(migration)migration.textContent=storageMigrationState;
+}
+async function refreshStorageDiagnostics(){
+  if(navigator.storage?.estimate){
+    try{
+      const estimate=await navigator.storage.estimate();
+      storageEstimateState={usage:Number.isFinite(estimate?.usage)?estimate.usage:null,quota:Number.isFinite(estimate?.quota)?estimate.quota:null};
+    }catch(e){storageEstimateState={usage:null,quota:null}}
+  }
+  renderStorageDiagnostics();
+}
+async function requestPersistentStorage(){
+  if(!navigator.storage?.persist){storagePersistentState='API non disponibile';return}
+  try{storagePersistentState=(await navigator.storage.persist())?'Concessa':'Non concessa'}catch(e){storagePersistentState='Richiesta non riuscita'}
+}
+async function initializeCardoryxStorage(){
+  const localCollection=db,localDecks=decks;
+  try{
+    storageDb=await openCardoryxIndexedDb();
+    let state=await readIndexedDbState();
+    if(state.marker){
+      if(!verifiedMigrationMarker(state.marker)||!verifiedIndexedState(state))throw new Error('IndexedDB contiene dati o marker non verificabili');
+      const localChangedAfterMigration=
+        (storageFingerprint(localCollection)!==state.marker.sourceCollectionFingerprint||
+         storageFingerprint(localDecks)!==state.marker.sourceDecksFingerprint)&&
+        !sameMigrationPayload(localCollection,localDecks,state.collection,state.decks);
+      if(localChangedAfterMigration)throw new Error('Conflitto tra fallback localStorage e IndexedDB: nessun dato è stato sovrascritto');
+      storageMigrationState=`Migrazione verificata · backend IndexedDB attivo · ${collectionTotals(state.collection).records} record`;
+    }else{
+      const hasPartial=state.collectionRow!==undefined||state.decksRow!==undefined;
+      if(hasPartial){
+        if(!verifiedIndexedState(state)||!sameMigrationPayload(localCollection,localDecks,state.collection,state.decks)){
+          throw new Error('Migrazione IndexedDB incompleta o non coerente: marker non scritto');
+        }
+      }else{
+        await idbWriteState(localCollection,localDecks);
+        state=await readIndexedDbState();
+        if(!verifiedIndexedState(state)||!sameMigrationPayload(localCollection,localDecks,state.collection,state.decks)){
+          throw new Error('Verifica della copia IndexedDB non riuscita');
+        }
+      }
+      const marker=migrationMarkerFor(state.collection,state.decks);
+      await idbWriteMigrationMarker(marker);
+      const verified=await readIndexedDbState();
+      if(!verifiedMigrationMarker(verified.marker)||!verifiedIndexedState(verified)||
+         !sameMigrationPayload(localCollection,localDecks,verified.collection,verified.decks)){
+        throw new Error('Marker di migrazione non verificabile');
+      }
+      state=verified;
+      storageMigrationState=`Migrazione completata e verificata: ${marker.records} record · ${marker.total} carte`;
+    }
+    db=state.collection;
+    decks=state.decks.map(d=>({...d,type:d?.type==='sale'?'sale':'game',entries:Array.isArray(d?.entries)?d.entries:[]}));
+    persistedCollectionJson=JSON.stringify(db);
+    persistedDecksJson=JSON.stringify(decks);
+    storageBackend='indexeddb';
+    await requestPersistentStorage();
+    renderAfterCollectionPersistence();
+  }catch(error){
+    storageBackend='localStorage-fallback';
+    storageMigrationState=`Fallback attivo: ${error?.message||'IndexedDB non disponibile'}`;
+    console.error('Cardoryx IndexedDB initialization:',error);
+    alert(`IndexedDB non è stato attivato. Cardoryx continua a usare i dati precedenti in localStorage senza sovrascriverli. ${error?.message||''}`);
+    persistedCollectionJson=JSON.stringify(db);
+    persistedDecksJson=JSON.stringify(decks);
+    renderAfterCollectionPersistence();
+  }
+  await refreshStorageDiagnostics();
+  return storageBackend;
 }
 function showView(v){
   ['home','scan','catalog','stats','decks','settings'].forEach(x=>{
@@ -1112,16 +1365,10 @@ function cardCategory(c){
 const DECK_KEY='cardoryx_decks';
 let decks=(()=>{try{const x=JSON.parse(localStorage.getItem(DECK_KEY)||'[]');return Array.isArray(x)?x:[]}catch(e){return[]}})();
 decks=decks.map(d=>({...d,type:d?.type==='sale'?'sale':'game',entries:Array.isArray(d?.entries)?d.entries:[]}));
+persistedDecksJson=JSON.stringify(decks);
 let currentDeckId=null;
 function deckType(d){return d?.type==='sale'?'sale':'game'}
 function deckTypeLabel(d){return deckType(d)==='sale'?'🏷️ Vendita':'🎮 Gioco'}
-
-function persistDecks(){
-  localStorage.setItem(DECK_KEY,JSON.stringify(decks));
-  renderDecks();
-  renderHomeDashboard();
-  try{renderCatalog()}catch(e){}
-}
 
 // V2.1.37 — one-time, user-confirmed migration of the old fixed Mazzo 1 / Mazzo 2 statuses.
 // Quantities are preserved exactly: legacy records become ordinary Disponibile stock, while
@@ -1156,7 +1403,7 @@ function legacyTargetDeck(status){
   decks.push(d);
   return d;
 }
-function migrateLegacyDeckAllocations(){
+async function migrateLegacyDeckAllocations(){
   const summary=legacyDeckStatusSummary();
   const rows=Object.entries(summary).filter(([,q])=>q>0);
   if(!rows.length){alert('Non ci sono più assegnazioni legacy da migrare.');renderLegacyDeckMigration();return}
@@ -1185,15 +1432,14 @@ function migrateLegacyDeckAllocations(){
     else d.entries.push({cardKey:key,cardId:available.id||'',variant:available.variant||'Normale',qty:q});
   }
   if(toRemove.size)db=db.filter(c=>!toRemove.has(c));
-  localStorage.setItem('cardoryx_db',JSON.stringify(db));
-  localStorage.setItem(DECK_KEY,JSON.stringify(decks));
-  try{renderAll();renderSettings();renderDecks();renderHomeDashboard();renderLegacyDeckMigration()}catch(e){console.error('Legacy deck migration render:',e)}
+  if(!await persistCollectionAndDecks())return;
+  try{renderLegacyDeckMigration()}catch(e){console.error('Legacy deck migration render:',e)}
   alert(`Migrazione completata: ${total} copie trasferite nei mazzi reali. Nessuna carta è stata eliminata.`);
 }
 function deckId(){
   return 'deck_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
 }
-function createDeck(){
+async function createDeck(){
   const input=ui('newDeckName');
   const name=(input?.value||'').trim();
   if(!name){alert('Inserisci un nome per il mazzo.');return}
@@ -1201,7 +1447,7 @@ function createDeck(){
   const d={id:deckId(),name,type,createdAt:new Date().toISOString(),entries:[]};
   decks.push(d);
   if(input)input.value='';
-  persistDecks();
+  if(!await persistDecks())return;
   openDeck(d.id);
 }
 function deckById(id){return decks.find(d=>d.id===id)}
@@ -1306,7 +1552,7 @@ function closeDeckBuilder(){
   renderDecks();
   window.scrollTo(0,0);
 }
-function changeDeckQty(cardKey,delta){
+async function changeDeckQty(cardKey,delta){
   const d=currentDeck(),c=db.find(x=>deckRecordKey(x)===decodeURIComponent(cardKey));
   if(!d||!c)return;
   const key=deckRecordKey(c);
@@ -1328,7 +1574,7 @@ function changeDeckQty(cardKey,delta){
     d.entries.push(e);
   }else if(e)e.qty=next;
   d.entries=d.entries.filter(x=>(Number(x.qty)||0)>0);
-  persistDecks();
+  if(!await persistDecks())return;
   renderDeckBuilder();
 }
 function renderDeckBuilder(){
@@ -1399,12 +1645,12 @@ function renderBeginnerAdvice(d){
   if(!tips.length)tips.push('La struttura è ragionevole come punto di partenza. Provala in partita e modifica le quantità in base a cosa peschi troppo o troppo poco.');
   ui('deckBeginnerAdvice').innerHTML=tips.map(x=>`• ${esc(x)}`).join('<br>');
 }
-function renameCurrentDeck(){
+async function renameCurrentDeck(){
   const d=currentDeck();if(!d)return;
   const n=prompt('Nuovo nome del mazzo',d.name);
-  if(n&&n.trim()){d.name=n.trim().slice(0,40);persistDecks();renderDeckBuilder()}
+  if(n&&n.trim()){d.name=n.trim().slice(0,40);if(!await persistDecks())return;renderDeckBuilder()}
 }
-function dismantleCurrentDeck(){
+async function dismantleCurrentDeck(){
   const d=currentDeck();if(!d)return;
   const msg=deckType(d)==='sale'
     ? `Sfatare il mazzo vendita “${d.name}”?\n\nLe carte NON verranno eliminate: la riserva viene rimossa e torneranno disponibili nel Catalogo.`
@@ -1412,10 +1658,10 @@ function dismantleCurrentDeck(){
   if(!confirm(msg))return;
   decks=decks.filter(x=>x.id!==d.id);
   currentDeckId=null;
-  persistDecks();
+  if(!await persistDecks())return;
   closeDeckBuilder();
 }
-function sellCurrentDeck(){
+async function sellCurrentDeck(){
   const d=currentDeck();if(!d||deckType(d)!=='sale')return;
   const total=deckTotal(d);
   if(total<1){alert('Il mazzo vendita è vuoto.');return}
@@ -1434,9 +1680,7 @@ function sellCurrentDeck(){
   }
   decks=decks.filter(x=>x.id!==d.id);
   currentDeckId=null;
-  localStorage.setItem('cardoryx_db',JSON.stringify(db));
-  localStorage.setItem(DECK_KEY,JSON.stringify(decks));
-  try{renderAll();renderSettings();renderDecks();renderHomeDashboard()}catch(e){}
+  if(!await persistCollectionAndDecks())return;
   closeDeckBuilder();
   alert(`Vendita registrata: ${total} carte rimosse dal Catalogo.`);
 }
@@ -5369,7 +5613,7 @@ function clearSelection(){
     [...ps.options].forEach(o=>o.disabled=false);
   }
   document.getElementById('scanValueBox')?.classList.add('hidden');selectedCard=null;confirmCard.classList.add('hidden');saveMsg.textContent=''}
-function saveSelected(){
+async function saveSelected(){
   if(selectedCard){
     selectedCard.variant=canonicalVariant(document.getElementById('variant')?.value||selectedCard.variant||'Normal');
     selectedCard.stamp=canonicalStamp(document.getElementById('stamp')?.value||selectedCard.stamp||'None');
@@ -5468,7 +5712,7 @@ priceUpdatedAt:
       const current=Number(same.qty)||1;
       if(confirm(`${rec.name} è già presente nel catalogo (×${current}). Vuoi aggiungerne un'altra copia?`)){
         same.qty=current+1;
-        if(!persist()){
+        if(!await persist()){
           saveMsg.textContent=lastCollectionStorageError;
           saveMsg.className='footer-note notice';
           return;
@@ -5488,7 +5732,7 @@ priceUpdatedAt:
     }
 
     db.push(rec);
-    if(!persist()){
+    if(!await persist()){
       saveMsg.textContent=lastCollectionStorageError;
       saveMsg.className='footer-note notice';
       return;
@@ -5688,7 +5932,7 @@ function openGroupEditModal(encodedGroupKey){
   if(cardHasEditVariantEvidence(c)||c?.livePlayPrice?.exact)syncVariantAvailability(c,true);
   hydrateEditCardEvidence(c).then(async()=>{
     if(editingGroupKey!==gkey)return;
-    localStorage.setItem('cardoryx_db',JSON.stringify(db));
+    if(!await persist())return;
     await refreshOfficialPlayAvailability(c,true,false);
     if(editingGroupKey!==gkey)return;
     applyPlayAutoSeries(c,true);syncStampAvailability(c,true,false);syncVariantAvailability(c,true);
@@ -5726,7 +5970,7 @@ async function openEditModal(key){
     if(editingKey!==recordKey(c))return;
     // Persist recovered source evidence so future Edit openings do not need to
     // reconstruct the same card again. No user selection is changed here.
-    localStorage.setItem('cardoryx_db',JSON.stringify(db));
+    if(!await persist())return;
     await refreshOfficialPlayAvailability(c,true,false);
     if(editingKey!==recordKey(c))return;
     applyPlayAutoSeries(c,true);
@@ -5808,7 +6052,7 @@ async function saveEditModal(){
         d.entries.push({cardKey:newKey,cardId:availableRecord.id||'',variant:availableRecord.variant||'Normale',qty:q});
       }
     }
-    if(!persistCollectionAndDecks(previousDecksJson))return;
+    if(!await persistCollectionAndDecks(previousDecksJson))return;
     closeEditModal();
     return;
   }
@@ -5858,27 +6102,29 @@ async function saveEditModal(){
     if(c.stamp!=='Play! Pokémon'||isManualVariantChoice(c.variant))c.priceUpdatedAt='';
   }
 
-  if(!persist())return;
+  if(!await persist())return;
   closeEditModal();
 }
 function renderSettings(){
   const r=document.getElementById('settingsRecords'),t=document.getElementById('settingsTotal');
   if(r)r.textContent=db.length;
   if(t)t.textContent=db.reduce((a,c)=>a+(Number(c.qty)||1),0);
+  renderStorageDiagnostics();
 }
 function openResetModal(){resetModal.classList.add('open');resetModal.setAttribute('aria-hidden','false')}
 function closeResetModal(){resetModal.classList.remove('open');resetModal.setAttribute('aria-hidden','true')}
-function confirmResetCatalog(){
+async function confirmResetCatalog(){
   // Azzera il catalogo senza lasciare allocazioni fantasma nei mazzi.
   // I mazzi restano come contenitori, ma vengono svuotati.
   db=[];
   decks=decks.map(d=>({...d,entries:[]}));
   currentDeckId=null;
 
+  if(!await persistCollectionAndDecks())return;
+  // This deletion happens only after the user's explicit double-confirmed reset,
+  // never as part of the automatic IndexedDB migration.
   ['cardoryx_db','cardoryx_v1','cardoryx_v2','cardoryx_v3'].forEach(k=>localStorage.removeItem(k));
   localStorage.setItem(DECK_KEY,JSON.stringify(decks));
-
-  persist();
   try{renderDecks()}catch(e){console.error('Cardoryx render decks after reset:',e)}
   closeResetModal();
   showView('home');
@@ -5942,19 +6188,19 @@ function filterByCategory(cat){
 }
 
 
-function changeQty(key,delta){
+async function changeQty(key,delta){
   const c=findRecordByKey(key);
   if(!c)return;
   const next=(Number(c.qty)||1)+delta;
   if(next<1){
     if(confirm(`Rimuovere ${c.name} dal catalogo?`)){
       db=db.filter(x=>x!==c);
-      persist();
+      await persist();
     }
     return;
   }
   c.qty=next;
-  persist();
+  await persist();
 }
 
 
@@ -6159,13 +6405,13 @@ function closeCardDetail(){
   detailKey=null;
 }
 
-function saveCardNotes(){
+async function saveCardNotes(){
   if(!detailKey)return;
   const c=db.find(x=>recordKey(x)===detailKey);
   if(!c)return;
   const noteEl=document.getElementById('detailNotes');
   c.notes=(noteEl?.value||'').trim();
-  if(!persist())return;
+  if(!await persist())return;
   const btn=[...document.querySelectorAll('#detailContent button')].find(b=>b.textContent.includes('Salva note'));
   if(btn){
     const old=btn.textContent;
@@ -6313,12 +6559,12 @@ async function refreshAllPrices(){
   const st=document.getElementById('priceRefreshStatus');let ok=0,done=0,noPrice=0;
   if(st)st.textContent='Associo le carte a TCGdex e aggiorno Cardmarket…';
   for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} · prezzi trovati ${ok}…`}
-  persist();renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
+  if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
 }
 
 // V2.1.36 — dynamic deck allocations + sale deck lifecycle. V2.1.35 catalog grouping remains: identical physical printing/condition records are
 // shown as one card even when copies have different allocations/statuses.
-// Storage remains unchanged: no migration and no loss of per-copy allocation.
+// The stored card/deck record schema remains unchanged; no per-copy allocation is lost.
 function physicalCardIdentityKey(c){
   const identity=String(c?.id||c?.tcgdexId||`${c?.set||''}::${c?.localId||''}::${c?.name||''}`).toLowerCase();
   return [identity,canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),normalizedPlaySeries(c?.playSeries||''),normText(c?.language||'Italiano')].join('|||');
@@ -6349,13 +6595,13 @@ function groupAllocationHtml(g){
   const deckHtml=Object.entries(data.decks).filter(([,q])=>q>0).map(([id,q])=>{const d=deckById(id);return d?`<span class="collection-badge">${esc(d.name)}${g.qty>1?` ×${q}`:''}</span>`:''}).join('');
   return statusHtml+deckHtml;
 }
-function changeGroupQty(encodedGroupKey,delta){
+async function changeGroupQty(encodedGroupKey,delta){
   const key=decodeURIComponent(encodedGroupKey);const g=catalogGroups().find(x=>x.key===key);if(!g)return;
   let available=g.records.find(c=>(c.status||'Disponibile')==='Disponibile');
   if(delta>0){
     if(available)available.qty=(Number(available.qty)||1)+1;
     else{const base={...g.representative};delete base.livePlayPrice;base.status='Disponibile';base.qty=1;base.addedAt=new Date().toISOString();db.push(base)}
-    persist();return;
+    await persist();return;
   }
   if(!available){alert('Non ci sono copie Disponibili da rimuovere.');return}
   const reserved=(decks||[]).reduce((sum,d)=>sum+deckEntryQty(d,deckRecordKey(available)),0);
@@ -6363,7 +6609,7 @@ function changeGroupQty(encodedGroupKey,delta){
   if(q-reserved<=0){alert('Le copie disponibili sono già riservate a uno o più mazzi. Usa Modifica oppure sfai il mazzo prima di rimuoverle.');return}
   available.qty=q-1;
   if(available.qty<=0)db=db.filter(x=>x!==available);
-  persist();
+  await persist();
 }
 function catalogUniqueCount(){return catalogGroups().length}
 function catalogCopyCount(){return db.reduce((a,c)=>a+(Number(c.qty)||1),0)}
@@ -6425,15 +6671,15 @@ function renderCatalog(){
     </div></article>`}).join('')}</div>`;
 }
 
-function deleteRecord(key){
+async function deleteRecord(key){
   const c=findRecordByKey(key);
   if(!c)return;
   if(!confirm(`Eliminare ${c.name} dal catalogo?`))return;
   db=db.filter(x=>x!==c);
-  persist();
+  await persist();
 }
 
-function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;persist()}
+async function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;await persist()}
 function renderStats(){
   const cv=document.getElementById('collectionValue'),ci=document.getElementById('collectionValueInfo');if(cv)cv.textContent=euro(collectionMarketValue());if(ci)ci.textContent=`${pricedCopies()} carte valorizzate su ${catalogCopyCount()} · trend Cardmarket disponibile.`;
   const su=document.getElementById('statUnique'), sc=document.getElementById('statCopies'), sh=document.getElementById('statHolo'), sn=document.getElementById('statNM');
@@ -6555,7 +6801,7 @@ async function exportCSV(){
     const total=Number(totals.get(sid)||0);
     if(total>0){c._cardoryxSetTotal=total;totalsChanged=true}
   }
-  if(totalsChanged)localStorage.setItem('cardoryx_db',JSON.stringify(db));
+  if(totalsChanged&&!await persist())return;
 
   const ordered=[...db].sort((a,b)=>{
     const setCmp=String(a?.set||'').localeCompare(String(b?.set||''),'it',{sensitivity:'base',numeric:true});
@@ -6941,7 +7187,7 @@ if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
     if(Array.isArray(data)){
       if(confirm(`Importare ${data.length} record dal vecchio backup? Il catalogo attuale verrà sostituito.`)){
         db=data.map(c=>({...c,qty:Math.max(1,Number(c.qty)||1),status:c.status||'Disponibile',variant:canonicalVariant(c.variant||'Normal'),stamp:canonicalStamp(c.stamp||'None'),condition:c.condition||'NM'}));
-        persist();
+        if(!await persist())return;
         alert('Backup precedente importato correttamente.');
       }
     }else if(data?.format==='cardoryx-full-backup' && Array.isArray(data.cards)){
@@ -6958,11 +7204,9 @@ if(settingsImportFile)settingsImportFile.addEventListener('change',async()=>{
           return restored;
         });
         decks=Array.isArray(data.decks)?data.decks:[];
-        localStorage.setItem(DECK_KEY,JSON.stringify(decks));
         const quick=data?.preferences?.quickscan;
+        if(!await persistCollectionAndDecks())return;
         if(quick&&typeof quick==='object')localStorage.setItem('cardoryx_quickscan',JSON.stringify(quick));
-        localStorage.setItem('cardoryx_db',JSON.stringify(db));
-        renderAll();renderSettings();renderDecks();
         alert(`Backup completo ripristinato: ${db.length} schede e ${decks.length} mazzi.`);
       }
     }else throw new Error('Formato backup non riconosciuto');
@@ -7025,6 +7269,7 @@ document.getElementById('scanAskingPrice')?.addEventListener('input',()=>{if(doc
 
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 renderAll();renderSettings();
+storageInitializationPromise=initializeCardoryxStorage();
 
 document.getElementById('variant')?.addEventListener('change',()=>{
   if(scanPriceCard||selectedCard)renderScanValue(scanPriceCard||selectedCard);
