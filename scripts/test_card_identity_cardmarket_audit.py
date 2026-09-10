@@ -34,19 +34,21 @@ OUT = ROOT / "artifacts" / "card_identity_cardmarket_audit_report.json"
 API = "https://api.tcgdex.net/v2/en/cards"
 CM_BASE = "https://downloads.s3.cardmarket.com/productCatalog"
 
-# Cardmarket V1/V2 pages and current Price Guide values prove that these V1
-# products are base printings, while V2 are Pokémon Horizons stamped printings.
-# TCGdex currently attaches the IDs to the opposite physical rows.
-CONFIRMED_SURGING_SPARKS_INVERSIONS = {
+# Exact Cardmarket catalogue identities and current Price Guide values prove
+# the base/conflicting product pairs. The Surging Sparks cases are V1/V2
+# Horizons inversions; Piplup is CEC54 base versus CEC239 Character Rare.
+CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv08-029": {"base": 794286, "alternate": 794946, "stamp": "horizons", "cardmarketCode": "SSP029"},
     "sv08-050": {"base": 794316, "alternate": 794947, "stamp": "horizons", "cardmarketCode": "SSP050"},
     "sv08-161": {"base": 794534, "alternate": 794948, "stamp": "horizons", "cardmarketCode": "SSP161"},
+    "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
 }
 PROTECTED_REVERSE = {"pl2-102", "pl3-26", "pl3-5", "pl3-59", "pl3-83", "sv10.5b-013"}
 EXPECTED_BASE_OVERRIDES = {
     "sv08-029": {"setId": "sv08", "localId": "029", "conflictingProduct": 794946, "baseProduct": 794286},
     "sv08-050": {"setId": "sv08", "localId": "050", "conflictingProduct": 794947, "baseProduct": 794316},
     "sv08-161": {"setId": "sv08", "localId": "161", "conflictingProduct": 794948, "baseProduct": 794534},
+    "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
 }
 
 
@@ -267,7 +269,7 @@ def main():
     # from TCGdex for all 4,252 identities. Only multi-product identities outside
     # that sample require live detail calls; a single-product shared identity has
     # an unambiguous top-level candidate by construction.
-    live_targets = (multi_ids - historical_ids) | set(CONFIRMED_SURGING_SPARKS_INVERSIONS) | {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE
+    live_targets = (multi_ids - historical_ids) | set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE
     live, live_errors = {}, {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
         futures = {pool.submit(live_card, card_id, args.cache): card_id for card_id in sorted(live_targets)}
@@ -282,7 +284,7 @@ def main():
     source = INDEX.read_text(encoding="utf-8")
     base_overrides = extract_js_object(source, "VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
-        raise AssertionError("Base Cardmarket override registry differs from the three audited P0 identities")
+        raise AssertionError("Base Cardmarket override registry differs from the four audited P0 identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
     torkoal_guard = "knownCardmarketIdentityConflict" in source and "sm12-29" in source and "398524" in source
     protected_reverse = {card_id: card_id in source for card_id in sorted(PROTECTED_REVERSE)}
@@ -302,9 +304,8 @@ def main():
                 current_pid = ids[0] if len(ids) == 1 else None
         # TCGdex currently points Piplup CEC54 at the Character Rare CEC239
         # product. Cardmarket's official catalogue proves that product 407919
-        # is the same-expansion/same-metacard CEC54 base product. This finding
-        # is diagnostic only: it is intentionally not added to the production
-        # override registry in this PR.
+        # is the same-expansion/same-metacard CEC54 base product. Keep both IDs
+        # in the audit even when the snapshot omits one of the physical rows.
         if card_id == "sm12-54":
             ids = sorted(set(ids) | {398504, 407919})
             details = dict(details)
@@ -316,7 +317,7 @@ def main():
         classification, priority, confidence = "SAFE", None, "HIGH"
         reason = "Il prodotto corrente è associato a una riga base e le alternative restano identità fisiche esplicite."
         action = "Nessuna modifica."
-        inversion = CONFIRMED_SURGING_SPARKS_INVERSIONS.get(card_id)
+        inversion = CONFIRMED_BASE_PRODUCT_CONFLICTS.get(card_id)
         applied_override = False
         resolved_pid = current_pid
         resolved_value = current_value = (prices.get(current_pid) or {}).get("trend") if current_pid else current_cm.get("trend")
@@ -328,11 +329,10 @@ def main():
                                if int((row.get("thirdParty") or {}).get("cardmarket") or 0) == inversion["base"] and
                                int((((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct") or 0)) == inversion["base"]]
             exact_cm = (((exact_live_rows[0].get("pricing") or {}).get("cardmarket") or {}) if exact_live_rows else {})
-            applied_override = applied_override and bool(exact_cm)
             override_tests = {
                 "exactIdentityAccepted": applied_override,
                 "wrongTcgdexIdRejected": not override_matches(rule, card_id + "-other", (card.get("set") or {}).get("id"), card.get("localId"), current_pid),
-                "wrongSetIdRejected": not override_matches(rule, card_id, "sv08-other", card.get("localId"), current_pid),
+                "wrongSetIdRejected": not override_matches(rule, card_id, f"{(card.get('set') or {}).get('id')}-other", card.get("localId"), current_pid),
                 "wrongLocalIdRejected": not override_matches(rule, card_id, (card.get("set") or {}).get("id"), str(card.get("localId")) + "9", current_pid),
                 "correctedFutureProductRejected": not override_matches(rule, card_id, (card.get("set") or {}).get("id"), card.get("localId"), inversion["base"]),
                 "exactLivePriceRowPresent": bool(exact_cm),
@@ -342,16 +342,15 @@ def main():
                 resolved_value = next((exact_cm.get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
                                        if isinstance(exact_cm.get(key), (int, float)) and exact_cm.get(key) > 0), None)
                 classification, priority = "SAFE", None
-                reason = "Il resolver applica il prodotto base verificato solo alla quadrupla identità esatta e legge la Price Guide dalla riga live esatta."
-                action = "Mantenere la guardia esatta; nessun prezzo statico."
+                if exact_cm:
+                    reason = "Il resolver applica il prodotto base verificato solo alla quadrupla identità esatta e legge la Price Guide dalla riga live esatta."
+                else:
+                    reason = "La quadrupla identità esatta blocca il prodotto conflittuale; la Price Guide del prodotto base non è presente nella riga live e il resolver resta fail-closed."
+                action = "Mantenere la guardia esatta e il fail-closed; nessun prezzo statico."
             else:
                 classification, priority = "P0_WRONG_PRODUCT", "P0"
-                reason = "Il conflitto V1/V2 è dimostrato ma la guardia o la Price Guide esatta non sono disponibili."
+                reason = "Il conflitto di prodotto è dimostrato ma la guardia esatta non è disponibile."
                 action = "Fail-closed; non usare il prodotto conflittuale."
-        elif card_id == "sm12-54" and current_pid == 398504 and 407919 in products:
-            classification, priority, confidence = "P0_WRONG_PRODUCT", "P0_PHASE_B", "HIGH"
-            reason = "Il prodotto top-level 398504 identifica Piplup CEC239 Character Rare; il catalogo Cardmarket associa il prodotto 407919 a Piplup CEC54 base nello stesso metacard/espansione."
-            action = "Creare in un intervento successivo un mapping identitario esatto sm12-54/set/localId/currentProduct=398504 -> 407919; per questa PR non applicare il fix."
         elif card_id == "sm12-29" and current_pid == 398524:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "TCGdex assegna il prodotto 398524 a un'altra identità fisica; Cardoryx lo blocca già con guardia esatta.", "Mantenere il fail-closed esistente."
@@ -400,7 +399,7 @@ def main():
             "classification": classification, "priority": priority, "confidence": confidence,
             "reason": reason, "recommendedAction": action,
         }
-        if inversion:
+        if inversion and card_id.startswith("sv08-"):
             case["confirmedCardmarketVersionEvidence"] = {
                 "V1ProductId": inversion["base"], "V2ProductId": inversion["alternate"],
                 "V1Url": f"https://www.cardmarket.com/en/Pokemon/Products/Singles/Surging-Sparks/{case['name']}-V1-{inversion['cardmarketCode']}",
@@ -412,10 +411,16 @@ def main():
                 "tcgdexAssociationIsInverted": True,
             }
         if card_id == "sm12-54":
-            case["phaseBOnlyFinding"] = True
             case["verifiedBaseProductId"] = 407919
             case["currentProductPhysicalIdentity"] = "Piplup CEC239 Character Rare"
             case["verifiedBasePhysicalIdentity"] = "Piplup CEC54 base Normal/Reverse"
+            case["verifiedBaseProductConflictEvidence"] = {
+                "conflictingProductId": 398504, "baseProductId": 407919,
+                "exactIdentity": "Cosmic Eclipse / Eclissi Cosmica 054/236",
+                "guard": "tcgdexId + setId + normalized localId + current product",
+                "priceSourcePolicy": "required live exact variants_detailed product row; otherwise fail-closed",
+                "exactLivePriceRowPresent": bool(exact_cm),
+            }
         cases.append(case)
 
     counts = Counter(case["classification"] for case in cases)
@@ -479,16 +484,21 @@ def main():
                             "candidateIdentitiesDeepAudited": len(cases), "liveDetailRequests": len(live_targets),
                             "liveApiErrors": live_errors}},
         "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
-        "p0Regression": {"before": 3, "after": len(known_phase_a_p0),
+        "p0Regression": {"before": 4, "after": len(known_phase_a_p0),
                          "exactOverridesApplied": sum(bool(c.get("baseOverrideApplied")) for c in cases),
                          "registry": base_overrides,
                          "noP1AutoMapped": not any(c.get("baseOverrideApplied") for c in cases if c["tcgdexId"] not in EXPECTED_BASE_OVERRIDES),
-                         "newOutOfScopePhaseBFinding": "sm12-54" if piplup["classification"] == "P0_WRONG_PRODUCT" else None},
+                         "priorThree": {"before": 3, "after": sum(c["classification"] == "P0_WRONG_PRODUCT" for c in cases if c["tcgdexId"].startswith("sv08-") and c["tcgdexId"] in EXPECTED_BASE_OVERRIDES)},
+                         "piplup": {"before": 1, "after": int(piplup["classification"] == "P0_WRONG_PRODUCT")}},
         "multiProductClassificationTotals": {name: multi_classifications.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
         "historical4252CandidateClassificationTotals": {name: historical_classifications.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
-        "fuecoco": fuecoco, "piplup": piplup, "p0WrongProduct": p0, "p1AmbiguousProduct": p1,
+        "fuecoco": fuecoco, "piplup": piplup, "p0WrongProduct": p0,
+        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],
         "sourceConflicts": [c for c in cases if c["classification"] == "SOURCE_CONFLICT"],
-        "unmappedExactProduct": [c for c in cases if c["classification"] == "UNMAPPED_EXACT_PRODUCT"], "cases": cases,
+        "unmappedExactProduct": [c for c in cases if c["classification"] == "UNMAPPED_EXACT_PRODUCT"],
+        "caseIndex": [{"tcgdexId": c["tcgdexId"], "classification": c["classification"],
+                       "priority": c.get("priority"), "inHistorical4252": c["inHistorical4252"]}
+                      for c in cases],
         "alreadyProtected": {"torkoalSm12_29Product398524": torkoal_guard, "reverseConflicts": protected_reverse,
                              "allRequestedProtectionsPresent": torkoal_guard and all(protected_reverse.values())},
         "riskExtremes": {"maximumObservedOvervaluation": max(over, default=None), "maximumObservedUndervaluation": max(under, default=None),
@@ -496,10 +506,10 @@ def main():
                          "maximumConfirmedP0Undervaluation": None,
                          "method": "Differenze fra soli campi trend reali Cardmarket; nessuna stima o interpolazione."},
         "safety": {"productionFilesModified": True, "indexHtmlModified": True,
-                   "productionChangeScope": "Only three exact Cardmarket base-product identity overrides",
+                   "productionChangeScope": "Four exact Cardmarket base-product identity overrides; this phase adds only Piplup",
                    "cardmarketDataModified": False,
                    "retailModified": False, "retailPricesModified": False, "scannerOcrSearchModified": False,
-                   "finishesModified": False, "workflowAdded": False, "mergePerformed": False},
+                   "finishesModified": True, "workflowAdded": False, "mergePerformed": False},
     }
     OUT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({"report": str(OUT), "mainSha": report["mainSha"], "snapshot": snapshot_sha,

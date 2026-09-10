@@ -3827,6 +3827,23 @@ function verifiedNormalFinish(card){
          exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
 }
 
+// V2.1.41 — Reverse finishes independently verified for exact physical identities.
+// Finish evidence only: no marketplace id or price, and no set/era/name inference.
+const VERIFIED_REVERSE_FINISHES = {
+  'sm2-10':{setId:'sm2',localId:'010'},
+  'sm1-46':{setId:'sm1',localId:'046'},
+  'sm12-54':{setId:'sm12',localId:'054'},
+  'sm10-13':{setId:'sm10',localId:'013'},
+  'sm7-18':{setId:'sm7',localId:'018'}
+};
+function verifiedReverseFinish(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_REVERSE_FINISHES[id];
+  if(!rule)return false;
+  return cardSetId(card)===rule.setId &&
+         exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
+}
+
 
 // V2.1.14 — Prize Pack Series 1–9 resolver + exact product refresh.
 // The official Cardmarket catalogue exposes one product for a single printing
@@ -4098,6 +4115,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
 
   // Exact finish-only evidence. Stamped/Play! editions remain on their own path.
   if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');
+  if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');
 
   // Exact verified registries may add a finish for the exact edition.
   for(const name of ['Normal','Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo']){
@@ -4789,7 +4807,10 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // top-level product is still present.
   'sv08-029':{setId:'sv08',localId:'029',conflictingProduct:794946,baseProduct:794286},
   'sv08-050':{setId:'sv08',localId:'050',conflictingProduct:794947,baseProduct:794316},
-  'sv08-161':{setId:'sv08',localId:'161',conflictingProduct:794948,baseProduct:794534}
+  'sv08-161':{setId:'sv08',localId:'161',conflictingProduct:794948,baseProduct:794534},
+  // Cosmic Eclipse / Eclissi Cosmica — TCGdex currently exposes the CEC239
+  // Character Rare product for the exact CEC54 base identity.
+  'sm12-54':{setId:'sm12',localId:'054',conflictingProduct:398504,baseProduct:407919}
 };
 function verifiedBaseCardmarketProductOverride(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
