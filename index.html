@@ -3747,7 +3747,7 @@ async function chooseCandidate(key){
 
 let scanPriceCard=null;
 function scanEuro(v){const n=Number(v||0);return n>0?n.toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
-function scanCM(c){return c?.pricing?.cardmarket||null}
+function scanCM(c){return resolvedCardmarketPricingForCard(c)}
 
 
 
@@ -4625,9 +4625,13 @@ function staticPlayCandidates(index,card,series){
 
   // 2) ID Cardmarket della carta base -> stessa metacard -> Prize Pack
 const baseIds=new Set(tcgdexBaseCMIds(card));
+// Never feed a known identity-conflicting product into Play!/metacard lookup.
+for(const id of [...baseIds]){
+  if(knownCardmarketIdentityConflict(card,id))baseIds.delete(id);
+}
 
 // TCGdex espone spesso l'idProduct Cardmarket direttamente nel pricing.
-const pricingId=Number(card?.pricing?.cardmarket?.idProduct);
+const pricingId=Number(resolvedCardmarketPricingForCard(card)?.idProduct);
 if(Number.isFinite(pricingId) && pricingId>0){
   baseIds.add(pricingId);
 }
@@ -5114,6 +5118,27 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // Character Rare product for the exact CEC54 base identity.
   'sm12-54':{setId:'sm12',localId:'054',conflictingProduct:398504,baseProduct:407919}
 };
+// Exact Cardmarket Price Guide row for CEC54. This is intentionally scoped to
+// one physical identity and one product id; it is not a V1/V2 or number rule.
+// Normal and Reverse retain their independent standard / *-holo fields.
+const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
+  'sm12-54':{
+    setId:'sm12',localId:'054',name:'Piplup',productId:407919,
+    verified:'2026-09-10T02:48:22+0200',
+    source:'Cardmarket Price Guide v1 · product 407919',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    sha256:'ec7e165008203cb0eeaa89b3c6daacd833d63e3f7b0a6beed7599ce994aaef30',
+    pricing:{idProduct:407919,trend:0.17,avg7:0.18,avg30:0.12,avg:0.10,low:0.02,
+      'trend-holo':0.76,'avg7-holo':0.94,'avg30-holo':0.76,'avg-holo':1.12,'low-holo':0.14}
+  }
+};
+function exactCardmarketGuideIdentity(card,id,guide){
+  const cardId=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+  const local=canonicalPrintedLocalId(card?.localId||'');
+  return cardId===id && setId===guide.setId &&
+    local===canonicalPrintedLocalId(guide.localId) && normText(card?.name||'')===normText(guide.name||'');
+}
 function verifiedBaseCardmarketProductOverride(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const rule=VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES[id];
@@ -5123,19 +5148,37 @@ function verifiedBaseCardmarketProductOverride(card){
   const currentProduct=Number(card?.pricing?.cardmarket?.idProduct||0);
   if(setId!==rule.setId || local!==canonicalPrintedLocalId(rule.localId) ||
      currentProduct!==rule.conflictingProduct)return null;
+  const guide=VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES[id]||null;
+  if(guide&&!exactCardmarketGuideIdentity(card,id,guide))return null;
   const exactRow=tcgdexVariantDetails(card).find(row=>
     Number(row?.thirdParty?.cardmarket||0)===rule.baseProduct &&
     Number(row?.pricing?.cardmarket?.idProduct||0)===rule.baseProduct
   );
-  const pricing=exactRow?.pricing?.cardmarket||null;
-  return {matched:true,rule,pricing};
+  const livePricing=exactRow?.pricing?.cardmarket||null;
+  const verifiedPricing=guide&&Number(guide.productId)===rule.baseProduct
+    ?{...guide.pricing,idProduct:guide.productId,_cardoryxSource:guide.source,
+      _cardoryxVerified:guide.verified,_cardoryxSourceUrl:guide.sourceUrl}:null;
+  const pricing=livePricing||verifiedPricing;
+  return {matched:true,rule,pricing,evidence:livePricing?null:guide};
 }
-function knownCardmarketIdentityConflict(card){
+function knownCardmarketIdentityConflict(card,resolvedProduct){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
   const local=canonicalPrintedLocalId(card?.localId||'');
   const name=normText(card?.name||'');
-  const product=Number(card?.pricing?.cardmarket?.idProduct||0);
+  const product=Number(resolvedProduct||card?.pricing?.cardmarket?.idProduct||0);
+  const guide=VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES['sm12-54'];
+  const exactPiplup54=exactCardmarketGuideIdentity(card,'sm12-54',guide);
+  const targetsPiplup54=id==='sm12-54'||(setId==='sm12'&&local==='54'&&name==='piplup');
+  if((product===398504&&targetsPiplup54)||(product===407919&&!exactPiplup54)){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · prodotto Piplup CEC54 verificato',
+      reason:product===398504
+        ?'Il prodotto 398504 appartiene a Piplup CEC239 e non può valutare CEC54'
+        :'Il prodotto 407919 è consentito solo per Piplup sm12-54 / 054'
+    };
+  }
   const isTorkoal29=id==='sm12-29'||(setId==='sm12'&&local==='29'&&name==='torkoal');
   if(isTorkoal29 && product===398524){
     return {
@@ -5145,6 +5188,19 @@ function knownCardmarketIdentityConflict(card){
     };
   }
   return null;
+}
+function resolvedCardmarketPricingForCard(card){
+  const baseOverride=verifiedBaseCardmarketProductOverride(card);
+  const cm=baseOverride?.matched?baseOverride.pricing:card?.pricing?.cardmarket;
+  if(!cm||knownCardmarketIdentityConflict(card,cm.idProduct))return null;
+  return cm;
+}
+function pricingWithResolvedCardmarket(card){
+  if(!card?.pricing)return null;
+  const pricing={...card.pricing};
+  const cm=resolvedCardmarketPricingForCard(card);
+  if(cm)pricing.cardmarket={...cm};else delete pricing.cardmarket;
+  return Object.keys(pricing).length?pricing:null;
 }
 const VERIFIED_REVERSE_CARDMARKET_CONFLICTS = {
   // Exact TCGdex identities whose explicit Reverse row points to a different
@@ -5181,7 +5237,7 @@ function cardmarketValueForCardVariant(card,variant){
   if(baseOverride?.matched&&!cm)return {value:0,kind:'base-product-price-unavailable',
     source:'Cardmarket · prodotto base esatto non disponibile'};
   if(!cm)return {value:0,kind:'none'};
-  const identityConflict=knownCardmarketIdentityConflict(card);
+  const identityConflict=knownCardmarketIdentityConflict(card,cm.idProduct);
   if(identityConflict)return {value:0,...identityConflict};
   const v=canonicalVariant(variant||'Normal');
   const n=k=>{const x=Number(cm[k]||0);return Number.isFinite(x)&&x>0?x:0};
@@ -5210,7 +5266,8 @@ function cardmarketValueForCardVariant(card,variant){
     const x=reverse();
     return x?{value:x,kind:'reverse-cardmarket',exact:true,
       productId:Number(cm.idProduct||0)||undefined,
-      source:'Cardmarket · quotazione Reverse Holo'}:{value:0,kind:'needs-exact-variant'};
+      source:cm._cardoryxSource||'Cardmarket · quotazione Reverse Holo',
+      verified:cm._cardoryxVerified||''}:{value:0,kind:'needs-exact-variant'};
   }
 
   if(v==='Holo'){
@@ -5220,7 +5277,8 @@ function cardmarketValueForCardVariant(card,variant){
       const x=standard();
       return x?{value:x,kind:'holo-standard-cardmarket',exact:true,
         productId:Number(cm.idProduct||0)||undefined,
-        source:'Cardmarket · quotazione standard della carta Holo'}:{value:0,kind:'none'};
+        source:cm._cardoryxSource||'Cardmarket · quotazione standard della carta Holo',
+        verified:cm._cardoryxVerified||''}:{value:0,kind:'none'};
     }
     // Se TCGdex documenta contemporaneamente Normal e Holo, non assumiamo che
     // il prezzo standard appartenga alla Holo.
@@ -5232,7 +5290,8 @@ function cardmarketValueForCardVariant(card,variant){
       const x=standard();
       return x?{value:x,kind:'normal',exact:true,
         productId:Number(cm.idProduct||0)||undefined,
-        source:'Cardmarket · quotazione standard'}:{value:0,kind:'none'};
+        source:cm._cardoryxSource||'Cardmarket · quotazione standard',
+        verified:cm._cardoryxVerified||''}:{value:0,kind:'none'};
     }
     return {value:0,kind:'needs-exact-variant'};
   }
@@ -5243,6 +5302,7 @@ function cardmarketStatsForCardVariant(card,variant){
   const baseOverride=verifiedBaseCardmarketProductOverride(card);
   const cm=(baseOverride?.matched?baseOverride.pricing:card?.pricing?.cardmarket)||{};
   const info=cardmarketValueForCardVariant(card,variant);
+  if(!info?.value)return {low:null,trend:null,avg7:null,avg30:null};
   const v=canonicalVariant(variant||'Normal');
   if(info?.kind==='reverse-cardmarket' || v==='Reverse Holo'){
     return {
@@ -5522,6 +5582,8 @@ async function renderScanValue(card){
       metaEl.textContent=info.value
         ? 'Cardmarket · solo riferimento generico: prezzo specifico Poké Ball/Master Ball non ancora verificato'
         : 'Cardmarket · prezzo specifico della variante non disponibile';
+    }else if(info.exact&&info.productId){
+      metaEl.textContent=`${info.source||'Cardmarket'} · prodotto ${info.productId}${info.verified?` · ${info.verified}`:''}`;
     }else{
       metaEl.textContent='Cardmarket · valore indicativo';
     }
@@ -5660,7 +5722,7 @@ async function saveSelected(){
       image:editedCardPhoto||selectedCard._imageUrl||selectedCard.image||'',originalImage:selectedCard._imageUrl||selectedCard.image||'',imageCandidates:selectedCard._imageCandidates||[],officialPage:selectedCard._officialPage||'',rarity:selectedCard.rarity||'',category,type,
       stage:selectedCard.stage||'',trainerType,energyType,printedCode:selectedCard._printedCode||'',
       variant:canonicalVariant(document.getElementById('variant')?.value||'Normal'),stamp:canonicalStamp(document.getElementById('stamp')?.value||'None'),playSeries:canonicalStamp(document.getElementById('stamp')?.value||'None')==='Play! Pokémon'?normalizedPlaySeries(document.getElementById('playSeries')?.value||''):'',status:selectedStatus(),condition:selectedCondition(),
-      pricing:selectedCard.pricing||null,
+      pricing:pricingWithResolvedCardmarket(selectedCard),
       tcgdexId:selectedCard.tcgdexId||selectedCard.id||scanPriceCard?.id||'',
       variants:(selectedCard.variants||scanPriceCard?.variants||null),
       variants_detailed:(selectedCard.variants_detailed||scanPriceCard?.variants_detailed||[]),
@@ -5694,7 +5756,8 @@ livePlayPrice:(()=>{
 priceUpdatedAt:
   selectedCard.livePlayPrice?.updated||
   scanPriceCard?.livePlayPrice?.updated||
-  selectedCard.pricing?.cardmarket?.updated||
+  resolvedCardmarketPricingForCard(selectedCard)?.updated||
+  resolvedCardmarketPricingForCard(selectedCard)?._cardoryxVerified||
   '',
       qty:1,addedAt:new Date().toISOString()
     };
@@ -6553,7 +6616,10 @@ async function refreshPriceForRecord(c){
   const id=await resolveTcgdexIdForRecord(c);if(!id)return false;
   const full=await fetchFullCardForPrice(id);
   if(!full?.pricing?.cardmarket){c.pricing=null;c.priceUpdatedAt='';return false}
-  c.pricing=full.pricing;c.priceUpdatedAt=full.pricing.cardmarket.updated||new Date().toISOString();c.tcgdexId=full.id;c.id=full.id;return true;
+  const resolved=resolvedCardmarketPricingForCard(full);
+  if(!resolved){c.pricing=null;c.priceUpdatedAt='';return false}
+  c.pricing={...full.pricing,cardmarket:{...resolved}};
+  c.priceUpdatedAt=resolved._cardoryxVerified||resolved.updated||new Date().toISOString();c.tcgdexId=full.id;c.id=full.id;return true;
 }
 async function refreshAllPrices(){
   const st=document.getElementById('priceRefreshStatus');let ok=0,done=0,noPrice=0;
@@ -6819,7 +6885,7 @@ async function exportCSV(){
     return String(a?.status||'').localeCompare(String(b?.status||''),'it');
   });
   const rows=ordered.map(c=>{
-    const info=cardPriceInfo(c),unit=info.value,qty=Math.max(1,Number(c.qty)||1),cm=c?.pricing?.cardmarket||{};
+    const info=cardPriceInfo(c),unit=info.value,qty=Math.max(1,Number(c.qty)||1),cm=resolvedCardmarketPricingForCard(c)||{};
     return [c.name,c.set,c._cardoryxSetId||'',c.localId,csvSetTotal(c,totals),c.tcgdexId||c.id||'',c.category,c.type,canonicalTrainerType(c)||'',csvEnergyType(c),c.stage,c.rarity,c.regulationMark||c._cardoryxRegulationMark||'',c.printedCode||'',canonicalVariant(c.variant||'Normal'),canonicalStamp(c.stamp||'None'),normalizedPlaySeries(c.playSeries||''),qty,c.status,csvAllocation(c),c.condition,cardCategory(c),c.notes||'',c.addedAt||'',unit==null?'':unit,unit==null?'':unit*qty,info.source||'Cardmarket',info.exact?'SI':'NO',info.updated||c.priceUpdatedAt||'',cm.idProduct||'',cm.trend||'',cm.low||'',cm.avg1||'',cm.avg7||'',cm.avg30||'',csvImageUrl(c)];
   });
   const csv=[h,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\n');
