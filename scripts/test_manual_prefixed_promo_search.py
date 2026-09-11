@@ -97,10 +97,15 @@ async function queryManualCardsByExactLocalId(value){
   assert(rows[0].name==='Mega Dragonite ex'&&rows[0].localId==='091','wrong verified identity');
   assert(rows[0]._cardoryxLocal===true&&rows[0]._cardoryxVerifiedPromo===true,'fallback not marked verified/local');
   assert(rows[0].variants?.holo===true,'verified Holo finish missing');
-  assert(!rows[0].pricing,'fallback must not invent Cardmarket pricing');
-  const unknown=await queryManualCardsByPrefixedPromoCode('MEP 092');
+  const cm=rows[0].pricing?.cardmarket;
+  assert(cm&&cm.trend===2.04,'MEP091 exact Cardmarket snapshot missing');
+  assert(String(cm._cardoryxSourceUrl||'').includes('Mega-Dragonite-ex-MEP091'),'MEP091 exact Cardmarket source missing');
+  const known=await queryManualCardsByPrefixedPromoCode('MEP 092');
+  assert(known.length===1&&known[0].name==='Resort Paradiso','verified MEP092 identity missing');
+  assert(!known[0].pricing,'MEP092 must not inherit MEP091 pricing');
+  const unknown=await queryManualCardsByPrefixedPromoCode('MEP 102');
   assert(unknown.length===0,'unverified promo code must fail closed');
-  console.log(JSON.stringify({fallback:'PASS',result:rows[0].id,price:'none'}));
+  console.log(JSON.stringify({fallback:'PASS',result:rows[0].id,price:'verified-exact'}));
 })().catch(e=>{console.error(e);process.exit(1)});
 """
     script = '\n'.join([registry, parser, fallback, resolver, common, fallback_harness])
@@ -132,7 +137,7 @@ async function queryManualCardsByExactLocalId(){
 
     print(result.stdout.strip())
     print(live_result.stdout.strip())
-    print('{"test":"PASS","nakedNumber":"blocked","MEP091":"verified-fallback","Cardmarket":"untouched"}')
+    print('{"test":"PASS","nakedNumber":"blocked","MEP091":"verified-fallback","Cardmarket":"exact-snapshot-only"}')
 
 
 if __name__ == '__main__':
