@@ -27,15 +27,43 @@ helper = r'''function manualPrefixedPromoCodeParts(value=''){
   return {prefix,number,display:`${prefix} ${number.padStart(3,'0')}`,setId:prefix.toLowerCase()};
 }
 
+// Exact externally verified promo identities used only when TCGdex has not yet
+// published the card. No Cardmarket price is attached and no prefix-wide rule is inferred.
+const VERIFIED_MANUAL_PROMO_IDENTITIES = {
+  'MEP 091':{
+    name:'Mega Dragonite ex',localId:'091',setId:'mep',setName:'Promozioni MEP',finish:'Holo',
+    source:'Pokémon ufficiale · MEP 091; finitura Holo verificata da catalogo promo indipendente',
+    sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',
+    verified:'2026-09-11'
+  }
+};
+function verifiedManualPromoFallback(code){
+  const key=String(code?.display||'').trim().toUpperCase();
+  const row=VERIFIED_MANUAL_PROMO_IDENTITIES[key];
+  if(!row || row.setId!==code?.setId || String(Number(row.localId))!==String(Number(code?.number)))return null;
+  return {
+    id:`verified-promo-${row.setId}-${row.localId}`,
+    tcgdexId:'',name:row.name,localId:row.localId,number:row.localId,
+    category:'Pokemon',rarity:'Promo',variants:{holo:true},
+    variants_detailed:[{type:'holo',languages:['it']}],
+    set:{id:row.setId,name:row.setName},
+    _cardoryxLocal:true,_cardoryxVerifiedPromo:true,_printedCode:key,
+    _verifiedPromoSource:row.source,_verifiedPromoSourceUrl:row.sourceUrl,_verifiedPromoAt:row.verified
+  };
+}
+
 async function queryManualCardsByPrefixedPromoCode(value){
   const code=manualPrefixedPromoCodeParts(value);
   if(!code)return [];
   const cards=await queryManualCardsByExactLocalId(code.number);
-  return (cards||[]).filter(card=>{
+  const live=(cards||[]).filter(card=>{
     const setId=cardSetId(card);
     const id=String(card?.id||card?.tcgdexId||'').trim().toLowerCase();
     return setId===code.setId || id.startsWith(`${code.setId}-`);
   });
+  if(live.length)return live;
+  const fallback=verifiedManualPromoFallback(code);
+  return fallback?[fallback]:[];
 }
 
 '''
