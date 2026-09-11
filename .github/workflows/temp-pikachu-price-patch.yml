@@ -1,0 +1,110 @@
+name: Temporary Pikachu Pokemon Day price patch
+
+on:
+  push:
+    branches:
+      - fix/pikachu-pokemon-day-price-p0-20260911
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pikachu-pokemon-day-price-p0-20260911
+          fetch-depth: 0
+
+      - name: Apply exact price mapping and extend regression
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          source = index.read_text(encoding='utf-8')
+
+          marker = "const VERIFIED_STAMP_PRICES = {"
+          if "const VERIFIED_EXACT_SPECIAL_STAMP_PRICES = {" in source:
+              raise SystemExit('Exact special stamp price registry already present')
+          if marker not in source:
+              raise SystemExit('VERIFIED_STAMP_PRICES marker missing')
+
+          registry = r'''// V2.1.43 — exact Cardmarket price for one independently verified stamped printing.
+// Identity, finish and stamp must all match. The standard price fields below belong
+// to the dedicated Cardmarket V3 product itself; no base-card or generic Holo fallback.
+const VERIFIED_EXACT_SPECIAL_STAMP_PRICES = {
+  'sv05-051':{
+    setId:'sv05',localId:'051',name:'Pikachu',finish:'Holo',stamp:'Pokémon Day',productId:870424,
+    trend:3.88,avg7:2.89,avg30:3.57,avg1:2.79,
+    source:'Cardmarket · Pikachu V3 TEF051 · Pokémon Day · product 870424',
+    sourceUrl:'https://www.cardmarket.com/it/Pokemon/Products/Singles/Temporal-Forces/Pikachu-V3-TEF051',
+    verified:'2026-09-11'
+  }
+};
+function verifiedExactSpecialStampPrice(card,variant,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_EXACT_SPECIAL_STAMP_PRICES[id];
+  if(!rule || cardSetId(card)!==rule.setId ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
+     normText(card?.name||'')!==normText(rule.name||'') ||
+     canonicalVariant(variant||'Normal')!==canonicalVariant(rule.finish) ||
+     canonicalStamp(stamp||'None')!==canonicalStamp(rule.stamp))return null;
+  return rule;
+}
+
+'''
+          source = source.replace(marker, registry + marker, 1)
+
+          old = """function verifiedStampPrice(card,variant,stamp){\n  const setName=normText(card?.set?.name||card?.set||'');"""
+          new = """function verifiedStampPrice(card,variant,stamp){\n  const exact=verifiedExactSpecialStampPrice(card,variant,stamp);\n  if(exact)return exact;\n  const setName=normText(card?.set?.name||card?.set||'');"""
+          if old not in source:
+              raise SystemExit('verifiedStampPrice signature block missing')
+          source = source.replace(old, new, 1)
+          index.write_text(source, encoding='utf-8')
+
+          test = Path('scripts/test_special_stamp_finish_runtime.py')
+          t = test.read_text(encoding='utf-8')
+          range_marker = '        ("function syncVariantAvailability", "// Prezzi Cardmarket verificati manualmente"),\n'
+          range_add = range_marker + '        ("const VERIFIED_EXACT_SPECIAL_STAMP_PRICES", "const VERIFIED_VARIANT_PRICES"),\n'
+          if range_marker not in t:
+              raise SystemExit('test range marker missing')
+          t = t.replace(range_marker, range_add, 1)
+          stub = 'function verifiedStampPrice(){return null}\n'
+          if stub not in t:
+              raise SystemExit('verifiedStampPrice test stub missing')
+          t = t.replace(stub, '', 1)
+          assertion_marker = "assert(!finishes(pikachu,'Pokémon Day').includes('Cosmos Holo'),'Base Cosmos leaked into Pokémon Day');\n"
+          assertions = assertion_marker + r'''const exactStampPrice=verifiedStampPrice(pikachu,'Holo','Pokémon Day');
+assert(exactStampPrice && exactStampPrice.productId===870424,'Exact Pokémon Day Cardmarket product missing');
+assert(exactStampPrice.trend===3.88,'Unexpected Pokémon Day trend');
+assert(exactStampPrice.avg7===2.89 && exactStampPrice.avg30===3.57,'Unexpected Pokémon Day averages');
+assert(verifiedStampPrice(pikachu,'Normal','Pokémon Day')===null,'Normal must not inherit Pokémon Day Holo price');
+assert(verifiedStampPrice(pikachu,'Reverse Holo','Pokémon Day')===null,'Reverse must not inherit Pokémon Day Holo price');
+assert(verifiedStampPrice({...pikachu,id:'sv05-052',tcgdexId:'sv05-052'},'Holo','Pokémon Day')===null,'Wrong id accepted by stamp price');
+assert(verifiedStampPrice({...pikachu,set:{id:'sv04'}},'Holo','Pokémon Day')===null,'Wrong set accepted by stamp price');
+assert(verifiedStampPrice({...pikachu,localId:'052'},'Holo','Pokémon Day')===null,'Wrong local id accepted by stamp price');
+assert(verifiedStampPrice({...pikachu,name:'Raichu'},'Holo','Pokémon Day')===null,'Wrong name accepted by stamp price');
+assert(verifiedStampPrice(pikachu,'Holo','GameStop')===null,'Wrong stamp accepted by stamp price');
+'''
+          if assertion_marker not in t:
+              raise SystemExit('test assertion marker missing')
+          t = t.replace(assertion_marker, assertions, 1)
+          t = t.replace("  edit:'Holo enabled'\n", "  edit:'Holo enabled',\n  cardmarketProduct:870424,\n  pokemonDayTrend:3.88\n", 1)
+          test.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Run focused regression
+        run: python scripts/test_special_stamp_finish_runtime.py
+
+      - name: Commit production fix and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temp-pikachu-price-patch.yml
+          git add index.html scripts/test_special_stamp_finish_runtime.py
+          git commit -m "Fix Pikachu Pokemon Day exact Cardmarket price"
+          git push origin HEAD:fix/pikachu-pokemon-day-price-p0-20260911
