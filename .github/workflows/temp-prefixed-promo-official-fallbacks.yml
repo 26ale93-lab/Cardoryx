@@ -1,0 +1,34 @@
+name: Temp prefixed promo official fallbacks
+
+on:
+  push:
+    branches:
+      - fix/prefixed-promo-official-fallbacks-20260911
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prefixed-promo-official-fallbacks-20260911
+          fetch-depth: 0
+      - name: Apply surgical fallback patch
+        run: python scripts/_temp_apply_prefixed_promo_official_fallbacks.py
+      - name: Run promo regressions
+        run: |
+          python scripts/test_manual_prefixed_promo_search.py
+          python scripts/test_prefixed_promo_official_fallbacks.py
+      - name: Commit verified production changes
+        run: |
+          rm scripts/_temp_apply_prefixed_promo_official_fallbacks.py
+          rm .github/workflows/temp-prefixed-promo-official-fallbacks.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html scripts/test_prefixed_promo_official_fallbacks.py scripts/_temp_apply_prefixed_promo_official_fallbacks.py .github/workflows/temp-prefixed-promo-official-fallbacks.yml
+          git commit -m "Add official MEP promo fallbacks and exact Dragonite price"
+          git push origin HEAD:fix/prefixed-promo-official-fallbacks-20260911
