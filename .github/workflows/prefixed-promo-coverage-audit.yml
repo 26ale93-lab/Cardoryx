@@ -1,0 +1,25 @@
+name: Prefixed promo coverage audit
+
+on:
+  push:
+    branches:
+      - diagnostic/promo-prefixed-coverage-audit-20260911
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run read-only promo coverage audit
+        run: python scripts/test_prefixed_promo_coverage_audit.py
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: prefixed-promo-coverage-audit
+          path: artifacts/prefixed_promo_coverage_audit_report.json
+          if-no-files-found: error
