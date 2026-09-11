@@ -78,6 +78,7 @@ def main():
         ("const VERIFIED_SPECIAL_STAMP_FINISHES", "// V2.1.14 — Prize Pack Series"),
         ("function documentedVariantsForCard", "function syncVariantAvailability"),
         ("function syncVariantAvailability", "// Prezzi Cardmarket verificati manualmente"),
+        ("const VERIFIED_EXACT_SPECIAL_STAMP_PRICES", "const VERIFIED_VARIANT_PRICES"),
     ]
     actual = "\n".join(source[source.index(start):source.index(end, source.index(start))]
                        for start, end in ranges)
@@ -100,7 +101,6 @@ function rarityForcesStandardHolo(){return false}
 function verifiedNormalFinish(){return false}
 function verifiedReverseFinish(){return false}
 function verifiedVariantPrice(){return null}
-function verifiedStampPrice(){return null}
 function verifiedPlaySeriesPrice(){return null}
 function prizePackFinishPlan(){return {finishes:[],authoritative:false}}
 function assert(ok,message){if(!ok)throw new Error(message)}
@@ -124,6 +124,17 @@ exactOnly(finishes(pikachu,'Pokémon Day'),['Holo'],'Pikachu Pokémon Day');
 assert(!finishes(pikachu,'Pokémon Day').includes('Normal'),'Base Normal leaked into Pokémon Day');
 assert(!finishes(pikachu,'Pokémon Day').includes('Reverse Holo'),'Base Reverse leaked into Pokémon Day');
 assert(!finishes(pikachu,'Pokémon Day').includes('Cosmos Holo'),'Base Cosmos leaked into Pokémon Day');
+const exactStampPrice=verifiedStampPrice(pikachu,'Holo','Pokémon Day');
+assert(exactStampPrice && exactStampPrice.productId===870424,'Exact Pokémon Day Cardmarket product missing');
+assert(exactStampPrice.trend===3.88,'Unexpected Pokémon Day trend');
+assert(exactStampPrice.avg7===2.89 && exactStampPrice.avg30===3.57,'Unexpected Pokémon Day averages');
+assert(verifiedStampPrice(pikachu,'Normal','Pokémon Day')===null,'Normal must not inherit Pokémon Day Holo price');
+assert(verifiedStampPrice(pikachu,'Reverse Holo','Pokémon Day')===null,'Reverse must not inherit Pokémon Day Holo price');
+assert(verifiedStampPrice({...pikachu,id:'sv05-052',tcgdexId:'sv05-052'},'Holo','Pokémon Day')===null,'Wrong id accepted by stamp price');
+assert(verifiedStampPrice({...pikachu,set:{id:'sv04'}},'Holo','Pokémon Day')===null,'Wrong set accepted by stamp price');
+assert(verifiedStampPrice({...pikachu,localId:'052'},'Holo','Pokémon Day')===null,'Wrong local id accepted by stamp price');
+assert(verifiedStampPrice({...pikachu,name:'Raichu'},'Holo','Pokémon Day')===null,'Wrong name accepted by stamp price');
+assert(verifiedStampPrice(pikachu,'Holo','GameStop')===null,'Wrong stamp accepted by stamp price');
 exactOnly(finishes({...pikachu,id:'sv05-052',tcgdexId:'sv05-052',variants_detailed:pikachu.variants_detailed.slice(0,3)},'Pokémon Day'),[],'Wrong identity');
 exactOnly(finishes({...pikachu,set:{id:'sv04'}},'Pokémon Day'),[],'Wrong set');
 exactOnly(finishes({...pikachu,localId:'052'},'Pokémon Day'),[],'Wrong local id');
@@ -166,7 +177,9 @@ console.log(JSON.stringify({
   relatedExplicitRows:'audit-only; no generalized fix',
   playPrizePack:'unchanged-pass',
   scannerConfirmation:'Holo enabled',
-  edit:'Holo enabled'
+  edit:'Holo enabled',
+  cardmarketProduct:870424,
+  pokemonDayTrend:3.88
 }));
 """
     result = subprocess.run(["node", "-e", actual + "\n" + harness], text=True, capture_output=True)
