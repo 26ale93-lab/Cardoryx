@@ -81,8 +81,8 @@ function assert(ok,message){if(!ok)throw new Error(message)}
 
     fallback_harness = r"""
 async function queryManualCardsByExactLocalId(value){
-  if(String(value)!=='91')throw new Error('resolver did not reduce MEP 091 to local number 91');
-  return [{id:'sv05-091',name:'Other card',localId:'091',set:{id:'sv05'}}];
+  if(String(value)==='91')return [{id:'sv05-091',name:'Other card',localId:'091',set:{id:'sv05'}}];
+  return [];
 }
 (async()=>{
   let p=manualPrefixedPromoCodeParts('MEP 091');
