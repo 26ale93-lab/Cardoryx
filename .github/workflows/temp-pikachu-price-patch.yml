@@ -5,8 +5,26 @@ on:
     branches:
       - fix/pikachu-pokemon-day-price-p0-20260911
 
+permissions:
+  contents: write
+
 jobs:
-  smoke:
+  patch-and-test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ready
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pikachu-pokemon-day-price-p0-20260911
+          fetch-depth: 0
+      - name: Apply exact mapping
+        run: python scripts/_temp_apply_pikachu_price_patch.py
+      - name: Run focused regression
+        run: python scripts/test_special_stamp_finish_runtime.py
+      - name: Commit verified fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temp-pikachu-price-patch.yml scripts/_temp_apply_pikachu_price_patch.py
+          git add index.html scripts/test_special_stamp_finish_runtime.py
+          git commit -m "Fix Pikachu Pokemon Day exact Cardmarket price"
+          git push origin HEAD:fix/pikachu-pokemon-day-price-p0-20260911
