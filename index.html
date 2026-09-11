@@ -5007,6 +5007,29 @@ function verifiedPlaySeriesPrice(card,variant,stamp,series){
   return null;
 }
 
+// V2.1.43 — exact Cardmarket price for one independently verified stamped printing.
+// Identity, finish and stamp must all match. The standard price fields below belong
+// to the dedicated Cardmarket V3 product itself; no base-card or generic Holo fallback.
+const VERIFIED_EXACT_SPECIAL_STAMP_PRICES = {
+  'sv05-051':{
+    setId:'sv05',localId:'051',name:'Pikachu',finish:'Holo',stamp:'Pokémon Day',productId:870424,
+    trend:3.88,avg7:2.89,avg30:3.57,avg1:2.79,
+    source:'Cardmarket · Pikachu V3 TEF051 · Pokémon Day · product 870424',
+    sourceUrl:'https://www.cardmarket.com/it/Pokemon/Products/Singles/Temporal-Forces/Pikachu-V3-TEF051',
+    verified:'2026-09-11'
+  }
+};
+function verifiedExactSpecialStampPrice(card,variant,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_EXACT_SPECIAL_STAMP_PRICES[id];
+  if(!rule || cardSetId(card)!==rule.setId ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
+     normText(card?.name||'')!==normText(rule.name||'') ||
+     canonicalVariant(variant||'Normal')!==canonicalVariant(rule.finish) ||
+     canonicalStamp(stamp||'None')!==canonicalStamp(rule.stamp))return null;
+  return rule;
+}
+
 const VERIFIED_STAMP_PRICES = {
   // Anita / Hilda WHT 084 — Play! Pokémon Prize Pack Series Nine.
   // Versione standard stamped.
@@ -5024,6 +5047,8 @@ const VERIFIED_STAMP_PRICES = {
 };
 
 function verifiedStampPrice(card,variant,stamp){
+  const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
+  if(exact)return exact;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
