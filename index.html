@@ -4146,6 +4146,26 @@ function verifiedReverseFinish(card){
          exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
 }
 
+// V2.1.42 — exact non-Play stamped printing whose finish is independently
+// present in the TCGdex physical row. Finish evidence only: no price fallback,
+// no base-card inheritance, and no rule for other identities or stamps.
+const VERIFIED_SPECIAL_STAMP_FINISHES = {
+  'sv05-051':{
+    setId:'sv05',localId:'051',name:'Pikachu',stamp:'Pokémon Day',
+    finishes:['Holo'],source:'TCGdex variants_detailed · pokemon-day · type holo · Cardmarket product 870424',
+    verified:'2026-09-11'
+  }
+};
+function verifiedSpecialStampFinishes(card,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_SPECIAL_STAMP_FINISHES[id];
+  if(!rule || cardSetId(card)!==rule.setId ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
+     normText(card?.name||'')!==normText(rule.name||'') ||
+     canonicalStamp(stamp)!==canonicalStamp(rule.stamp))return [];
+  return Array.isArray(rule.finishes)?rule.finishes.map(canonicalVariant):[];
+}
+
 
 // V2.1.14 — Prize Pack Series 1–9 resolver + exact product refresh.
 // The official Cardmarket catalogue exposes one product for a single printing
@@ -4406,6 +4426,10 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     const playRows=pool.filter(isPlayRow);
     if(playRows.length)addDetailedFinishes(allowed,playRows,{base:true,special:true});
   }
+
+  // Exact, independently verified non-Play stamp mappings only. This must not
+  // inherit any finish from the unstamped/base printing.
+  for(const finish of verifiedSpecialStampFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
