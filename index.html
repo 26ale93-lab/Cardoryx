@@ -3411,23 +3411,44 @@ function manualPrefixedPromoCodeParts(value=''){
 // Exact externally verified promo identities used only when TCGdex has not yet
 // published the card. No Cardmarket price is attached and no prefix-wide rule is inferred.
 const VERIFIED_MANUAL_PROMO_IDENTITIES = {
+  'MEP 089':{name:'Mega Zeraora ex',localId:'089',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'Holo',source:'Pokémon ufficiale · MEP 089; Mega Forces Tin foil promo',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 090':{name:'Mega Darkrai ex',localId:'090',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'Holo',source:'Pokémon ufficiale · MEP 090; Mega Forces Tin foil promo',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
   'MEP 091':{
-    name:'Mega Dragonite ex',localId:'091',setId:'mep',setName:'Promozioni MEP',finish:'Holo',
-    source:'Pokémon ufficiale · MEP 091; finitura Holo verificata da catalogo promo indipendente',
+    name:'Mega Dragonite ex',localId:'091',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'Holo',
+    source:'Pokémon ufficiale · MEP 091; Mega Forces Tin foil promo',
     sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',
-    verified:'2026-09-11'
-  }
+    verified:'2026-09-11',
+    cardmarket:{trend:2.04,low:1.33,avg1:1.76,avg7:2.37,avg30:3.39,source:'Cardmarket · Mega Dragonite ex MEP091',sourceUrl:'https://www.cardmarket.com/de/Pokemon/Products/Singles/MEP-Black-Star-Promos/Mega-Dragonite-ex-MEP091',verified:'2026-09-11'}
+  },
+  'MEP 092':{name:'Resort Paradiso',localId:'092',setId:'mep',setName:'Promozioni MEP',category:'Stadio',finish:'',source:'Pokémon ufficiale · MEP 092',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 093':{name:'Pikachu',localId:'093',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 093',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 094':{name:'Exeggutor di Alola',localId:'094',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 094',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 095':{name:'Lucario',localId:'095',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 095',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 096':{name:'Moltres',localId:'096',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 096',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 097':{name:'Articuno',localId:'097',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 097',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 098':{name:'Zapdos',localId:'098',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 098',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 099':{name:'Greninja ex',localId:'099',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 099',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 100':{name:'Sylveon ex',localId:'100',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 100',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'},
+  'MEP 101':{name:'Nidorina',localId:'101',setId:'mep',setName:'Promozioni MEP',category:'Pokemon',finish:'',source:'Pokémon ufficiale · MEP 101',sourceUrl:'https://www.pokemon.com/it/play-pokemon/info/entrata-in-vigore-delle-carte-promozionali-del-gcc-pokemon',verified:'2026-09-11'}
 };
 function verifiedManualPromoFallback(code){
   const key=String(code?.display||'').trim().toUpperCase();
   const row=VERIFIED_MANUAL_PROMO_IDENTITIES[key];
   if(!row || row.setId!==code?.setId || String(Number(row.localId))!==String(Number(code?.number)))return null;
+  const finish=String(row.finish||'').trim();
+  const variants=finish==='Holo'?{holo:true}:{};
+  const variantsDetailed=finish==='Holo'?[{type:'holo',languages:['it']}]:[];
+  const cm=row.cardmarket?{
+    trend:row.cardmarket.trend,low:row.cardmarket.low,avg1:row.cardmarket.avg1,avg7:row.cardmarket.avg7,avg30:row.cardmarket.avg30,
+    _cardoryxSource:row.cardmarket.source,_cardoryxSourceUrl:row.cardmarket.sourceUrl,_cardoryxVerified:row.cardmarket.verified
+  }:null;
   return {
     id:`verified-promo-${row.setId}-${row.localId}`,
     tcgdexId:'',name:row.name,localId:row.localId,number:row.localId,
-    category:'Pokemon',rarity:'Promo',variants:{holo:true},
-    variants_detailed:[{type:'holo',languages:['it']}],
+    category:row.category||'Pokemon',rarity:'Promo',variants,
+    variants_detailed:variantsDetailed,
     set:{id:row.setId,name:row.setName},
+    ...(cm?{pricing:{cardmarket:cm}}:{}),
     _cardoryxLocal:true,_cardoryxVerifiedPromo:true,_printedCode:key,
     _verifiedPromoSource:row.source,_verifiedPromoSourceUrl:row.sourceUrl,_verifiedPromoAt:row.verified
   };
