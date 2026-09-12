@@ -1,0 +1,34 @@
+name: Temp Frillish Master Ball Cardmarket price
+
+on:
+  push:
+    branches:
+      - fix/frillish-masterball-cardmarket-p0-20260912
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/frillish-masterball-cardmarket-p0-20260912
+          fetch-depth: 0
+      - name: Apply surgical price patch
+        run: python scripts/_temp_apply_frillish_masterball_price.py
+      - name: Run exact regression
+        run: python scripts/test_frillish_masterball_cardmarket_price.py
+      - name: Commit production change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No index change to commit"
+          else
+            git commit -m "Fix Frillish Master Ball exact Cardmarket price"
+            git push origin HEAD:fix/frillish-masterball-cardmarket-p0-20260912
+          fi
