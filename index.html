@@ -5154,6 +5154,28 @@ function verifiedStampPrice(card,variant,stamp){
   return null;
 }
 
+// Exact physical-identity variant prices. Keep these stricter than the legacy
+// set-name registry: no other card/finish may inherit a special parallel price.
+const VERIFIED_EXACT_VARIANT_PRICES = {
+  'sv10.5w-044':{
+    setId:'sv10.5w',localId:'044',name:'Frillish',finish:'Master Ball Reverse Holo',productId:836574,
+    low:0.95,trend:3.00,avg1:3.00,avg7:2.50,avg30:2.50,
+    source:'Cardmarket · White Flare: Additionals · Frillish V2 xWHT044 · product 836574',
+    sourceUrl:'https://www.cardmarket.com/en/Pokemon/Products/Singles/White-Flare-Additionals/Frillish-V2-xWHT044',
+    priceGuideUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    verified:'2026-09-11T12:09:34+0200'
+  }
+};
+function verifiedExactVariantPrice(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_EXACT_VARIANT_PRICES[id];
+  if(!rule || cardSetId(card)!==rule.setId ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
+     normText(card?.name||'')!==normText(rule.name||'') ||
+     canonicalVariant(variant||'Normal')!==canonicalVariant(rule.finish))return null;
+  return rule;
+}
+
 const VERIFIED_VARIANT_PRICES = {
   // V1.1.0 — Ascesa Eroica / Ascended Heroes additionals.
   // Cardmarket publishes the Poké Ball parallel as a separate xASC product.
@@ -5191,6 +5213,8 @@ function variantPriceKey(card,variant){
   return `${setName}|${num}|${canonicalVariant(variant||'Normal')}`;
 }
 function verifiedVariantPrice(card,variant){
+  const exact=verifiedExactVariantPrice(card,variant);
+  if(exact)return exact;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const target=canonicalVariant(variant||'Normal');
