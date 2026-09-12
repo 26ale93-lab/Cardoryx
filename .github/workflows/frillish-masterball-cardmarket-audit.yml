@@ -1,0 +1,18 @@
+name: Frillish Master Ball Cardmarket audit
+
+on:
+  push:
+    branches:
+      - diagnostic/frillish-masterball-cardmarket-p0-20260912
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run read-only Frillish audit
+        run: python scripts/test_frillish_masterball_cardmarket_audit.py
