@@ -18,32 +18,24 @@ def get_json(url):
 def main():
     src=INDEX.read_text(encoding='utf-8')
     print('INDEX_LEN',len(src))
-    for marker in ['870424','407919','398524','VERIFIED','Cardmarket','cardmarket','productId','Master Ball']:
+    for marker in ['VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES','cardmarketValueForCardVariant','cardmarketStatsForCardVariant','isBallReverseVariant']:
         print('\n=== MARKER',marker,'===')
-        for m in list(re.finditer(re.escape(marker),src,re.I))[:12]:
-            a=max(0,m.start()-700); b=min(len(src),m.end()+1200)
+        m=re.search(re.escape(marker),src,re.I)
+        if m:
+            a=max(0,m.start()-1200); b=min(len(src),m.end()+5000)
             print(src[a:b].replace('\n','\\n'))
-            print('---')
 
-    # Probe TCGdex search endpoints conservatively.
     urls=[
-      'https://api.tcgdex.net/v2/it/cards?name=Frillish',
-      'https://api.tcgdex.net/v2/en/cards?name=Frillish',
-      'https://api.tcgdex.net/v2/it/cards?localId=44',
+      'https://api.tcgdex.net/v2/it/cards/sv10.5w-044',
+      'https://api.tcgdex.net/v2/en/cards/sv10.5w-044',
     ]
     for u in urls:
-        print('\nURL',u)
+        print('\nDETAIL',u)
         try:
             data=get_json(u)
-            if isinstance(data,list):
-                rows=[x for x in data if str(x.get('name','')).lower()=='frillish']
-                print(json.dumps(rows[:30],ensure_ascii=False)[:12000])
-            else:
-                print(json.dumps(data,ensure_ascii=False)[:12000])
+            print(json.dumps(data,ensure_ascii=False)[:30000])
         except Exception as e:
             print('ERR',repr(e))
-
-    # Candidate details guessed from returned/search IDs if available by scanning search response isn't enough here.
 
 if __name__=='__main__':
     main()
