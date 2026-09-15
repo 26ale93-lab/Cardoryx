@@ -2128,10 +2128,19 @@ async function apiCardsQuery(params){
       if(!r.ok)continue;
       const data=await r.json();
       const arr=Array.isArray(data)?data:(data.cards||data.data||[]);
-      for(const c of arr||[])if(c?.id)merged.set(c.id,c);
+      for(const c of arr||[])if(c?.id)merged.set(c.id,mergeCardLanguageResult(merged.get(c.id),c));
     }catch(e){}
   }
   return [...merged.values()];
+}
+
+function mergeCardLanguageResult(previous,incoming){
+  if(!previous)return incoming;
+  const merged={...previous,...incoming};
+  // EN remains authoritative for translated metadata, but an empty EN image
+  // must never erase an image already returned by the Italian catalogue.
+  if(String(previous.image||'').trim()&&!String(incoming?.image||'').trim())merged.image=previous.image;
+  return merged;
 }
 
 
@@ -5992,6 +6001,18 @@ function cardHasEditVariantEvidence(card){
          !!(card?.variants && !Array.isArray(card.variants) && typeof card.variants==='object');
 }
 
+function backfillOriginalImageFromExactTCGdex(card,full,expectedId){
+  const exactId=String(expectedId||'').trim();
+  const source=String(full?.image||'').trim();
+  if(!card||!full||!exactId||String(full.id||'').trim()!==exactId||!source)return false;
+  const savedIds=[card.tcgdexId,card.id].map(x=>String(x||'').trim()).filter(Boolean);
+  if(!savedIds.includes(exactId))return false;
+  const existing=[card.originalImage,card.image,...(Array.isArray(card.imageCandidates)?card.imageCandidates:[])];
+  if(existing.some(value=>String(value||'').trim()))return false;
+  card.originalImage=source;
+  return true;
+}
+
 async function hydrateEditCardEvidence(card){
   if(!card)return card;
   const ids=[];
@@ -6018,7 +6039,9 @@ async function hydrateEditCardEvidence(card){
     if(b&&typeof b==='object'&&!Array.isArray(b))for(const [k,v] of Object.entries(b))out[k]=(out[k]===true||v===true)?true:(out[k]??v);
     return Object.keys(out).length?out:null;
   };
-  const mergeFull=full=>{
+  const exactImageIdentityIds=new Set(ids);
+  const mergeFull=(full,requestedId)=>{
+    if(exactImageIdentityIds.has(requestedId))backfillOriginalImageFromExactTCGdex(card,full,requestedId);
     card.variants=mergeCoarse(card.variants,full.variants);
     card.variants_detailed=mergeDetailed(card.variants_detailed,full.variants_detailed);
     if(full.pricing)card.pricing={...(card.pricing||{}),...full.pricing};
@@ -6040,7 +6063,7 @@ async function hydrateEditCardEvidence(card){
         if(!full?.id)continue;
         if(card.localId && full.localId && !sameCollectorNumber(card.localId,full.localId))continue;
         if(!priceSetMatches(card,full))continue;
-        mergeFull(full);matched=true;
+        mergeFull(full,id);matched=true;
       }catch(e){}
     }
     return matched;
