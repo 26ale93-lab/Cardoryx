@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-09-15T20:37:41.263214+00:00",
+  "status": "PASS",
+  "inputs": {
+    "index": "/workspace/scratch/d826452ff6ac/diag_cardoryx/index.html",
+    "indexSha256": "708f4bbfd6d9e407d89d70f5519ddac64f946ea911bae884eeceb94c6308d1a7",
+    "enCardsSource": "https://api.tcgdex.net/v2/en/cards",
+    "enCardsInput": "cardoryx_tcgdex_en_cards_20260915.json",
+    "enCardsSha256": "7fe663233b866634ad456f76da560d8ce2112d8e2b40189982295c0b4cea480a",
+    "itCardsSource": "https://api.tcgdex.net/v2/it/cards",
+    "itCardsInput": "cardoryx_tcgdex_it_cards_20260915.json",
+    "itCardsSha256": "8dc4a585d7dc342c834bc4aced338e954f623871d1bc37cba5b325eb172d4743"
+  },
+  "catalogue": {
+    "physicalIdentities": 21867,
+    "itImagesLostBefore": 363,
+    "itImagesLostAfter": 0,
+    "runtimeMissingBefore": 1692,
+    "runtimeMissingAfter": 1329,
+    "missingInBothLanguages": 1329
+  },
+  "targets": {
+    "swsh10tg-TG08": {
+      "enImage": null,
+      "itImage": null,
+      "runtimeImage": null,
+      "classification": "SOURCE_MISSING_IMAGE"
+    },
+    "svp-211": {
+      "enImage": null,
+      "itImage": null,
+      "runtimeImage": null,
+      "classification": "SOURCE_MISSING_IMAGE"
+    }
+  },
+  "javascript": {
+    "passed": 10,
+    "checks": [
+      "merge_preserves_it_image_when_en_empty",
+      "merge_accepts_populated_en_image",
+      "backfill_exact_tcgdex_id",
+      "backfill_exact_saved_card_id",
+      "backfill_rejects_identity_mismatch",
+      "backfill_preserves_existing_original_url",
+      "backfill_preserves_personal_url",
+      "backfill_preserves_data_image",
+      "backfill_preserves_image_candidates",
+      "backfill_rejects_missing_source_image"
+    ]
+  },
+  "assertions": {
+    "physicalIdentities": true,
+    "itImagesLostBefore": true,
+    "itImagesLostAfter": true,
+    "runtimeMissingBefore": true,
+    "runtimeMissingAfter": true,
+    "runtimeAfterEqualsMissingBoth": true,
+    "swsh10tg-TG08RemainsMissing": true,
+    "svp-211RemainsMissing": true,
+    "javascriptRegressions": true
+  },
+  "failed": []
+}
