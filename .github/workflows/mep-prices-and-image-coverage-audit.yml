@@ -1,0 +1,20 @@
+name: MEP prices and image coverage audit
+
+on:
+  push:
+    branches:
+      - diagnostic/mep-prices-and-image-coverage-20260915
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit MEP Cardmarket candidates
+        run: python scripts/test_mep_cardmarket_price_audit.py
+      - name: Audit card image coverage
+        run: python scripts/test_card_image_coverage_audit.py
