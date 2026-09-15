@@ -98,14 +98,15 @@ async function queryManualCardsByExactLocalId(value){
   assert(rows[0]._cardoryxLocal===true&&rows[0]._cardoryxVerifiedPromo===true,'fallback not marked verified/local');
   assert(rows[0].variants?.holo===true,'verified Holo finish missing');
   const cm=rows[0].pricing?.cardmarket;
-  assert(cm&&cm.trend===2.04,'MEP091 exact Cardmarket snapshot missing');
+  assert(cm&&cm.idProduct===903681,'MEP091 exact Cardmarket product missing');
+  assert(cm.trend===1.57&&cm.low===0.99&&cm.avg1===2.02&&cm.avg7===2.12&&cm.avg30===3.19,'MEP091 exact Cardmarket snapshot missing');
   assert(String(cm._cardoryxSourceUrl||'').includes('Mega-Dragonite-ex-MEP091'),'MEP091 exact Cardmarket source missing');
   const known=await queryManualCardsByPrefixedPromoCode('MEP 092');
   assert(known.length===1&&known[0].name==='Resort Paradiso','verified MEP092 identity missing');
-  assert(!known[0].pricing,'MEP092 must not inherit MEP091 pricing');
+  assert(!known[0].pricing,'MEP092 ambiguous product must remain unavailable');
   const unknown=await queryManualCardsByPrefixedPromoCode('MEP 102');
   assert(unknown.length===0,'unverified promo code must fail closed');
-  console.log(JSON.stringify({fallback:'PASS',result:rows[0].id,price:'verified-exact'}));
+  console.log(JSON.stringify({fallback:'PASS',result:rows[0].id,product:cm.idProduct,price:'verified-exact'}));
 })().catch(e=>{console.error(e);process.exit(1)});
 """
     script = '\n'.join([registry, parser, fallback, resolver, common, fallback_harness])
@@ -133,11 +134,14 @@ async function queryManualCardsByExactLocalId(){
     assert 'queryManualCardsByPrefixedPromoCode(num)' in source
     assert 'Codice promo completo' in source
     assert 'MEP 091' in source
-    assert 'productId' not in registry and 'pricing:' not in registry
+    assert 'productId:903681' in registry
+    assert "'MEP 092':" in registry and "productId:903686" not in registry and "productId:905263" not in registry
+    assert "'MEP 093':" in registry and "productId:894884" not in registry and "productId:894885" not in registry
+    assert "'MEP 101':" in registry and "productId:895604" not in registry and "productId:895605" not in registry
 
     print(result.stdout.strip())
     print(live_result.stdout.strip())
-    print('{"test":"PASS","nakedNumber":"blocked","MEP091":"verified-fallback","Cardmarket":"exact-snapshot-only"}')
+    print('{"test":"PASS","nakedNumber":"blocked","MEP091":"verified-product-903681","ambiguous":"fail-closed"}')
 
 
 if __name__ == '__main__':

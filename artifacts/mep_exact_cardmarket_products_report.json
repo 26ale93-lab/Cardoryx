@@ -1,0 +1,104 @@
+{
+  "auditDate": "2026-09-15",
+  "catalogSnapshot": {
+    "createdAt": "2026-09-15T12:48:15+0200",
+    "sha256": "244b5abf51d5f6b4586aee0a7acec61cd7977c64ab67314b28ed74664712bff0",
+    "url": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json"
+  },
+  "priceGuideSnapshot": {
+    "createdAt": "2026-09-15T02:48:12+0200",
+    "sha256": "5acedfc9bda0b7b59b1cab4538135941e55d3cb34381a38ec5d3b1f8841d43ca",
+    "url": "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json"
+  },
+  "exactProducts": {
+    "MEP 089": {
+      "productId": 903672,
+      "trend": 1.36,
+      "low": 1.0,
+      "avg1": 2.12,
+      "avg7": 1.8,
+      "avg30": 2.5,
+      "name": "Mega Zeraora ex",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Mega-Zeraora-ex-MEP089"
+    },
+    "MEP 090": {
+      "productId": 903676,
+      "trend": 2.06,
+      "low": 1.0,
+      "avg1": 2.92,
+      "avg7": 2.3,
+      "avg30": 2.97,
+      "name": "Mega Darkrai ex",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Mega-Darkrai-ex-MEP090"
+    },
+    "MEP 091": {
+      "productId": 903681,
+      "trend": 1.57,
+      "low": 0.99,
+      "avg1": 2.02,
+      "avg7": 2.12,
+      "avg30": 3.19,
+      "name": "Mega Dragonite ex",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Mega-Dragonite-ex-MEP091"
+    },
+    "MEP 094": {
+      "productId": 895609,
+      "name": "Exeggutor di Alola",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Alolan-Exeggutor-MEP094"
+    },
+    "MEP 095": {
+      "productId": 895610,
+      "name": "Lucario",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Lucario-MEP095"
+    },
+    "MEP 096": {
+      "productId": 895606,
+      "low": 1.0,
+      "name": "Moltres",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Moltres-MEP096"
+    },
+    "MEP 097": {
+      "productId": 895607,
+      "low": 1.0,
+      "name": "Articuno",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Articuno-MEP097"
+    },
+    "MEP 098": {
+      "productId": 895608,
+      "low": 1.0,
+      "name": "Zapdos",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Zapdos-MEP098"
+    },
+    "MEP 099": {
+      "productId": 895611,
+      "low": 5.0,
+      "name": "Greninja ex",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Greninja-ex-MEP099"
+    },
+    "MEP 100": {
+      "productId": 895612,
+      "low": 4.8,
+      "name": "Sylveon ex",
+      "sourceUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/MEP-Black-Star-Promos/Sylveon-ex-MEP100"
+    }
+  },
+  "ambiguousFailClosed": {
+    "MEP 092": [
+      903686,
+      905263
+    ],
+    "MEP 093": [
+      894884,
+      894885
+    ],
+    "MEP 101": [
+      895604,
+      895605
+    ]
+  },
+  "rules": [
+    "No price is estimated for missing Price Guide fields.",
+    "MEP 092, 093 and 101 receive no Cardmarket product or price.",
+    "Only exact audited MEP identities are mapped."
+  ]
+}
