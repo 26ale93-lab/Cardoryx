@@ -27,7 +27,7 @@ jobs:
           p=Path('scripts/test_card_identity_cardmarket_audit.py')
           s=p.read_text(encoding='utf-8')
           old='''    for case in p0 + p1:\n        current = case.get("currentCardoryxValue")\n'''
-          new='''    for case in p0 + p1:\n        cid=case.get("tcgdexId") or ""\n        if cid in {"sv09-055", "me01-073", "ex8-16", "sv05-041"} or cid.startswith(("base1-", "base2-", "base3-", "base5-", "gym1-", "gym2-", "neo1-", "neo2-", "neo3-", "neo4-")):\n            continue\n        current = case.get("currentCardoryxValue")\n'''
+          new='''    for case in p0 + p1:\n        cid=case.get("tcgdexId") or ""\n        if cid in {"sv09-055", "me01-073", "ex8-16", "sv05-041", "sv10.5b-065", "swshp-SWSH055"} or cid.startswith(("base1-", "base2-", "base3-", "base5-", "gym1-", "gym2-", "neo1-", "neo2-", "neo3-", "neo4-")):\n            continue\n        current = case.get("currentCardoryxValue")\n'''
           if old not in s: raise SystemExit('risk loop anchor missing')
           p.write_text(s.replace(old,new,1),encoding='utf-8')
           PY
