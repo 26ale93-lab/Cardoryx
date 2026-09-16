@@ -1,0 +1,45 @@
+name: Temp Numel Ditto finish
+
+on:
+  push:
+    branches:
+      - fix/numel-ditto-peelable-finish-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/numel-ditto-peelable-finish-20260916
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply surgical Numel Ditto patch
+        run: python scripts/_temp_apply_numel_ditto_finish.py
+      - name: Run Numel Ditto runtime regression
+        run: python scripts/test_numel_ditto_finish_runtime.py
+      - name: Run variant finish regression
+        run: python scripts/test_variant_finish_audit.py
+      - name: Run Piplup runtime regression
+        run: python scripts/test_piplup_cardmarket_runtime.py
+      - name: Run identity/Cardmarket regression
+        run: python scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Validate Python and diff
+        run: |
+          python -m py_compile scripts/test_numel_ditto_finish_runtime.py
+          git diff --check
+      - name: Commit tested production change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html scripts/test_numel_ditto_finish_runtime.py
+          if git diff --cached --quiet; then
+            echo 'No production changes to commit'
+            exit 1
+          fi
+          git commit -m 'Separate Numel peelable Ditto finish safely'
+          git push origin HEAD:fix/numel-ditto-peelable-finish-20260916
