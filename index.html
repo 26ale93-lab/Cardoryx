@@ -5325,7 +5325,11 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   'sv08-161':{setId:'sv08',localId:'161',conflictingProduct:794948,baseProduct:794534},
   // Cosmic Eclipse / Eclissi Cosmica — TCGdex currently exposes the CEC239
   // Character Rare product for the exact CEC54 base identity.
-  'sm12-54':{setId:'sm12',localId:'054',conflictingProduct:398504,baseProduct:407919}
+  'sm12-54':{setId:'sm12',localId:'054',conflictingProduct:398504,baseProduct:407919},
+  // Expedition Base Set — TCGdex currently exposes Tyranitar 029/165 Holo
+  // product 274904 for the exact 066/165 Rare base identity. Cardmarket V2
+  // is the 066/165 base product; keep this exact and fail closed elsewhere.
+  'ecard1-66':{setId:'ecard1',localId:'066',conflictingProduct:274904,baseProduct:274941}
 };
 // Exact Cardmarket Price Guide row for CEC54. This is intentionally scoped to
 // one physical identity and one product id; it is not a V1/V2 or number rule.
@@ -5339,6 +5343,14 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     sha256:'ec7e165008203cb0eeaa89b3c6daacd833d63e3f7b0a6beed7599ce994aaef30',
     pricing:{idProduct:407919,trend:0.17,avg7:0.18,avg30:0.12,avg:0.10,low:0.02,
       'trend-holo':0.76,'avg7-holo':0.94,'avg30-holo':0.76,'avg-holo':1.12,'low-holo':0.14}
+  },
+  'ecard1-66':{
+    setId:'ecard1',localId:'066',name:'Tyranitar',productId:274941,
+    verified:'2026-09-16T11:50:00+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Expedition Base Set Version 2 · product 274941',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:274941,trend:10.33,avg7:14.48,avg30:15.37,avg:15.07,low:1.50,
+      'trend-holo':40.70,'avg7-holo':33.71,'avg30-holo':43.76,'avg-holo':12.49,'low-holo':3.99}
   }
 };
 function exactCardmarketGuideIdentity(card,id,guide){
@@ -5386,6 +5398,17 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
       reason:product===398504
         ?'Il prodotto 398504 appartiene a Piplup CEC239 e non può valutare CEC54'
         :'Il prodotto 407919 è consentito solo per Piplup sm12-54 / 054'
+    };
+  }
+  const exactTyranitar66=id==='ecard1-66'&&setId==='ecard1'&&local==='66'&&name==='tyranitar';
+  const targetsTyranitar66=id==='ecard1-66'||(setId==='ecard1'&&local==='66'&&name==='tyranitar');
+  if((product===274904&&targetsTyranitar66)||(product===274941&&!exactTyranitar66)){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · Expedition Tyranitar 066/165 product 274941 verificato',
+      reason:product===274904
+        ?'Il prodotto 274904 appartiene a Tyranitar Expedition 029/165 Holo e non può valutare 066/165 Rare'
+        :'Il prodotto 274941 è consentito solo per Tyranitar ecard1-66 / 066'
     };
   }
   const isTorkoal29=id==='sm12-29'||(setId==='sm12'&&local==='29'&&name==='torkoal');
