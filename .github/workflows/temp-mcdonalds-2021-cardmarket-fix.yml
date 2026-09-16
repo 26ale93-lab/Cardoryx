@@ -1,0 +1,67 @@
+name: Temporary McDonalds 2021 Cardmarket Fix
+
+on:
+  push:
+    branches:
+      - fix/mcdonalds-2021-cardmarket-pairs
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone pinned TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Apply exact 25-pair patch
+        run: python -B scripts/temp_patch_mcdonalds_2021_cardmarket.py
+      - name: Compile audit and helper
+        run: python -B -m py_compile scripts/test_card_identity_cardmarket_audit.py scripts/temp_patch_mcdonalds_2021_cardmarket.py
+      - name: Runtime 25-card / 50-product regression
+        run: node scripts/temp_test_mcdonalds_2021_runtime.js
+      - name: Existing Cardmarket runtime regression
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket identity audit
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Assert classification movement
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          c=r.get('classifications') or r.get('classificationTotals') or {}
+          expected={'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':395,'SAFE':1687,'EXACT_ALTERNATE_PRODUCT':115,'SOURCE_CONFLICT':7}
+          for k,v in expected.items():
+              got=c.get(k)
+              if got!=v:
+                  raise SystemExit(f'{k}: expected {v}, got {got}')
+          ids=set(r.get('p1AmbiguousProductIds') or [])
+          leftovers=[f'2021swsh-{i}' for i in range(1,26) if f'2021swsh-{i}' in ids]
+          if leftovers:
+              raise SystemExit(f'McDonalds P1 leftovers: {leftovers}')
+          print('classification movement PASS',expected)
+          PY
+      - name: Restore generated report
+        run: git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+      - name: Safety scope
+        run: |
+          CHANGED=$(git diff --name-only)
+          printf '%s\n' "$CHANGED"
+          test "$CHANGED" = $'index.html\nscripts/test_card_identity_cardmarket_audit.py'
+          ! git diff --name-only | grep -E '(^data/|retail|indexeddb|manifest|service-worker)' || exit 1
+      - name: Commit validated production patch
+        run: |
+          git config user.name '26ale93-lab'
+          git config user.email '26ale93@gmail.com'
+          git add index.html scripts/test_card_identity_cardmarket_audit.py
+          git commit -m 'Resolve McDonalds 2021 Cardmarket finish pairs'
+          git push origin HEAD:fix/mcdonalds-2021-cardmarket-pairs
