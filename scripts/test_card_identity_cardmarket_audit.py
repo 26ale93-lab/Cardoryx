@@ -49,6 +49,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv10.5b-014": {"base": 835929, "alternate": 835069, "stamp": "unverified-top-level-product", "cardmarketCode": "BLK014"},
     "sv10.5b-065": {"base": 836043, "alternate": 836009, "stamp": "wrong-card-identity", "cardmarketCode": "BLK065"},
     "swsh11-201": {"base": 674207, "alternate": 670816, "stamp": "wrong-card-identity", "cardmarketCode": "LOR201"},
+    "sv03-062": {"base": 725142, "alternate": 727118, "stamp": "pre-release-top-level", "cardmarketCode": "OBF062"},
     "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
     "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
@@ -134,6 +135,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sv10.5b-014": {"setId": "sv10.5b", "localId": "014", "conflictingProduct": 835069, "baseProduct": 835929},
     "sv10.5b-065": {"setId": "sv10.5b", "localId": "065", "conflictingProduct": 836009, "baseProduct": 836043},
     "swsh11-201": {"setId": "swsh11", "localId": "201", "conflictingProduct": 670816, "baseProduct": 674207},
+    "sv03-062": {"setId": "sv03", "localId": "062", "conflictingProduct": 727118, "baseProduct": 725142},
     "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
@@ -451,6 +453,22 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 670816, "trend": 1.46}},
     }
+    fixtures["palafin062"] = {
+        "id": "sv03-062", "tcgdexId": "sv03-062", "name": "Palafin", "localId": "062",
+        "set": {"id": "sv03", "name": "Obsidian Flames"}, "rarity": "Rare", "regulationMark": "G",
+        "variants": {"normal": True, "holo": True, "reverse": True},
+        "variants_detailed": [
+            {"type": "normal", "stamp": ["pre-release"], "thirdParty": {"cardmarket": 727118},
+             "pricing": {"cardmarket": {"idProduct": 727118, "trend": 0.26, "avg7": 0.23, "avg30": 0.18, "avg": 0.16, "low": 0.02}}},
+            {"type": "holo", "thirdParty": {"cardmarket": 725142},
+             "pricing": {"cardmarket": {"idProduct": 725142, "trend": 0.02, "avg7": 0.05, "avg30": 0.06, "avg": 0.06, "low": 0.02, "trend-holo": 0.16, "avg7-holo": 0.18, "avg30-holo": 0.25, "avg-holo": 0.24, "low-holo": 0.02}}},
+            {"type": "holo", "foil": "cosmos", "thirdParty": {"cardmarket": 781858},
+             "pricing": {"cardmarket": {"idProduct": 781858, "trend": 0.22}}},
+            {"type": "reverse", "thirdParty": {"cardmarket": 725142},
+             "pricing": {"cardmarket": {"idProduct": 725142, "trend": 0.02, "trend-holo": 0.16}}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 727118, "trend": 0.26, "avg7": 0.23, "avg30": 0.18, "avg": 0.16, "low": 0.02}},
+    }
     fixtures["metagross"] = {
         "id": "pl3-7", "tcgdexId": "pl3-7", "name": "Metagross", "localId": "7",
         "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Rare Holo",
@@ -563,7 +581,7 @@ globalThis.runtime={
   verifiedBaseCardmarketProductOverride,resolvedCardmarketPricingForCard,
   pricingWithResolvedCardmarket,knownCardmarketIdentityConflict,
   cardmarketValueForCardVariant,cardmarketStatsForCardVariant,
-  verifiedVariantPrice,verifiedStampPrice,renderScanValue,cardPriceInfo,
+  verifiedVariantPrice,verifiedStampPrice,documentedVariantsForCard,renderScanValue,cardPriceInfo,
   setSelected:c=>{selectedCard=c;scanPriceCard=null}
 };`,context);
 const r=context.runtime;
@@ -627,6 +645,36 @@ const girUpstreamChanged={...gir,variants_detailed:[{type:'holo',foil:'rainbow',
 const changedResult=r.cardmarketValueForCardVariant(girUpstreamChanged,'Holo');
 assert.strictEqual(changedResult.value,0);
 assert.strictEqual(changedResult.kind,'needs-exact-variant');
+const pal=fixtures.palafin062;
+const palOverride=r.verifiedBaseCardmarketProductOverride(pal);
+assert.strictEqual(palOverride?.pricing?.idProduct,725142);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(pal)?.idProduct,725142);
+assert.strictEqual(r.knownCardmarketIdentityConflict(pal,781858)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...pal,id:'sv03-057',tcgdexId:'sv03-057',localId:'057',name:'Frogadier'},781858),null);
+assert.strictEqual(r.knownCardmarketIdentityConflict({...pal,id:'other-1',tcgdexId:'other-1',localId:'1',name:'Other',set:{id:'other'}},725142)?.kind,'identity-mismatch');
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...pal,localId:'063'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...pal,name:'Finizen'}),null);
+const palBaseFinishes=[...r.documentedVariantsForCard(pal,'None','')];
+assert(palBaseFinishes.includes('Holo'));
+assert(palBaseFinishes.includes('Reverse Holo'));
+assert(!palBaseFinishes.includes('Normal'));
+assert(!palBaseFinishes.includes('Cosmos Holo'));
+const palPreFinishes=[...r.documentedVariantsForCard(pal,'Pre-release','')];
+assert(palPreFinishes.includes('Normal'));
+const palHolo=r.cardmarketValueForCardVariant(pal,'Holo');
+const palReverse=r.cardmarketValueForCardVariant(pal,'Reverse Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:palHolo.value,productId:palHolo.productId})),{value:0.02,productId:725142});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:palReverse.value,productId:palReverse.productId})),{value:0.16,productId:725142});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(pal,'Holo'))),{low:0.02,trend:0.02,avg7:0.05,avg30:0.06});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(pal,'Reverse Holo'))),{low:0.02,trend:0.16,avg7:0.18,avg30:0.25});
+const palPre=r.verifiedStampPrice(pal,'Normal','Pre-release');
+assert.strictEqual(palPre?.productId,727118);
+assert.strictEqual(palPre?.trend,0.26);
+assert.strictEqual(r.verifiedStampPrice(pal,'Holo','Pre-release'),null);
+assert.strictEqual(r.verifiedStampPrice(pal,'Normal','None'),null);
+const palSaved={...pal,pricing:r.pricingWithResolvedCardmarket(pal),variant:'Normal',stamp:'Pre-release',_cardoryxSetId:'sv03'};
+assert.strictEqual(palSaved.pricing.cardmarket.idProduct,725142);
+assert.strictEqual(r.cardPriceInfo(palSaved).value,0.26);
 const met=fixtures.metagross;
 const metOverride=r.verifiedBaseCardmarketProductOverride(met);
 assert.strictEqual(metOverride?.pricing?.idProduct,278698);
