@@ -1,0 +1,617 @@
+{
+  "requested": 16,
+  "fetched": 16,
+  "errors": {},
+  "stampTaxonomy": {
+    "set-logo": 16,
+    "set-logo+staff": 16,
+    "(none)": 1
+  },
+  "exactVariantRows": 32,
+  "cards": [
+    {
+      "tcgdexId": "mep-001",
+      "name": "Meganium",
+      "localId": "001",
+      "topLevelProductId": 851043,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851043,
+          "pricingProductId": 851043,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 20.82,
+          "low": 7
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851044,
+          "pricingProductId": 851044,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 72.28,
+          "low": 11.2
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-002",
+      "name": "Inteleon",
+      "localId": "002",
+      "topLevelProductId": 851045,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851045,
+          "pricingProductId": 851045,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 11.25,
+          "low": 3.3
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851046,
+          "pricingProductId": 851046,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 13.5,
+          "low": 4.9
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-003",
+      "name": "Alakazam",
+      "localId": "003",
+      "topLevelProductId": 851047,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851047,
+          "pricingProductId": 851047,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 23.23,
+          "low": 9.85
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851048,
+          "pricingProductId": 851048,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 48.68,
+          "low": 16
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-004",
+      "name": "Lunatone",
+      "localId": "004",
+      "topLevelProductId": 851049,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851049,
+          "pricingProductId": 851049,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 16.83,
+          "low": 9
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 851050,
+          "pricingProductId": 851050,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 15.17,
+          "low": 7.8
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-014",
+      "name": "Ceruledge",
+      "localId": "014",
+      "topLevelProductId": 857390,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 857390,
+          "pricingProductId": 857390,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 21.77,
+          "low": 14
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 859014,
+          "pricingProductId": 859014,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 34.25,
+          "low": 9.89
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-015",
+      "name": "Zacian",
+      "localId": "015",
+      "topLevelProductId": 857393,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 857393,
+          "pricingProductId": 857393,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 15.22,
+          "low": 5
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 859015,
+          "pricingProductId": 859015,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 19.55,
+          "low": 8.4
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-016",
+      "name": "Flygon",
+      "localId": "016",
+      "topLevelProductId": 857396,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 857396,
+          "pricingProductId": 857396,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 15.47,
+          "low": 9.9
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 859016,
+          "pricingProductId": 859016,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 23.25,
+          "low": 9.28
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-017",
+      "name": "Toxtricity",
+      "localId": "017",
+      "topLevelProductId": 857400,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 857400,
+          "pricingProductId": 857400,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 15.75,
+          "low": 7
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 859018,
+          "pricingProductId": 859018,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 18.66,
+          "low": 7.95
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-064",
+      "name": "Serperior",
+      "localId": "064",
+      "topLevelProductId": 877543,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": null,
+          "languages": null,
+          "cardmarketProductId": null,
+          "pricingProductId": null,
+          "hasRealPrice": false,
+          "exactRow": false,
+          "trend": null,
+          "low": null
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 877543,
+          "pricingProductId": 877543,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 8.24,
+          "low": 2.99
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 879303,
+          "pricingProductId": 879303,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 31.76,
+          "low": 6.95
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-065",
+      "name": "Barbaracle",
+      "localId": "065",
+      "topLevelProductId": 877544,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 877544,
+          "pricingProductId": 877544,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 8.58,
+          "low": 2.5
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 879305,
+          "pricingProductId": 879305,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 8.24,
+          "low": 4.9
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-066",
+      "name": "Tyrantrum",
+      "localId": "066",
+      "topLevelProductId": 877545,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 877545,
+          "pricingProductId": 877545,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 12.35,
+          "low": 3.9
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 879315,
+          "pricingProductId": 879315,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 10.01,
+          "low": 7.95
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-067",
+      "name": "Doublade",
+      "localId": "067",
+      "topLevelProductId": 877546,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 877546,
+          "pricingProductId": 877546,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 8.73,
+          "low": 2.4
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 879312,
+          "pricingProductId": 879312,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 10.2,
+          "low": 5
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-074",
+      "name": "Delphox",
+      "localId": "074",
+      "topLevelProductId": 884752,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884752,
+          "pricingProductId": 884752,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 10.12,
+          "low": 3.5
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884753,
+          "pricingProductId": 884753,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 33.5,
+          "low": 5
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-075",
+      "name": "Ampharos",
+      "localId": "075",
+      "topLevelProductId": 884754,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884754,
+          "pricingProductId": 884754,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 14.26,
+          "low": 3.5
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884755,
+          "pricingProductId": 884755,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 12.3,
+          "low": 8
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-076",
+      "name": "Crobat",
+      "localId": "076",
+      "topLevelProductId": 884756,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884756,
+          "pricingProductId": 884756,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 11.42,
+          "low": 4.9
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884757,
+          "pricingProductId": 884757,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 28.01,
+          "low": 8
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mep-077",
+      "name": "Goodra",
+      "localId": "077",
+      "topLevelProductId": 884758,
+      "variantsDetailed": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884758,
+          "pricingProductId": 884758,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 10.99,
+          "low": 2
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "languages": null,
+          "cardmarketProductId": 884759,
+          "pricingProductId": 884759,
+          "hasRealPrice": true,
+          "exactRow": true,
+          "trend": 14.51,
+          "low": 5
+        }
+      ]
+    }
+  ]
+}
