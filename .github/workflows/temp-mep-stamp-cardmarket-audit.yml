@@ -1,0 +1,39 @@
+name: Temporary MEP Stamp Cardmarket Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/mep-stamp-cardmarket-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run MEP live stamp audit
+        run: python -B scripts/temp_mep_stamp_cardmarket_audit.py
+      - name: Assert read-only diagnostic scope
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/mep_stamp_cardmarket_audit_report.json').read_text())
+          assert r['requested']==16 and r['fetched']==16, r
+          assert not r['errors'], r
+          print(json.dumps({'stampTaxonomy':r['stampTaxonomy'],'exactVariantRows':r['exactVariantRows']},indent=2))
+          PY
+      - name: Commit report only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artifacts/mep_stamp_cardmarket_audit_report.json
+          git commit -m "Report MEP exact stamped Cardmarket rows"
+          git push
