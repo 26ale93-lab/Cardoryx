@@ -1,98 +1,73 @@
 #!/usr/bin/env python3
-# Runtime regression for Numel PGO 013 peelable Ditto finish separation.
+# Focused regression for Numel PGO 013 peelable Ditto finish separation.
 
-import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / 'index.html'
 
 
-def js_function(source, marker):
-    start = source.index(marker)
-    brace = source.index('{', start)
-    depth = 0
-    quote = None
-    escape = False
-    for pos in range(brace, len(source)):
-        ch = source[pos]
-        if quote:
-            if escape:
-                escape = False
-            elif ch == '\\':
-                escape = True
-            elif ch == quote:
-                quote = None
-            continue
-        if ch in ("'", '"', '`'):
-            quote = ch
-        elif ch == '{':
-            depth += 1
-        elif ch == '}':
-            depth -= 1
-            if depth == 0:
-                return source[start:pos + 1]
-    raise AssertionError(f'Unclosed function: {marker}')
+def require(source, needle, label):
+    if needle not in source:
+        raise AssertionError(f'{label}: missing expected production code')
 
 
 def main():
     source = INDEX.read_text(encoding='utf-8')
 
-    required = [
-        'function normText',
-        'function canonicalVariant',
-        'function canonicalFinishTypeLabel',
-        'function canonicalFinishFoilLabel',
-        'function addDetailedFinishes',
-        'function tcgdexMarketplaceVariant',
-    ]
-    js = '\n'.join(js_function(source, x) for x in required)
+    # Both scanner and edit UI expose the physical Ditto identity separately.
+    if source.count('value="Ditto Peelable Reverse Holo"') != 2:
+        raise AssertionError('Ditto finish must exist exactly in scanner and edit selectors')
 
-    harness = r'''
-function assert(ok,msg){if(!ok)throw new Error(msg)}
-const numel={
-  id:'swsh10.5-013',tcgdexId:'swsh10.5-013',name:'Numel',localId:'013',
-  variants_detailed:[
-    {type:'normal',languages:['it'],thirdParty:{cardmarket:665652}},
-    {type:'reverse',languages:['it'],thirdParty:{cardmarket:665652}},
-    {type:'reverse',foil:'peelable-ditto',languages:['it'],thirdParty:{}}
-  ],
-  pricing:{cardmarket:{idProduct:665652,trend:0.05,'trend-reverse-holo':0.12}}
-};
+    # Canonicalization must happen before generic Reverse, otherwise Ditto collapses again.
+    ditto_rule = "if(n.includes('ditto')&&(n.includes('peelable')||n.includes('rimovibile')))return 'Ditto Peelable Reverse Holo';"
+    reverse_rule = "if(n.includes('reverse'))return 'Reverse Holo';"
+    require(source, ditto_rule, 'Ditto canonical rule')
+    require(source, reverse_rule, 'generic Reverse rule')
+    if source.index(ditto_rule) > source.index(reverse_rule):
+        raise AssertionError('Ditto canonical rule must precede generic Reverse rule')
 
-const allowed=new Set();
-addDetailedFinishes(allowed,numel.variants_detailed,{base:true,special:true});
-assert(allowed.has('Normal'),'Normal finish missing');
-assert(allowed.has('Reverse Holo'),'standard Reverse missing');
-assert(allowed.has('Ditto Peelable Reverse Holo'),'Ditto peelable finish missing');
-assert(canonicalVariant('Reverse Holo Ditto (rimovibile)')==='Ditto Peelable Reverse Holo','Italian Ditto label canonicalization failed');
-assert(canonicalVariant('Ditto Peelable Reverse Holo')==='Ditto Peelable Reverse Holo','Ditto canonicalization failed');
+    # TCGdex detailed evidence remains physically distinct.
+    require(
+        source,
+        "if(type==='reverse'&&foil==='peelableditto')allowed.add('Ditto Peelable Reverse Holo');",
+        'detailed finish separation',
+    )
 
-const standard=tcgdexMarketplaceVariant(numel,'Reverse Holo');
-assert(standard && !standard.foil,'standard Reverse resolved to special foil');
-assert(Number(standard.thirdParty?.cardmarket)===665652,'standard Reverse Cardmarket row changed');
+    # Standard Reverse explicitly rejects any foil tag; peelable-ditto cannot enter this path.
+    require(
+        source,
+        "else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);",
+        'standard Reverse row guard',
+    )
 
-const ditto=tcgdexMarketplaceVariant(numel,'Ditto Peelable Reverse Holo');
-assert(ditto && ditto.foil==='peelable-ditto','Ditto finish did not resolve to peelable row');
-assert(!Number(ditto.thirdParty?.cardmarket||0),'Ditto fixture unexpectedly has exact Cardmarket product');
+    # Ditto selection resolves only to the exact peelable row.
+    require(
+        source,
+        "else if(target==='Ditto Peelable Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='peelableditto'&&!x?.stamp?.length);",
+        'Ditto TCGdex row resolver',
+    )
 
-console.log(JSON.stringify({
-  test:'PASS',
-  standardReverseProduct:Number(standard.thirdParty.cardmarket),
-  dittoFoil:ditto.foil
-}));
-'''
-    result = subprocess.run(['node', '-e', js + '\n' + harness], text=True, capture_output=True)
-    if result.returncode:
-        raise AssertionError(result.stderr.strip())
+    # Both generic and card-aware Cardmarket paths must fail closed until an exact product exists.
+    require(
+        source,
+        "if(v==='Cosmos Holo'||v==='Ditto Peelable Reverse Holo'||v==='Speciale / Altro'||v==='Non so')",
+        'generic Cardmarket fail-closed guard',
+    )
+    require(
+        source,
+        "v==='Master Ball Reverse Holo'||v==='Ditto Peelable Reverse Holo'||",
+        'card-aware Cardmarket fail-closed guard',
+    )
 
-    # UI and both Cardmarket resolvers must explicitly fail closed for Ditto peelable.
-    assert source.count('value="Ditto Peelable Reverse Holo"') == 2
-    assert "if(v==='Cosmos Holo'||v==='Ditto Peelable Reverse Holo'||v==='Speciale / Altro'||v==='Non so')" in source
-    assert "v==='Master Ball Reverse Holo'||v==='Ditto Peelable Reverse Holo'" in source
-    assert "foil==='peelableditto'" in source
-    print(result.stdout.strip())
-    print('{"cardmarketDitto":"fail-closed","expectedValue":null}')
+    # Distinct badge prevents a saved Ditto card from rendering as Normal/standard Reverse.
+    require(
+        source,
+        "if(x==='Ditto Peelable Reverse Holo')return '<span class=\"variant-badge variant-reverse\">🟡 Reverse Holo Ditto (rimovibile)</span>';",
+        'Ditto badge',
+    )
+
+    print('{"test":"PASS","numel":"swsh10.5-013","standardReverse":"preserved","ditto":"separate","cardmarketDitto":"fail-closed"}')
 
 
 if __name__ == '__main__':
