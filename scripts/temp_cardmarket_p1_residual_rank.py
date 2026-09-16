@@ -57,9 +57,26 @@ insert = r'''    def compact_name(value):
     for row in wrong_name[:40]:
         print("WRONG_NAME_CASE " + json.dumps(row, ensure_ascii=False, sort_keys=True))
 
+    giratina_catalog = []
+    for pid, product in products.items():
+        name = str((product or {}).get("name") or "")
+        if int((product or {}).get("idExpansion") or 0) == 5093 and name.startswith("Giratina VSTAR"):
+            pg = prices.get(pid) or {}
+            giratina_catalog.append({
+                "idProduct": pid,
+                "name": name,
+                "idExpansion": product.get("idExpansion"),
+                "idMetacard": product.get("idMetacard"),
+                "dateAdded": product.get("dateAdded"),
+                "trend": pg.get("trend"),
+                "trendHolo": pg.get("trend-holo"),
+                "low": pg.get("low"),
+            })
+    print("GIRATINA_VSTAR_LOST_ORIGIN " + json.dumps(sorted(giratina_catalog, key=lambda x: x["idProduct"]), ensure_ascii=False, sort_keys=True))
+
     over, under = [], []
 '''
 if needle not in text:
     raise SystemExit('ranking anchor missing')
 path.write_text(text.replace(needle, insert, 1), encoding='utf-8')
-print('wrong-card-name P1 diagnostic injection applied')
+print('wrong-card-name P1 + Giratina catalogue diagnostic injection applied')
