@@ -3877,6 +3877,7 @@ function canonicalStamp(v){
   if(n.includes('staff'))return 'Staff';
   if(n.includes('set stamp')||n.includes('set-promo'))return 'Set Stamp';
   if(n.includes('gamestop'))return 'GameStop';
+  if(n.includes('gymchallenge'))return 'Gym Challenge';
   return v||'Altro';
 }
 function stampBadgeHTML(v){
@@ -5258,9 +5259,37 @@ function tcgdexExactSwsh028GameStopPrice(card,variant,stamp){
   return {...cm,idProduct:742039,source:'TCGdex · Cardmarket · Duraludon SWSH028 GameStop',verified:String(cm?.updated||'')};
 }
 
+// Exact dynamic evidence for Beldum 29/101 Gym Challenge special print.
+// The label Gym Challenge may be recognized from TCGdex evidence globally,
+// but Cardmarket pricing is deliberately resolved only for this verified card.
+function tcgdexExactEx5BeldumGymChallengePrice(card,variant,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  if(id!=='ex5-29' || cardSetId(card)!=='ex5' ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey('029') ||
+     normText(card?.name||'')!==normText('Beldum') ||
+     canonicalVariant(variant||'Normal')!=='Normal' || canonicalStamp(stamp)!=='Gym Challenge')return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    if(Array.isArray(row?.languages)&&row.languages.length&&!row.languages.includes('it'))return false;
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.length===1 && stamps[0]==='gymchallenge' &&
+      canonicalFinishTypeLabel(row?.type)==='normal' && !canonicalFinishFoilLabel(row?.foil);
+  });
+  if(rows.length!==1)return null;
+  const row=rows[0];
+  const productId=Number(row?.thirdParty?.cardmarket||0);
+  const cm=row?.pricing?.cardmarket;
+  const pricingProductId=Number(cm?.idProduct||cm?.id_product||0);
+  if(productId!==280585 || pricingProductId!==280585 || !cm)return null;
+  const hasRealPrice=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k])>0);
+  if(!hasRealPrice)return null;
+  return {...cm,idProduct:280585,source:'TCGdex · Cardmarket · Beldum HL29 Gym Challenge',verified:String(cm?.updated||'')};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
+  const beldumGym=tcgdexExactEx5BeldumGymChallengePrice(card,variant,stamp);
+  if(beldumGym)return beldumGym;
   const swsh028GameStop=tcgdexExactSwsh028GameStopPrice(card,variant,stamp);
   if(swsh028GameStop)return swsh028GameStop;
   const tcgdexExact=tcgdexExactSvpStampPrice(card,variant,stamp);
@@ -5413,6 +5442,11 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // Supreme Victors — TCGdex currently points Metagross 7/147 at Milotic
   // product 278689. Cardmarket catalogue proves product 278698 is Metagross.
   'pl3-7':{setId:'pl3',localId:'007',conflictingProduct:278689,baseProduct:278698},
+  // EX Hidden Legends — Beldum 29/101. TCGdex exposes the Gym Challenge
+  // special-print product at top level; V1 product 276103 is the standard
+  // Normal/Reverse identity. Product 280585 remains valid only as the exact
+  // Gym Challenge stamped printing resolved separately below.
+  'ex5-29':{setId:'ex5',localId:'029',conflictingProduct:280585,baseProduct:276103},
   // EX Team Magma vs Team Aqua — exact western expansion 1542 identities.
   // Each entry blocks only the proven wrong product currently exposed upstream.
   'ex4-6':{setId:'ex4',localId:'006',conflictingProduct:275783,baseProduct:275983},
@@ -5859,6 +5893,14 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
       reason:product===274904
         ?'Il prodotto 274904 appartiene a Tyranitar Expedition 029/165 Holo e non può valutare 066/165 Rare'
         :'Il prodotto 274941 è consentito solo per Tyranitar ecard1-66 / 066'
+    };
+  }
+  const exactBeldumEx5_29=id==='ex5-29'&&setId==='ex5'&&local==='29'&&name==='beldum';
+  if(product===276103&&!exactBeldumEx5_29){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · EX Hidden Legends Beldum 29/101 V1 product 276103 verificato',
+      reason:'Il prodotto 276103 è consentito solo per Beldum ex5-29 / 029'
     };
   }
   const exactMetagrossPl3_7=id==='pl3-7'&&setId==='pl3'&&local==='7'&&name==='metagross';

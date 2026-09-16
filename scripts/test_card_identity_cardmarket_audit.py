@@ -97,6 +97,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
+    "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
     "ex4-89": {"setId": "ex4", "localId": "089", "conflictingProduct": 275866, "baseProduct": 276066},
@@ -756,6 +757,60 @@ process.stdout.write(JSON.stringify({checked,count:Object.keys(checked).length,s
     return result
 
 
+def runtime_ex5_beldum_gym_challenge_regression():
+    source = INDEX.read_text(encoding="utf-8")
+    def extract_fn(name):
+        marker = re.search(rf"\bfunction\s+{re.escape(name)}\s*\(", source)
+        if not marker: raise AssertionError(f"Missing production function {name}")
+        brace=source.find("{", marker.end()); depth=0; quote=None; esc=False
+        for i in range(brace,len(source)):
+            ch=source[i]
+            if quote:
+                if esc: esc=False
+                elif ch=="\\": esc=True
+                elif ch==quote: quote=None
+                continue
+            if ch in ("'", '"', "`"): quote=ch
+            elif ch=="{": depth+=1
+            elif ch=="}":
+                depth-=1
+                if depth==0:return source[marker.start():i+1]
+        raise AssertionError(f"Unclosed production function {name}")
+    card,error=live_card("ex5-29", Path(tempfile.gettempdir())/"cardoryx_ex5_beldum_gym_v1")
+    if error or not card: raise AssertionError(f"Beldum ex5-29 live fixture unavailable: {error}")
+    rows=card.get("variants_detailed") or []
+    base=[r for r in rows if not (r.get("stamp") or []) and cm_id(r)==276103 and int(((r.get("pricing") or {}).get("cardmarket") or {}).get("idProduct") or 0)==276103]
+    gym=[r for r in rows if [str(x).lower() for x in (r.get("stamp") or [])]==["gym-challenge"] and cm_id(r)==280585 and int(((r.get("pricing") or {}).get("cardmarket") or {}).get("idProduct") or 0)==280585]
+    if len(base)!=1 or len(gym)!=1: raise AssertionError(f"Unexpected Beldum product rows base={len(base)} gym={len(gym)}")
+    base_cm=(base[0].get("pricing") or {}).get("cardmarket") or {}
+    if not any(isinstance(base_cm.get(k),(int,float)) and base_cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low")):
+        raise AssertionError("Beldum base V1 has no real Cardmarket price")
+    names=("normText","canonicalStamp","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel",
+           "cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails",
+           "tcgdexExactEx5BeldumGymChallengePrice")
+    js="\n".join(extract_fn(n) for n in names)
+    harness=r'''
+const c=JSON.parse(process.argv[1]);
+function fail(m){throw new Error(m)}
+if(canonicalStamp('gym-challenge')!=='Gym Challenge')fail('taxonomy not canonicalized');
+const ok=tcgdexExactEx5BeldumGymChallengePrice(c,'Normal','Gym Challenge');
+if(!ok||Number(ok.idProduct)!==280585)fail('exact Gym Challenge product not resolved');
+for(const [v,s] of [['Reverse Holo','Gym Challenge'],['Normal','None'],['Normal','GameStop']]){
+  if(tcgdexExactEx5BeldumGymChallengePrice(c,v,s)!==null)fail('wrong finish/stamp accepted '+v+' '+s);
+}
+for(const mutated of [
+  {...c,id:'ex5-30',tcgdexId:'ex5-30'},
+  {...c,localId:'030'},
+  {...c,name:'Beldum wrong'},
+  {...c,set:{...(c.set||{}),id:'ex5-other'}},
+]) if(tcgdexExactEx5BeldumGymChallengePrice(mutated,'Normal','Gym Challenge')!==null)fail('wrong identity accepted');
+const wrongPid={...c,variants_detailed:(c.variants_detailed||[]).map(r=>(r.stamp||[]).includes('gym-challenge')?{...r,thirdParty:{...(r.thirdParty||{}),cardmarket:280586}}:r)};
+if(tcgdexExactEx5BeldumGymChallengePrice(wrongPid,'Normal','Gym Challenge')!==null)fail('wrong product accepted');
+process.stdout.write(JSON.stringify({baseProductId:276103,gymProductId:ok.idProduct,baseTrend:Number(process.argv[2]),gymTrend:Number(ok.trend||0),exact:true}));
+'''
+    return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(card),str(base_cm.get("trend") or 0)],text=True))
+
+
 def runtime_swsh028_gamestop_regression():
     source = INDEX.read_text(encoding="utf-8")
     def extract_fn(name):
@@ -807,6 +862,7 @@ def main():
     runtime_regression = runtime_cardmarket_regression()
     runtime_regression["svpSetLogoStaff"] = runtime_svp_set_logo_staff_regression()
     runtime_regression["mepSetLogoStaff"] = runtime_mep_set_logo_staff_regression()
+    runtime_regression["ex5BeldumGymChallenge"] = runtime_ex5_beldum_gym_challenge_regression()
     runtime_regression["swsh028GameStop"] = runtime_swsh028_gamestop_regression()
     if args.runtime_only:
         print(json.dumps(runtime_regression, ensure_ascii=False, indent=2))
@@ -868,7 +924,7 @@ def main():
             for row in (card.get("variants_detailed") or [])
         )
     }
-    live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028"} |
+    live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
@@ -1015,6 +1071,30 @@ def main():
                     "staff": svp_staff_rows[0][1],
                 }
 
+        live_ex5_beldum_gym_pair = False
+        live_ex5_beldum_products = None
+        if card_id == "ex5-29":
+            base_rows = []
+            gym_rows = []
+            for row in live_card_detail.get("variants_detailed") or []:
+                stamp_tokens = [str(v or "").strip().lower() for v in (row.get("stamp") or [])]
+                row_pid = cm_id(row)
+                pricing_cm = ((row.get("pricing") or {}).get("cardmarket") or {})
+                try:
+                    pricing_pid = int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+                except (TypeError, ValueError):
+                    pricing_pid = None
+                usable = any(isinstance(pricing_cm.get(k), (int, float)) and pricing_cm.get(k) > 0
+                             for k in ("trend", "avg7", "avg30", "avg", "low"))
+                if not stamp_tokens and row_pid == 276103 and pricing_pid == 276103 and usable:
+                    base_rows.append(row)
+                if (stamp_tokens == ["gym-challenge"] and str(row.get("type") or "").lower() == "normal" and
+                        not row.get("foil") and row_pid == 280585 and pricing_pid == 280585 and usable):
+                    gym_rows.append(row)
+            if len(base_rows) == 1 and len(gym_rows) == 1:
+                live_ex5_beldum_gym_pair = True
+                live_ex5_beldum_products = {"base": 276103, "gymChallenge": 280585}
+
         live_swsh028_gamestop = False
         live_swsh028_gamestop_pid = None
         if card_id == "swshp-SWSH028":
@@ -1079,6 +1159,12 @@ def main():
         elif card_id in PROTECTED_REVERSE:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "Conflitto Reverse Cardmarket noto e già protetto con identità/prodotto esatti.", "Mantenere il fail-closed esistente."
+        elif live_ex5_beldum_gym_pair:
+            classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+            reason = ("Beldum EX Hidden Legends 29/101 ha V1 base Cardmarket 276103 e una stampa Gym Challenge "
+                      "fisicamente distinta 280585, entrambe verificate sulla stessa identità live. Il runtime "
+                      "separa base Normal/Reverse dallo stamp Gym Challenge senza fallback.")
+            action = "Mantenere override base ex5-29 e resolver esatto Gym Challenge; nessuna regola generale per altri set."
         elif live_swsh028_gamestop:
             classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
             reason = ("TCGdex live espone la stampa GameStop esatta di Duraludon SWSH028 con productId "
@@ -1145,6 +1231,8 @@ def main():
             "liveExplicitVariantUsesSameProduct": bool(live_explicit_rows),
             "liveExactSvpSetLogoStaffPair": live_svp_set_logo_pair,
             "liveExactSvpStampProducts": live_svp_stamp_products,
+            "liveExactEx5BeldumGymChallenge": live_ex5_beldum_gym_pair,
+            "liveExactEx5BeldumProducts": live_ex5_beldum_products,
             "liveExactSwsh028GameStop": live_swsh028_gamestop,
             "liveExactSwsh028GameStopProductId": live_swsh028_gamestop_pid,
             "snapshotExactAlternateProductProtected": snapshot_exact_alternate_product,
