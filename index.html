@@ -4277,6 +4277,25 @@ function verifiedSpecialStampFinishes(card,stamp){
   return Array.isArray(rule.finishes)?rule.finishes.map(canonicalVariant):[];
 }
 
+// V2.1.43 — exact Play! Pokémon finish-only evidence.
+// No marketplace product or price is stored here: this only unlocks a physical
+// finish for one exact tcgdexId/set/localId/Series identity.
+const VERIFIED_PLAY_SERIES_FINISHES = {
+  'sv10-033|9':{
+    setId:'sv10',localId:'033',finishes:['Normal'],
+    source:'Play! Pokémon Prize Pack Series 9 checklist · DRI 033 · Standard Set / Non-Holo',
+    verified:'2026-09-16'
+  }
+};
+function verifiedPlaySeriesFinishes(card,series){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const ps=normalizedPlaySeries(series);
+  const rule=VERIFIED_PLAY_SERIES_FINISHES[`${id}|${ps}`];
+  if(!rule || cardSetId(card)!==rule.setId ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId))return [];
+  return Array.isArray(rule.finishes)?rule.finishes.map(canonicalVariant):[];
+}
+
 
 // V2.1.14 — Prize Pack Series 1–9 resolver + exact product refresh.
 // The official Cardmarket catalogue exposes one product for a single printing
@@ -4569,6 +4588,10 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   if(stamp==='Play! Pokémon'){
     const plan=prizePackFinishPlan(card,series);
     if(plan.authoritative && plan.finishes.length)allowed=new Set(plan.finishes.map(canonicalVariant));
+    // Exact finish evidence affects availability only. It is intentionally kept
+    // outside prizePackFinishPlan(), so it cannot create a product or price.
+    const exactPlayFinishes=verifiedPlaySeriesFinishes(card,series);
+    if(exactPlayFinishes.length)allowed=new Set(exactPlayFinishes);
   }
 
   if(!allowed.size)allowed.add('Non so');
