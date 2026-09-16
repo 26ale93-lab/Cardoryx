@@ -32,6 +32,8 @@ jobs:
           PY
       - name: Apply exact MEP resolver patch
         run: python -B scripts/temp_apply_mep_set_logo_staff_fix.py
+      - name: Restore temporary helper before audits
+        run: git checkout -- scripts/temp_apply_mep_set_logo_staff_fix.py
       - name: Runtime Cardmarket regressions including MEP
         run: python -B scripts/test_card_identity_cardmarket_audit.py --runtime-only
       - name: Clone pinned TCGdex source
@@ -59,11 +61,10 @@ jobs:
         run: python -B scripts/test_variant_finish_audit.py --numel-ditto-only
       - name: Existing Quilava Play regression
         run: python -B scripts/test_variant_finish_audit.py --quilava-play-only
-      - name: Restore generated reports and helper
+      - name: Restore generated reports
         run: |
           git checkout -- artifacts/card_identity_cardmarket_audit_report.json
           git checkout -- artifacts/variant_finish_audit_report.json
-          git checkout -- scripts/temp_apply_mep_set_logo_staff_fix.py
       - name: Diff safety
         run: |
           git diff --check
