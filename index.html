@@ -529,6 +529,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
 <option value="Normal">Normale</option>
 <option value="Holo">Holo</option>
 <option value="Reverse Holo">Reverse Holo</option>
+<option value="Ditto Peelable">Ditto rimovibile</option>
 <option value="Cosmos Holo">Cosmos Holo</option>
 <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
 <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
@@ -790,6 +791,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
               <option value="Normal">Normale</option>
               <option value="Holo">Holo</option>
               <option value="Reverse Holo">Reverse Holo</option>
+<option value="Ditto Peelable">Ditto rimovibile</option>
               <option value="Cosmos Holo">Cosmos Holo</option>
               <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
               <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
@@ -4046,6 +4048,7 @@ function meePrizePackCardmarketName(card){
 
 function canonicalVariant(v){
   const n=normText(v||'');
+  if(['peelableditto','dittopeelable','dittorimovibile'].includes(n))return 'Ditto Peelable';
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
   if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
   if(n==='cosmo'||n.includes('cosmos'))return 'Cosmos Holo';
@@ -4071,6 +4074,15 @@ function canonicalFinishFoilLabel(v){
   if(n==='masterball'||n==='master ball')return 'masterball';
   return n;
 }
+function canonicalFinishSubtypeLabel(v){
+  const n=normText(v||'');
+  if(n==='peelableditto'||n==='dittopeelable'||n==='dittorimovibile')return 'peelable-ditto';
+  return n;
+}
+function isPeelableDittoVariantRow(row){
+  return canonicalFinishTypeLabel(row?.type)==='reverse' &&
+         canonicalFinishSubtypeLabel(row?.subtype)==='peelable-ditto';
+}
 function isManualVariantChoice(v){
   const x=canonicalVariant(v);
   return x==='Non so'||x==='Speciale / Altro';
@@ -4083,6 +4095,7 @@ function variantBadgeHTML(v){
   const x=canonicalVariant(v);
   if(x==='Poké Ball Reverse Holo')return '<span class="variant-badge variant-pokeball">🔴 Poké Ball Reverse Holo</span>';
   if(x==='Master Ball Reverse Holo')return '<span class="variant-badge variant-masterball">🟣 Master Ball Reverse Holo</span>';
+  if(x==='Ditto Peelable')return '<span class="variant-badge variant-reverse">Ditto rimovibile</span>';
   if(x==='Reverse Holo')return '<span class="variant-badge variant-reverse">Reverse Holo</span>';
   if(x==='Cosmos Holo')return '<span class="variant-badge variant-holo">Cosmos Holo</span>';
   if(x==='Holo')return '<span class="variant-badge variant-holo">Holo</span>';
@@ -4136,9 +4149,11 @@ function tcgdexMarketplaceVariant(card,variant){
   else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='pokeball');
   else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='masterball');
   else if(target==='Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
-  else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Ditto Peelable') matches=pool.filter(x=>isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
   else if(target==='Normal') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='normal'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
   const withCM=matches.find(x=>Number(x?.thirdParty?.cardmarket)>0);
+  if(target==='Ditto Peelable')return withCM||null;
   return withCM||matches[0]||null;
 }
 function applyDetectedVariant(card){
@@ -4371,10 +4386,12 @@ function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
   for(const x of (Array.isArray(rows)?rows:[])){
     const type=canonicalFinishTypeLabel(x?.type);
     const foil=canonicalFinishFoilLabel(x?.foil);
+    const peelableDitto=isPeelableDittoVariantRow(x);
     if(base){
       if(type==='normal')allowed.add('Normal');
       if(type==='holo' && !foil)allowed.add('Holo');
-      if(type==='reverse' && !foil)allowed.add('Reverse Holo');
+      if(type==='reverse' && !foil && !peelableDitto)allowed.add('Reverse Holo');
+      if(peelableDitto && !foil)allowed.add('Ditto Peelable');
     }
     if(special){
       if(['normal','holo','reverse'].includes(type) && foil==='cosmos')allowed.add('Cosmos Holo');
@@ -5255,7 +5272,7 @@ function cardmarketValueForVariant(cm,variant){
     return {value:0,kind:'needs-exact-variant'};
   }
 
-  if(v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so'){
+  if(v==='Ditto Peelable'||v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so'){
     // Cosmos e altre finiture particolari non devono ereditare automaticamente
     // il prezzo Holo/Normal: senza una corrispondenza verificata il valore resta da verificare.
     return {value:0,kind:'needs-exact-variant'};
@@ -5415,7 +5432,7 @@ function cardmarketValueForCardVariant(card,variant){
 
   if(v==='Play! Pokémon Prize Pack'||v==='Play! Pokémon Stamp'||v==='Pokémon Day Stamp'||
      v==='Poké Ball Reverse Holo'||v==='Master Ball Reverse Holo'||
-     v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so'){
+     v==='Ditto Peelable'||v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so'){
     return {value:0,kind:'needs-exact-variant'};
   }
 

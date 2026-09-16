@@ -52,7 +52,7 @@ SAMPLE_PER_SET = 18
 
 FINISHES = (
     "Normal", "Holo", "Reverse Holo", "Cosmos Holo",
-    "Poké Ball Reverse Holo", "Master Ball Reverse Holo",
+    "Poké Ball Reverse Holo", "Master Ball Reverse Holo", "Ditto Peelable",
 )
 MANUAL_FINISHES = ("Speciale / Altro", "Non so")
 CLASSIFICATIONS = ("CORRETTA", "FALSO POSITIVO", "FALSO NEGATIVO", "AMBIGUA", "SOURCE CONFLICT")
@@ -115,7 +115,7 @@ REAL_WORLD_REGRESSION = {
     "swsh11-160": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     # Pokémon GO
     "swsh10.5-009": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
-    "swsh10.5-013": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED", "note": "Peelable Ditto remains a separate physical identity."},
+    "swsh10.5-013": {"expected": ["Normal", "Reverse Holo", "Ditto Peelable"], "cause": "ALREADY_FIXED", "note": "Reverse standard and exact peelable-Ditto subtype remain separate physical variants."},
     "swsh10.5-019": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "swsh10.5-066": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "swsh10.5-068": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
@@ -157,6 +157,8 @@ def norm(value):
 
 def canonical_finish(value):
     n = norm(value)
+    if n in {"peelableditto", "dittopeelable", "dittorimovibile"}:
+        return "Ditto Peelable"
     if "masterball" in n:
         return "Master Ball Reverse Holo"
     if "pokeball" in n:
@@ -196,6 +198,18 @@ def canonical_finish_foil_label(value):
         return "masterball"
     return n
 
+def canonical_finish_subtype_label(value):
+    n = norm(value)
+    if n in {"peelableditto", "dittopeelable", "dittorimovibile"}:
+        return "peelable-ditto"
+    return n
+
+
+def is_peelable_ditto_row(row):
+    return (canonical_finish_type_label(row.get("type")) == "reverse" and
+            canonical_finish_subtype_label(row.get("subtype")) == "peelable-ditto")
+
+
 
 def canonical_row_finish(row, translate_localized=True):
     typ = norm(row.get("type"))
@@ -205,6 +219,8 @@ def canonical_row_finish(row, translate_localized=True):
             typ = "normal"
         if typ in {"olografica", "olografico"}:
             typ = "holo"
+    if is_peelable_ditto_row(row) and not foil:
+        return "Ditto Peelable"
     if foil in {"cosmos", "cosmo"}:
         return "Cosmos Holo"
     if typ == "reverse" and foil == "pokeball":
@@ -289,6 +305,134 @@ def extract_js_object(source, name):
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
 
+def extract_js_function(source, name):
+    marker = re.search(rf"\bfunction\s+{re.escape(name)}\s*\(", source)
+    if not marker:
+        raise AssertionError(f"Missing production function {name}")
+    start = marker.start()
+    header = re.search(r"\)\s*\{", source[marker.start():])
+    if not header:
+        raise AssertionError(f"Missing body for production function {name}")
+    brace = marker.start() + header.end() - 1
+    depth = 0
+    quote = None
+    escape = False
+    line_comment = False
+    block_comment = False
+    i = brace
+    while i < len(source):
+        c = source[i]
+        n = source[i + 1] if i + 1 < len(source) else ""
+        if line_comment:
+            if c == "\n":
+                line_comment = False
+            i += 1
+            continue
+        if block_comment:
+            if c == "*" and n == "/":
+                block_comment = False
+                i += 2
+                continue
+            i += 1
+            continue
+        if quote:
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == quote:
+                quote = None
+            i += 1
+            continue
+        if c == "/" and n == "/":
+            line_comment = True
+            i += 2
+            continue
+        if c == "/" and n == "*":
+            block_comment = True
+            i += 2
+            continue
+        if c in {'"', "'", "`"}:
+            quote = c
+            i += 1
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:i + 1]
+        i += 1
+    raise AssertionError(f"Unclosed production function {name}")
+
+
+def run_ditto_production_runtime(source):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant", "canonicalFinishTypeLabel",
+        "canonicalFinishFoilLabel", "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow",
+        "tcgdexVariantDetails", "tcgdexMarketplaceVariant", "addDetailedFinishes",
+        "documentedVariantsForCard", "migrateFinishStamp", "cardmarketValueForVariant",
+        "cardmarketValueForCardVariant",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    if source.count('<option value="Ditto Peelable">Ditto rimovibile</option>') != 2:
+        raise AssertionError("Ditto must be present exactly in Confirm and Edit variant selectors")
+    fixture = {
+        "variants_detailed": [
+            {"type": "Normale", "thirdParty": {"cardmarket": 665657}},
+            {"type": "Reverse", "thirdParty": {"cardmarket": 665657}},
+            {"type": "Reverse", "subtype": "Ditto rimovibile", "thirdParty": {"tcgplayer": 277791}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 665657, "trend": 0.15, "trend-holo": 0.55}},
+    }
+    js = functions + "\n" + r'''
+function normalizedPlaySeries(v){const s=String(v??'').trim();return /^[1-9]$/.test(s)?s:'';}
+function isMee30CelebrationEnergy(){return false;}
+function isMeePrizePackEnergy(){return false;}
+function isModernParallelEra(){return false;}
+function verifiedSpecialStampFinishes(){return [];}
+function verifiedNormalFinish(){return false;}
+function verifiedReverseFinish(){return false;}
+function verifiedVariantPrice(){return null;}
+function verifiedStampPrice(){return null;}
+function verifiedPlaySeriesPrice(){return null;}
+function prizePackFinishPlan(){return {authoritative:false,finishes:[]};}
+function verifiedBaseCardmarketProductOverride(){return null;}
+function knownCardmarketIdentityConflict(){return null;}
+function knownReverseCardmarketProductConflict(){return null;}
+function fail(msg){throw new Error(msg);}
+const numel=__FIXTURE__;
+const documented=[...documentedVariantsForCard(numel,'None','')];
+for(const x of ['Normal','Reverse Holo','Ditto Peelable'])if(!documented.includes(x))fail('Numel missing '+x);
+if(documented.includes('Holo'))fail('Numel gained generic Holo');
+const standard=tcgdexMarketplaceVariant(numel,'Reverse Holo');
+if(Number(standard?.thirdParty?.cardmarket||0)!==665657)fail('Reverse standard lost exact marketplace row');
+if(tcgdexMarketplaceVariant(numel,'Ditto Peelable')!==null)fail('Peelable Ditto inherited a non-exact Cardmarket row');
+const exactPrice=cardmarketValueForCardVariant(numel,'Ditto Peelable');
+if(exactPrice.value!==0||exactPrice.kind!=='needs-exact-variant')fail('Peelable Ditto did not fail closed');
+const rawPrice=cardmarketValueForVariant(numel.pricing.cardmarket,'Ditto Peelable');
+if(rawPrice.value!==0||rawPrice.kind!=='needs-exact-variant')fail('Low-level Cardmarket fallback leaked into Ditto');
+const reopened=migrateFinishStamp({variant:'Ditto Peelable',stamp:'None'});
+if(reopened.variant!=='Ditto Peelable')fail('Saved Ditto variant was not preserved on reopen');
+if(canonicalVariant('Ditto rimovibile')!=='Ditto Peelable'||canonicalVariant('peelable-ditto')!=='Ditto Peelable')fail('Ditto aliases are not canonical');
+for(const id of ['swsh10.5-009','swsh10.5-019','swsh10.5-066','swsh10.5-068']){
+  const s=new Set();
+  addDetailedFinishes(s,[{type:'Normale'},{type:'Reverse'}],{base:true,special:true});
+  if(s.has('Ditto Peelable')||!s.has('Normal')||!s.has('Reverse Holo'))fail('Pokémon GO regression '+id);
+}
+const specials=new Set();
+addDetailedFinishes(specials,[
+  {type:'Olografica',foil:'Cosmo'},
+  {type:'Reverse',foil:'Poké Ball'},
+  {type:'Reverse',foil:'Master Ball'}
+],{base:true,special:true});
+for(const x of ['Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo'])if(!specials.has(x))fail('Special finish regression '+x);
+if(canonicalStamp('Play! Pokémon')!=='Play! Pokémon'||canonicalStamp('Pokémon Day')!=='Pokémon Day')fail('Special stamp canonicalization changed');
+process.stdout.write(JSON.stringify({documented,standardReverseProduct:665657,dittoMarketplace:null,dittoPrice:exactPrice.kind,persistedVariant:reopened.variant,specials:[...specials]}));
+'''.replace('__FIXTURE__', json.dumps(fixture, ensure_ascii=False))
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
 def stratified(items, count):
     if len(items) <= count:
         return items
@@ -340,7 +484,9 @@ def simulate_italian_rest_payload(card):
         row = dict(original)
         row["type"] = {"normal": "Normale", "holo": "Olografica", "reverse": "Reverse"}.get(row.get("type"), row.get("type"))
         row["foil"] = {"cosmos": "Cosmo", "pokeball": "Poké Ball", "masterball": "Master Ball"}.get(row.get("foil"), row.get("foil"))
+        row["subtype"] = {"peelable-ditto": "Ditto rimovibile"}.get(row.get("subtype"), row.get("subtype"))
         if row.get("foil") is None: row.pop("foil", None)
+        if row.get("subtype") is None: row.pop("subtype", None)
         translated.append(row)
     out["variants_detailed"] = translated
     # REST also exposes coarse booleans even though the TS source uses detailed rows.
@@ -359,10 +505,12 @@ def cardoryx_add_detailed(allowed, rows, base=True, special=True):
     for row in rows:
         typ = canonical_finish_type_label(row.get("type"))
         foil = canonical_finish_foil_label(row.get("foil"))
+        peelable_ditto = is_peelable_ditto_row(row)
         if base:
             if typ == "normal": allowed.add("Normal")
             if typ == "holo" and not foil: allowed.add("Holo")
-            if typ == "reverse" and not foil: allowed.add("Reverse Holo")
+            if typ == "reverse" and not foil and not peelable_ditto: allowed.add("Reverse Holo")
+            if peelable_ditto and not foil: allowed.add("Ditto Peelable")
         if special:
             if typ in {"normal", "holo", "reverse"} and foil == "cosmos": allowed.add("Cosmos Holo")
             if typ == "reverse" and foil == "pokeball": allowed.add("Poké Ball Reverse Holo")
@@ -476,7 +624,7 @@ def cm_value(card, finish, allowed, registries):
         return {"value": None, "kind": "none", "exact": False}
     base = next((float(cm[k]) for k in ("trend", "avg7", "avg30", "avg", "low") if float(cm.get(k) or 0) > 0), 0)
     rev = next((float(cm[k]) for k in ("trend-holo", "avg7-holo", "avg30-holo", "avg-holo", "low-holo") if float(cm.get(k) or 0) > 0), 0)
-    if finish in {"Cosmos Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"}:
+    if finish in {"Ditto Peelable", "Cosmos Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"}:
         return {"value": None, "kind": "needs-exact-variant", "exact": False}
     if finish == "Reverse Holo":
         return {"value": rev or None, "kind": "reverse-cardmarket" if rev else "needs-exact-variant", "exact": bool(rev and finish in allowed)}
@@ -681,6 +829,8 @@ def main():
     ap.add_argument("--workers", type=int, default=28)
     ap.add_argument("--tcgdex-db", help="Path to a read-only checkout of tcgdex/cards-database")
     ap.add_argument("--baseline-report", help="Previous report used for deterministic before/after metrics")
+    ap.add_argument("--numel-ditto-only", action="store_true",
+                    help="Run the production-JS Numel Ditto P0 checks plus the binding 39-card regression set only")
     args = ap.parse_args()
     source = INDEX.read_text()
     required = [
@@ -692,10 +842,13 @@ def main():
         "VERIFIED_REVERSE_CARDMARKET_CONFLICTS", "knownReverseCardmarketProductConflict",
         "VERIFIED_NORMAL_FINISHES", "verifiedNormalFinish",
         "VERIFIED_REVERSE_FINISHES", "verifiedReverseFinish",
+        "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow", "tcgdexMarketplaceVariant",
+        "migrateFinishStamp",
     ]
     missing_logic = [x for x in required if x not in source]
     if missing_logic:
         raise SystemExit(f"Required production logic missing: {missing_logic}")
+    ditto_runtime = run_ditto_production_runtime(source)
     registries = {
         "normal": extract_js_object(source, "VERIFIED_NORMAL_FINISHES"),
         "reverse": extract_js_object(source, "VERIFIED_REVERSE_FINISHES"),
@@ -739,6 +892,29 @@ def main():
             "wrongSetRejected": True, "wrongLocalIdRejected": True,
         })
     play_index = json.loads(PLAY_INDEX.read_text())
+
+    if args.numel_ditto_only:
+        real_world_regression = real_world_regression_audit(registries, play_index, set(), args.workers)
+        report = {
+            "audit": "Numel Ditto peelable focused production regression",
+            "baseProductionRuntime": ditto_runtime,
+            "realWorldRegression": real_world_regression,
+            "safety": {
+                "readOnlyAudit": True, "retailModified": False, "cardmarketDataModified": False,
+                "scannerModified": False, "storageSchemaModified": False, "deckModified": False,
+            },
+        }
+        output = ROOT / args.output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+        print(json.dumps({
+            "output": str(output), "dittoRuntime": ditto_runtime,
+            "realWorldRegression": {k: real_world_regression[k] for k in (
+                "bindingDatasetSize", "recordsRecovered", "classificationBreakdown",
+                "finishMatrixMatchesExpectation", "finishMatrixAnomalies", "fullyResolvedCases",
+                "pipelineDataLossCases")},
+        }, ensure_ascii=False, indent=2))
+        return
 
     set_specs = dict(SAMPLED_SETS); set_specs.update(FULL_SETS)
     upstream_sha = None
@@ -1172,6 +1348,7 @@ def main():
             "assessment": "Five exact identities gain only Reverse Holo through tcgdexId + setId + normalized localId matching on stamp=None.",
         },
         "realWorldRegression": real_world_regression,
+        "dittoPeelableRuntimeAudit": ditto_runtime,
         "cardmarketPricingAudit": {
             "proposedFinishRoutes": dict(pricing_counts), "wrongPhysicalProductRisks": pricing_risks,
             "resolvedExactReverseProductConflicts": resolved_pricing_conflicts,
@@ -1217,7 +1394,7 @@ def main():
             "retailModified": False, "retailPricesModified": False, "workflowAdded": False,
             "fuzzyMatchingIntroduced": False, "productionCorrectionsApplied": True,
             "finishProductionCorrectionsAppliedInThisPhase": True,
-            "productionChangeScope": "One exact Piplup Cardmarket identity guard plus five exact unstamped Reverse finish identities",
+            "productionChangeScope": "Preserve exact peelable-Ditto subtype as a separate physical variant and fail closed on Cardmarket until an exact product is verified",
         },
         "finalAssessment": "FIX AD ALTA CONFIDENZA — AUDIT RIESEGUITO",
     }
