@@ -20,6 +20,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Repair temporary helper quoting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/temp_apply_mep_set_logo_staff_fix.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("fn=r'''\ndef runtime_mep_set_logo_staff_regression():", 'fn=r"""\ndef runtime_mep_set_logo_staff_regression():', 1)
+          s=s.replace("\n'''\ns=s.replace(insert_before,fn+insert_before,1)\nold='''    runtime_regression", "\n\"\"\"\ns=s.replace(insert_before,fn+insert_before,1)\nold='''    runtime_regression", 1)
+          p.write_text(s,encoding='utf-8')
+          PY
       - name: Apply exact MEP resolver patch
         run: python -B scripts/temp_apply_mep_set_logo_staff_fix.py
       - name: Runtime Cardmarket regressions including MEP
