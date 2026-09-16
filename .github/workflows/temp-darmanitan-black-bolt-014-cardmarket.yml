@@ -26,8 +26,10 @@ jobs:
       - name: Apply exact Darmanitan patch
         run: python -B scripts/temp_darmanitan_black_bolt_014_fix.py
 
-      - name: Compile audit
-        run: python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+      - name: Compile audit without leaving cache
+        run: |
+          python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+          rm -rf scripts/__pycache__
 
       - name: Clone current TCGdex source
         run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
