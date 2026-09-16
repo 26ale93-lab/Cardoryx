@@ -16,10 +16,13 @@ def walk(x):
 
 p={int(d['idProduct']):d for d in walk(products) if isinstance(d.get('idProduct'),int) and d.get('idExpansion')==3738}
 g={int(d['idProduct']):d for d in walk(prices) if isinstance(d.get('idProduct'),int)}
+fields=('trend','avg7','avg30','avg','low','trend-holo','avg7-holo','avg30-holo','avg-holo','low-holo')
 rows=[]
 for pid,d in sorted(p.items()):
     if 538700 <= pid <= 539100:
         q=g.get(pid,{})
-        rows.append({'idProduct':pid,'idMetacard':d.get('idMetacard'),'name':d.get('name'),'trend':q.get('trend'),'low':q.get('low')})
+        row={'idProduct':pid,'idMetacard':d.get('idMetacard'),'name':d.get('name')}
+        for k in fields: row[k]=q.get(k)
+        rows.append(row)
 print('MCD2021_OFFICIAL_COUNT',len(rows))
-for r in rows: print('MCD2021_OFFICIAL '+json.dumps(r,ensure_ascii=False,sort_keys=True))
+for r in rows: print('MCD2021_OFFICIAL_FULL '+json.dumps(r,ensure_ascii=False,sort_keys=True))
