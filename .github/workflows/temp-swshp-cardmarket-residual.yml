@@ -1,0 +1,29 @@
+name: Temporary SWSH Promo Cardmarket Residual
+
+on:
+  push:
+    branches:
+      - diagnostic/swshp-cardmarket-residual-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run SWSH promo residual audit
+        run: python -B scripts/temp_swshp_cardmarket_residual.py
+      - name: Commit report only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artifacts/swshp_cardmarket_residual_report.json
+          git commit -m "Report SWSH promo Cardmarket residuals"
+          git push
