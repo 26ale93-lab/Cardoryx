@@ -48,6 +48,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv10.5b-027": {"base": 835953, "alternate": 835994, "stamp": "wrong-card-identity", "cardmarketCode": "BLK027"},
     "sv10.5b-014": {"base": 835929, "alternate": 835069, "stamp": "unverified-top-level-product", "cardmarketCode": "BLK014"},
     "sv10.5b-065": {"base": 836043, "alternate": 836009, "stamp": "wrong-card-identity", "cardmarketCode": "BLK065"},
+    "swsh11-201": {"base": 674207, "alternate": 670816, "stamp": "wrong-card-identity", "cardmarketCode": "LOR201"},
     "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
     "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
@@ -132,6 +133,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sv10.5b-027": {"setId": "sv10.5b", "localId": "027", "conflictingProduct": 835994, "baseProduct": 835953},
     "sv10.5b-014": {"setId": "sv10.5b", "localId": "014", "conflictingProduct": 835069, "baseProduct": 835929},
     "sv10.5b-065": {"setId": "sv10.5b", "localId": "065", "conflictingProduct": 836009, "baseProduct": 836043},
+    "swsh11-201": {"setId": "swsh11", "localId": "201", "conflictingProduct": 670816, "baseProduct": 674207},
     "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
@@ -439,6 +441,16 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 836009, "trend": 0.03, "trend-holo": 0.19}},
     }
+    fixtures["giratina201"] = {
+        "id": "swsh11-201", "tcgdexId": "swsh11-201", "name": "Giratina VSTAR", "localId": "201",
+        "set": {"id": "swsh11", "name": "Lost Origin"}, "rarity": "Secret Rare", "regulationMark": "F",
+        "variants": {"normal": False, "holo": True, "reverse": False},
+        "variants_detailed": [
+            {"type": "holo", "foil": "rainbow", "thirdParty": {"cardmarket": 670816},
+             "pricing": {"cardmarket": {"idProduct": 670816, "trend": 1.46}}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 670816, "trend": 1.46}},
+    }
     fixtures["metagross"] = {
         "id": "pl3-7", "tcgdexId": "pl3-7", "name": "Metagross", "localId": "7",
         "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Rare Holo",
@@ -595,6 +607,26 @@ assert.strictEqual(bishMaster.value,0);
 assert.strictEqual(bishMaster.kind,'needs-exact-variant');
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(bish,'Normal'))),{low:0.02,trend:0.03,avg7:0.03,avg30:0.03});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(bish,'Reverse Holo'))),{low:0.02,trend:0.12,avg7:0.15,avg30:0.16});
+const gir=fixtures.giratina201;
+const girOverride=r.verifiedBaseCardmarketProductOverride(gir);
+assert.strictEqual(girOverride?.pricing?.idProduct,674207);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(gir)?.idProduct,674207);
+assert.strictEqual(r.knownCardmarketIdentityConflict(gir,670816)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...gir,id:'swsh11-202',tcgdexId:'swsh11-202',localId:'202'},674207)?.kind,'identity-mismatch');
+const correctGiratinaV={...gir,id:'swsh11-130',tcgdexId:'swsh11-130',name:'Giratina V',localId:'130',variants_detailed:[{type:'holo',thirdParty:{cardmarket:670816}}],pricing:{cardmarket:{idProduct:670816,trend:1.46}}};
+assert.strictEqual(r.knownCardmarketIdentityConflict(correctGiratinaV,670816),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...gir,localId:'202'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...gir,name:'Giratina V'}),null);
+const girHolo=r.cardmarketValueForCardVariant(gir,'Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:girHolo.value,productId:girHolo.productId,kind:girHolo.kind})),{value:20.65,productId:674207,kind:'exact-giratina-vstar-201'});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(gir,'Holo'))),{low:9.9,trend:20.65,avg7:20.82,avg30:19.59});
+const girWrongFinish=r.cardmarketValueForCardVariant(gir,'Normal');
+assert.strictEqual(girWrongFinish.value,0);
+assert.strictEqual(girWrongFinish.kind,'needs-exact-variant');
+const girUpstreamChanged={...gir,variants_detailed:[{type:'holo',foil:'rainbow',thirdParty:{cardmarket:674207}}]};
+const changedResult=r.cardmarketValueForCardVariant(girUpstreamChanged,'Holo');
+assert.strictEqual(changedResult.value,0);
+assert.strictEqual(changedResult.kind,'needs-exact-variant');
 const met=fixtures.metagross;
 const metOverride=r.verifiedBaseCardmarketProductOverride(met);
 assert.strictEqual(metOverride?.pricing?.idProduct,278698);
