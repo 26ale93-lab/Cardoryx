@@ -5460,6 +5460,10 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // Cardmarket Throh [Shoulder Throw]; exact Normal/Reverse rows are Bisharp 836043.
   // Poké Ball/Master Ball remain separate exact products.
   'sv10.5b-065':{setId:'sv10.5b',localId:'065',conflictingProduct:836009,baseProduct:836043},
+  // Lost Origin / Origine Perduta — Giratina VSTAR 201/196 Rainbow.
+  // TCGdex currently points this exact card at Cardmarket 670816, which is Giratina V.
+  // Cardmarket product 674207 is Giratina VSTAR LOR201.
+  'swsh11-201':{setId:'swsh11',localId:'201',conflictingProduct:670816,baseProduct:674207},
   // EX Hidden Legends — Beldum 29/101. TCGdex exposes the Gym Challenge
   // special-print product at top level; V1 product 276103 is the standard
   // Normal/Reverse identity. Product 280585 remains valid only as the exact
@@ -5885,6 +5889,13 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     source:"Cardmarket Product Catalogue + Price Guide \u00b7 EX Team Magma vs Team Aqua \u00b7 exact checklist-verified product 276065",
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
     pricing:{"idProduct":276065,"trend":3.13,"avg7":3.03,"avg30":2.51,"avg":2.08,"low":0.49,"trend-holo":4.55,"avg7-holo":4.41,"avg30-holo":5.14,"avg-holo":5.9,"low-holo":1}
+  },
+  'swsh11-201':{
+    setId:'swsh11',localId:'201',name:'Giratina VSTAR',productId:674207,
+    verified:'2026-09-17T00:34:29+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Lost Origin · Giratina VSTAR 201 · product 674207',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:674207,trend:20.65,avg7:20.82,avg30:19.59,avg:19.03,low:9.90}
   }
 };
 function exactCardmarketGuideIdentity(card,id,guide){
@@ -6006,6 +6017,17 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
       reason:product===836009
         ?'Il prodotto 836009 appartiene a Throh [Shoulder Throw] e non può valutare Bisharp 065'
         :'Il prodotto 836043 è consentito solo per Bisharp sv10.5b-065 / 065'
+    };
+  }
+  const exactGiratinaVstar201=id==='swsh11-201'&&setId==='swsh11'&&local==='201'&&name==='giratinavstar';
+  const targetsGiratinaVstar201=id==='swsh11-201'||(setId==='swsh11'&&local==='201'&&name==='giratinavstar');
+  if((product===670816&&targetsGiratinaVstar201)||(product===674207&&!exactGiratinaVstar201)){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · Lost Origin Giratina VSTAR 201 product 674207 verificato',
+      reason:product===670816
+        ?'Il prodotto 670816 appartiene a Giratina V [Abyss Seeking | Shred] e non può valutare Giratina VSTAR 201'
+        :'Il prodotto 674207 è consentito solo per Giratina VSTAR swsh11-201 / 201'
     };
   }
   const ex4ExactConflicts=[
@@ -6167,7 +6189,31 @@ function verifiedMcdonalds2021CardmarketVariant(card,variant){
   return {handled:true,matched:true,variant:v,pricing,productId:pricing.idProduct,
     source:"Cardmarket · McDonald's Collection 2021 · prodotto esatto per finitura"};
 }
+function verifiedGiratinaVstar201CardmarketVariant(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+  const local=exactLocalIdKey(card?.localId||'');
+  const name=normText(card?.name||'');
+  if(id!=='swsh11-201'||setId!=='swsh11'||local!=='201'||name!=='giratinavstar')return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>
+    canonicalFinishTypeLabel(row?.type)==='holo'&&canonicalFinishFoilLabel(row?.foil)==='rainbow'&&!row?.stamp?.length
+  );
+  if(rows.length!==1||Number(rows[0]?.thirdParty?.cardmarket||0)!==670816){
+    return {handled:true,matched:false,kind:'needs-exact-variant'};
+  }
+  if(canonicalVariant(variant||'')!=='Holo')return {handled:true,matched:false,kind:'needs-exact-variant'};
+  const guide=VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES['swsh11-201'];
+  if(!guide||Number(guide.productId)!==674207)return {handled:true,matched:false,kind:'needs-exact-variant'};
+  return {handled:true,matched:true,pricing:guide.pricing,productId:674207,
+    source:'Cardmarket · Lost Origin · Giratina VSTAR 201 Rainbow · prodotto esatto'};
+}
 function cardmarketValueForCardVariant(card,variant){
+  const giratina=verifiedGiratinaVstar201CardmarketVariant(card,variant);
+  if(giratina?.handled){
+    if(!giratina.matched)return {value:0,kind:giratina.kind||'needs-exact-variant'};
+    const value=Number(giratina.pricing?.trend||0);
+    return {value:Number.isFinite(value)&&value>0?value:0,kind:'exact-giratina-vstar-201',productId:giratina.productId,source:giratina.source};
+  }
   const mcd=verifiedMcdonalds2021CardmarketVariant(card,variant);
   if(mcd?.handled){
     if(!mcd.matched)return {value:0,kind:mcd.kind||'needs-exact-variant'};
@@ -6241,6 +6287,12 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
+  const giratina=verifiedGiratinaVstar201CardmarketVariant(card,variant);
+  if(giratina?.handled){
+    if(!giratina.matched)return {low:null,trend:null,avg7:null,avg30:null};
+    const p=giratina.pricing||{};
+    return {low:p.low??null,trend:p.trend??null,avg7:p.avg7??null,avg30:p.avg30??null};
+  }
   const mcd=verifiedMcdonalds2021CardmarketVariant(card,variant);
   if(mcd?.handled){
     if(!mcd.matched)return {low:null,trend:null,avg7:null,avg30:null};
