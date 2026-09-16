@@ -26,6 +26,8 @@ jobs:
         run: python -B scripts/temp_cardmarket_p1_cluster_audit.py
       - name: Audit set-logo taxonomy globally
         run: python -B scripts/temp_set_logo_taxonomy_audit.py "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Test strict Set Stamp versus Staff rule
+        run: python -B scripts/temp_set_logo_runtime_rule_audit.py "$RUNNER_TEMP/tcgdex-cards-database"
       - uses: actions/upload-artifact@v4
         with:
           name: cardmarket-p1-residual-post-live-evidence
@@ -33,4 +35,5 @@ jobs:
             artifacts/card_identity_cardmarket_audit_report.json
             artifacts/cardmarket_p1_cluster_audit_report.json
             artifacts/set_logo_taxonomy_audit_report.json
+            artifacts/set_logo_runtime_rule_audit_report.json
           if-no-files-found: error
