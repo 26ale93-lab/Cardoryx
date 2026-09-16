@@ -1,0 +1,57 @@
+name: Temporary Metagross pl3-7 Cardmarket Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/metagross-pl3-7-cardmarket-p0
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Inspect official Cardmarket Supreme Victors products
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+
+          base='https://downloads.s3.cardmarket.com/productCatalog'
+          def get(url):
+              req=urllib.request.Request(url,headers={'User-Agent':'Cardoryx-Metagross-Audit/1.0'})
+              with urllib.request.urlopen(req,timeout=300) as r:
+                  return json.load(r)
+
+          products=get(f'{base}/productList/products_singles_6.json')
+          prices=get(f'{base}/priceGuide/price_guide_6.json')
+          prows=products.get('products',[])
+          grows=prices.get('priceGuides',prices.get('priceGuide',[]))
+          targets=[p for p in prows if int(p.get('idExpansion') or 0)==1564 and ('Metagross' in str(p.get('name') or '') or int(p.get('idProduct') or 0) in {278689,278698})]
+          ids={int(p['idProduct']) for p in targets}
+          price={int(p['idProduct']):p for p in grows if int(p.get('idProduct') or 0) in ids}
+          out={'products':targets,'prices':{str(i):price.get(i) for i in sorted(ids)}}
+          Path('artifacts').mkdir(exist_ok=True)
+          Path('artifacts/metagross_pl3_7_cardmarket_audit.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Verify production untouched
+        run: |
+          git diff --check
+          git diff --exit-code HEAD -- index.html scripts/test_card_identity_cardmarket_audit.py data/retail_prices.json data/cardmarket_play_index.json sw.js manifest.webmanifest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: metagross-pl3-7-cardmarket-audit
+          path: artifacts/metagross_pl3_7_cardmarket_audit.json
+          if-no-files-found: error
