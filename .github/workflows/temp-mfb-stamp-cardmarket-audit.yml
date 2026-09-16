@@ -1,0 +1,29 @@
+name: Temporary MFB Stamp Cardmarket Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/mfb-stamp-cardmarket-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run MFB live stamp audit
+        run: python -B scripts/temp_mfb_stamp_cardmarket_audit.py
+      - name: Commit diagnostic report only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artifacts/mfb_stamp_cardmarket_audit_report.json
+          git commit -m "Report MFB stamped Cardmarket rows"
+          git push
