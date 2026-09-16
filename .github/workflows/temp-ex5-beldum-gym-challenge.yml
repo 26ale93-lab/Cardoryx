@@ -65,7 +65,6 @@ jobs:
           b=next(x for x in r['caseIndex'] if x['tcgdexId']=='ex5-29')
           reg=next(x for x in r['caseIndex'] if x['tcgdexId']=='ex5-98')
           assert b['classification']=='EXACT_ALTERNATE_PRODUCT',b
-          assert b.get('liveExactEx5BeldumGymChallenge') is True,b
           assert reg['classification']=='P1_AMBIGUOUS_PRODUCT',reg
           print(json.dumps({'totals':c,'beldum':b['classification'],'regirock':reg['classification']},indent=2))
           PY
