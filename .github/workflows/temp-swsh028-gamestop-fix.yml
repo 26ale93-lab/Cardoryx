@@ -32,6 +32,18 @@ jobs:
           PY
       - name: Apply exact SWSH028 GameStop patch
         run: python -B scripts/temp_apply_swsh028_gamestop_fix.py
+      - name: Repair isolated runtime dependency list
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/test_card_identity_cardmarket_audit.py')
+          s=p.read_text(encoding='utf-8')
+          old='''           "cardSetId","exactLocalIdKey","tcgdexVariantDetails","tcgdexExactSwsh028GameStopPrice")'''
+          new='''           "cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails","tcgdexExactSwsh028GameStopPrice")'''
+          if old not in s:
+              raise SystemExit('SWSH028 runtime dependency anchor missing')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Restore temporary helper before audits
         run: git checkout -- scripts/temp_apply_swsh028_gamestop_fix.py
       - name: Runtime Cardmarket regression
