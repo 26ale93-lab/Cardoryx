@@ -37,10 +37,13 @@ jobs:
           PY
       - name: Audit Scarlet and Violet promo residuals
         run: python -B scripts/temp_cardmarket_svp_residual_audit.py
+      - name: Audit exact stamped groups across all residual P1
+        run: python -B scripts/temp_cardmarket_residual_stamp_audit.py
       - uses: actions/upload-artifact@v4
         with:
           name: cardmarket-p1-residual-audit
           path: |
             artifacts/card_identity_cardmarket_audit_report.json
             artifacts/cardmarket_svp_residual_audit_report.json
+            artifacts/cardmarket_residual_stamp_audit_report.json
           if-no-files-found: error
