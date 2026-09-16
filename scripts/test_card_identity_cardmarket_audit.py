@@ -756,11 +756,58 @@ process.stdout.write(JSON.stringify({checked,count:Object.keys(checked).length,s
     return result
 
 
+def runtime_swsh028_gamestop_regression():
+    source = INDEX.read_text(encoding="utf-8")
+    def extract_fn(name):
+        marker = re.search(rf"\bfunction\s+{re.escape(name)}\s*\(", source)
+        if not marker: raise AssertionError(f"Missing production function {name}")
+        brace=source.find("{", marker.end()); depth=0; quote=None; esc=False
+        for i in range(brace,len(source)):
+            ch=source[i]
+            if quote:
+                if esc: esc=False
+                elif ch=="\\": esc=True
+                elif ch==quote: quote=None
+                continue
+            if ch in ("'", '"', "`"): quote=ch
+            elif ch=="{": depth+=1
+            elif ch=="}":
+                depth-=1
+                if depth==0:return source[marker.start():i+1]
+        raise AssertionError(f"Unclosed production function {name}")
+    card,error=live_card("swshp-SWSH028", Path(tempfile.gettempdir())/"cardoryx_swsh028_gamestop_v1")
+    if error or not card: raise AssertionError(f"SWSH028 live fixture unavailable: {error}")
+    names=("normText","canonicalStamp","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel",
+           "cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails","tcgdexExactSwsh028GameStopPrice")
+    js="\n".join(extract_fn(n) for n in names)
+    harness=r'''
+const c=JSON.parse(process.argv[1]);
+function fail(m){throw new Error(m)}
+const ok=tcgdexExactSwsh028GameStopPrice(c,'Holo','GameStop');
+if(!ok||Number(ok.idProduct)!==742039)fail('exact GameStop product not resolved');
+if(!Number(ok.low)>0 && !Number(ok.trend)>0)fail('no real price');
+for(const [v,s] of [['Normal','GameStop'],['Holo','EB Games'],['Holo','None']]){
+  if(tcgdexExactSwsh028GameStopPrice(c,v,s)!==null)fail('wrong finish/stamp accepted '+v+' '+s);
+}
+for(const mutated of [
+  {...c,id:'swshp-SWSH029',tcgdexId:'swshp-SWSH029'},
+  {...c,localId:'SWSH029'},
+  {...c,name:'Duraludon wrong'},
+  {...c,set:{...(c.set||{}),id:'swshp-other'}},
+]) if(tcgdexExactSwsh028GameStopPrice(mutated,'Holo','GameStop')!==null)fail('wrong identity accepted');
+const wrongPid={...c,variants_detailed:(c.variants_detailed||[]).map(r=>(r.stamp||[]).includes('gamestop')?{...r,thirdParty:{...(r.thirdParty||{}),cardmarket:742040}}:r)};
+if(tcgdexExactSwsh028GameStopPrice(wrongPid,'Holo','GameStop')!==null)fail('wrong product accepted');
+process.stdout.write(JSON.stringify({productId:ok.idProduct,trend:ok.trend,low:ok.low,exact:true}));
+'''
+    return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(card)],text=True))
+
+
 def main():
     args = cli()
     runtime_regression = runtime_cardmarket_regression()
     runtime_regression["svpSetLogoStaff"] = runtime_svp_set_logo_staff_regression()
     runtime_regression["mepSetLogoStaff"] = runtime_mep_set_logo_staff_regression()
+    runtime_regression["swsh028GameStop"] = runtime_swsh028_gamestop_regression()
     if args.runtime_only:
         print(json.dumps(runtime_regression, ensure_ascii=False, indent=2))
         return
@@ -821,7 +868,7 @@ def main():
             for row in (card.get("variants_detailed") or [])
         )
     }
-    live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids |
+    live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
@@ -968,6 +1015,27 @@ def main():
                     "staff": svp_staff_rows[0][1],
                 }
 
+        live_swsh028_gamestop = False
+        live_swsh028_gamestop_pid = None
+        if card_id == "swshp-SWSH028":
+            exact_rows = []
+            for row in live_card_detail.get("variants_detailed") or []:
+                stamp_tokens = [str(v or "").strip().lower() for v in (row.get("stamp") or [])]
+                row_pid = cm_id(row)
+                pricing_cm = ((row.get("pricing") or {}).get("cardmarket") or {})
+                try:
+                    pricing_pid = int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+                except (TypeError, ValueError):
+                    pricing_pid = None
+                usable = any(isinstance(pricing_cm.get(k), (int, float)) and pricing_cm.get(k) > 0
+                             for k in ("trend", "avg7", "avg30", "avg", "low"))
+                if (stamp_tokens == ["gamestop"] and str(row.get("type") or "").lower() == "holo" and
+                        not row.get("foil") and row_pid == 742039 and pricing_pid == 742039 and usable):
+                    exact_rows.append(row)
+            if len(exact_rows) == 1:
+                live_swsh028_gamestop = True
+                live_swsh028_gamestop_pid = 742039
+
         classification, priority, confidence = "SAFE", None, "HIGH"
         reason = "Il prodotto corrente è associato a una riga base e le alternative restano identità fisiche esplicite."
         action = "Nessuna modifica."
@@ -1011,6 +1079,12 @@ def main():
         elif card_id in PROTECTED_REVERSE:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "Conflitto Reverse Cardmarket noto e già protetto con identità/prodotto esatti.", "Mantenere il fail-closed esistente."
+        elif live_swsh028_gamestop:
+            classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+            reason = ("TCGdex live espone la stampa GameStop esatta di Duraludon SWSH028 con productId "
+                      "Cardmarket 742039 e Price Guide sulla stessa riga fisica. Il runtime la risolve "
+                      "solo per identità, finitura e stamp esatti.")
+            action = "Mantenere il resolver esatto SWSH028 GameStop; EB Games e gli altri promo restano fail-closed."
         elif live_svp_set_logo_pair:
             classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
             reason = ("TCGdex live espone una coppia fisica promo esatta e distinta: `set-logo` e "
@@ -1071,6 +1145,8 @@ def main():
             "liveExplicitVariantUsesSameProduct": bool(live_explicit_rows),
             "liveExactSvpSetLogoStaffPair": live_svp_set_logo_pair,
             "liveExactSvpStampProducts": live_svp_stamp_products,
+            "liveExactSwsh028GameStop": live_swsh028_gamestop,
+            "liveExactSwsh028GameStopProductId": live_swsh028_gamestop_pid,
             "snapshotExactAlternateProductProtected": snapshot_exact_alternate_product,
             "realPriceGuideValues": {str(pid): price_compact(prices.get(pid)) for pid in ids if prices.get(pid)},
             "trendDeltaVersusCurrent": {str(pid): round(row["trend"] - current_value, 2) for pid, row in prices.items()
