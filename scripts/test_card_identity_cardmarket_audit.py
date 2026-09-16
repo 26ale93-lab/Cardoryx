@@ -618,7 +618,13 @@ def main():
     # from TCGdex for all 4,252 identities. Only multi-product identities outside
     # that sample require live detail calls; a single-product shared identity has
     # an unambiguous top-level candidate by construction.
-    live_targets = (multi_ids - historical_ids) | set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE
+    # Shared-product ambiguity is only actionable when current live TCGdex can
+    # prove the top-level Cardmarket product against an exact physical base row.
+    # Fetch shared identities as evidence; failed/missing live evidence remains
+    # fail-closed and cannot downgrade a P1.
+    live_targets = ((multi_ids - historical_ids) | shared_identity_ids |
+                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) |
+                    {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
         futures = {pool.submit(live_card, card_id, args.cache): card_id for card_id in sorted(live_targets)}
@@ -663,6 +669,55 @@ def main():
         base_ids = sorted({cm_id(row) for row in (card.get("variants_detailed") or []) if cm_id(row) and is_base_row(row)})
         alt_ids = sorted(set(ids) - ({current_pid} if current_pid else set()))
         shared = sorted({other for pid in ids for other in pid_to_cards[pid] if other != card_id})
+
+        # Preserve already-proven alternate Play! products before considering
+        # live evidence. The live rule is allowed to clear only P1 ambiguity;
+        # it must never flatten an EXACT_ALTERNATE_PRODUCT into generic SAFE.
+        snapshot_play_rows = (play_index.get("byBaseProduct") or {}).get(str(current_pid), {}) if current_pid else {}
+        snapshot_mapped_play_products = {
+            int(row["idProduct"])
+            for series in snapshot_play_rows.values()
+            for row in series
+            if row.get("idProduct")
+        }
+        snapshot_exact_alternate_product = bool(
+            current_pid and len(ids) > 1 and
+            (set(ids) - set(base_ids)) and
+            snapshot_mapped_play_products.intersection(set(ids) - set(base_ids))
+        )
+
+        # Strict live evidence can clear stale snapshot ambiguity only when all
+        # identity signals agree on the same physical base product. Special
+        # stamp/foil/1st Edition rows never qualify and a reused product stays P1.
+        live_card_detail = live.get(card_id) or {}
+        live_cm = ((live_card_detail.get("pricing") or {}).get("cardmarket") or {})
+        try:
+            live_pid = int(live_cm.get("idProduct") or live_cm.get("id_product"))
+        except (TypeError, ValueError):
+            live_pid = None
+        live_base_rows = []
+        live_explicit_rows = []
+        for live_row in live_card_detail.get("variants_detailed") or []:
+            pid = cm_id(live_row)
+            pricing_cm = ((live_row.get("pricing") or {}).get("cardmarket") or {})
+            try:
+                pricing_pid = int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+            except (TypeError, ValueError):
+                pricing_pid = None
+            if is_base_row(live_row):
+                if pid == live_pid and pricing_pid == live_pid:
+                    live_base_rows.append(live_row)
+            elif pid == live_pid:
+                live_explicit_rows.append(live_row)
+        live_usable_price = any(
+            isinstance(live_cm.get(key), (int, float)) and live_cm.get(key) > 0
+            for key in ("trend", "avg7", "avg30", "avg", "low")
+        )
+        live_exact_base_evidence = bool(
+            live_pid and current_pid == live_pid and live_base_rows and
+            live_usable_price and not live_explicit_rows
+        )
+
         classification, priority, confidence = "SAFE", None, "HIGH"
         reason = "Il prodotto corrente è associato a una riga base e le alternative restano identità fisiche esplicite."
         action = "Nessuna modifica."
@@ -706,6 +761,18 @@ def main():
         elif card_id in PROTECTED_REVERSE:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "Conflitto Reverse Cardmarket noto e già protetto con identità/prodotto esatti.", "Mantenere il fail-closed esistente."
+        elif live_exact_base_evidence and not snapshot_exact_alternate_product:
+            classification, priority, confidence = "SAFE", None, "HIGH"
+            resolved_pid = live_pid
+            resolved_value = next(
+                (live_cm.get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
+                 if isinstance(live_cm.get(key), (int, float)) and live_cm.get(key) > 0),
+                None,
+            )
+            reason = ("TCGdex live conferma lo stesso productId Cardmarket sia a livello top-level sia "
+                      "in una riga fisica base unstamped/unfoiled, con prezzo reale disponibile e senza "
+                      "riuso dello stesso prodotto da parte di varianti speciali.")
+            action = "Nessuna modifica di produzione: identità base live esatta, falso positivo dello snapshot statico."
         elif not current_pid and len(ids) > 1:
             classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
             reason = "La sorgente espone più prodotti ma non un product ID top-level corrente verificabile."
@@ -742,6 +809,11 @@ def main():
             "sharedProductWithTcgdexIds": shared, "currentCardoryxValue": current_value,
             "baseOverrideApplied": applied_override, "resolvedProductId": resolved_pid,
             "resolvedCardoryxValue": resolved_value, "baseOverrideGuardTests": override_tests,
+            "liveExactBaseEvidence": live_exact_base_evidence,
+            "liveExactBaseProductId": live_pid if live_exact_base_evidence else None,
+            "liveExactBasePriceAvailable": live_usable_price,
+            "liveExplicitVariantUsesSameProduct": bool(live_explicit_rows),
+            "snapshotExactAlternateProductProtected": snapshot_exact_alternate_product,
             "realPriceGuideValues": {str(pid): price_compact(prices.get(pid)) for pid in ids if prices.get(pid)},
             "trendDeltaVersusCurrent": {str(pid): round(row["trend"] - current_value, 2) for pid, row in prices.items()
                                          if pid in ids and pid != current_pid and isinstance(current_value, (int, float)) and isinstance(row.get("trend"), (int, float))},
@@ -833,6 +905,12 @@ def main():
                             "candidateIdentitiesDeepAudited": len(cases), "liveDetailRequests": len(live_targets),
                             "liveApiErrors": live_errors}},
         "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
+        "liveExactBaseEvidence": {
+            "count": sum(bool(case.get("liveExactBaseEvidence")) for case in cases),
+            "ids": [case["tcgdexId"] for case in cases if case.get("liveExactBaseEvidence")],
+            "protectedExactAlternateCount": sum(bool(case.get("snapshotExactAlternateProductProtected")) for case in cases),
+            "policy": "live top-level product == live physical base-row product == live row pricing product; usable real price; no explicit special row reuses product; existing exact alternate Play products remain protected",
+        },
         "p0Regression": {"before": 20, "after": len(known_phase_a_p0),
                          "exactOverridesApplied": sum(bool(c.get("baseOverrideApplied")) for c in cases),
                          "registry": base_overrides,
