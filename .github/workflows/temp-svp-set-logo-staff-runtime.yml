@@ -22,30 +22,56 @@ jobs:
           python-version: '3.12'
       - name: Apply candidate runtime patch
         run: python -B scripts/temp_apply_svp_set_logo_staff_fix.py
+      - name: Apply permanent audit regression patch
+        run: python -B scripts/temp_patch_cardmarket_audit_svp_stamps.py
       - name: Exact live SVP stamp runtime test
         run: python -B scripts/temp_test_svp_set_logo_staff_runtime.py
-      - name: Existing Cardmarket runtime regression
+      - name: Cardmarket runtime regression including SVP stamps
         run: python -B scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Clone pinned TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Run full Cardmarket identity audit
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Assert residual classification movement
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          c=r['classificationTotals']
+          assert c['P0_WRONG_PRODUCT']==0, c
+          assert c['SOURCE_CONFLICT']==7, c
+          assert c['P1_AMBIGUOUS_PRODUCT']==440, c
+          assert c['EXACT_ALTERNATE_PRODUCT']==72, c
+          cases={x['tcgdexId']:x for x in r['caseIndex']}
+          for cid in ('svp-005','svp-006','svp-007'):
+              assert cases[cid]['classification']=='EXACT_ALTERNATE_PRODUCT', (cid,cases[cid])
+          for cid in ('svp-045','svp-067','svp-101','svp-150'):
+              assert cases[cid]['classification']=='P1_AMBIGUOUS_PRODUCT', (cid,cases[cid])
+          print(json.dumps(c,indent=2))
+          PY
       - name: Existing Numel Ditto regression
         run: python -B scripts/test_variant_finish_audit.py --numel-ditto-only
       - name: Existing Quilava Play regression
         run: python -B scripts/test_variant_finish_audit.py --quilava-play-only
       - name: Restore generated reports
-        run: git checkout -- artifacts/variant_finish_audit_report.json
+        run: |
+          git checkout -- artifacts/variant_finish_audit_report.json
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
       - name: Diff safety
         run: |
           git diff --check
           changed="$(git diff --name-only)"
           printf '%s\n' "$changed"
-          test -z "$changed" || test "$changed" = "index.html"
-      - name: Commit validated candidate
+          test -z "$changed" || test "$changed" = "scripts/test_card_identity_cardmarket_audit.py"
+      - name: Commit validated permanent regression
         run: |
-          if git diff --quiet -- index.html; then
-            echo "Candidate already committed"
+          if git diff --quiet -- scripts/test_card_identity_cardmarket_audit.py; then
+            echo "Permanent regression already committed"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Support exact SVP Set Stamp and Staff products"
+          git add scripts/test_card_identity_cardmarket_audit.py
+          git commit -m "Audit exact SVP Set Stamp and Staff products"
           git push
