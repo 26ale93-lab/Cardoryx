@@ -30,6 +30,8 @@ jobs:
         run: python -B scripts/temp_ex2_runtime_probe.py "$RUNNER_TEMP/tcgdex-cards-database"
       - name: Recalculate EX Sandstorm shared owners after verified conflicts
         run: python -B scripts/temp_ex2_shared_owner_audit.py "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Validate all EX Sandstorm P1 identities live
+        run: python -B scripts/temp_ex2_live_full_validation.py
       - uses: actions/upload-artifact@v4
         with:
           name: cardmarket-p1-cluster-audit
