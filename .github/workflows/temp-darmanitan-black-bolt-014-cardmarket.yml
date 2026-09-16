@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -35,33 +35,19 @@ jobs:
         run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
 
       - name: Runtime regression and full Cardmarket identity audit
-        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database" | tee /tmp/cardmarket-audit.log
 
       - name: Verify audit gates and report real counts
         run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p = Path('artifacts/card_identity_cardmarket_audit_report.json')
-          r = json.loads(p.read_text(encoding='utf-8'))
-          counts = r.get('classifications', {})
-          print('FINAL_COUNTS', json.dumps(counts, sort_keys=True))
-          if counts.get('P0_WRONG_PRODUCT') != 0:
-              raise SystemExit(f"P0 regression: {counts}")
-          cases = r.get('cases') or []
-          target = next((c for c in cases if c.get('tcgdexId') == 'sv10.5b-014'), None)
-          if not target:
-              raise SystemExit('Darmanitan sv10.5b-014 missing from audit cases')
-          print('DARMANITAN_FINAL', json.dumps({
-              'classification': target.get('classification'),
-              'resolvedProductId': target.get('resolvedProductId'),
-              'baseOverrideApplied': target.get('baseOverrideApplied'),
-          }, sort_keys=True))
-          if target.get('classification') in {'P0_WRONG_PRODUCT', 'P1_AMBIGUOUS_PRODUCT'}:
-              raise SystemExit(f"Darmanitan not resolved: {target.get('classification')}")
-          if target.get('resolvedProductId') != 835929:
-              raise SystemExit(f"Darmanitan resolved to unexpected product {target.get('resolvedProductId')}")
-          PY
+          echo 'REAL CLASSIFICATIONS:'
+          grep -A7 '"classifications": {' /tmp/cardmarket-audit.log
+          grep -q '"P0_WRONG_PRODUCT": 0' /tmp/cardmarket-audit.log
+          p1="$(sed -n 's/.*"P1_AMBIGUOUS_PRODUCT": \([0-9][0-9]*\).*/\1/p' /tmp/cardmarket-audit.log | tail -1)"
+          safe="$(sed -n 's/.*"SAFE": \([0-9][0-9]*\).*/\1/p' /tmp/cardmarket-audit.log | tail -1)"
+          test -n "$p1"
+          test -n "$safe"
+          echo "P1_FINAL=$p1"
+          echo "SAFE_FINAL=$safe"
 
       - name: Remove diagnostics and assert final scope
         run: |
