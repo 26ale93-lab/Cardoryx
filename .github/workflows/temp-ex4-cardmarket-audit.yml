@@ -50,7 +50,8 @@ jobs:
 
           rows=[]
           for c in sorted(ex4,key=lambda x:int(re.sub(r'\D','',str(x.get('localId') or '999')) or 999)):
-              name=str(c.get('name') or '')
+              raw_name=c.get('name') or ''
+              name=str(raw_name.get('en') or next(iter(raw_name.values()),'') if isinstance(raw_name,dict) else raw_name)
               matches=[p for p in cm if norm(name)==norm(str(p.get('name') or '').split(' [',1)[0])]
               current=cmids(c)
               rows.append({
