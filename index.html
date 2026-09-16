@@ -5204,12 +5204,12 @@ function tcgdexStampedRowFinish(row){
   return '';
 }
 
-// Exact live Cardmarket resolver for the verified Scarlet & Violet Promo
-// set-logo taxonomy.  Scope is deliberately limited to `svp`: no other set,
-// no Worlds/region stamp, no base-card fallback and no cross-stamp price reuse.
+// Exact live Cardmarket resolver for the verified SVP and MEP set-logo
+// taxonomy. Scope is deliberately limited to these two promo sets: no other
+// set, no Worlds/region stamp, no base-card fallback and no cross-stamp price reuse.
 function tcgdexExactSvpStampPrice(card,variant,stamp){
   const setId=normText(card?.set?.id||card?._cardoryxSetId||card?.setId||'');
-  if(setId!=='svp')return null;
+  if(setId!=='svp'&&setId!=='mep')return null;
   const st=canonicalStamp(stamp);
   if(st!=='Set Stamp'&&st!=='Staff')return null;
   const target=canonicalVariant(variant||'Normal');
