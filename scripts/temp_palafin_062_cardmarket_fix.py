@@ -21,7 +21,7 @@ idx=rep(idx,
 # 2) Exact base guide, used only for the exact identity and product.
 idx=rep(idx,
 "\n};\nfunction exactCardmarketGuideIdentity(card,id,guide){",
-"\n  'sv03-062':{\n    setId:'sv03',localId:'062',name:'Palafin',productId:725142,\n    verified:'2026-09-17T00:47:03+0200',\n    source:'Cardmarket Product Catalogue + Price Guide · Obsidian Flames · Palafin 062 base · product 725142',\n    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',\n    pricing:{idProduct:725142,trend:0.02,avg7:0.05,avg30:0.06,avg:0.06,low:0.02,\n      'trend-holo':0.16,'avg7-holo':0.18,'avg30-holo':0.25,'avg-holo':0.24,'low-holo':0.02}\n  },\n};\nfunction exactCardmarketGuideIdentity(card,id,guide){",
+",\n  'sv03-062':{\n    setId:'sv03',localId:'062',name:'Palafin',productId:725142,\n    verified:'2026-09-17T00:47:03+0200',\n    source:'Cardmarket Product Catalogue + Price Guide · Obsidian Flames · Palafin 062 base · product 725142',\n    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',\n    pricing:{idProduct:725142,trend:0.02,avg7:0.05,avg30:0.06,avg:0.06,low:0.02,\n      'trend-holo':0.16,'avg7-holo':0.18,'avg30-holo':0.25,'avg-holo':0.24,'low-holo':0.02}\n  }\n};\nfunction exactCardmarketGuideIdentity(card,id,guide){",
 'base guide')
 
 # 3) Palafin Pre-release is a valid separate physical edition, Normal finish.
