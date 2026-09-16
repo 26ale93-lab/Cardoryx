@@ -25,6 +25,22 @@ new="""        base_ids = sorted({cm_id(row) for row in (card.get(\"variants_det
         alt_ids = sorted(set(ids) - ({current_pid} if current_pid else set()))
         shared = sorted({other for pid in ids for other in pid_to_cards[pid] if other != card_id})
 
+        # Preserve already-proven alternate Play! products before considering
+        # live evidence. The live rule is allowed to clear only P1 ambiguity;
+        # it must never flatten an EXACT_ALTERNATE_PRODUCT into generic SAFE.
+        snapshot_play_rows = (play_index.get(\"byBaseProduct\") or {}).get(str(current_pid), {}) if current_pid else {}
+        snapshot_mapped_play_products = {
+            int(row[\"idProduct\"])
+            for series in snapshot_play_rows.values()
+            for row in series
+            if row.get(\"idProduct\")
+        }
+        snapshot_exact_alternate_product = bool(
+            current_pid and len(ids) > 1 and
+            (set(ids) - set(base_ids)) and
+            snapshot_mapped_play_products.intersection(set(ids) - set(base_ids))
+        )
+
         # Strict live evidence can clear stale snapshot ambiguity only when all
         # identity signals agree on the same physical base product. Special
         # stamp/foil/1st Edition rows never qualify and a reused product stays P1.
@@ -68,7 +84,7 @@ old="""        elif not current_pid and len(ids) > 1:
             action = \"Restare fail-closed finché il prodotto principale non è dimostrato.\"
         elif shared and current_pid and current_pid in shared_pids:
 """
-new="""        elif live_exact_base_evidence:
+new="""        elif live_exact_base_evidence and not snapshot_exact_alternate_product:
             classification, priority, confidence = \"SAFE\", None, \"HIGH\"
             resolved_pid = live_pid
             resolved_value = next(
@@ -98,6 +114,7 @@ new='''            "baseOverrideApplied": applied_override, "resolvedProductId":
             "liveExactBaseProductId": live_pid if live_exact_base_evidence else None,
             "liveExactBasePriceAvailable": live_usable_price,
             "liveExplicitVariantUsesSameProduct": bool(live_explicit_rows),
+            "snapshotExactAlternateProductProtected": snapshot_exact_alternate_product,
 '''
 if old not in s: raise SystemExit('case fields anchor not found')
 s=s.replace(old,new,1)
@@ -108,7 +125,8 @@ new='''        "classificationTotals": {name: counts.get(name, 0) for name in ("
         "liveExactBaseEvidence": {
             "count": sum(bool(case.get("liveExactBaseEvidence")) for case in cases),
             "ids": [case["tcgdexId"] for case in cases if case.get("liveExactBaseEvidence")],
-            "policy": "live top-level product == live physical base-row product == live row pricing product; usable real price; no explicit special row reuses product",
+            "protectedExactAlternateCount": sum(bool(case.get("snapshotExactAlternateProductProtected")) for case in cases),
+            "policy": "live top-level product == live physical base-row product == live row pricing product; usable real price; no explicit special row reuses product; existing exact alternate Play products remain protected",
         },
 '''
 if old not in s: raise SystemExit('report totals anchor not found')
