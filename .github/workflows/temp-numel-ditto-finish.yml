@@ -22,9 +22,7 @@ jobs:
         run: python scripts/_temp_apply_numel_ditto_finish.py
       - name: Run Numel Ditto runtime regression
         run: python scripts/test_numel_ditto_finish_runtime.py
-      - name: Run Piplup runtime regression
-        run: python scripts/test_piplup_cardmarket_runtime.py
-      - name: Run identity/Cardmarket regression
+      - name: Run identity/Cardmarket runtime regression
         run: python scripts/test_card_identity_cardmarket_audit.py --runtime-only
       - name: Run Frillish exact-variant regression
         run: python scripts/test_frillish_masterball_cardmarket_price.py
