@@ -4,10 +4,12 @@ from pathlib import Path
 p=Path('scripts/test_card_identity_cardmarket_audit.py')
 s=p.read_text(encoding='utf-8')
 needle='    report = {\n'
-insert='''    _skip={"sv09-055","me01-073","ex8-16","sv05-041","sv10.5b-065","swshp-SWSH055","base1-49","base1-4","pl3-70"}
+insert='''    _skip={"sv09-055","me01-073","ex8-16","sv05-041","sv10.5b-065","swshp-SWSH055","pl3-70"}
+    _historical_prefixes=("base1-","base2-","base3-","base5-","gym1-","gym2-","neo1-","neo2-","neo3-","neo4-")
     _rank=[]
     for _c in cases:
-        if _c.get("classification")!="P1_AMBIGUOUS_PRODUCT" or _c.get("tcgdexId") in _skip:
+        _cid=_c.get("tcgdexId") or ""
+        if _c.get("classification")!="P1_AMBIGUOUS_PRODUCT" or _cid in _skip or _cid.startswith(_historical_prefixes):
             continue
         _cur=_c.get("currentCardoryxValue")
         if not isinstance(_cur,(int,float)):
