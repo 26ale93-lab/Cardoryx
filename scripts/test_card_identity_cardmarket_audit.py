@@ -54,6 +54,7 @@ EXPECTED_BASE_OVERRIDES = {
 
 def cli():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--runtime-only", action="store_true")
     parser.add_argument("--tcgdex-db", type=Path, default=ROOT.parent / "tcgdex-cards-database")
     parser.add_argument("--products", type=Path)
     parser.add_argument("--prices", type=Path)
@@ -224,8 +225,150 @@ def override_matches(rule, card_id, set_id, local_id, current_product):
                 int(rule.get("conflictingProduct") or 0) == int(current_product or 0))
 
 
+def runtime_cardmarket_regression():
+    """Execute the production JavaScript resolvers against focused runtime fixtures."""
+    fixtures = {
+        "piplup": {
+            "id": "sm12-54", "tcgdexId": "sm12-54", "name": "Piplup", "localId": "54",
+            "set": {"id": "sm12", "name": "Eclissi Cosmica"}, "rarity": "Comune",
+            "variants": {"normal": True, "holo": False, "reverse": False},
+            "variants_detailed": [{"type": "normal", "size": "Standard", "variantId": "generated"}],
+            "pricing": {"cardmarket": {"idProduct": 398504, "trend": 54.51, "trend-holo": 11.29}},
+        },
+        "surging": [
+            {"id": "sv08-029", "tcgdexId": "sv08-029", "localId": "29", "set": {"id": "sv08"},
+             "pricing": {"cardmarket": {"idProduct": 794946}}, "variants_detailed": [
+                 {"type": "normal", "thirdParty": {"cardmarket": 794286},
+                  "pricing": {"cardmarket": {"idProduct": 794286, "trend": 0.11}}}]},
+            {"id": "sv08-050", "tcgdexId": "sv08-050", "localId": "50", "set": {"id": "sv08"},
+             "pricing": {"cardmarket": {"idProduct": 794947}}, "variants_detailed": [
+                 {"type": "normal", "thirdParty": {"cardmarket": 794316},
+                  "pricing": {"cardmarket": {"idProduct": 794316, "trend": 0.12}}}]},
+            {"id": "sv08-161", "tcgdexId": "sv08-161", "localId": "161", "set": {"id": "sv08"},
+             "pricing": {"cardmarket": {"idProduct": 794948}}, "variants_detailed": [
+                 {"type": "normal", "thirdParty": {"cardmarket": 794534},
+                  "pricing": {"cardmarket": {"idProduct": 794534, "trend": 0.13}}}]},
+        ],
+        "frillish": {"id": "sv10.5w-044", "tcgdexId": "sv10.5w-044", "name": "Frillish",
+                     "localId": "044", "set": {"id": "sv10.5w", "name": "Fuoco Bianco"}},
+        "pikachu": {"id": "sv05-051", "tcgdexId": "sv05-051", "name": "Pikachu",
+                    "localId": "051", "set": {"id": "sv05", "name": "Cronoforze"}},
+    }
+    harness = r"""
+const assert=require('assert');
+const fs=require('fs');
+const vm=require('vm');
+const source=fs.readFileSync(process.argv[1],'utf8');
+const fixtures=JSON.parse(process.argv[2]);
+function section(start,end){
+  const a=source.indexOf(start),b=source.indexOf(end,a+start.length);
+  assert(a>=0&&b>a,`Missing production section ${start}`);
+  return source.slice(a,b);
+}
+const production=[
+  section("function normText(","function similarity("),
+  section("function canonicalPrintedLocalId(","function extractCollectorCode("),
+  section("function normalizedPlaySeries(","function playSeriesLabel("),
+  section("function canonicalStamp(","function scanUnit("),
+  section("async function renderScanValue(","async function chooseCard("),
+  section("function cardPriceInfo(","function cardUnitPrice(")
+].join('\n');
+const elements={};
+function element(id){
+  if(!elements[id])elements[id]={
+    textContent:'',innerHTML:'',value:id==='variant'?'Reverse Holo':id==='stamp'?'None':'',
+    classList:{add(){},remove(){},toggle(){}},style:{},options:[],selectedOptions:[]
+  };
+  return elements[id];
+}
+const context={console,document:{getElementById:element}};
+vm.createContext(context);
+vm.runInContext(`
+${production}
+let scanPriceCard=null;
+let selectedCard=null;
+function scanEuro(v){const n=Number(v||0);return n>0?n.toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'—'}
+function scanCM(c){return resolvedCardmarketPricingForCard(c)}
+function verifiedStandardEnergyPrice(){return null}
+async function fetchScanPricing(card){return card}
+async function enrichCardoryxEnglishIdentity(){}
+async function refreshOfficialPlayAvailability(){}
+function refreshScanProtectionRecommendation(){}
+syncStampAvailability=()=>[];
+syncVariantAvailability=()=>[];
+globalThis.runtime={
+  verifiedBaseCardmarketProductOverride,resolvedCardmarketPricingForCard,
+  pricingWithResolvedCardmarket,knownCardmarketIdentityConflict,
+  cardmarketValueForCardVariant,cardmarketStatsForCardVariant,
+  verifiedVariantPrice,verifiedStampPrice,renderScanValue,cardPriceInfo,
+  setSelected:c=>{selectedCard=c;scanPriceCard=null}
+};`,context);
+const r=context.runtime;
+const p=fixtures.piplup;
+const override=r.verifiedBaseCardmarketProductOverride(p);
+assert.strictEqual(override?.pricing?.idProduct,407919);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(p)?.idProduct,407919);
+assert.strictEqual(r.knownCardmarketIdentityConflict(p,398504)?.kind,'identity-mismatch');
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,localId:'SM54'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,tcgdexId:'sm12-55',id:'sm12-55'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,set:{...p.set,id:'sm11'}}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,name:'Prinplup'}),null);
+const normal=r.cardmarketValueForCardVariant(p,'Normal');
+const reverse=r.cardmarketValueForCardVariant(p,'Reverse Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:normal.value,productId:normal.productId})),{value:0.17,productId:407919});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:reverse.value,productId:reverse.productId})),{value:0.76,productId:407919});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(p,'Normal'))),
+  {low:0.02,trend:0.17,avg7:0.18,avg30:0.12});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(p,'Reverse Holo'))),
+  {low:0.14,trend:0.76,avg7:0.94,avg30:0.76});
+const savedPricing=r.pricingWithResolvedCardmarket(p);
+assert.strictEqual(savedPricing.cardmarket.idProduct,407919);
+assert.notStrictEqual(savedPricing.cardmarket.idProduct,398504);
+const saved={...p,pricing:savedPricing,variant:'Reverse Holo',stamp:'None',_cardoryxSetId:'sm12'};
+assert.strictEqual(r.cardPriceInfo(saved).value,0.76);
+r.setSelected(p);
+element('variant').value='Reverse Holo';
+element('stamp').value='None';
+(async()=>{
+  await r.renderScanValue(p);
+  assert(!element('scanMarketValue').textContent.includes('Valore da verificare'));
+  assert(element('scanMarketValue').textContent.includes('0,76'));
+  const expectedSurging={"sv08-029":794286,"sv08-050":794316,"sv08-161":794534};
+  for(const card of fixtures.surging){
+    assert.strictEqual(r.verifiedBaseCardmarketProductOverride(card)?.pricing?.idProduct,expectedSurging[card.id]);
+    assert.strictEqual(r.resolvedCardmarketPricingForCard(card)?.idProduct,expectedSurging[card.id]);
+  }
+  const frillish=r.verifiedVariantPrice(fixtures.frillish,'Master Ball Reverse Holo');
+  assert.strictEqual(frillish?.productId,836574);
+  assert.strictEqual(frillish?.trend,3);
+  assert.strictEqual(r.verifiedVariantPrice(fixtures.frillish,'Normal'),null);
+  assert.strictEqual(r.verifiedVariantPrice(fixtures.frillish,'Poké Ball Reverse Holo'),null);
+  const pikachu=r.verifiedStampPrice(fixtures.pikachu,'Holo','Pokémon Day');
+  assert.strictEqual(pikachu?.productId,870424);
+  assert.strictEqual(pikachu?.trend,3.88);
+  assert.strictEqual(r.verifiedStampPrice(fixtures.pikachu,'Normal','Pokémon Day'),null);
+  assert.strictEqual(r.verifiedStampPrice(fixtures.pikachu,'Holo','None'),null);
+  process.stdout.write(JSON.stringify({
+    piplup:{normal,reverse,scanner:element('scanMarketValue').textContent,savedProductId:savedPricing.cardmarket.idProduct},
+    surging:Object.fromEntries(fixtures.surging.map(c=>[c.id,r.resolvedCardmarketPricingForCard(c).idProduct])),
+    frillish:{productId:frillish.productId,value:frillish.trend},
+    pikachu:{productId:pikachu.productId,value:pikachu.trend}
+  }));
+})().catch(error=>{console.error(error);process.exit(1)});
+"""
+    output = subprocess.check_output(
+        ["node", "-e", harness, str(INDEX), json.dumps(fixtures, ensure_ascii=False)],
+        text=True,
+    )
+    return json.loads(output)
+
+
 def main():
     args = cli()
+    runtime_regression = runtime_cardmarket_regression()
+    if args.runtime_only:
+        print(json.dumps(runtime_regression, ensure_ascii=False, indent=2))
+        return
     dirty = []
     for line in git("status", "--porcelain").splitlines():
         path = line.lstrip(" ?MADRCU").strip()
