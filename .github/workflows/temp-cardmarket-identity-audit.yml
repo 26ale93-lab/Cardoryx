@@ -11,27 +11,25 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Checkout pinned TCGdex database snapshot
-        uses: actions/checkout@v4
-        with:
-          repository: tcgdex/cards-database
-          path: tcgdex-cards-database
-          fetch-depth: 1
+      - name: Checkout pinned TCGdex database snapshot outside worktree
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Validate audit script
-        run: python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+      - name: Validate audit script without bytecode
+        run: python -B -m py_compile scripts/test_card_identity_cardmarket_audit.py && rm -rf scripts/__pycache__
 
       - name: Run Cardmarket identity audit read-only
-        run: python scripts/test_card_identity_cardmarket_audit.py --tcgdex-db tcgdex-cards-database
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
 
       - name: Verify protected production files unchanged
         run: |
