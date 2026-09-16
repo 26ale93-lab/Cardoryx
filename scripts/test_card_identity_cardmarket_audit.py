@@ -44,6 +44,11 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
     "pl3-7": {"base": 278698, "alternate": 278689, "stamp": "wrong-card-identity", "cardmarketCode": "SV7"},
+    "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
+    "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
+    "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
+    "ex4-94": {"base": 276071, "alternate": 275871, "stamp": "wrong-card-identity", "cardmarketCode": "MA94"},
+    "ex4-95": {"base": 276072, "alternate": 275872, "stamp": "wrong-card-identity", "cardmarketCode": "MA95"},
 }
 PROTECTED_REVERSE = {"pl2-102", "pl3-26", "pl3-5", "pl3-59", "pl3-83", "sv10.5b-013"}
 EXPECTED_BASE_OVERRIDES = {
@@ -53,6 +58,11 @@ EXPECTED_BASE_OVERRIDES = {
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
+    "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
+    "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
+    "ex4-89": {"setId": "ex4", "localId": "089", "conflictingProduct": 275866, "baseProduct": 276066},
+    "ex4-94": {"setId": "ex4", "localId": "094", "conflictingProduct": 275871, "baseProduct": 276071},
+    "ex4-95": {"setId": "ex4", "localId": "095", "conflictingProduct": 275872, "baseProduct": 276072},
 }
 
 
@@ -278,6 +288,17 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 278689, "trend": 40.68, "trend-holo": 62.71}},
     }
+    fixtures["ex4_high_impact"] = [
+        {"id":"ex4-6","tcgdexId":"ex4-6","name":"Team Aqua's Walrein","localId":"6","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"rarity":"Holo Rare","wrong":275783,"correct":275983,"expected":4.40},
+        {"id":"ex4-7","tcgdexId":"ex4-7","name":"Team Magma's Aggron","localId":"7","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"rarity":"Holo Rare","wrong":275784,"correct":275984,"expected":5.80},
+        {"id":"ex4-89","tcgdexId":"ex4-89","name":"Blaziken ex","localId":"89","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"rarity":"Rare","wrong":275866,"correct":276066,"expected":136.64},
+        {"id":"ex4-94","tcgdexId":"ex4-94","name":"Suicune ex","localId":"94","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"rarity":"Rare","wrong":275871,"correct":276071,"expected":714.52},
+        {"id":"ex4-95","tcgdexId":"ex4-95","name":"Swampert ex","localId":"95","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"rarity":"Rare","wrong":275872,"correct":276072,"expected":93.11},
+    ]
+    for card in fixtures["ex4_high_impact"]:
+        card["variants"] = {"normal": False, "holo": True, "reverse": False}
+        card["variants_detailed"] = [{"type":"holo","thirdParty":{"cardmarket":card["wrong"]},"pricing":{"cardmarket":{"idProduct":card["wrong"],"trend":1}}}]
+        card["pricing"] = {"cardmarket":{"idProduct":card["wrong"],"trend":1}}
     harness = r"""
 const assert=require('assert');
 const fs=require('fs');
@@ -357,6 +378,16 @@ assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,localId:'8'})
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,name:'Milotic'}),null);
 const metHolo=r.cardmarketValueForCardVariant(met,'Holo');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:metHolo.value,productId:metHolo.productId})),{value:3.05,productId:278698});
+for(const card of fixtures.ex4_high_impact){
+  const o=r.verifiedBaseCardmarketProductOverride(card);
+  assert.strictEqual(o?.pricing?.idProduct,card.correct);
+  assert.strictEqual(r.resolvedCardmarketPricingForCard(card)?.idProduct,card.correct);
+  assert.strictEqual(r.knownCardmarketIdentityConflict(card,card.wrong)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,id:card.id+'x',tcgdexId:card.tcgdexId+'x',localId:'999'},card.correct)?.kind,'identity-mismatch');
+  assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
+  const value=r.cardmarketValueForCardVariant(card,'Holo');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify({value:value.value,productId:value.productId})),{value:card.expected,productId:card.correct});
+}
 const normal=r.cardmarketValueForCardVariant(p,'Normal');
 const reverse=r.cardmarketValueForCardVariant(p,'Reverse Holo');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:normal.value,productId:normal.productId})),{value:0.17,productId:407919});
@@ -471,7 +502,7 @@ def main():
     source = INDEX.read_text(encoding="utf-8")
     base_overrides = extract_js_object(source, "VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
-        raise AssertionError("Base Cardmarket override registry differs from the six audited P0 identities")
+        raise AssertionError("Base Cardmarket override registry differs from the eleven audited P0 identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
     torkoal_guard = "knownCardmarketIdentityConflict" in source and "sm12-29" in source and "398524" in source
     protected_reverse = {card_id: card_id in source for card_id in sorted(PROTECTED_REVERSE)}
@@ -671,7 +702,7 @@ def main():
                             "candidateIdentitiesDeepAudited": len(cases), "liveDetailRequests": len(live_targets),
                             "liveApiErrors": live_errors}},
         "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
-        "p0Regression": {"before": 6, "after": len(known_phase_a_p0),
+        "p0Regression": {"before": 11, "after": len(known_phase_a_p0),
                          "exactOverridesApplied": sum(bool(c.get("baseOverrideApplied")) for c in cases),
                          "registry": base_overrides,
                          "noP1AutoMapped": not any(c.get("baseOverrideApplied") for c in cases if c["tcgdexId"] not in EXPECTED_BASE_OVERRIDES),
@@ -693,7 +724,7 @@ def main():
                          "maximumConfirmedP0Undervaluation": None,
                          "method": "Differenze fra soli campi trend reali Cardmarket; nessuna stima o interpolazione."},
         "safety": {"productionFilesModified": True, "indexHtmlModified": True,
-                   "productionChangeScope": "Six exact Cardmarket base-product identity overrides; latest addition is Metagross pl3-7",
+                   "productionChangeScope": "Eleven exact Cardmarket base-product identity overrides; latest block adds five exact EX Team Magma vs Team Aqua identities",
                    "cardmarketDataModified": False,
                    "retailModified": False, "retailPricesModified": False, "scannerOcrSearchModified": False,
                    "finishesModified": True, "workflowAdded": False, "mergePerformed": False},
