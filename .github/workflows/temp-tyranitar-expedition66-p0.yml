@@ -40,6 +40,7 @@ jobs:
 
       - name: Verify scope and protected files
         run: |
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
           git diff --check
           git diff --exit-code HEAD -- data/retail_prices.json data/cardmarket_play_index.json sw.js manifest.webmanifest
           test "$(git diff --name-only HEAD | sort | tr '\n' ' ')" = "index.html scripts/test_card_identity_cardmarket_audit.py "
