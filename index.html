@@ -4276,6 +4276,11 @@ const VERIFIED_SPECIAL_STAMP_FINISHES = {
     setId:'sv05',localId:'051',name:'Pikachu',stamp:'Pokémon Day',
     finishes:['Holo'],source:'TCGdex variants_detailed · pokemon-day · type holo · Cardmarket product 870424',
     verified:'2026-09-11'
+  },
+  'sv03-062':{
+    setId:'sv03',localId:'062',name:'Palafin',stamp:'Pre-release',
+    finishes:['Normal'],source:'TCGdex variants_detailed · pre-release · type normal · Cardmarket product 727118',
+    verified:'2026-09-17'
   }
 };
 function verifiedSpecialStampFinishes(card,stamp){
@@ -4521,7 +4526,12 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   }
   const d=tcgdexVariantDetails(card);
   const it=d.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
-  const pool=it.length?it:d;
+  const rawPool=it.length?it:d;
+  const exactPalafin062=String(card?.tcgdexId||card?.id||'').trim().toLowerCase()==='sv03-062' &&
+    cardSetId(card)==='sv03' && exactLocalIdKey(card?.localId||'')===exactLocalIdKey('062') && normText(card?.name||'')==='palafin';
+  const pool=exactPalafin062
+    ? rawPool.filter(x=>Number(x?.thirdParty?.cardmarket||0)!==781858)
+    : rawPool;
   const isPlayRow=x=>{
     const stamps=Array.isArray(x?.stamp)?x.stamp.map(normText):[];
     const foil=normText(x?.foil||'');
@@ -5164,6 +5174,13 @@ const VERIFIED_EXACT_SPECIAL_STAMP_PRICES = {
     source:'Cardmarket · Pikachu V3 TEF051 · Pokémon Day · product 870424',
     sourceUrl:'https://www.cardmarket.com/it/Pokemon/Products/Singles/Temporal-Forces/Pikachu-V3-TEF051',
     verified:'2026-09-11'
+  },
+  'sv03-062':{
+    setId:'sv03',localId:'062',name:'Palafin',finish:'Normal',stamp:'Pre-release',productId:727118,
+    low:0.02,trend:0.26,avg7:0.23,avg30:0.18,avg:0.16,
+    source:'Cardmarket Product Catalogue + Price Guide · Obsidian Flames · Palafin 062 Pre-release · product 727118',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    verified:'2026-09-17'
   }
 };
 function verifiedExactSpecialStampPrice(card,variant,stamp){
@@ -5464,6 +5481,10 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // TCGdex currently points this exact card at Cardmarket 670816, which is Giratina V.
   // Cardmarket product 674207 is Giratina VSTAR LOR201.
   'swsh11-201':{setId:'swsh11',localId:'201',conflictingProduct:670816,baseProduct:674207},
+  // Obsidian Flames — Palafin 062. TCGdex exposes the legitimate Pre-release
+  // product 727118 at top level; the unstamped Holo/Reverse base product is 725142.
+  // Pre-release remains a separate exact stamped printing below.
+  'sv03-062':{setId:'sv03',localId:'062',conflictingProduct:727118,baseProduct:725142},
   // EX Hidden Legends — Beldum 29/101. TCGdex exposes the Gym Challenge
   // special-print product at top level; V1 product 276103 is the standard
   // Normal/Reverse identity. Product 280585 remains valid only as the exact
@@ -5896,6 +5917,14 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     source:'Cardmarket Product Catalogue + Price Guide · Lost Origin · Giratina VSTAR 201 · product 674207',
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
     pricing:{idProduct:674207,trend:20.65,avg7:20.82,avg30:19.59,avg:19.03,low:9.90}
+  },
+  'sv03-062':{
+    setId:'sv03',localId:'062',name:'Palafin',productId:725142,
+    verified:'2026-09-17T00:47:03+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Obsidian Flames · Palafin 062 base · product 725142',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:725142,trend:0.02,avg7:0.05,avg30:0.06,avg:0.06,low:0.02,
+      'trend-holo':0.16,'avg7-holo':0.18,'avg30-holo':0.25,'avg-holo':0.24,'low-holo':0.02}
   }
 };
 function exactCardmarketGuideIdentity(card,id,guide){
@@ -6017,6 +6046,17 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
       reason:product===836009
         ?'Il prodotto 836009 appartiene a Throh [Shoulder Throw] e non può valutare Bisharp 065'
         :'Il prodotto 836043 è consentito solo per Bisharp sv10.5b-065 / 065'
+    };
+  }
+  const exactPalafin062=id==='sv03-062'&&setId==='sv03'&&local==='062'&&name==='palafin';
+  const targetsPalafin062=id==='sv03-062'||(setId==='sv03'&&local==='062'&&name==='palafin');
+  if((product===781858&&targetsPalafin062)||((product===725142||product===727118)&&!exactPalafin062)){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · Obsidian Flames Palafin 062 prodotti verificati',
+      reason:product===781858
+        ?'Il prodotto 781858 appartiene a Frogadier [Strafe] e non può valutare Palafin 062'
+        :`Il prodotto ${product} è consentito solo per Palafin sv03-062 / 062`
     };
   }
   const exactGiratinaVstar201=id==='swsh11-201'&&setId==='swsh11'&&local==='201'&&name==='giratinavstar';
