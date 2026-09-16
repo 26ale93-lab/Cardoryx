@@ -22,15 +22,15 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
           python -B - <<'PY'
-          import json,re,unicodedata,urllib.request,importlib.util,sys
+          import json,re,unicodedata,urllib.request,importlib.util
           from pathlib import Path
 
           ROOT=Path.cwd()
           db=Path("${{ runner.temp }}")/'tcgdex-cards-database'
           spec=importlib.util.spec_from_file_location('vf',ROOT/'scripts/test_variant_finish_audit.py')
           mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-          cards=mod.load_official_database(db)
-          ex4=[c for c in cards if str(c.get('setId') or (c.get('set') or {}).get('id') or '').lower()=='ex4']
+          cards,parse_errors,snapshot=mod.load_official_database(db)
+          ex4=[c for c in cards if str((c.get('set') or {}).get('id') or '').lower()=='ex4']
 
           req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',headers={'User-Agent':'Cardoryx-EX4-Audit/1.0'})
           with urllib.request.urlopen(req,timeout=300) as r: products=json.load(r).get('products',[])
@@ -43,14 +43,9 @@ jobs:
           def cmids(card):
               out=[]
               for row in card.get('variants_detailed') or []:
-                  try:
-                      pid=int(((row.get('thirdParty') or {}).get('cardmarket')))
+                  try: pid=int(((row.get('thirdParty') or {}).get('cardmarket')))
                   except Exception: continue
                   if pid not in out: out.append(pid)
-              try:
-                  pid=int(((card.get('pricing') or {}).get('cardmarket') or {}).get('idProduct'))
-                  if pid not in out: out.append(pid)
-              except Exception: pass
               return out
 
           rows=[]
@@ -59,7 +54,7 @@ jobs:
               matches=[p for p in cm if norm(name)==norm(str(p.get('name') or '').split(' [',1)[0])]
               current=cmids(c)
               rows.append({
-                  'tcgdexId':c.get('id') or c.get('tcgdexId'), 'localId':c.get('localId'), 'name':name,
+                  'tcgdexId':c.get('id'), 'localId':c.get('localId'), 'name':name,
                   'currentProductIds':current,
                   'currentCatalogue':[byid.get(pid) for pid in current if pid in byid],
                   'exactNameExpansion1542Matches':matches,
@@ -68,7 +63,8 @@ jobs:
               })
 
           out={
-              'setId':'ex4','expectedExpansionId':1542,'cards':len(ex4),'catalogueProducts1542':len(cm),
+              'setId':'ex4','expectedExpansionId':1542,'snapshot':snapshot,'parseErrors':len(parse_errors),
+              'cards':len(ex4),'catalogueProducts1542':len(cm),
               'uniqueExactMatches':sum(r['uniqueExactMatch'] for r in rows),
               'currentIdsOutside1542':sum(any((byid.get(pid) or {}).get('idExpansion')!=1542 for pid in r['currentProductIds']) for r in rows),
               'rows':rows,
