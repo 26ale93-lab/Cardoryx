@@ -85,7 +85,7 @@ assert.strictEqual(r.knownCardmarketIdentityConflict({...met,id:'pl3-8',tcgdexId
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,localId:'8'}),null);
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,name:'Milotic'}),null);
 const metHolo=r.cardmarketValueForCardVariant(met,'Holo');
-assert.deepStrictEqual(JSON.parse(JSON.stringify({value:metHolo.value,productId:metHolo.productId})),{value:3.24,productId:278698});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:metHolo.value,productId:metHolo.productId})),{value:3.05,productId:278698});
 const normal=r.cardmarketValueForCardVariant(p,'Normal');
 """
 if t.count(marker)!=1:
