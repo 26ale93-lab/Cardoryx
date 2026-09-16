@@ -1,0 +1,81 @@
+name: Temporary Darmanitan Black Bolt 014 Cardmarket Fix
+
+on:
+  push:
+    branches:
+      - fix/darmanitan-black-bolt-014-cardmarket-p1
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-finalize:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      BASE_SHA: 148f6a557e0202757b14bcd5b3660692392cdb1b
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply exact Darmanitan patch
+        run: python -B scripts/temp_darmanitan_black_bolt_014_fix.py
+
+      - name: Compile audit
+        run: python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+
+      - name: Clone current TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+
+      - name: Runtime regression and full Cardmarket identity audit
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+
+      - name: Verify audit gates and report real counts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('artifacts/card_identity_cardmarket_audit_report.json')
+          r = json.loads(p.read_text(encoding='utf-8'))
+          counts = r.get('classifications', {})
+          print('FINAL_COUNTS', json.dumps(counts, sort_keys=True))
+          if counts.get('P0_WRONG_PRODUCT') != 0:
+              raise SystemExit(f"P0 regression: {counts}")
+          cases = r.get('cases') or []
+          target = next((c for c in cases if c.get('tcgdexId') == 'sv10.5b-014'), None)
+          if not target:
+              raise SystemExit('Darmanitan sv10.5b-014 missing from audit cases')
+          print('DARMANITAN_FINAL', json.dumps({
+              'classification': target.get('classification'),
+              'resolvedProductId': target.get('resolvedProductId'),
+              'baseOverrideApplied': target.get('baseOverrideApplied'),
+          }, sort_keys=True))
+          if target.get('classification') in {'P0_WRONG_PRODUCT', 'P1_AMBIGUOUS_PRODUCT'}:
+              raise SystemExit(f"Darmanitan not resolved: {target.get('classification')}")
+          if target.get('resolvedProductId') != 835929:
+              raise SystemExit(f"Darmanitan resolved to unexpected product {target.get('resolvedProductId')}")
+          PY
+
+      - name: Remove diagnostics and assert final scope
+        run: |
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git rm .github/workflows/temp-darmanitan-black-bolt-014-cardmarket.yml
+          git rm scripts/temp_darmanitan_black_bolt_014_fix.py
+          changed="$(git diff --name-only "$BASE_SHA" | sort)"
+          printf 'FINAL_DIFF\n%s\n' "$changed"
+          expected="$(printf '%s\n' index.html scripts/test_card_identity_cardmarket_audit.py | sort)"
+          test "$changed" = "$expected"
+          git diff --check "$BASE_SHA"
+
+      - name: Commit validated production-only diff
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html scripts/test_card_identity_cardmarket_audit.py
+          git commit -m 'Fix Darmanitan Black Bolt 014 Cardmarket identity'
+          git push origin HEAD:fix/darmanitan-black-bolt-014-cardmarket-p1
