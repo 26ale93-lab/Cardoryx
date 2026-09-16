@@ -1,0 +1,43 @@
+name: Temporary Cardmarket P1 Residual Rank
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-p1-wrong-card-name-post-bisharp-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  residual-rank:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Inject read-only ranking output
+        run: python -B scripts/temp_cardmarket_p1_residual_rank.py
+
+      - name: Compile audit without leaving cache
+        run: |
+          python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+          rm -rf scripts/__pycache__
+
+      - name: Clone current TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+
+      - name: Run full audit and residual ranking
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+
+      - name: Fail if diagnostic modified production files in repository
+        run: |
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git checkout -- scripts/test_card_identity_cardmarket_audit.py
+          changed="$(git status --short)"
+          printf '%s\n' "$changed"
+          test -z "$changed"
