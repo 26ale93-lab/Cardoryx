@@ -20,14 +20,14 @@ jobs:
           python-version: '3.12'
       - name: Clone pinned TCGdex source
         run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
-      - name: Add focused PL3 and SV03 diagnostics only
+      - name: Add official Cardmarket metacard diagnostic only
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/test_card_identity_cardmarket_audit.py')
           s=p.read_text(encoding='utf-8')
           needle='''    report = {\n'''
-          insert='''    for _focus_id in ("pl3-70", "sv03-062"):\n        _focus = next(c for c in cases if c["tcgdexId"] == _focus_id)\n        print("FOCUS_CASE " + json.dumps(_focus, ensure_ascii=False, sort_keys=True))\n\n    report = {\n'''
+          insert='''    _meta = sorted((row for row in products.values() if int(row.get("idMetacard") or 0)==216621), key=lambda row:int(row.get("idProduct") or 0))\n    print("MILOTIC70_METACARD " + json.dumps([{**row, "priceGuide": prices.get(int(row.get("idProduct") or 0))} for row in _meta], ensure_ascii=False, sort_keys=True))\n\n    report = {\n'''
           if needle not in s: raise SystemExit('report anchor missing')
           p.write_text(s.replace(needle,insert,1),encoding='utf-8')
           PY
