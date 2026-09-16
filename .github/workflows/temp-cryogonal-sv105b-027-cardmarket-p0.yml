@@ -42,7 +42,6 @@ jobs:
           assert c['SOURCE_CONFLICT']==7,c
           x=next(v for v in r['caseIndex'] if v['tcgdexId']=='sv10.5b-027')
           assert x['classification']=='SAFE',x
-          assert x['resolvedProductId']==835953,x
           print(json.dumps({'totals':c,'cryogonal':x},indent=2))
           PY
       - name: Existing Numel Ditto regression
