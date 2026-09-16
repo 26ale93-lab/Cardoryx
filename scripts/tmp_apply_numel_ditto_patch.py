@@ -1,0 +1,413 @@
+#!/usr/bin/env python3
+from pathlib import Path
+
+index_path = Path('index.html')
+test_path = Path('scripts/test_variant_finish_audit.py')
+index = index_path.read_text(encoding='utf-8')
+test = test_path.read_text(encoding='utf-8')
+
+
+def replace_exact(text, old, new, expected=1, label='replacement'):
+    count = text.count(old)
+    if count != expected:
+        raise SystemExit(f'{label}: expected {expected} exact occurrence(s), found {count}')
+    return text.replace(old, new)
+
+
+# UI: visible in Confirm and Edit only; availability still comes exclusively
+# from documentedVariantsForCard() evidence.
+index = replace_exact(
+    index,
+    '<option value="Reverse Holo">Reverse Holo</option>',
+    '<option value="Reverse Holo">Reverse Holo</option>\n<option value="Ditto Peelable">Ditto rimovibile</option>',
+    expected=2,
+    label='Ditto UI options',
+)
+
+old = """function canonicalVariant(v){
+  const n=normText(v||'');
+  if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
+  if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
+  if(n==='cosmo'||n.includes('cosmos'))return 'Cosmos Holo';
+  if(n.includes('reverse'))return 'Reverse Holo';
+  if(n.includes('holo')||n==='olografica'||n==='olografico')return 'Holo';
+  if(n.includes('speciale')||n.includes('special / other'))return 'Speciale / Altro';
+  if(n.includes('non so')||n.includes('unknown'))return 'Non so';
+  return 'Normal';
+}"""
+new = """function canonicalVariant(v){
+  const n=normText(v||'');
+  if(['peelableditto','dittopeelable','dittorimovibile'].includes(n))return 'Ditto Peelable';
+  if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
+  if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
+  if(n==='cosmo'||n.includes('cosmos'))return 'Cosmos Holo';
+  if(n.includes('reverse'))return 'Reverse Holo';
+  if(n.includes('holo')||n==='olografica'||n==='olografico')return 'Holo';
+  if(n.includes('speciale')||n.includes('special / other'))return 'Speciale / Altro';
+  if(n.includes('non so')||n.includes('unknown'))return 'Non so';
+  return 'Normal';
+}"""
+index = replace_exact(index, old, new, label='canonicalVariant')
+
+old = """function canonicalFinishFoilLabel(v){
+  const n=normText(v||'');
+  if(n==='cosmo'||n==='cosmos')return 'cosmos';
+  if(n==='pokeball'||n==='poke ball')return 'pokeball';
+  if(n==='masterball'||n==='master ball')return 'masterball';
+  return n;
+}"""
+new = old + """
+function canonicalFinishSubtypeLabel(v){
+  const n=normText(v||'');
+  if(n==='peelableditto'||n==='dittopeelable'||n==='dittorimovibile')return 'peelable-ditto';
+  return n;
+}
+function isPeelableDittoVariantRow(row){
+  return canonicalFinishTypeLabel(row?.type)==='reverse' &&
+         canonicalFinishSubtypeLabel(row?.subtype)==='peelable-ditto';
+}"""
+index = replace_exact(index, old, new, label='peelable subtype helpers')
+
+index = replace_exact(
+    index,
+    "  if(x==='Reverse Holo')return '<span class=\"variant-badge variant-reverse\">Reverse Holo</span>';",
+    "  if(x==='Ditto Peelable')return '<span class=\"variant-badge variant-reverse\">Ditto rimovibile</span>';\n  if(x==='Reverse Holo')return '<span class=\"variant-badge variant-reverse\">Reverse Holo</span>';",
+    label='Ditto badge',
+)
+
+old = """function tcgdexMarketplaceVariant(card,variant){
+  const target=canonicalVariant(variant||'Normal');
+  const list=Array.isArray(card?.variants_detailed)?card.variants_detailed:[];
+  const it=list.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
+  const pool=it.length?it:list;
+  const hasStamp=(x,name)=>(x?.stamp||[]).some(v=>normText(v)===normText(name));
+  let matches=[];
+  if(target==='Play! Pokémon Prize Pack'||target==='Play! Pokémon Stamp') matches=pool.filter(x=>hasStamp(x,'player-rewards-program')||x?.foil==='player-reward'||x?.foil==='league');
+  else if(target==='Pokémon Day Stamp') matches=pool.filter(x=>hasStamp(x,'pokemon-day'));
+  else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='pokeball');
+  else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='masterball');
+  else if(target==='Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Normal') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='normal'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  const withCM=matches.find(x=>Number(x?.thirdParty?.cardmarket)>0);
+  return withCM||matches[0]||null;
+}"""
+new = """function tcgdexMarketplaceVariant(card,variant){
+  const target=canonicalVariant(variant||'Normal');
+  const list=Array.isArray(card?.variants_detailed)?card.variants_detailed:[];
+  const it=list.filter(x=>!Array.isArray(x?.languages)||x.languages.includes('it'));
+  const pool=it.length?it:list;
+  const hasStamp=(x,name)=>(x?.stamp||[]).some(v=>normText(v)===normText(name));
+  let matches=[];
+  if(target==='Play! Pokémon Prize Pack'||target==='Play! Pokémon Stamp') matches=pool.filter(x=>hasStamp(x,'player-rewards-program')||x?.foil==='player-reward'||x?.foil==='league');
+  else if(target==='Pokémon Day Stamp') matches=pool.filter(x=>hasStamp(x,'pokemon-day'));
+  else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='pokeball');
+  else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='masterball');
+  else if(target==='Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Ditto Peelable') matches=pool.filter(x=>isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  else if(target==='Normal') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='normal'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
+  const withCM=matches.find(x=>Number(x?.thirdParty?.cardmarket)>0);
+  if(target==='Ditto Peelable')return withCM||null;
+  return withCM||matches[0]||null;
+}"""
+index = replace_exact(index, old, new, label='tcgdexMarketplaceVariant')
+
+old = """function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
+  for(const x of (Array.isArray(rows)?rows:[])){
+    const type=canonicalFinishTypeLabel(x?.type);
+    const foil=canonicalFinishFoilLabel(x?.foil);
+    if(base){
+      if(type==='normal')allowed.add('Normal');
+      if(type==='holo' && !foil)allowed.add('Holo');
+      if(type==='reverse' && !foil)allowed.add('Reverse Holo');
+    }
+    if(special){
+      if(['normal','holo','reverse'].includes(type) && foil==='cosmos')allowed.add('Cosmos Holo');
+      if(type==='reverse'&&foil==='pokeball')allowed.add('Poké Ball Reverse Holo');
+      if(type==='reverse'&&foil==='masterball')allowed.add('Master Ball Reverse Holo');
+    }
+  }
+}"""
+new = """function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
+  for(const x of (Array.isArray(rows)?rows:[])){
+    const type=canonicalFinishTypeLabel(x?.type);
+    const foil=canonicalFinishFoilLabel(x?.foil);
+    const peelableDitto=isPeelableDittoVariantRow(x);
+    if(base){
+      if(type==='normal')allowed.add('Normal');
+      if(type==='holo' && !foil)allowed.add('Holo');
+      if(type==='reverse' && !foil && !peelableDitto)allowed.add('Reverse Holo');
+      if(peelableDitto && !foil)allowed.add('Ditto Peelable');
+    }
+    if(special){
+      if(['normal','holo','reverse'].includes(type) && foil==='cosmos')allowed.add('Cosmos Holo');
+      if(type==='reverse'&&foil==='pokeball')allowed.add('Poké Ball Reverse Holo');
+      if(type==='reverse'&&foil==='masterball')allowed.add('Master Ball Reverse Holo');
+    }
+  }
+}"""
+index = replace_exact(index, old, new, label='addDetailedFinishes')
+
+index = replace_exact(
+    index,
+    "v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so')",
+    "v==='Ditto Peelable'||v==='Cosmos Holo'||v==='Speciale / Altro'||v==='Non so')",
+    expected=2,
+    label='Cardmarket fail-closed guards',
+)
+
+# Audit mirror: distinguish the exact subtype and test production JS directly.
+test = replace_exact(
+    test,
+    '    "Poké Ball Reverse Holo", "Master Ball Reverse Holo",\n)',
+    '    "Poké Ball Reverse Holo", "Master Ball Reverse Holo", "Ditto Peelable",\n)',
+    label='FINISHES tuple',
+)
+test = replace_exact(
+    test,
+    '    "swsh10.5-013": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED", "note": "Peelable Ditto remains a separate physical identity."},',
+    '    "swsh10.5-013": {"expected": ["Normal", "Reverse Holo", "Ditto Peelable"], "cause": "ALREADY_FIXED", "note": "Reverse standard and exact peelable-Ditto subtype remain separate physical variants."},',
+    label='Numel regression expectation',
+)
+test = replace_exact(
+    test,
+    '    n = norm(value)\n    if "masterball" in n:',
+    '    n = norm(value)\n    if n in {"peelableditto", "dittopeelable", "dittorimovibile"}:\n        return "Ditto Peelable"\n    if "masterball" in n:',
+    label='Python canonical finish Ditto',
+)
+old = """def canonical_finish_foil_label(value):
+    n = norm(value)
+    if n in {"cosmo", "cosmos"}:
+        return "cosmos"
+    if n == "pokeball":
+        return "pokeball"
+    if n == "masterball":
+        return "masterball"
+    return n
+"""
+new = old + """
+def canonical_finish_subtype_label(value):
+    n = norm(value)
+    if n in {"peelableditto", "dittopeelable", "dittorimovibile"}:
+        return "peelable-ditto"
+    return n
+
+
+def is_peelable_ditto_row(row):
+    return (canonical_finish_type_label(row.get("type")) == "reverse" and
+            canonical_finish_subtype_label(row.get("subtype")) == "peelable-ditto")
+
+"""
+test = replace_exact(test, old, new, label='Python subtype helpers')
+test = replace_exact(
+    test,
+    '    if foil in {"cosmos", "cosmo"}:\n        return "Cosmos Holo"',
+    '    if is_peelable_ditto_row(row) and not foil:\n        return "Ditto Peelable"\n    if foil in {"cosmos", "cosmo"}:\n        return "Cosmos Holo"',
+    label='canonical row Ditto',
+)
+test = replace_exact(
+    test,
+    '        row["foil"] = {"cosmos": "Cosmo", "pokeball": "Poké Ball", "masterball": "Master Ball"}.get(row.get("foil"), row.get("foil"))\n        if row.get("foil") is None: row.pop("foil", None)',
+    '        row["foil"] = {"cosmos": "Cosmo", "pokeball": "Poké Ball", "masterball": "Master Ball"}.get(row.get("foil"), row.get("foil"))\n        row["subtype"] = {"peelable-ditto": "Ditto rimovibile"}.get(row.get("subtype"), row.get("subtype"))\n        if row.get("foil") is None: row.pop("foil", None)\n        if row.get("subtype") is None: row.pop("subtype", None)',
+    label='Italian subtype simulation',
+)
+old = """def cardoryx_add_detailed(allowed, rows, base=True, special=True):
+    # Production uses lexical-only canonical labels; no generic foil inference.
+    for row in rows:
+        typ = canonical_finish_type_label(row.get("type"))
+        foil = canonical_finish_foil_label(row.get("foil"))
+        if base:
+            if typ == "normal": allowed.add("Normal")
+            if typ == "holo" and not foil: allowed.add("Holo")
+            if typ == "reverse" and not foil: allowed.add("Reverse Holo")
+        if special:
+            if typ in {"normal", "holo", "reverse"} and foil == "cosmos": allowed.add("Cosmos Holo")
+            if typ == "reverse" and foil == "pokeball": allowed.add("Poké Ball Reverse Holo")
+            if typ == "reverse" and foil == "masterball": allowed.add("Master Ball Reverse Holo")
+"""
+new = """def cardoryx_add_detailed(allowed, rows, base=True, special=True):
+    # Production uses lexical-only canonical labels; no generic foil inference.
+    for row in rows:
+        typ = canonical_finish_type_label(row.get("type"))
+        foil = canonical_finish_foil_label(row.get("foil"))
+        peelable_ditto = is_peelable_ditto_row(row)
+        if base:
+            if typ == "normal": allowed.add("Normal")
+            if typ == "holo" and not foil: allowed.add("Holo")
+            if typ == "reverse" and not foil and not peelable_ditto: allowed.add("Reverse Holo")
+            if peelable_ditto and not foil: allowed.add("Ditto Peelable")
+        if special:
+            if typ in {"normal", "holo", "reverse"} and foil == "cosmos": allowed.add("Cosmos Holo")
+            if typ == "reverse" and foil == "pokeball": allowed.add("Poké Ball Reverse Holo")
+            if typ == "reverse" and foil == "masterball": allowed.add("Master Ball Reverse Holo")
+"""
+test = replace_exact(test, old, new, label='Python addDetailed mirror')
+test = replace_exact(
+    test,
+    '    if finish in {"Cosmos Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"}:',
+    '    if finish in {"Ditto Peelable", "Cosmos Holo", "Poké Ball Reverse Holo", "Master Ball Reverse Holo"}:',
+    label='Python Cardmarket guard',
+)
+
+runtime_helper = r'''
+def extract_js_function(source, name):
+    marker = re.search(rf"\bfunction\s+{re.escape(name)}\s*\(", source)
+    if not marker:
+        raise AssertionError(f"Missing production function {name}")
+    start = marker.start()
+    brace = source.find("{", marker.end())
+    if brace < 0:
+        raise AssertionError(f"Missing body for production function {name}")
+    depth = 0
+    quote = None
+    escape = False
+    line_comment = False
+    block_comment = False
+    i = brace
+    while i < len(source):
+        c = source[i]
+        n = source[i + 1] if i + 1 < len(source) else ""
+        if line_comment:
+            if c == "\n":
+                line_comment = False
+            i += 1
+            continue
+        if block_comment:
+            if c == "*" and n == "/":
+                block_comment = False
+                i += 2
+                continue
+            i += 1
+            continue
+        if quote:
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == quote:
+                quote = None
+            i += 1
+            continue
+        if c == "/" and n == "/":
+            line_comment = True
+            i += 2
+            continue
+        if c == "/" and n == "*":
+            block_comment = True
+            i += 2
+            continue
+        if c in {'"', "'", "`"}:
+            quote = c
+            i += 1
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:i + 1]
+        i += 1
+    raise AssertionError(f"Unclosed production function {name}")
+
+
+def run_ditto_production_runtime(source):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant", "canonicalFinishTypeLabel",
+        "canonicalFinishFoilLabel", "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow",
+        "tcgdexVariantDetails", "tcgdexMarketplaceVariant", "addDetailedFinishes",
+        "documentedVariantsForCard", "migrateFinishStamp", "cardmarketValueForVariant",
+        "cardmarketValueForCardVariant",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    if source.count('<option value="Ditto Peelable">Ditto rimovibile</option>') != 2:
+        raise AssertionError("Ditto must be present exactly in Confirm and Edit variant selectors")
+    fixture = {
+        "variants_detailed": [
+            {"type": "Normale", "thirdParty": {"cardmarket": 665657}},
+            {"type": "Reverse", "thirdParty": {"cardmarket": 665657}},
+            {"type": "Reverse", "subtype": "Ditto rimovibile", "thirdParty": {"tcgplayer": 277791}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 665657, "trend": 0.15, "trend-holo": 0.55}},
+    }
+    js = functions + "\n" + r'''
+function normalizedPlaySeries(v){const s=String(v??'').trim();return /^[1-9]$/.test(s)?s:'';}
+function isMee30CelebrationEnergy(){return false;}
+function isMeePrizePackEnergy(){return false;}
+function isModernParallelEra(){return false;}
+function verifiedSpecialStampFinishes(){return [];}
+function verifiedNormalFinish(){return false;}
+function verifiedReverseFinish(){return false;}
+function verifiedVariantPrice(){return null;}
+function verifiedStampPrice(){return null;}
+function verifiedPlaySeriesPrice(){return null;}
+function prizePackFinishPlan(){return {authoritative:false,finishes:[]};}
+function verifiedBaseCardmarketProductOverride(){return null;}
+function knownCardmarketIdentityConflict(){return null;}
+function knownReverseCardmarketProductConflict(){return null;}
+function fail(msg){throw new Error(msg);}
+const numel=__FIXTURE__;
+const documented=[...documentedVariantsForCard(numel,'None','')];
+for(const x of ['Normal','Reverse Holo','Ditto Peelable'])if(!documented.includes(x))fail('Numel missing '+x);
+if(documented.includes('Holo'))fail('Numel gained generic Holo');
+const standard=tcgdexMarketplaceVariant(numel,'Reverse Holo');
+if(Number(standard?.thirdParty?.cardmarket||0)!==665657)fail('Reverse standard lost exact marketplace row');
+if(tcgdexMarketplaceVariant(numel,'Ditto Peelable')!==null)fail('Peelable Ditto inherited a non-exact Cardmarket row');
+const exactPrice=cardmarketValueForCardVariant(numel,'Ditto Peelable');
+if(exactPrice.value!==0||exactPrice.kind!=='needs-exact-variant')fail('Peelable Ditto did not fail closed');
+const rawPrice=cardmarketValueForVariant(numel.pricing.cardmarket,'Ditto Peelable');
+if(rawPrice.value!==0||rawPrice.kind!=='needs-exact-variant')fail('Low-level Cardmarket fallback leaked into Ditto');
+const reopened=migrateFinishStamp({variant:'Ditto Peelable',stamp:'None'});
+if(reopened.variant!=='Ditto Peelable')fail('Saved Ditto variant was not preserved on reopen');
+if(canonicalVariant('Ditto rimovibile')!=='Ditto Peelable'||canonicalVariant('peelable-ditto')!=='Ditto Peelable')fail('Ditto aliases are not canonical');
+for(const id of ['swsh10.5-009','swsh10.5-019','swsh10.5-066','swsh10.5-068']){
+  const s=new Set();
+  addDetailedFinishes(s,[{type:'Normale'},{type:'Reverse'}],{base:true,special:true});
+  if(s.has('Ditto Peelable')||!s.has('Normal')||!s.has('Reverse Holo'))fail('Pokémon GO regression '+id);
+}
+const specials=new Set();
+addDetailedFinishes(specials,[
+  {type:'Olografica',foil:'Cosmo'},
+  {type:'Reverse',foil:'Poké Ball'},
+  {type:'Reverse',foil:'Master Ball'}
+],{base:true,special:true});
+for(const x of ['Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo'])if(!specials.has(x))fail('Special finish regression '+x);
+if(canonicalStamp('Play! Pokémon')!=='Play! Pokémon'||canonicalStamp('Pokémon Day')!=='Pokémon Day')fail('Special stamp canonicalization changed');
+process.stdout.write(JSON.stringify({documented,standardReverseProduct:665657,dittoMarketplace:null,dittoPrice:exactPrice.kind,persistedVariant:reopened.variant,specials:[...specials]}));
+'''.replace('__FIXTURE__', json.dumps(fixture, ensure_ascii=False))
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+'''
+marker = "\ndef stratified(items, count):\n"
+if marker not in test:
+    raise SystemExit('runtime helper insertion marker missing')
+test = test.replace(marker, runtime_helper + marker, 1)
+
+test = replace_exact(
+    test,
+    '        "VERIFIED_REVERSE_FINISHES", "verifiedReverseFinish",\n    ]',
+    '        "VERIFIED_REVERSE_FINISHES", "verifiedReverseFinish",\n        "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow", "tcgdexMarketplaceVariant",\n        "migrateFinishStamp",\n    ]',
+    label='required production Ditto logic',
+)
+test = replace_exact(
+    test,
+    '    if missing_logic:\n        raise SystemExit(f"Required production logic missing: {missing_logic}")\n    registries = {',
+    '    if missing_logic:\n        raise SystemExit(f"Required production logic missing: {missing_logic}")\n    ditto_runtime = run_ditto_production_runtime(source)\n    registries = {',
+    label='run production JS runtime',
+)
+test = replace_exact(
+    test,
+    '        "realWorldRegression": real_world_regression,\n        "cardmarketPricingAudit": {',
+    '        "realWorldRegression": real_world_regression,\n        "dittoPeelableRuntimeAudit": ditto_runtime,\n        "cardmarketPricingAudit": {',
+    label='report runtime audit',
+)
+test = replace_exact(
+    test,
+    '            "productionChangeScope": "One exact Piplup Cardmarket identity guard plus five exact unstamped Reverse finish identities",',
+    '            "productionChangeScope": "Preserve exact peelable-Ditto subtype as a separate physical variant and fail closed on Cardmarket until an exact product is verified",',
+    label='production scope report',
+)
+
+index_path.write_text(index, encoding='utf-8')
+test_path.write_text(test, encoding='utf-8')
+print('Exact Numel Ditto patch applied to index.html and scripts/test_variant_finish_audit.py')
