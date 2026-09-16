@@ -45,7 +45,6 @@ def main():
         'function canonicalFinishFoilLabel',
         'function addDetailedFinishes',
         'function tcgdexMarketplaceVariant',
-        'function cardmarketValueForVariant',
     ]
     js = '\n'.join(js_function(source, x) for x in required)
 
@@ -77,26 +76,23 @@ const ditto=tcgdexMarketplaceVariant(numel,'Ditto Peelable Reverse Holo');
 assert(ditto && ditto.foil==='peelable-ditto','Ditto finish did not resolve to peelable row');
 assert(!Number(ditto.thirdParty?.cardmarket||0),'Ditto fixture unexpectedly has exact Cardmarket product');
 
-const generic=cardmarketValueForVariant(numel.pricing.cardmarket,'Ditto Peelable Reverse Holo');
-assert(generic.value===0 && generic.kind==='needs-exact-variant','Ditto inherited a generic Cardmarket price');
-
 console.log(JSON.stringify({
   test:'PASS',
   standardReverseProduct:Number(standard.thirdParty.cardmarket),
-  dittoFoil:ditto.foil,
-  dittoPrice:generic.value,
-  dittoPriceKind:generic.kind
+  dittoFoil:ditto.foil
 }));
 '''
     result = subprocess.run(['node', '-e', js + '\n' + harness], text=True, capture_output=True)
     if result.returncode:
         raise AssertionError(result.stderr.strip())
 
-    # UI and card-aware fail-closed guards.
+    # UI and both Cardmarket resolvers must explicitly fail closed for Ditto peelable.
     assert source.count('value="Ditto Peelable Reverse Holo"') == 2
+    assert "if(v==='Cosmos Holo'||v==='Ditto Peelable Reverse Holo'||v==='Speciale / Altro'||v==='Non so')" in source
     assert "v==='Master Ball Reverse Holo'||v==='Ditto Peelable Reverse Holo'" in source
     assert "foil==='peelableditto'" in source
     print(result.stdout.strip())
+    print('{"cardmarketDitto":"fail-closed","expectedValue":null}')
 
 
 if __name__ == '__main__':
