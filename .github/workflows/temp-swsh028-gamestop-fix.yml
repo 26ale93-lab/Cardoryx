@@ -32,7 +32,7 @@ jobs:
           PY
       - name: Apply exact SWSH028 GameStop patch
         run: python -B scripts/temp_apply_swsh028_gamestop_fix.py
-      - name: Repair isolated runtime dependency list
+      - name: Repair isolated runtime dependency list and live target
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -42,6 +42,11 @@ jobs:
           new='''           "cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails","tcgdexExactSwsh028GameStopPrice")'''
           if old not in s:
               raise SystemExit('SWSH028 runtime dependency anchor missing')
+          s=s.replace(old,new,1)
+          old='''    live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids |\n                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) |'''
+          new='''    live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028"} |\n                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) |'''
+          if old not in s:
+              raise SystemExit('live target anchor missing')
           p.write_text(s.replace(old,new,1),encoding='utf-8')
           PY
       - name: Restore temporary helper before audits
