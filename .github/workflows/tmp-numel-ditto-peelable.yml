@@ -28,6 +28,24 @@ jobs:
           test "$changed" = "$expected"
           sha256sum data/retail_prices.json data/cardmarket_play_index.json > /tmp/cardoryx-protected.before
 
+      - name: Repair temporary runner quoting
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/tmp_apply_numel_ditto_patch.py')
+          s=p.read_text(encoding='utf-8')
+          a="runtime_helper = r'''"
+          b="\n'''\nmarker = \"\\ndef stratified"
+          if s.count(a)!=1 or s.count(b)!=1:
+              raise SystemExit('Temporary runner delimiter guard failed')
+          s=s.replace(a, 'runtime_helper = r"""', 1)
+          s=s.replace(b, '\n"""\nmarker = "\\ndef stratified', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          python -m py_compile scripts/tmp_apply_numel_ditto_patch.py
+
       - name: Apply exact guarded patch
         run: python scripts/tmp_apply_numel_ditto_patch.py
 
@@ -47,7 +65,7 @@ jobs:
           git diff --check
           git diff --exit-code -- data/retail_prices.json data/cardmarket_play_index.json sw.js manifest.webmanifest
           changed="$(git diff --name-only | sort)"
-          expected="$(printf '%s\n' index.html scripts/test_variant_finish_audit.py | sort)"
+          expected="$(printf '%s\n' index.html scripts/test_variant_finish_audit.py scripts/tmp_apply_numel_ditto_patch.py | sort)"
           test "$changed" = "$expected"
 
       - name: Commit only production and existing test
@@ -57,6 +75,7 @@ jobs:
           git config user.name "cardoryx-audit-bot"
           git config user.email "cardoryx-audit-bot@users.noreply.github.com"
           git add index.html scripts/test_variant_finish_audit.py
+          git checkout -- scripts/tmp_apply_numel_ditto_patch.py
           git rm .github/workflows/tmp-numel-ditto-peelable.yml scripts/tmp_apply_numel_ditto_patch.py
           git commit -m "Fix peelable Ditto finish identity"
           git push origin HEAD:fix/numel-ditto-peelable
