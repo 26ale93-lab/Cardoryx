@@ -75,14 +75,16 @@ jobs:
           base=json.loads(Path(os.environ['RUNNER_TEMP'],'baseline_identity_report.json').read_text())
           post=json.loads(Path(os.environ['RUNNER_TEMP'],'post_identity_report.json').read_text())
           batch=json.loads(Path(os.environ['RUNNER_TEMP'],'ex4_verified_batch_audit.json').read_text())
-          bc=base['summary']['classifications'] if 'summary' in base and 'classifications' in base['summary'] else base['classifications']
-          pc=post['summary']['classifications'] if 'summary' in post and 'classifications' in post['summary'] else post['classifications']
+          bc=base['classificationTotals']
+          pc=post['classificationTotals']
           assert bc['P0_WRONG_PRODUCT']==0, bc
           assert pc['P0_WRONG_PRODUCT']==0, pc
           assert pc['P1_AMBIGUOUS_PRODUCT'] < bc['P1_AMBIGUOUS_PRODUCT'], (bc,pc)
           drop=bc['P1_AMBIGUOUS_PRODUCT']-pc['P1_AMBIGUOUS_PRODUCT']
           assert drop==batch['eligibleCount'], (drop,batch['eligibleCount'])
+          assert pc['SAFE']-bc['SAFE']==batch['eligibleCount'], (bc,pc,batch['eligibleCount'])
           print('P1',bc['P1_AMBIGUOUS_PRODUCT'],'->',pc['P1_AMBIGUOUS_PRODUCT'])
+          print('SAFE',bc['SAFE'],'->',pc['SAFE'])
           print('P0',pc['P0_WRONG_PRODUCT'])
           PY
       - name: Verify scope and protected files
