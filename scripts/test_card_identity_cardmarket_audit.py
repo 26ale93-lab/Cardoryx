@@ -45,6 +45,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
     "pl3-7": {"base": 278698, "alternate": 278689, "stamp": "wrong-card-identity", "cardmarketCode": "SV7"},
     "pl3-70": {"base": 278761, "alternate": 882910, "stamp": "special-v2-source-conflict", "cardmarketCode": "SV70"},
+    "sv10.5b-027": {"base": 835953, "alternate": 835994, "stamp": "wrong-card-identity", "cardmarketCode": "BLK027"},
     "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
     "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
@@ -99,6 +100,7 @@ EXPECTED_BASE_OVERRIDES = {
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
     "pl3-70": {"setId": "pl3", "localId": "070", "conflictingProduct": 882910, "baseProduct": 278761},
+    "sv10.5b-027": {"setId": "sv10.5b", "localId": "027", "conflictingProduct": 835994, "baseProduct": 835953},
     "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
@@ -370,6 +372,18 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 882910, "trend": 34.74}},
     }
+    fixtures["cryogonal027"] = {
+        "id": "sv10.5b-027", "tcgdexId": "sv10.5b-027", "name": "Cryogonal", "localId": "027",
+        "set": {"id": "sv10.5b", "name": "Black Bolt"}, "rarity": "Uncommon", "regulationMark": "I",
+        "variants": {"normal": True, "holo": False, "reverse": True},
+        "variants_detailed": [
+            {"type": "normal", "thirdParty": {"cardmarket": 835953}},
+            {"type": "reverse", "thirdParty": {"cardmarket": 835953}},
+            {"type": "reverse", "foil": "pokeball", "thirdParty": {"cardmarket": 836326}},
+            {"type": "reverse", "foil": "masterball", "thirdParty": {"cardmarket": 836324}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 835994, "trend": 0.02, "trend-holo": 0.28}},
+    }
     fixtures["metagross"] = {
         "id": "pl3-7", "tcgdexId": "pl3-7", "name": "Metagross", "localId": "7",
         "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Rare Holo",
@@ -529,6 +543,26 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify({value:milNormal.value,productI
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:milReverse.value,productId:milReverse.productId})),{value:14.54,productId:278761});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(mil,'Normal'))),{low:0.13,trend:0.97,avg7:1.27,avg30:0.87});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(mil,'Reverse Holo'))),{low:0.49,trend:14.54,avg7:13.73,avg30:8.01});
+const cry=fixtures.cryogonal027;
+const cryOverride=r.verifiedBaseCardmarketProductOverride(cry);
+assert.strictEqual(cryOverride?.pricing?.idProduct,835953);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(cry)?.idProduct,835953);
+assert.strictEqual(r.knownCardmarketIdentityConflict(cry,835994)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...cry,id:'sv10.5b-028',tcgdexId:'sv10.5b-028',localId:'028'},835953)?.kind,'identity-mismatch');
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...cry,localId:'028'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...cry,name:'Golurk'}),null);
+const cryNormal=r.cardmarketValueForCardVariant(cry,'Normal');
+const cryReverse=r.cardmarketValueForCardVariant(cry,'Reverse Holo');
+const cryPoke=r.cardmarketValueForCardVariant(cry,'Poké Ball Reverse Holo');
+const cryMaster=r.cardmarketValueForCardVariant(cry,'Master Ball Reverse Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:cryNormal.value,productId:cryNormal.productId})),{value:0.05,productId:835953});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:cryReverse.value,productId:cryReverse.productId})),{value:0.18,productId:835953});
+assert.strictEqual(cryPoke.value,0);
+assert.strictEqual(cryPoke.kind,'needs-exact-variant');
+assert.strictEqual(cryMaster.value,0);
+assert.strictEqual(cryMaster.kind,'needs-exact-variant');
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(cry,'Normal'))),{low:0.02,trend:0.05,avg7:0.08,avg30:0.04});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(cry,'Reverse Holo'))),{low:0.02,trend:0.18,avg7:0.20,avg30:0.19});
 for(const card of fixtures.ex4_high_impact){
   const o=r.verifiedBaseCardmarketProductOverride(card);
   assert.strictEqual(o?.pricing?.idProduct,card.correct);
