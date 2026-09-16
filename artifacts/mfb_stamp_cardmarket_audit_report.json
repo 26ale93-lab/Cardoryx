@@ -1,0 +1,373 @@
+{
+  "requested": 9,
+  "fetched": 9,
+  "errors": {},
+  "stampTaxonomy": {
+    "bulbasaur": 4,
+    "bulbasaur+pokeball": 2,
+    "charmander": 4,
+    "charmander+pokeball": 2,
+    "pikachu": 4,
+    "pikachu+pokeball": 2,
+    "squirtle": 3,
+    "pokeball+squirtle": 1
+  },
+  "cards": [
+    {
+      "tcgdexId": "mfb-1",
+      "name": "Bulbasaur",
+      "localId": "1",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "bulbasaur"
+          ],
+          "languages": null,
+          "pid": 741976,
+          "pricingPid": 741976,
+          "exact": true,
+          "trend": 5.97,
+          "low": 1
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "bulbasaur",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 741975,
+          "pricingPid": 741975,
+          "exact": true,
+          "trend": 7.67,
+          "low": 1.99
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-8",
+      "name": "Grass Energy",
+      "localId": "8",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "bulbasaur"
+          ],
+          "languages": null,
+          "pid": 741986,
+          "pricingPid": 741986,
+          "exact": true,
+          "trend": 0.12,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "bulbasaur",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 741985,
+          "pricingPid": 741985,
+          "exact": true,
+          "trend": 0.3,
+          "low": 0.02
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-9",
+      "name": "Charmander",
+      "localId": "9",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "charmander"
+          ],
+          "languages": null,
+          "pid": 741988,
+          "pricingPid": 741988,
+          "exact": true,
+          "trend": 2.88,
+          "low": 1.1
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "charmander",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 741976,
+          "pricingPid": 741976,
+          "exact": true,
+          "trend": 5.97,
+          "low": 1
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-16",
+      "name": "Fire Energy",
+      "localId": "16",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "charmander"
+          ],
+          "languages": null,
+          "pid": 741998,
+          "pricingPid": 741998,
+          "exact": true,
+          "trend": 0.25,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "charmander",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 741997,
+          "pricingPid": 741997,
+          "exact": true,
+          "trend": 0.16,
+          "low": 0.05
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-17",
+      "name": "Pikachu",
+      "localId": "17",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "pikachu"
+          ],
+          "languages": null,
+          "pid": 742000,
+          "pricingPid": 742000,
+          "exact": true,
+          "trend": 7.89,
+          "low": 3.5
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "pikachu",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 741999,
+          "pricingPid": 741999,
+          "exact": true,
+          "trend": 13.58,
+          "low": 5
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-24",
+      "name": "Lightning Energy",
+      "localId": "24",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "pikachu"
+          ],
+          "languages": null,
+          "pid": 742010,
+          "pricingPid": 742010,
+          "exact": true,
+          "trend": 0.19,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "pikachu",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 742009,
+          "pricingPid": 742009,
+          "exact": true,
+          "trend": 0.48,
+          "low": 0.02
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-25",
+      "name": "Squirtle",
+      "localId": "25",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "squirtle"
+          ],
+          "languages": null,
+          "pid": 742012,
+          "pricingPid": 742012,
+          "exact": true,
+          "trend": 3.87,
+          "low": 2.9
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "squirtle",
+            "pokeball"
+          ],
+          "languages": null,
+          "pid": 742011,
+          "pricingPid": 742011,
+          "exact": true,
+          "trend": 7.36,
+          "low": 3.99
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-33",
+      "name": "Potion",
+      "localId": "33",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "pikachu"
+          ],
+          "languages": null,
+          "pid": 742007,
+          "pricingPid": 742007,
+          "exact": true,
+          "trend": 0.17,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "squirtle"
+          ],
+          "languages": null,
+          "pid": 524029,
+          "pricingPid": null,
+          "exact": false,
+          "trend": null,
+          "low": null
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "bulbasaur"
+          ],
+          "languages": null,
+          "pid": 741983,
+          "pricingPid": 741983,
+          "exact": true,
+          "trend": 0.22,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "charmander"
+          ],
+          "languages": null,
+          "pid": 741995,
+          "pricingPid": 741995,
+          "exact": true,
+          "trend": 0.17,
+          "low": 0.02
+        }
+      ]
+    },
+    {
+      "tcgdexId": "mfb-34",
+      "name": "Switch",
+      "localId": "34",
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "pikachu"
+          ],
+          "languages": null,
+          "pid": 742008,
+          "pricingPid": 742008,
+          "exact": true,
+          "trend": 0.13,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "squirtle"
+          ],
+          "languages": null,
+          "pid": 742020,
+          "pricingPid": 742020,
+          "exact": true,
+          "trend": 0.09,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "bulbasaur"
+          ],
+          "languages": null,
+          "pid": 741984,
+          "pricingPid": 741984,
+          "exact": true,
+          "trend": 0.18,
+          "low": 0.02
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "charmander"
+          ],
+          "languages": null,
+          "pid": 741996,
+          "pricingPid": 741996,
+          "exact": true,
+          "trend": 0.09,
+          "low": 0.03
+        }
+      ]
+    }
+  ]
+}
