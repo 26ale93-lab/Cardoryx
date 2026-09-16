@@ -22,7 +22,7 @@ jobs:
           python-version: '3.12'
       - name: Apply candidate runtime patch
         run: python -B scripts/temp_apply_svp_set_logo_staff_fix.py
-      - name: Repair temporary patch-helper quoting
+      - name: Repair temporary patch-helper for current audit
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -31,6 +31,8 @@ jobs:
           s=s.replace("fn=r'''def runtime_svp_set_logo_staff_regression():\n    \"\"\"Verify exact live SVP Set Stamp/Staff product separation in production JS.\"\"\"",
                       'fn=r"""def runtime_svp_set_logo_staff_regression():\n    # Verify exact live SVP Set Stamp/Staff product separation in production JS.')
           s=s.replace("    return result\n\n\n'''\nif anchor not in s:", '    return result\n\n\n"""\nif anchor not in s:')
+          s=s.replace('        elif live_exact_base_evidence:\n',
+                      '        elif live_exact_base_evidence and not snapshot_exact_alternate_product:\n')
           p.write_text(s,encoding='utf-8')
           PY
       - name: Apply permanent audit regression patch
