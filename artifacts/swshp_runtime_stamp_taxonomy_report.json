@@ -1,0 +1,19 @@
+{
+  "canonicalStamp": {
+    "eb-games": "eb-games",
+    "EB Games": "EB Games",
+    "gamestop": "GameStop",
+    "GameStop": "GameStop",
+    "25th-celebration": "25th-celebration",
+    "25th Celebration": "25th Celebration",
+    "worlds-2022": "worlds-2022",
+    "Worlds 2022": "Worlds 2022",
+    "staff": "Staff",
+    "Staff": "Staff",
+    "Set Stamp": "Set Stamp"
+  },
+  "sourceSnippets": {
+    "normText": "function normText(s=''){return String(s).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'')}",
+    "canonicalStamp": "function canonicalStamp(v){\n  const n=normText(v||'');\n  if(!n||n==='none'||n==='nessuno')return 'None';\n  if(n.includes('play')||n.includes('player reward')||n.includes('prize pack'))return 'Play! Pokémon';\n  if(n.includes('pokemon day'))return 'Pokémon Day';\n  if(n.includes('30 anniversario')||n.includes('30th celebration')||n.includes('30 celebration'))return '30° Anniversario';\n  if(n.includes('pokemon center'))return 'Pokémon Center';\n  if(n.includes('pre-release')||n.includes('prerelease'))return 'Pre-release';\n  if(n.includes('staff'))return 'Staff';\n  if(n.includes('set stamp')||n.includes('set-promo'))return 'Set Stamp';\n  if(n.includes('gamestop'))return 'GameStop';\n  return v||'Altro';\n}"
+  }
+}
