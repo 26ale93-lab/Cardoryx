@@ -5232,9 +5232,37 @@ function tcgdexExactSvpStampPrice(card,variant,stamp){
   return {...cm,idProduct:productId,source:`TCGdex · Cardmarket · ${st}`,verified:String(cm?.updated||'')};
 }
 
+// Exact dynamic evidence for one verified Sword & Shield promo printing.
+// This is deliberately not a generic GameStop rule: it applies only to
+// Duraludon SWSH028 and never falls back to EB Games or the base Cosmos Holo.
+function tcgdexExactSwsh028GameStopPrice(card,variant,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  if(id!=='swshp-swsh028' || cardSetId(card)!=='swshp' ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey('SWSH028') ||
+     normText(card?.name||'')!==normText('Duraludon') ||
+     canonicalVariant(variant||'Normal')!=='Holo' || canonicalStamp(stamp)!=='GameStop')return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    if(Array.isArray(row?.languages)&&row.languages.length&&!row.languages.includes('it'))return false;
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.length===1 && stamps[0]==='gamestop' &&
+      canonicalFinishTypeLabel(row?.type)==='holo' && !canonicalFinishFoilLabel(row?.foil);
+  });
+  if(rows.length!==1)return null;
+  const row=rows[0];
+  const productId=Number(row?.thirdParty?.cardmarket||0);
+  const cm=row?.pricing?.cardmarket;
+  const pricingProductId=Number(cm?.idProduct||cm?.id_product||0);
+  if(productId!==742039 || pricingProductId!==742039 || !cm)return null;
+  const hasRealPrice=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k])>0);
+  if(!hasRealPrice)return null;
+  return {...cm,idProduct:742039,source:'TCGdex · Cardmarket · Duraludon SWSH028 GameStop',verified:String(cm?.updated||'')};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
+  const swsh028GameStop=tcgdexExactSwsh028GameStopPrice(card,variant,stamp);
+  if(swsh028GameStop)return swsh028GameStop;
   const tcgdexExact=tcgdexExactSvpStampPrice(card,variant,stamp);
   if(tcgdexExact)return tcgdexExact;
   const setName=normText(card?.set?.name||card?.set||'');
