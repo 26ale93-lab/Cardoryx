@@ -1,0 +1,92 @@
+name: Temporary EX4 Cardmarket Identity Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/ex4-cardmarket-identity-audit-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit EX4 against official Cardmarket catalogue
+        run: |
+          git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+          python -B - <<'PY'
+          import json,re,unicodedata,urllib.request,importlib.util,sys
+          from pathlib import Path
+
+          ROOT=Path.cwd()
+          db=Path("${{ runner.temp }}")/'tcgdex-cards-database'
+          spec=importlib.util.spec_from_file_location('vf',ROOT/'scripts/test_variant_finish_audit.py')
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          cards=mod.load_official_database(db)
+          ex4=[c for c in cards if str(c.get('setId') or (c.get('set') or {}).get('id') or '').lower()=='ex4']
+
+          req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',headers={'User-Agent':'Cardoryx-EX4-Audit/1.0'})
+          with urllib.request.urlopen(req,timeout=300) as r: products=json.load(r).get('products',[])
+          cm=[p for p in products if int(p.get('idExpansion') or 0)==1542]
+          byid={int(p['idProduct']):p for p in products}
+
+          def norm(x):
+              s=unicodedata.normalize('NFKD',str(x or '')).encode('ascii','ignore').decode().lower()
+              return re.sub(r'[^a-z0-9]+','',s)
+          def cmids(card):
+              out=[]
+              for row in card.get('variants_detailed') or []:
+                  try:
+                      pid=int(((row.get('thirdParty') or {}).get('cardmarket')))
+                  except Exception: continue
+                  if pid not in out: out.append(pid)
+              try:
+                  pid=int(((card.get('pricing') or {}).get('cardmarket') or {}).get('idProduct'))
+                  if pid not in out: out.append(pid)
+              except Exception: pass
+              return out
+
+          rows=[]
+          for c in sorted(ex4,key=lambda x:int(re.sub(r'\D','',str(x.get('localId') or '999')) or 999)):
+              name=str(c.get('name') or '')
+              matches=[p for p in cm if norm(name)==norm(str(p.get('name') or '').split(' [',1)[0])]
+              current=cmids(c)
+              rows.append({
+                  'tcgdexId':c.get('id') or c.get('tcgdexId'), 'localId':c.get('localId'), 'name':name,
+                  'currentProductIds':current,
+                  'currentCatalogue':[byid.get(pid) for pid in current if pid in byid],
+                  'exactNameExpansion1542Matches':matches,
+                  'uniqueExactMatch': len(matches)==1,
+                  'exactProductId': int(matches[0]['idProduct']) if len(matches)==1 else None,
+              })
+
+          out={
+              'setId':'ex4','expectedExpansionId':1542,'cards':len(ex4),'catalogueProducts1542':len(cm),
+              'uniqueExactMatches':sum(r['uniqueExactMatch'] for r in rows),
+              'currentIdsOutside1542':sum(any((byid.get(pid) or {}).get('idExpansion')!=1542 for pid in r['currentProductIds']) for r in rows),
+              'rows':rows,
+          }
+          Path('artifacts').mkdir(exist_ok=True)
+          Path('artifacts/ex4_cardmarket_identity_audit.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({k:v for k,v in out.items() if k!='rows'},ensure_ascii=False,indent=2))
+          print('HIGH_IMPACT')
+          for r in rows:
+              if r['localId'] in {'4','24','64','73','78','82','89','94','95'}:
+                  print(json.dumps(r,ensure_ascii=False))
+          PY
+      - name: Verify production untouched
+        run: |
+          git diff --check
+          git diff --exit-code HEAD -- index.html scripts/test_card_identity_cardmarket_audit.py data/retail_prices.json data/cardmarket_play_index.json sw.js manifest.webmanifest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ex4-cardmarket-identity-audit
+          path: artifacts/ex4_cardmarket_identity_audit.json
+          if-no-files-found: error
