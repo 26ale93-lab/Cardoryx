@@ -1,0 +1,36 @@
+name: Temporary Cardmarket P1 Post-Palafin Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-p1-post-palafin-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inject read-only diagnostics
+        run: python -B scripts/temp_cardmarket_p1_post_palafin.py
+      - name: Compile audit
+        run: |
+          python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+          rm -rf scripts/__pycache__
+      - name: Clone current TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Run full audit and ranking
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Assert read-only worktree
+        run: |
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json scripts/test_card_identity_cardmarket_audit.py
+          changed="$(git status --short)"
+          printf '%s\n' "$changed"
+          test -z "$changed"
