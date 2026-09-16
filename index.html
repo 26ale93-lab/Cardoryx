@@ -5304,18 +5304,18 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
 function exactCardmarketGuideIdentity(card,id,guide){
   const cardId=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
-  const local=canonicalPrintedLocalId(card?.localId||'');
+  const local=exactLocalIdKey(card?.localId||'');
   return cardId===id && setId===guide.setId &&
-    local===canonicalPrintedLocalId(guide.localId) && normText(card?.name||'')===normText(guide.name||'');
+    local===exactLocalIdKey(guide.localId) && normText(card?.name||'')===normText(guide.name||'');
 }
 function verifiedBaseCardmarketProductOverride(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const rule=VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES[id];
   if(!rule)return null;
   const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
-  const local=canonicalPrintedLocalId(card?.localId||'');
+  const local=exactLocalIdKey(card?.localId||'');
   const currentProduct=Number(card?.pricing?.cardmarket?.idProduct||0);
-  if(setId!==rule.setId || local!==canonicalPrintedLocalId(rule.localId) ||
+  if(setId!==rule.setId || local!==exactLocalIdKey(rule.localId) ||
      currentProduct!==rule.conflictingProduct)return null;
   const guide=VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES[id]||null;
   if(guide&&!exactCardmarketGuideIdentity(card,id,guide))return null;
