@@ -49,6 +49,22 @@ jobs:
       - name: Apply exact guarded patch
         run: python scripts/tmp_apply_numel_ditto_patch.py
 
+      - name: Fix generated production-function extractor
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/test_variant_finish_audit.py')
+          s=p.read_text(encoding='utf-8')
+          old='''    brace = source.find("{", marker.end())\n    if brace < 0:\n        raise AssertionError(f"Missing body for production function {name}")\n'''
+          new='''    header = re.search(r"\\)\\s*\\{", source[marker.start():])\n    if not header:\n        raise AssertionError(f"Missing body for production function {name}")\n    brace = marker.start() + header.end() - 1\n'''
+          if s.count(old)!=1:
+              raise SystemExit('Production-function extractor guard failed')
+          p.write_text(s.replace(old,new,1), encoding='utf-8')
+          PY
+          python -m py_compile scripts/test_variant_finish_audit.py
+
       - name: Run production JS and full finish regression audit
         shell: bash
         run: |
