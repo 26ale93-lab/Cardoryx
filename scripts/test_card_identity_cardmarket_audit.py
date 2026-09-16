@@ -47,6 +47,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "pl3-70": {"base": 278761, "alternate": 882910, "stamp": "special-v2-source-conflict", "cardmarketCode": "SV70"},
     "sv10.5b-027": {"base": 835953, "alternate": 835994, "stamp": "wrong-card-identity", "cardmarketCode": "BLK027"},
     "sv10.5b-014": {"base": 835929, "alternate": 835069, "stamp": "unverified-top-level-product", "cardmarketCode": "BLK014"},
+    "sv10.5b-065": {"base": 836043, "alternate": 836009, "stamp": "wrong-card-identity", "cardmarketCode": "BLK065"},
     "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
     "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
@@ -130,6 +131,7 @@ EXPECTED_BASE_OVERRIDES = {
     "pl3-70": {"setId": "pl3", "localId": "070", "conflictingProduct": 882910, "baseProduct": 278761},
     "sv10.5b-027": {"setId": "sv10.5b", "localId": "027", "conflictingProduct": 835994, "baseProduct": 835953},
     "sv10.5b-014": {"setId": "sv10.5b", "localId": "014", "conflictingProduct": 835069, "baseProduct": 835929},
+    "sv10.5b-065": {"setId": "sv10.5b", "localId": "065", "conflictingProduct": 836009, "baseProduct": 836043},
     "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
@@ -425,6 +427,18 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 835069}},
     }
+    fixtures["bisharp065"] = {
+        "id": "sv10.5b-065", "tcgdexId": "sv10.5b-065", "name": "Bisharp", "localId": "065",
+        "set": {"id": "sv10.5b", "name": "Black Bolt"}, "rarity": "Uncommon", "regulationMark": "I",
+        "variants": {"normal": True, "holo": False, "reverse": True},
+        "variants_detailed": [
+            {"type": "normal", "thirdParty": {"cardmarket": 836043}},
+            {"type": "reverse", "thirdParty": {"cardmarket": 836043}},
+            {"type": "reverse", "foil": "pokeball", "thirdParty": {"cardmarket": 836444}},
+            {"type": "reverse", "foil": "masterball", "thirdParty": {"cardmarket": 836445}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 836009, "trend": 0.03, "trend-holo": 0.19}},
+    }
     fixtures["metagross"] = {
         "id": "pl3-7", "tcgdexId": "pl3-7", "name": "Metagross", "localId": "7",
         "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Rare Holo",
@@ -560,6 +574,27 @@ assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...tyr,localId:'29'}
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...tyr,name:'Tyranitar ex'}),null);
 const tyrNormal=r.cardmarketValueForCardVariant(tyr,'Normal');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:tyrNormal.value,productId:tyrNormal.productId})),{value:10.33,productId:274941});
+const bish=fixtures.bisharp065;
+const bishOverride=r.verifiedBaseCardmarketProductOverride(bish);
+assert.strictEqual(bishOverride?.pricing?.idProduct,836043);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(bish)?.idProduct,836043);
+assert.strictEqual(r.knownCardmarketIdentityConflict(bish,836009)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...bish,id:'sv10.5b-066',tcgdexId:'sv10.5b-066',localId:'066'},836043)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...bish,id:'other-1',tcgdexId:'other-1',localId:'1',name:'Other',set:{id:'other'}},836009),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...bish,localId:'066'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...bish,name:'Pawniard'}),null);
+const bishNormal=r.cardmarketValueForCardVariant(bish,'Normal');
+const bishReverse=r.cardmarketValueForCardVariant(bish,'Reverse Holo');
+const bishPoke=r.cardmarketValueForCardVariant(bish,'Poké Ball Reverse Holo');
+const bishMaster=r.cardmarketValueForCardVariant(bish,'Master Ball Reverse Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:bishNormal.value,productId:bishNormal.productId})),{value:0.03,productId:836043});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:bishReverse.value,productId:bishReverse.productId})),{value:0.12,productId:836043});
+assert.strictEqual(bishPoke.value,0);
+assert.strictEqual(bishPoke.kind,'needs-exact-variant');
+assert.strictEqual(bishMaster.value,0);
+assert.strictEqual(bishMaster.kind,'needs-exact-variant');
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(bish,'Normal'))),{low:0.02,trend:0.03,avg7:0.03,avg30:0.03});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(bish,'Reverse Holo'))),{low:0.02,trend:0.12,avg7:0.15,avg30:0.16});
 const met=fixtures.metagross;
 const metOverride=r.verifiedBaseCardmarketProductOverride(met);
 assert.strictEqual(metOverride?.pricing?.idProduct,278698);
