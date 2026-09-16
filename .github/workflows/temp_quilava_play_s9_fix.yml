@@ -20,6 +20,19 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Add runtime dependencies to temporary helper
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/temp_apply_quilava_play_s9_fix.py')
+          s=p.read_text()
+          old='    "    names = (\\"normText\\", \\"canonicalVariant\\", \\"exactLocalIdKey\\", \\"cardSetId\\",",\n'
+          new='    "    names = (\\"normText\\", \\"canonicalVariant\\", \\"canonicalPrintedLocalId\\", \\"printedLocalIdParts\\", \\"exactLocalIdKey\\", \\"cardSetId\\",",\n'
+          if s.count(old) != 1:
+              raise SystemExit(f'dependency marker count={s.count(old)}')
+          p.write_text(s.replace(old,new,1))
+          PY
+
       - name: Validate temporary helper
         run: python -m py_compile scripts/temp_apply_quilava_play_s9_fix.py
 
