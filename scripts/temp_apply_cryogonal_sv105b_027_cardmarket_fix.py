@@ -75,8 +75,8 @@ new="""  const exactMiloticPl3_70=id==='pl3-70'&&setId==='pl3'&&local==='70'&&na
         :'Il prodotto 278761 è consentito solo per Milotic pl3-70 / 070'
     };
   }
-  const exactCryogonal027=id==='sv10.5b-027'&&setId==='sv10.5b'&&local==='27'&&name==='cryogonal';
-  const targetsCryogonal027=id==='sv10.5b-027'||(setId==='sv10.5b'&&local==='27'&&name==='cryogonal');
+  const exactCryogonal027=id==='sv10.5b-027'&&setId==='sv10.5b'&&local==='027'&&name==='cryogonal';
+  const targetsCryogonal027=id==='sv10.5b-027'||(setId==='sv10.5b'&&local==='027'&&name==='cryogonal');
   if((product===835994&&targetsCryogonal027)||(product===835953&&!exactCryogonal027)){
     return {
       kind:'identity-mismatch',
