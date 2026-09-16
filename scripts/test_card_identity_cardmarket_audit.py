@@ -44,6 +44,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
     "pl3-7": {"base": 278698, "alternate": 278689, "stamp": "wrong-card-identity", "cardmarketCode": "SV7"},
+    "pl3-70": {"base": 278761, "alternate": 882910, "stamp": "special-v2-source-conflict", "cardmarketCode": "SV70"},
     "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
     "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
@@ -97,6 +98,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
+    "pl3-70": {"setId": "pl3", "localId": "070", "conflictingProduct": 882910, "baseProduct": 278761},
     "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
@@ -357,6 +359,17 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 274904, "trend": 311.31, "trend-holo": 136.66}},
     }
+    fixtures["milotic70"] = {
+        "id": "pl3-70", "tcgdexId": "pl3-70", "name": "Milotic", "localId": "70",
+        "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Uncommon",
+        "variants": {"normal": True, "holo": False, "reverse": True},
+        "variants_detailed": [
+            {"type": "normal", "thirdParty": {"cardmarket": 882910}, "pricing": {"cardmarket": {"idProduct": 882910, "trend": 34.74}}},
+            {"type": "reverse", "thirdParty": {"cardmarket": 278689}, "pricing": {"cardmarket": {"idProduct": 278689, "trend": 40.68}}},
+            {"type": "normal", "stamp": ["pre-release"], "thirdParty": {"cardmarket": 882910}, "pricing": {"cardmarket": {"idProduct": 882910, "trend": 34.74}}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 882910, "trend": 34.74}},
+    }
     fixtures["metagross"] = {
         "id": "pl3-7", "tcgdexId": "pl3-7", "name": "Metagross", "localId": "7",
         "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Rare Holo",
@@ -502,6 +515,20 @@ assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,localId:'8'})
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,name:'Milotic'}),null);
 const metHolo=r.cardmarketValueForCardVariant(met,'Holo');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:metHolo.value,productId:metHolo.productId})),{value:3.05,productId:278698});
+const mil=fixtures.milotic70;
+const milOverride=r.verifiedBaseCardmarketProductOverride(mil);
+assert.strictEqual(milOverride?.pricing?.idProduct,278761);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(mil)?.idProduct,278761);
+assert.strictEqual(r.knownCardmarketIdentityConflict(mil,278689)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...mil,id:'pl3-SH7',tcgdexId:'pl3-SH7',localId:'SH7'},278761)?.kind,'identity-mismatch');
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...mil,localId:'71'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...mil,name:'Milotic Lv.52'}),null);
+const milNormal=r.cardmarketValueForCardVariant(mil,'Normal');
+const milReverse=r.cardmarketValueForCardVariant(mil,'Reverse Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:milNormal.value,productId:milNormal.productId})),{value:0.97,productId:278761});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:milReverse.value,productId:milReverse.productId})),{value:14.54,productId:278761});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(mil,'Normal'))),{low:0.13,trend:0.97,avg7:1.27,avg30:0.87});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(mil,'Reverse Holo'))),{low:0.49,trend:14.54,avg7:13.73,avg30:8.01});
 for(const card of fixtures.ex4_high_impact){
   const o=r.verifiedBaseCardmarketProductOverride(card);
   assert.strictEqual(o?.pricing?.idProduct,card.correct);

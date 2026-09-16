@@ -5442,6 +5442,11 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // Supreme Victors — TCGdex currently points Metagross 7/147 at Milotic
   // product 278689. Cardmarket catalogue proves product 278698 is Metagross.
   'pl3-7':{setId:'pl3',localId:'007',conflictingProduct:278689,baseProduct:278698},
+  // Supreme Victors — Milotic 70/147. TCGdex currently exposes the later
+  // special V2 product 882910 at top level and points Reverse to Milotic SH7
+  // product 278689. Cardmarket catalogue proves V1 product 278761 is the exact
+  // Milotic Lv.49 70/147 standard product with standard + Reverse price fields.
+  'pl3-70':{setId:'pl3',localId:'070',conflictingProduct:882910,baseProduct:278761},
   // EX Hidden Legends — Beldum 29/101. TCGdex exposes the Gym Challenge
   // special-print product at top level; V1 product 276103 is the standard
   // Normal/Reverse identity. Product 280585 remains valid only as the exact
@@ -5522,6 +5527,14 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
     pricing:{idProduct:278698,trend:3.05,avg7:4.10,avg30:3.47,avg:3.55,low:0.45,
       'trend-holo':3.24,'avg7-holo':3.40,'avg30-holo':2.63,'avg-holo':3.40,'low-holo':0.45}
+  },
+  'pl3-70':{
+    setId:'pl3',localId:'070',name:'Milotic',productId:278761,
+    verified:'2026-09-16T20:12:54+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Supreme Victors · Milotic Lv.49 70/147 V1 · product 278761',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278761,trend:0.97,avg7:1.27,avg30:0.87,avg:1.10,low:0.13,
+      'trend-holo':14.54,'avg7-holo':13.73,'avg30-holo':8.01,'avg-holo':29.02,'low-holo':0.49}
   },
   'ex4-6':{
     setId:'ex4',localId:'006',name:"Team Aqua's Walrein",productId:275983,
@@ -5912,6 +5925,17 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
       reason:product===278689
         ?'Il prodotto 278689 appartiene a Milotic Lv.52 e non può valutare Metagross 7/147'
         :'Il prodotto 278698 è consentito solo per Metagross pl3-7 / 007'
+    };
+  }
+  const exactMiloticPl3_70=id==='pl3-70'&&setId==='pl3'&&local==='70'&&name==='milotic';
+  const targetsMiloticPl3_70=id==='pl3-70'||(setId==='pl3'&&local==='70'&&name==='milotic');
+  if((product===278689&&targetsMiloticPl3_70)||(product===278761&&!exactMiloticPl3_70)){
+    return {
+      kind:'identity-mismatch',
+      source:'Cardmarket · Supreme Victors Milotic Lv.49 70/147 V1 product 278761 verificato',
+      reason:product===278689
+        ?'Il prodotto 278689 appartiene a Milotic Lv.52 SH7 e non può valutare Milotic 70/147'
+        :'Il prodotto 278761 è consentito solo per Milotic pl3-70 / 070'
     };
   }
   const ex4ExactConflicts=[
