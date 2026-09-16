@@ -1,0 +1,41 @@
+name: Temporary Quilava Play S9 fix
+
+on:
+  push:
+    branches:
+      - fix/quilava-play-s9-normal
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply exact finish-only patch
+        run: python scripts/temp_apply_quilava_play_s9_fix.py
+
+      - name: Run focused production regression
+        run: python scripts/test_variant_finish_audit.py --quilava-play-only --output artifacts/quilava_play_s9_finish_audit_report.json
+
+      - name: Verify protected files unchanged
+        run: |
+          git diff --check
+          git diff --exit-code HEAD -- data/retail_prices.json data/cardmarket_play_index.json sw.js manifest.webmanifest
+
+      - name: Commit final two-file change and remove temporary helpers
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html scripts/test_variant_finish_audit.py
+          git rm .github/workflows/temp_quilava_play_s9_fix.yml scripts/temp_apply_quilava_play_s9_fix.py
+          git commit -m "Fix exact Quilava Play Series 9 finish"
+          git push origin HEAD:fix/quilava-play-s9-normal
