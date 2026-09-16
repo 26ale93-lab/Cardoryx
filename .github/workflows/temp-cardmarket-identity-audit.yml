@@ -1,0 +1,46 @@
+name: Temporary Cardmarket Identity Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-identity-audit-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout pinned TCGdex database snapshot
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: ../tcgdex-cards-database
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate audit script
+        run: python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+
+      - name: Run Cardmarket identity audit read-only
+        run: python scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+
+      - name: Verify protected production files unchanged
+        run: |
+          git diff --check
+          git diff --exit-code HEAD -- index.html data/retail_prices.json data/cardmarket_play_index.json sw.js manifest.webmanifest
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardmarket-identity-audit-20260916
+          path: artifacts/card_identity_cardmarket_audit_report.json
+          if-no-files-found: error
