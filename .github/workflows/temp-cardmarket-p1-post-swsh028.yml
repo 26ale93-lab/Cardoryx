@@ -22,6 +22,8 @@ jobs:
         run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
       - name: Full Cardmarket identity audit
         run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Audit EX Hidden Legends residuals
+        run: python -B scripts/temp_ex5_cardmarket_audit.py
       - name: Group residual P1 by set
         run: python -B scripts/temp_cardmarket_p1_cluster_audit.py
       - name: Restore generated report
