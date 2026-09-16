@@ -32,8 +32,13 @@ jobs:
           cards,parse_errors,snapshot=mod.load_official_database(db)
           ex4=[c for c in cards if str((c.get('set') or {}).get('id') or '').lower()=='ex4']
 
-          req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',headers={'User-Agent':'Cardoryx-EX4-Audit/1.0'})
-          with urllib.request.urlopen(req,timeout=300) as r: products=json.load(r).get('products',[])
+          def download(url):
+              req=urllib.request.Request(url,headers={'User-Agent':'Cardoryx-EX4-Audit/1.1'})
+              with urllib.request.urlopen(req,timeout=300) as r: return json.load(r)
+          products=download('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json').get('products',[])
+          price_root=download('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json')
+          prices=price_root.get('priceGuides',price_root.get('priceGuide',[]))
+          price={int(p['idProduct']):p for p in prices if p.get('idProduct') is not None}
           cm=[p for p in products if int(p.get('idExpansion') or 0)==1542]
           byid={int(p['idProduct']):p for p in products}
 
@@ -47,6 +52,9 @@ jobs:
                   except Exception: continue
                   if pid not in out: out.append(pid)
               return out
+          def compact(pid):
+              p=price.get(pid) or {}
+              return {k:p.get(k) for k in ('idProduct','trend','avg7','avg30','avg','low','trend-holo','avg7-holo','avg30-holo','avg-holo','low-holo') if k in p}
 
           rows=[]
           for c in sorted(ex4,key=lambda x:int(re.sub(r'\D','',str(x.get('localId') or '999')) or 999)):
@@ -54,29 +62,34 @@ jobs:
               name=str(raw_name.get('en') or next(iter(raw_name.values()),'') if isinstance(raw_name,dict) else raw_name)
               matches=[p for p in cm if norm(name)==norm(str(p.get('name') or '').split(' [',1)[0])]
               current=cmids(c)
+              exact=int(matches[0]['idProduct']) if len(matches)==1 else None
+              current_primary=next((pid for pid in current if (byid.get(pid) or {}).get('idExpansion')!=1542), current[0] if current else None)
+              current_trend=(price.get(current_primary) or {}).get('trend') if current_primary else None
+              exact_trend=(price.get(exact) or {}).get('trend') if exact else None
+              delta=(exact_trend-current_trend) if isinstance(current_trend,(int,float)) and isinstance(exact_trend,(int,float)) else None
               rows.append({
-                  'tcgdexId':c.get('id'), 'localId':c.get('localId'), 'name':name,
-                  'currentProductIds':current,
+                  'tcgdexId':c.get('id'), 'localId':c.get('localId'), 'name':name,'rarity':c.get('rarity'),
+                  'currentProductIds':current,'currentPrimaryProductId':current_primary,
                   'currentCatalogue':[byid.get(pid) for pid in current if pid in byid],
                   'exactNameExpansion1542Matches':matches,
-                  'uniqueExactMatch': len(matches)==1,
-                  'exactProductId': int(matches[0]['idProduct']) if len(matches)==1 else None,
+                  'uniqueExactMatch': len(matches)==1,'exactProductId':exact,
+                  'currentPriceGuide':compact(current_primary) if current_primary else None,
+                  'exactPriceGuide':compact(exact) if exact else None,
+                  'trendDelta':delta,
               })
 
+          ranked=sorted([r for r in rows if r['uniqueExactMatch'] and isinstance(r['trendDelta'],(int,float))],key=lambda r:abs(r['trendDelta']),reverse=True)
           out={
               'setId':'ex4','expectedExpansionId':1542,'snapshot':snapshot,'parseErrors':len(parse_errors),
-              'cards':len(ex4),'catalogueProducts1542':len(cm),
-              'uniqueExactMatches':sum(r['uniqueExactMatch'] for r in rows),
+              'cards':len(ex4),'catalogueProducts1542':len(cm),'uniqueExactMatches':sum(r['uniqueExactMatch'] for r in rows),
               'currentIdsOutside1542':sum(any((byid.get(pid) or {}).get('idExpansion')!=1542 for pid in r['currentProductIds']) for r in rows),
-              'rows':rows,
+              'topUniqueByTrendDelta':ranked[:20],'rows':rows,
           }
           Path('artifacts').mkdir(exist_ok=True)
           Path('artifacts/ex4_cardmarket_identity_audit.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps({k:v for k,v in out.items() if k!='rows'},ensure_ascii=False,indent=2))
-          print('HIGH_IMPACT')
-          for r in rows:
-              if r['localId'] in {'4','24','64','73','78','82','89','94','95'}:
-                  print(json.dumps(r,ensure_ascii=False))
+          print(json.dumps({k:v for k,v in out.items() if k not in {'rows','topUniqueByTrendDelta'}},ensure_ascii=False,indent=2))
+          print('TOP_UNIQUE_BY_TREND_DELTA')
+          for r in ranked[:20]: print(json.dumps(r,ensure_ascii=False))
           PY
       - name: Verify production untouched
         run: |
