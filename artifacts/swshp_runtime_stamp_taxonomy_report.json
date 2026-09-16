@@ -12,8 +12,41 @@
     "Staff": "Staff",
     "Set Stamp": "Set Stamp"
   },
+  "swshpSWSH028Evidence": {
+    "gameStop": true,
+    "ebGames": false,
+    "staff": false,
+    "rows": [
+      {
+        "pid": 453308,
+        "pricingPid": 453308,
+        "trend": 0.38,
+        "low": 0.08
+      },
+      {
+        "stamp": [
+          "eb-games"
+        ],
+        "pid": 886516,
+        "pricingPid": 886516,
+        "trend": null,
+        "low": 30
+      },
+      {
+        "stamp": [
+          "gamestop"
+        ],
+        "pid": 742039,
+        "pricingPid": 742039,
+        "trend": 7.43,
+        "low": 1
+      }
+    ]
+  },
   "sourceSnippets": {
     "normText": "function normText(s=''){return String(s).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'')}",
-    "canonicalStamp": "function canonicalStamp(v){\n  const n=normText(v||'');\n  if(!n||n==='none'||n==='nessuno')return 'None';\n  if(n.includes('play')||n.includes('player reward')||n.includes('prize pack'))return 'Play! Pokémon';\n  if(n.includes('pokemon day'))return 'Pokémon Day';\n  if(n.includes('30 anniversario')||n.includes('30th celebration')||n.includes('30 celebration'))return '30° Anniversario';\n  if(n.includes('pokemon center'))return 'Pokémon Center';\n  if(n.includes('pre-release')||n.includes('prerelease'))return 'Pre-release';\n  if(n.includes('staff'))return 'Staff';\n  if(n.includes('set stamp')||n.includes('set-promo'))return 'Set Stamp';\n  if(n.includes('gamestop'))return 'GameStop';\n  return v||'Altro';\n}"
+    "canonicalStamp": "function canonicalStamp(v){\n  const n=normText(v||'');\n  if(!n||n==='none'||n==='nessuno')return 'None';\n  if(n.includes('play')||n.includes('player reward')||n.includes('prize pack'))return 'Play! Pokémon';\n  if(n.includes('pokemon day'))return 'Pokémon Day';\n  if(n.includes('30 anniversario')||n.includes('30th celebration')||n.includes('30 celebration'))return '30° Anniversario';\n  if(n.includes('pokemon center'))return 'Pokémon Center';\n  if(n.includes('pre-release')||n.includes('prerelease'))return 'Pre-release';\n  if(n.includes('staff'))return 'Staff';\n  if(n.includes('set stamp')||n.includes('set-promo'))return 'Set Stamp';\n  if(n.includes('gamestop'))return 'GameStop';\n  return v||'Altro';\n}",
+    "tcgdexVariantDetails": "function tcgdexVariantDetails(card){\n  if(Array.isArray(card?.variants_detailed))return card.variants_detailed;\n  if(Array.isArray(card?.variants))return card.variants;\n  return [];\n}",
+    "stampEvidenceFromTCGdex": "function stampEvidenceFromTCGdex(card,stamp){\n  const st=canonicalStamp(stamp);\n  const list=tcgdexVariantDetails(card);\n  // TCGdex uses the exact `set-logo` taxonomy for set-logo promos.  Staff\n  // copies also carry `set-logo`, so a plain Set Stamp must explicitly exclude\n  // rows that also carry `staff`.  If this taxonomy is absent, preserve the\n  // older lexical aliases below.\n  if(st==='Set Stamp'){\n    const setLogoRows=list.filter(x=>(Array.isArray(x?.stamp)?x.stamp:[]).map(normText).includes('setlogo'));\n    if(setLogoRows.length){\n      return setLogoRows.some(x=>!(Array.isArray(x?.stamp)?x.stamp:[]).map(normText).includes('staff'));\n    }\n  }\n  const tokens={\n    'Play! Pokémon':['playerrewards','playpokemon','prizepack','league'],\n    'Pokémon Day':['pokemonday'],\n    '30° Anniversario':['30thcelebration','30anniversario','30thanniversary'],\n    'Pokémon Center':['pokemoncenter'],\n    'Pre-release':['prerelease','prereleasepromo'],\n    'Staff':['staff'],\n    'Set Stamp':['setstamp','setpromo'],\n    'GameStop':['gamestop']\n  }[st]||[];\n  if(!tokens.length)return false;\n  return list.some(x=>{\n    const vals=[...(Array.isArray(x?.stamp)?x.stamp:[]),x?.foil,x?.name,x?.variant].filter(Boolean).map(normText);\n    return vals.some(v=>tokens.some(t=>v.includes(t)));\n  });\n}"
   }
 }
