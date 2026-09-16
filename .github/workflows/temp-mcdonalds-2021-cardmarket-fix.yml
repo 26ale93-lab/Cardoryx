@@ -25,7 +25,9 @@ jobs:
       - name: Apply exact 25-pair patch
         run: python -B scripts/temp_patch_mcdonalds_2021_cardmarket.py
       - name: Compile audit and helper
-        run: python -B -m py_compile scripts/test_card_identity_cardmarket_audit.py scripts/temp_patch_mcdonalds_2021_cardmarket.py
+        run: |
+          python -B -m py_compile scripts/test_card_identity_cardmarket_audit.py scripts/temp_patch_mcdonalds_2021_cardmarket.py
+          rm -rf scripts/__pycache__
       - name: Runtime 25-card / 50-product regression
         run: node scripts/temp_test_mcdonalds_2021_runtime.js
       - name: Existing Cardmarket runtime regression
