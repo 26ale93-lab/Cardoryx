@@ -1,0 +1,32 @@
+name: Temporary McDonalds 2021 Cardmarket Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/mcdonalds-2021-cardmarket-p1-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone pinned TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Inject McDonalds diagnostic only
+        run: python -B scripts/temp_mcdonalds_2021_cardmarket_audit.py
+      - name: Full Cardmarket identity audit with McDonalds diagnostics
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Restore diagnostic modifications and report
+        run: |
+          git checkout -- scripts/test_card_identity_cardmarket_audit.py
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+      - name: Assert read-only
+        run: git diff --exit-code
