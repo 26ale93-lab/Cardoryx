@@ -124,7 +124,7 @@ REAL_WORLD_REGRESSION = {
     "sm1-46": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD"},
     "sv02-172": {"expected": ["Holo", "Reverse Holo"], "cause": "SPECIAL_PRINTING"},
     "sm10-23": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
-    "sv10-033": {"expected": ["Normal", "Reverse Holo"], "cause": "NEEDS_MORE_EVIDENCE", "playSeries": "9"},
+    "sv10-033": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_PLAY_SERIES_FINISH", "playSeries": "9"},
     "sm12-54": {"expected": ["Normal", "Reverse Holo"], "cause": "VERIFIED_REVERSE_STANDARD", "secondaryCause": "CARDMARKET_IDENTITY_RESOLVED"},
     "sm3-4": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
     "swsh12.5-007": {"expected": ["Normal", "Reverse Holo"], "cause": "ALREADY_FIXED"},
@@ -699,6 +699,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         "SPECIAL_PRINTING": "La stampa non-holo è product-specific e deve restare separata dalla matrice finish della stampa base.",
         "CARDMARKET_IDENTITY": "La matrice finish è separata dall'identità/prezzo del prodotto Cardmarket e richiede un mapping prodotto esatto, non un fallback finish.",
         "NEEDS_MORE_EVIDENCE": "La stampa Play!/Prize Pack esiste come prodotto separato, ma i dati locali non ne provano con precisione la finitura; mantenere il fail-closed.",
+        "VERIFIED_PLAY_SERIES_FINISH": "Checklist Prize Pack Series 9 e identità DRI 033 confermano la ristampa Play! come Standard Set / Non-Holo; regola circoscritta a sv10-033 + Series 9.",
         "VERIFIED_REVERSE_STANDARD": "Checklist ufficiale e catalogo indipendente confermano la Reverse Holo standard della stessa identità fisica; TCGdex non la documenta nel payload completo.",
     }
     fix_text = {
@@ -707,6 +708,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         "SPECIAL_PRINTING": "Modellare eventualmente l'edizione alternativa come identità prodotto separata, senza aggiungere Normal alla base.",
         "CARDMARKET_IDENTITY": "Usare esclusivamente mapping tcgdexId/set/localId/currentProduct verso product ID verificato; mai Reverse -> Normal.",
         "NEEDS_MORE_EVIDENCE": "Non automatizzare Play! Series 9 finché product ID e finish fisica non sono entrambi dimostrati.",
+        "VERIFIED_PLAY_SERIES_FINISH": "Abilitare esclusivamente Normal per sv10-033 + Play! Pokémon + Series 9; nessun product ID o prezzo viene introdotto.",
         "VERIFIED_REVERSE_STANDARD": "Applicare solo il registry Reverse esatto tcgdexId/setId/localId sul percorso unstamped.",
     }
 
@@ -786,7 +788,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
     expected_counts = {
         "RESOLVER_RULE": 0, "SCANNER_HYDRATION": 0, "LOCALIZATION": 0,
         "SOURCE_DATA": 0, "SPECIAL_PRINTING": 1, "CARDMARKET_IDENTITY": 4,
-        "ALREADY_FIXED": 28, "NEEDS_MORE_EVIDENCE": 1, "VERIFIED_REVERSE_STANDARD": 5,
+        "ALREADY_FIXED": 28, "NEEDS_MORE_EVIDENCE": 0, "VERIFIED_PLAY_SERIES_FINISH": 1, "VERIFIED_REVERSE_STANDARD": 5,
     }
     if len(records) != 39 or set(REAL_WORLD_REGRESSION) != {r.get("tcgdexId") for r in records}:
         raise AssertionError("The binding real-world regression set must contain exactly the 39 requested identities")
@@ -807,7 +809,7 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
         "classificationBreakdown": {key: counts.get(key, 0) for key in (
             "RESOLVER_RULE", "SCANNER_HYDRATION", "LOCALIZATION", "SOURCE_DATA",
             "SPECIAL_PRINTING", "CARDMARKET_IDENTITY", "ALREADY_FIXED", "NEEDS_MORE_EVIDENCE",
-            "VERIFIED_REVERSE_STANDARD")},
+            "VERIFIED_PLAY_SERIES_FINISH", "VERIFIED_REVERSE_STANDARD")},
         "finishMatrixMatchesExpectation": len(records) - len(matrix_anomalies),
         "finishMatrixAnomalies": len(matrix_anomalies),
         "fullyResolvedCases": len(fully_resolved),
@@ -823,6 +825,32 @@ def real_world_regression_audit(registries, play_index, historical_ids, workers)
     }
 
 
+def run_quilava_play_finish_runtime(source):
+    registry = extract_js_object(source, "VERIFIED_PLAY_SERIES_FINISHES")
+    expected = {"sv10-033|9": {"setId": "sv10", "localId": "033", "finishes": ["Normal"], "source": "Play! Pokémon Prize Pack Series 9 checklist · DRI 033 · Standard Set / Non-Holo", "verified": "2026-09-16"}}
+    if registry != expected: raise AssertionError("Exact Quilava Play Series 9 finish registry changed unexpectedly")
+    names = ("normText", "canonicalVariant", "canonicalPrintedLocalId", "printedLocalIdParts", "exactLocalIdKey", "cardSetId", "normalizedPlaySeries", "verifiedPlaySeriesFinishes")
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    js_lines = [
+        "const VERIFIED_PLAY_SERIES_FINISHES=" + json.dumps(registry, ensure_ascii=False) + ";",
+        functions,
+        "function fail(msg){throw new Error(msg);}",
+        "const exact={tcgdexId:'sv10-033',id:'sv10-033',set:{id:'sv10'},localId:'33',name:'Quilava di Armonio'};",
+        "const ok=verifiedPlaySeriesFinishes(exact,'9');",
+        "if(JSON.stringify(ok)!==JSON.stringify(['Normal']))fail('exact failed');",
+        "if(verifiedPlaySeriesFinishes(exact,'8').length)fail('series leak');",
+        "if(verifiedPlaySeriesFinishes({...exact,tcgdexId:'sv10-034',id:'sv10-034'},'9').length)fail('id leak');",
+        "if(verifiedPlaySeriesFinishes({...exact,set:{id:'sv09'}},'9').length)fail('set leak');",
+        "if(verifiedPlaySeriesFinishes({...exact,localId:'034'},'9').length)fail('local leak');",
+        "console.log(JSON.stringify({exactSeries9:ok,series8:verifiedPlaySeriesFinishes(exact,'8'),wrongIdentityRejected:true}));",
+    ]
+    runtime = json.loads(subprocess.check_output(["node", "-e", "\n".join(js_lines)], text=True))
+    if "const exactPlayFinishes=verifiedPlaySeriesFinishes(card,series);" not in source: raise AssertionError("documentedVariantsForCard does not consume exact Play finish evidence")
+    if "verifiedPlaySeriesFinishes" in extract_js_function(source, "prizePackFinishPlan"): raise AssertionError("finish-only evidence leaked into price planning")
+    runtime["pricePlanUntouched"] = True
+    runtime["finishOnlyEvidence"] = True
+    return runtime
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--output", default="artifacts/variant_finish_audit_report.json")
@@ -831,6 +859,8 @@ def main():
     ap.add_argument("--baseline-report", help="Previous report used for deterministic before/after metrics")
     ap.add_argument("--numel-ditto-only", action="store_true",
                     help="Run the production-JS Numel Ditto P0 checks plus the binding 39-card regression set only")
+    ap.add_argument("--quilava-play-only", action="store_true",
+                    help="Run exact Quilava Play Series 9 finish checks plus the binding 39-card regression set only")
     args = ap.parse_args()
     source = INDEX.read_text()
     required = [
@@ -842,6 +872,7 @@ def main():
         "VERIFIED_REVERSE_CARDMARKET_CONFLICTS", "knownReverseCardmarketProductConflict",
         "VERIFIED_NORMAL_FINISHES", "verifiedNormalFinish",
         "VERIFIED_REVERSE_FINISHES", "verifiedReverseFinish",
+        "VERIFIED_PLAY_SERIES_FINISHES", "verifiedPlaySeriesFinishes",
         "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow", "tcgdexMarketplaceVariant",
         "migrateFinishStamp",
     ]
@@ -856,6 +887,7 @@ def main():
         "stamp": extract_js_object(source, "VERIFIED_STAMP_PRICES"),
         "play": extract_js_object(source, "VERIFIED_PLAY_SERIES_PRICES"),
         "playAuto": extract_js_object(source, "PLAY_AUTO_CATALOG"),
+        "playFinish": extract_js_object(source, "VERIFIED_PLAY_SERIES_FINISHES"),
         "reverseConflict": extract_js_object(source, "VERIFIED_REVERSE_CARDMARKET_CONFLICTS"),
     }
     normal_registry = registries["normal"]
@@ -892,6 +924,27 @@ def main():
             "wrongSetRejected": True, "wrongLocalIdRejected": True,
         })
     play_index = json.loads(PLAY_INDEX.read_text())
+
+    if args.quilava_play_only:
+        quilava_runtime = run_quilava_play_finish_runtime(source)
+        real_world_regression = real_world_regression_audit(registries, play_index, set(), args.workers)
+        report = {
+            "audit": "Quilava Play Series 9 exact finish-only regression",
+            "quilavaRuntime": quilava_runtime,
+            "realWorldRegression": real_world_regression,
+            "safety": {"readOnlyAudit": True, "retailModified": False, "cardmarketDataModified": False,
+                       "priceMappingModified": False, "scannerModified": False,
+                       "storageSchemaModified": False, "deckModified": False},
+        }
+        output = ROOT / args.output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+        print(json.dumps({"output": str(output), "quilavaRuntime": quilava_runtime,
+                          "realWorldRegression": {k: real_world_regression[k] for k in (
+                              "bindingDatasetSize", "recordsRecovered", "classificationBreakdown",
+                              "finishMatrixMatchesExpectation", "finishMatrixAnomalies", "fullyResolvedCases",
+                              "pipelineDataLossCases")}}, ensure_ascii=False, indent=2))
+        return
 
     if args.numel_ditto_only:
         real_world_regression = real_world_regression_audit(registries, play_index, set(), args.workers)
