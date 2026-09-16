@@ -14,8 +14,8 @@ def walk(obj):
         for v in obj: yield from walk(v)
 
 def fetch_json(url):
-    req=urllib.request.Request(url,headers={'User-Agent':'Cardoryx-read-only-audit/1.0'})
-    with urllib.request.urlopen(req,timeout=60) as r:
+    req=urllib.request.Request(url,headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'})
+    with urllib.request.urlopen(req,timeout=120) as r:
         return json.load(r)
 
 def cm_pid(d):
@@ -46,18 +46,14 @@ def main():
         try:
             live[cid]=fetch_json('https://api.tcgdex.net/v2/en/cards/'+cid)
             for row in live[cid].get('variants_detailed') or []:
-                try:
-                    x=row.get('thirdParty',{}).get('cardmarket')
-                    if x:pids.add(int(x))
-                except Exception:pass
-                try:
-                    x=(row.get('pricing',{}).get('cardmarket') or {}).get('idProduct')
-                    if x:pids.add(int(x))
-                except Exception:pass
+                for x in (row.get('thirdParty',{}).get('cardmarket'),(row.get('pricing',{}).get('cardmarket') or {}).get('idProduct')):
+                    try:
+                        if x:pids.add(int(x))
+                    except Exception:pass
         except Exception as e:
             live[cid]={'error':repr(e)}
-    cat=fetch_json('https://downloads.s3.cardmarket.com/productCatalog/products_singles_6.json')
-    pg=fetch_json('https://downloads.s3.cardmarket.com/productCatalog/price_guide_6.json')
+    cat=fetch_json('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json')
+    pg=fetch_json('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json')
     cat_rows=[d for d in walk(cat) if isinstance(d,dict) and cm_pid(d) in pids]
     pg_rows=[d for d in walk(pg) if isinstance(d,dict) and cm_pid(d) in pids]
     out={'targets':sorted(TARGETS),'cases':cases,'live':live,'productIds':sorted(pids),'catalogRows':cat_rows,'priceGuideRows':pg_rows}
