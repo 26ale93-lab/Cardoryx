@@ -32,10 +32,13 @@ jobs:
         run: python -B scripts/temp_ex2_shared_owner_audit.py "$RUNNER_TEMP/tcgdex-cards-database"
       - name: Validate all EX Sandstorm P1 identities live
         run: python -B scripts/temp_ex2_live_full_validation.py
+      - name: Validate all current P1 identities live
+        run: python -B scripts/temp_global_p1_live_validation.py
       - uses: actions/upload-artifact@v4
         with:
           name: cardmarket-p1-cluster-audit
           path: |
             artifacts/cardmarket_p1_cluster_audit_report.json
             artifacts/ex2_cardmarket_identity_audit_report.json
+            artifacts/global_p1_live_validation_report.json
           if-no-files-found: error
