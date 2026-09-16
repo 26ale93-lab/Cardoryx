@@ -26,7 +26,7 @@ new="""        base_ids = sorted({cm_id(row) for row in (card.get(\"variants_det
         shared = sorted({other for pid in ids for other in pid_to_cards[pid] if other != card_id})
 
         # Strict live evidence can clear stale snapshot ambiguity only when all
-        # identity signals agree on the same physical base product.  Special
+        # identity signals agree on the same physical base product. Special
         # stamp/foil/1st Edition rows never qualify and a reused product stays P1.
         live_card_detail = live.get(card_id) or {}
         live_cm = ((live_card_detail.get(\"pricing\") or {}).get(\"cardmarket\") or {})
@@ -100,6 +100,18 @@ new='''            "baseOverrideApplied": applied_override, "resolvedProductId":
             "liveExplicitVariantUsesSameProduct": bool(live_explicit_rows),
 '''
 if old not in s: raise SystemExit('case fields anchor not found')
+s=s.replace(old,new,1)
+
+old='''        "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
+'''
+new='''        "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
+        "liveExactBaseEvidence": {
+            "count": sum(bool(case.get("liveExactBaseEvidence")) for case in cases),
+            "ids": [case["tcgdexId"] for case in cases if case.get("liveExactBaseEvidence")],
+            "policy": "live top-level product == live physical base-row product == live row pricing product; usable real price; no explicit special row reuses product",
+        },
+'''
+if old not in s: raise SystemExit('report totals anchor not found')
 s=s.replace(old,new,1)
 
 p.write_text(s,encoding='utf-8')
