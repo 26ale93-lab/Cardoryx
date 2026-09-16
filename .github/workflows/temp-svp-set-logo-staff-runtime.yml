@@ -30,6 +30,8 @@ jobs:
         run: python -B scripts/test_variant_finish_audit.py --numel-ditto-only
       - name: Existing Quilava Play regression
         run: python -B scripts/test_variant_finish_audit.py --quilava-play-only
+      - name: Restore generated reports
+        run: git checkout -- artifacts/variant_finish_audit_report.json
       - name: Diff safety
         run: |
           git diff --check
