@@ -22,6 +22,17 @@ jobs:
           python-version: '3.12'
       - name: Apply candidate runtime patch
         run: python -B scripts/temp_apply_svp_set_logo_staff_fix.py
+      - name: Repair temporary patch-helper quoting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/temp_patch_cardmarket_audit_svp_stamps.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("fn=r'''def runtime_svp_set_logo_staff_regression():\n    \"\"\"Verify exact live SVP Set Stamp/Staff product separation in production JS.\"\"\"",
+                      'fn=r"""def runtime_svp_set_logo_staff_regression():\n    # Verify exact live SVP Set Stamp/Staff product separation in production JS.')
+          s=s.replace("    return result\n\n\n'''\nif anchor not in s:", '    return result\n\n\n"""\nif anchor not in s:')
+          p.write_text(s,encoding='utf-8')
+          PY
       - name: Apply permanent audit regression patch
         run: python -B scripts/temp_patch_cardmarket_audit_svp_stamps.py
       - name: Exact live SVP stamp runtime test
@@ -54,10 +65,11 @@ jobs:
         run: python -B scripts/test_variant_finish_audit.py --numel-ditto-only
       - name: Existing Quilava Play regression
         run: python -B scripts/test_variant_finish_audit.py --quilava-play-only
-      - name: Restore generated reports
+      - name: Restore generated and temporary files
         run: |
           git checkout -- artifacts/variant_finish_audit_report.json
           git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git checkout -- scripts/temp_patch_cardmarket_audit_svp_stamps.py
       - name: Diff safety
         run: |
           git diff --check
