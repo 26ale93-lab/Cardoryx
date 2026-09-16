@@ -20,16 +20,23 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Repair temporary helper quoting
+      - name: Repair and validate temporary helper
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/temp_apply_quilava_play_s9_fix.py')
           s=p.read_text()
-          s=s.replace("helper_code = r'''\\ndef run_quilava_play_finish_runtime(source):", 'helper_code = r"""\\ndef run_quilava_play_finish_runtime(source):', 1)
-          s=s.replace("\\n    ap = argparse.ArgumentParser()\\n'''\\ntest = replace_once(test, helper_marker", '\\n    ap = argparse.ArgumentParser()\\n"""\\ntest = replace_once(test, helper_marker', 1)
+          opening="helper_code = r'''"
+          closing="\ndef main():\n    ap = argparse.ArgumentParser()\n'''\ntest = replace_once(test, helper_marker"
+          if s.count(opening) != 1:
+              raise SystemExit(f'helper opening count={s.count(opening)}')
+          if s.count(closing) != 1:
+              raise SystemExit(f'helper closing count={s.count(closing)}')
+          s=s.replace(opening, 'helper_code = r"""', 1)
+          s=s.replace(closing, '\ndef main():\n    ap = argparse.ArgumentParser()\n"""\ntest = replace_once(test, helper_marker', 1)
           p.write_text(s)
           PY
+          python -m py_compile scripts/temp_apply_quilava_play_s9_fix.py
 
       - name: Apply exact finish-only patch
         run: python scripts/temp_apply_quilava_play_s9_fix.py
