@@ -1,0 +1,67 @@
+name: Temporary Bisharp Black Bolt 065 Cardmarket Fix
+
+on:
+  push:
+    branches:
+      - fix/bisharp-black-bolt-065-cardmarket-p1
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-finalize:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      BASE_SHA: 46ac2d00f4942e311d5b3d3e4ee2888df54faba4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply exact Bisharp patch
+        run: python -B scripts/temp_bisharp_black_bolt_065_fix.py
+
+      - name: Compile audit without leaving cache
+        run: |
+          python -m py_compile scripts/test_card_identity_cardmarket_audit.py
+          rm -rf scripts/__pycache__
+
+      - name: Clone current TCGdex source
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database "$RUNNER_TEMP/tcgdex-cards-database"
+
+      - name: Runtime regression and full Cardmarket identity audit
+        run: python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database" | tee /tmp/cardmarket-audit.log
+
+      - name: Verify audit gates and real counts
+        run: |
+          grep -A7 '"classifications": {' /tmp/cardmarket-audit.log
+          grep -q '"P0_WRONG_PRODUCT": 0' /tmp/cardmarket-audit.log
+          grep -q '"P1_AMBIGUOUS_PRODUCT": 393' /tmp/cardmarket-audit.log
+          grep -q '"SAFE": 1689' /tmp/cardmarket-audit.log
+          grep -q '"EXACT_ALTERNATE_PRODUCT": 115' /tmp/cardmarket-audit.log
+          grep -q '"SOURCE_CONFLICT": 7' /tmp/cardmarket-audit.log
+          grep -q '"UNMAPPED_EXACT_PRODUCT": 0' /tmp/cardmarket-audit.log
+
+      - name: Remove diagnostics and assert final scope
+        run: |
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git rm .github/workflows/temp-bisharp-black-bolt-065-cardmarket.yml
+          git rm scripts/temp_bisharp_black_bolt_065_fix.py
+          changed="$(git diff --name-only "$BASE_SHA" | sort)"
+          printf 'FINAL_DIFF\n%s\n' "$changed"
+          expected="$(printf '%s\n' index.html scripts/test_card_identity_cardmarket_audit.py | sort)"
+          test "$changed" = "$expected"
+          git diff --check "$BASE_SHA"
+
+      - name: Commit validated production-only diff
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html scripts/test_card_identity_cardmarket_audit.py
+          git commit -m 'Fix Bisharp Black Bolt 065 Cardmarket identity'
+          git push origin HEAD:fix/bisharp-black-bolt-065-cardmarket-p1
