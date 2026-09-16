@@ -28,6 +28,8 @@ jobs:
         run: python -B scripts/temp_ex2_cardmarket_identity_audit.py "$RUNNER_TEMP/tcgdex-cards-database"
       - name: Probe EX Sandstorm live pricing and current runtime
         run: python -B scripts/temp_ex2_runtime_probe.py "$RUNNER_TEMP/tcgdex-cards-database"
+      - name: Recalculate EX Sandstorm shared owners after verified conflicts
+        run: python -B scripts/temp_ex2_shared_owner_audit.py "$RUNNER_TEMP/tcgdex-cards-database"
       - uses: actions/upload-artifact@v4
         with:
           name: cardmarket-p1-cluster-audit
