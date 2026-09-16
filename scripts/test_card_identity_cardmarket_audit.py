@@ -43,6 +43,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv08-161": {"base": 794534, "alternate": 794948, "stamp": "horizons", "cardmarketCode": "SSP161"},
     "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
+    "pl3-7": {"base": 278698, "alternate": 278689, "stamp": "wrong-card-identity", "cardmarketCode": "SV7"},
 }
 PROTECTED_REVERSE = {"pl2-102", "pl3-26", "pl3-5", "pl3-59", "pl3-83", "sv10.5b-013"}
 EXPECTED_BASE_OVERRIDES = {
@@ -51,6 +52,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sv08-161": {"setId": "sv08", "localId": "161", "conflictingProduct": 794948, "baseProduct": 794534},
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
+    "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
 }
 
 
@@ -266,6 +268,16 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 274904, "trend": 311.31, "trend-holo": 136.66}},
     }
+    fixtures["metagross"] = {
+        "id": "pl3-7", "tcgdexId": "pl3-7", "name": "Metagross", "localId": "7",
+        "set": {"id": "pl3", "name": "Supreme Victors"}, "rarity": "Rare Holo",
+        "variants": {"normal": False, "holo": True, "reverse": True},
+        "variants_detailed": [
+            {"type": "holo", "thirdParty": {"cardmarket": 278689}, "pricing": {"cardmarket": {"idProduct": 278689, "trend": 40.68, "trend-holo": 62.71}}},
+            {"type": "reverse", "thirdParty": {"cardmarket": 278698}, "pricing": {"cardmarket": {"idProduct": 278698, "trend": 3.05, "trend-holo": 3.24}}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 278689, "trend": 40.68, "trend-holo": 62.71}},
+    }
     harness = r"""
 const assert=require('assert');
 const fs=require('fs');
@@ -335,6 +347,16 @@ assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...tyr,localId:'29'}
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...tyr,name:'Tyranitar ex'}),null);
 const tyrNormal=r.cardmarketValueForCardVariant(tyr,'Normal');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:tyrNormal.value,productId:tyrNormal.productId})),{value:10.33,productId:274941});
+const met=fixtures.metagross;
+const metOverride=r.verifiedBaseCardmarketProductOverride(met);
+assert.strictEqual(metOverride?.pricing?.idProduct,278698);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(met)?.idProduct,278698);
+assert.strictEqual(r.knownCardmarketIdentityConflict(met,278689)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...met,id:'pl3-8',tcgdexId:'pl3-8',localId:'8'},278698)?.kind,'identity-mismatch');
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,localId:'8'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...met,name:'Milotic'}),null);
+const metHolo=r.cardmarketValueForCardVariant(met,'Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:metHolo.value,productId:metHolo.productId})),{value:3.05,productId:278698});
 const normal=r.cardmarketValueForCardVariant(p,'Normal');
 const reverse=r.cardmarketValueForCardVariant(p,'Reverse Holo');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:normal.value,productId:normal.productId})),{value:0.17,productId:407919});
@@ -449,7 +471,7 @@ def main():
     source = INDEX.read_text(encoding="utf-8")
     base_overrides = extract_js_object(source, "VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
-        raise AssertionError("Base Cardmarket override registry differs from the five audited P0 identities")
+        raise AssertionError("Base Cardmarket override registry differs from the six audited P0 identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
     torkoal_guard = "knownCardmarketIdentityConflict" in source and "sm12-29" in source and "398524" in source
     protected_reverse = {card_id: card_id in source for card_id in sorted(PROTECTED_REVERSE)}
@@ -649,7 +671,7 @@ def main():
                             "candidateIdentitiesDeepAudited": len(cases), "liveDetailRequests": len(live_targets),
                             "liveApiErrors": live_errors}},
         "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
-        "p0Regression": {"before": 5, "after": len(known_phase_a_p0),
+        "p0Regression": {"before": 6, "after": len(known_phase_a_p0),
                          "exactOverridesApplied": sum(bool(c.get("baseOverrideApplied")) for c in cases),
                          "registry": base_overrides,
                          "noP1AutoMapped": not any(c.get("baseOverrideApplied") for c in cases if c["tcgdexId"] not in EXPECTED_BASE_OVERRIDES),
@@ -671,7 +693,7 @@ def main():
                          "maximumConfirmedP0Undervaluation": None,
                          "method": "Differenze fra soli campi trend reali Cardmarket; nessuna stima o interpolazione."},
         "safety": {"productionFilesModified": True, "indexHtmlModified": True,
-                   "productionChangeScope": "Five exact Cardmarket base-product identity overrides; latest addition is Tyranitar ecard1-66",
+                   "productionChangeScope": "Six exact Cardmarket base-product identity overrides; latest addition is Metagross pl3-7",
                    "cardmarketDataModified": False,
                    "retailModified": False, "retailPricesModified": False, "scannerOcrSearchModified": False,
                    "finishesModified": True, "workflowAdded": False, "mergePerformed": False},
