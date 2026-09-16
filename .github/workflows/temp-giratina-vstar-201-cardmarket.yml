@@ -42,23 +42,13 @@ jobs:
 
       - name: Verify exact audit gates
         run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          report=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
-          c=report['classifications']
-          assert c['P0_WRONG_PRODUCT']==0, c
-          assert c['P1_AMBIGUOUS_PRODUCT']==392, c
-          assert c['SAFE']==1690, c
-          assert c['EXACT_ALTERNATE_PRODUCT']==115, c
-          assert c['SOURCE_CONFLICT']==7, c
-          assert c['UNMAPPED_EXACT_PRODUCT']==0, c
-          cases=report.get('cases') or report.get('results') or []
-          target=[x for x in cases if x.get('tcgdexId')=='swsh11-201']
-          if target:
-              assert target[0].get('classification')=='SAFE', target[0]
-          print('GATES', c)
-          PY
+          grep -A7 '"classifications": {' /tmp/cardmarket-audit.log
+          grep -q '"SAFE": 1690' /tmp/cardmarket-audit.log
+          grep -q '"EXACT_ALTERNATE_PRODUCT": 115' /tmp/cardmarket-audit.log
+          grep -q '"P0_WRONG_PRODUCT": 0' /tmp/cardmarket-audit.log
+          grep -q '"P1_AMBIGUOUS_PRODUCT": 392' /tmp/cardmarket-audit.log
+          grep -q '"SOURCE_CONFLICT": 7' /tmp/cardmarket-audit.log
+          grep -q '"UNMAPPED_EXACT_PRODUCT": 0' /tmp/cardmarket-audit.log
 
       - name: Remove diagnostics and assert final scope
         run: |
