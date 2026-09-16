@@ -91,6 +91,33 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "ex4-86": {"base": 276063, "alternate": 275863, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-86"},
     "ex4-88": {"base": 276065, "alternate": 275865, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-88"}
 }
+MCDONALDS_2021_EXACT_PAIRS = {
+    "2021swsh-1": {"localId": "1", "name": "Bulbasaur", "normal": 538778, "holo": 538783},
+    "2021swsh-2": {"localId": "2", "name": "Chikorita", "normal": 538788, "holo": 538793},
+    "2021swsh-3": {"localId": "3", "name": "Treecko", "normal": 538798, "holo": 538803},
+    "2021swsh-4": {"localId": "4", "name": "Turtwig", "normal": 538808, "holo": 538813},
+    "2021swsh-5": {"localId": "5", "name": "Snivy", "normal": 538818, "holo": 538823},
+    "2021swsh-6": {"localId": "6", "name": "Chespin", "normal": 538828, "holo": 538833},
+    "2021swsh-7": {"localId": "7", "name": "Rowlet", "normal": 538838, "holo": 538843},
+    "2021swsh-8": {"localId": "8", "name": "Grookey", "normal": 538848, "holo": 538853},
+    "2021swsh-9": {"localId": "9", "name": "Charmander", "normal": 538858, "holo": 538863},
+    "2021swsh-10": {"localId": "10", "name": "Cyndaquil", "normal": 538868, "holo": 538873},
+    "2021swsh-11": {"localId": "11", "name": "Torchic", "normal": 538878, "holo": 538883},
+    "2021swsh-12": {"localId": "12", "name": "Chimchar", "normal": 538888, "holo": 538893},
+    "2021swsh-13": {"localId": "13", "name": "Tepig", "normal": 538898, "holo": 538903},
+    "2021swsh-14": {"localId": "14", "name": "Fennekin", "normal": 538908, "holo": 538913},
+    "2021swsh-15": {"localId": "15", "name": "Litten", "normal": 538918, "holo": 538923},
+    "2021swsh-16": {"localId": "16", "name": "Scorbunny", "normal": 538928, "holo": 538933},
+    "2021swsh-17": {"localId": "17", "name": "Squirtle", "normal": 538938, "holo": 538943},
+    "2021swsh-18": {"localId": "18", "name": "Totodile", "normal": 538948, "holo": 538953},
+    "2021swsh-19": {"localId": "19", "name": "Mudkip", "normal": 538958, "holo": 538963},
+    "2021swsh-20": {"localId": "20", "name": "Piplup", "normal": 538968, "holo": 538973},
+    "2021swsh-21": {"localId": "21", "name": "Oshawott", "normal": 538978, "holo": 538983},
+    "2021swsh-22": {"localId": "22", "name": "Froakie", "normal": 538988, "holo": 538993},
+    "2021swsh-23": {"localId": "23", "name": "Popplio", "normal": 538998, "holo": 539003},
+    "2021swsh-24": {"localId": "24", "name": "Sobble", "normal": 539008, "holo": 539013},
+    "2021swsh-25": {"localId": "25", "name": "Pikachu", "normal": 539018, "holo": 539023},
+}
 PROTECTED_REVERSE = {"pl2-102", "pl3-26", "pl3-5", "pl3-59", "pl3-83", "sv10.5b-013"}
 EXPECTED_BASE_OVERRIDES = {
     "sv08-029": {"setId": "sv08", "localId": "029", "conflictingProduct": 794946, "baseProduct": 794286},
@@ -1220,6 +1247,27 @@ def main():
         elif card_id in PROTECTED_REVERSE:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "Conflitto Reverse Cardmarket noto e già protetto con identità/prodotto esatti.", "Mantenere il fail-closed esistente."
+        elif card_id in MCDONALDS_2021_EXACT_PAIRS:
+            rule = MCDONALDS_2021_EXACT_PAIRS[card_id]
+            pn, ph = products.get(rule["normal"]), products.get(rule["holo"])
+            gn, gh = prices.get(rule["normal"]), prices.get(rule["holo"])
+            same_meta = bool(pn and ph and pn.get("idExpansion") == 3738 and ph.get("idExpansion") == 3738 and
+                             pn.get("idMetacard") == ph.get("idMetacard") and pn.get("idMetacard") is not None)
+            exact_names = bool(pn and ph and str(pn.get("name") or "").split(" [",1)[0] == rule["name"] and
+                               str(ph.get("name") or "").split(" [",1)[0] == rule["name"])
+            priced = bool(gn and gh and isinstance(gn.get("trend"),(int,float)) and gn.get("trend") > 0 and
+                          isinstance(gh.get("trend"),(int,float)) and gh.get("trend") > 0)
+            if same_meta and exact_names and priced:
+                classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+                resolved_pid = rule["normal"]
+                resolved_value = gn.get("trend")
+                reason = ("McDonald's Collection 2021 ha prodotti Cardmarket Normal/Holo distinti, verificati "
+                          "sullo stesso metacard ufficiale; Cardoryx li risolve per identità e finitura esatte.")
+                action = "Mantenere la tabella esatta 25 carte; nessuna formula productId e nessun fallback tra finiture."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La coppia McDonald's 2021 non supera più i controlli catalogo/metacard/prezzo ufficiali."
+                action = "Fail-closed e nuova verifica del catalogo Cardmarket."
         elif live_ex5_beldum_gym_pair:
             classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
             reason = ("Beldum EX Hidden Legends 29/101 ha V1 base Cardmarket 276103 e una stampa Gym Challenge "
