@@ -1,0 +1,478 @@
+{
+  "requested": 11,
+  "fetched": 11,
+  "errors": {},
+  "cards": [
+    {
+      "tcgdexId": "swshp-SWSH028",
+      "name": "Duraludon",
+      "localId": "SWSH028",
+      "topProductId": 453308,
+      "topTrend": 0.38,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": "cosmos",
+          "stamp": null,
+          "languages": null,
+          "pid": 453308,
+          "pricingPid": 453308,
+          "trend": 0.38,
+          "low": 0.08,
+          "tcgplayer": 214239
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "eb-games"
+          ],
+          "languages": null,
+          "pid": 886516,
+          "pricingPid": 886516,
+          "trend": null,
+          "low": 30,
+          "tcgplayer": 624648
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "gamestop"
+          ],
+          "languages": null,
+          "pid": 742039,
+          "pricingPid": 742039,
+          "trend": 7.43,
+          "low": 1,
+          "tcgplayer": 247362
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH039",
+      "name": "Pikachu",
+      "localId": "SWSH039",
+      "topProductId": 491189,
+      "topTrend": 20.17,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": "cosmos",
+          "stamp": null,
+          "languages": null,
+          "pid": 491189,
+          "pricingPid": 491189,
+          "trend": 20.17,
+          "low": 8,
+          "tcgplayer": 220268
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 549406,
+          "pricingPid": 549406,
+          "trend": 22.19,
+          "low": 11.7,
+          "tcgplayer": 232764
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH055",
+      "name": "Hatterene V",
+      "localId": "SWSH055",
+      "topProductId": 510180,
+      "topTrend": 0.89,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": null,
+          "languages": null,
+          "pid": 510180,
+          "pricingPid": 510180,
+          "trend": 0.89,
+          "low": 0.3,
+          "tcgplayer": 223755
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": null,
+          "languages": null,
+          "pid": 510175,
+          "pricingPid": 510175,
+          "trend": 1.61,
+          "low": 0.3,
+          "tcgplayer": 223756
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH132",
+      "name": "Dragapult",
+      "localId": "SWSH132",
+      "topProductId": 576731,
+      "topTrend": 2.49,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576731,
+          "pricingPid": 576731,
+          "trend": 2.49,
+          "low": 0.4,
+          "tcgplayer": 251088
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576905,
+          "pricingPid": 576905,
+          "trend": 1.2,
+          "low": 0.1,
+          "tcgplayer": 252817
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH133",
+      "name": "Lance's Charizard V",
+      "localId": "SWSH133",
+      "topProductId": 576732,
+      "topTrend": 13.78,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576732,
+          "pricingPid": 576732,
+          "trend": 13.78,
+          "low": 4,
+          "tcgplayer": 251089
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576906,
+          "pricingPid": 576906,
+          "trend": 3.05,
+          "low": 1.8,
+          "tcgplayer": 251104
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH134",
+      "name": "Dark Sylveon V",
+      "localId": "SWSH134",
+      "topProductId": 576733,
+      "topTrend": 10.18,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576733,
+          "pricingPid": 576733,
+          "trend": 10.18,
+          "low": 6.95,
+          "tcgplayer": 251090
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576907,
+          "pricingPid": 576907,
+          "trend": 2.7,
+          "low": 0.7,
+          "tcgplayer": 251105
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH136",
+      "name": "Mimikyu",
+      "localId": "SWSH136",
+      "topProductId": 576735,
+      "topTrend": 12.4,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576735,
+          "pricingPid": 576735,
+          "trend": 12.4,
+          "low": 4,
+          "tcgplayer": 251092
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576908,
+          "pricingPid": 576908,
+          "trend": 8.05,
+          "low": 5,
+          "tcgplayer": 260878
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH137",
+      "name": "Light Toxtricity",
+      "localId": "SWSH137",
+      "topProductId": 576736,
+      "topTrend": 6.92,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576736,
+          "pricingPid": 576736,
+          "trend": 6.92,
+          "low": 0.5,
+          "tcgplayer": 251093
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576909,
+          "pricingPid": 576909,
+          "trend": 5.82,
+          "low": 4,
+          "tcgplayer": 260877
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH138",
+      "name": "Hydreigon C",
+      "localId": "SWSH138",
+      "topProductId": 576737,
+      "topTrend": 1.46,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576737,
+          "pricingPid": 576737,
+          "trend": 1.46,
+          "low": 0.19,
+          "tcgplayer": 251094
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "pid": 576910,
+          "pricingPid": 576910,
+          "trend": 4.94,
+          "low": 4,
+          "tcgplayer": 260879
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH163",
+      "name": "Zacian V-UNION",
+      "localId": "SWSH163",
+      "topProductId": 572163,
+      "topTrend": 3.58,
+      "rows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": null,
+          "languages": null,
+          "pid": 572163,
+          "pricingPid": 572163,
+          "trend": 3.58,
+          "low": 2,
+          "tcgplayer": 247364
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": null,
+          "languages": null,
+          "pid": 576915,
+          "pricingPid": 576915,
+          "trend": 4.12,
+          "low": 2,
+          "tcgplayer": 250253
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH296",
+      "name": "Champions Festival",
+      "localId": "SWSH296",
+      "topProductId": 671798,
+      "topTrend": 154.55,
+      "rows": [
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022"
+          ],
+          "languages": null,
+          "pid": 671798,
+          "pricingPid": 671798,
+          "trend": 154.55,
+          "low": 29.95,
+          "tcgplayer": 575154
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "champion"
+          ],
+          "languages": null,
+          "pid": null,
+          "pricingPid": null,
+          "trend": null,
+          "low": null,
+          "tcgplayer": null
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "finalist"
+          ],
+          "languages": null,
+          "pid": null,
+          "pricingPid": null,
+          "trend": null,
+          "low": null,
+          "tcgplayer": null
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "quarter-finalist"
+          ],
+          "languages": null,
+          "pid": null,
+          "pricingPid": null,
+          "trend": null,
+          "low": null,
+          "tcgplayer": null
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "semi-finalist"
+          ],
+          "languages": null,
+          "pid": null,
+          "pricingPid": null,
+          "trend": null,
+          "low": null,
+          "tcgplayer": null
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "staff"
+          ],
+          "languages": null,
+          "pid": 672087,
+          "pricingPid": 672087,
+          "trend": 491.48,
+          "low": 449.99,
+          "tcgplayer": 503454
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "top-sixteen"
+          ],
+          "languages": null,
+          "pid": null,
+          "pricingPid": null,
+          "trend": null,
+          "low": null,
+          "tcgplayer": null
+        },
+        {
+          "type": "normal",
+          "foil": null,
+          "stamp": [
+            "worlds-2022",
+            "top-thirty-two"
+          ],
+          "languages": null,
+          "pid": null,
+          "pricingPid": null,
+          "trend": null,
+          "low": null,
+          "tcgplayer": null
+        }
+      ]
+    }
+  ]
+}
