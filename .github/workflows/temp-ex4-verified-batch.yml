@@ -49,6 +49,8 @@ jobs:
           print('SAFE_BATCH_COUNT',r['eligibleCount'])
           print('SAFE_BATCH_IDS',','.join(r['eligibleIds']))
           PY
+          cp artifacts/ex4_verified_batch_audit.json "$RUNNER_TEMP/ex4_verified_batch_audit.json"
+          rm artifacts/ex4_verified_batch_audit.json
       - name: Baseline full Cardmarket identity audit
         run: |
           python -B scripts/test_card_identity_cardmarket_audit.py --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database"
@@ -56,7 +58,7 @@ jobs:
           git checkout -- artifacts/card_identity_cardmarket_audit_report.json
       - name: Apply only verified EX4 batch
         run: |
-          python -B scripts/temp_ex4_verified_batch.py --apply --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database" --report artifacts/ex4_verified_batch_audit.json
+          python -B scripts/temp_ex4_verified_batch.py --apply --tcgdex-db "$RUNNER_TEMP/tcgdex-cards-database" --report "$RUNNER_TEMP/ex4_verified_batch_audit.json"
           python -B -m py_compile scripts/test_card_identity_cardmarket_audit.py
           rm -rf scripts/__pycache__
       - name: Focused runtime regression
@@ -72,7 +74,7 @@ jobs:
           from pathlib import Path
           base=json.loads(Path(os.environ['RUNNER_TEMP'],'baseline_identity_report.json').read_text())
           post=json.loads(Path(os.environ['RUNNER_TEMP'],'post_identity_report.json').read_text())
-          batch=json.loads(Path('artifacts/ex4_verified_batch_audit.json').read_text())
+          batch=json.loads(Path(os.environ['RUNNER_TEMP'],'ex4_verified_batch_audit.json').read_text())
           bc=base['summary']['classifications'] if 'summary' in base and 'classifications' in base['summary'] else base['classifications']
           pc=post['summary']['classifications'] if 'summary' in post and 'classifications' in post['summary'] else post['classifications']
           assert bc['P0_WRONG_PRODUCT']==0, bc
@@ -99,5 +101,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ex4-verified-batch-audit
-          path: artifacts/ex4_verified_batch_audit.json
+          path: ${{ runner.temp }}/ex4_verified_batch_audit.json
           if-no-files-found: error
