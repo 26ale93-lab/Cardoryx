@@ -49,6 +49,15 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
     "ex4-94": {"base": 276071, "alternate": 275871, "stamp": "wrong-card-identity", "cardmarketCode": "MA94"},
     "ex4-95": {"base": 276072, "alternate": 275872, "stamp": "wrong-card-identity", "cardmarketCode": "MA95"},
+    "ex4-19": {"base": 275996, "alternate": 275796, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-19"},
+    "ex4-23": {"base": 276000, "alternate": 275800, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-23"},
+    "ex4-64": {"base": 276041, "alternate": 275841, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-64"},
+    "ex4-73": {"base": 276050, "alternate": 275850, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-73"},
+    "ex4-78": {"base": 276055, "alternate": 275855, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-78"},
+    "ex4-80": {"base": 276057, "alternate": 275857, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-80"},
+    "ex4-82": {"base": 276059, "alternate": 275859, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-82"},
+    "ex4-85": {"base": 276062, "alternate": 275862, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-85"},
+    "ex4-87": {"base": 276064, "alternate": 275864, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-87"}
 }
 PROTECTED_REVERSE = {"pl2-102", "pl3-26", "pl3-5", "pl3-59", "pl3-83", "sv10.5b-013"}
 EXPECTED_BASE_OVERRIDES = {
@@ -63,6 +72,15 @@ EXPECTED_BASE_OVERRIDES = {
     "ex4-89": {"setId": "ex4", "localId": "089", "conflictingProduct": 275866, "baseProduct": 276066},
     "ex4-94": {"setId": "ex4", "localId": "094", "conflictingProduct": 275871, "baseProduct": 276071},
     "ex4-95": {"setId": "ex4", "localId": "095", "conflictingProduct": 275872, "baseProduct": 276072},
+    "ex4-19": {"setId": "ex4", "localId": "019", "conflictingProduct": 275796, "baseProduct": 275996},
+    "ex4-23": {"setId": "ex4", "localId": "023", "conflictingProduct": 275800, "baseProduct": 276000},
+    "ex4-64": {"setId": "ex4", "localId": "064", "conflictingProduct": 275841, "baseProduct": 276041},
+    "ex4-73": {"setId": "ex4", "localId": "073", "conflictingProduct": 275850, "baseProduct": 276050},
+    "ex4-78": {"setId": "ex4", "localId": "078", "conflictingProduct": 275855, "baseProduct": 276055},
+    "ex4-80": {"setId": "ex4", "localId": "080", "conflictingProduct": 275857, "baseProduct": 276057},
+    "ex4-82": {"setId": "ex4", "localId": "082", "conflictingProduct": 275859, "baseProduct": 276059},
+    "ex4-85": {"setId": "ex4", "localId": "085", "conflictingProduct": 275862, "baseProduct": 276062},
+    "ex4-87": {"setId": "ex4", "localId": "087", "conflictingProduct": 275864, "baseProduct": 276064}
 }
 
 
@@ -299,6 +317,21 @@ def runtime_cardmarket_regression():
         card["variants"] = {"normal": False, "holo": True, "reverse": False}
         card["variants_detailed"] = [{"type":"holo","thirdParty":{"cardmarket":card["wrong"]},"pricing":{"cardmarket":{"idProduct":card["wrong"],"trend":1}}}]
         card["pricing"] = {"cardmarket":{"idProduct":card["wrong"],"trend":1}}
+    fixtures["ex4_verified_batch"] = [
+        {"id":"ex4-19","tcgdexId":"ex4-19","name":"Team Magma's Camerupt","localId":"19","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275796,"correct":275996},
+        {"id":"ex4-23","tcgdexId":"ex4-23","name":"Team Magma's Zangoose","localId":"23","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275800,"correct":276000},
+        {"id":"ex4-64","tcgdexId":"ex4-64","name":"Team Magma's Numel","localId":"64","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275841,"correct":276041},
+        {"id":"ex4-73","tcgdexId":"ex4-73","name":"Maxie","localId":"73","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275850,"correct":276050},
+        {"id":"ex4-78","tcgdexId":"ex4-78","name":"Team Aqua Hideout","localId":"78","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275855,"correct":276055},
+        {"id":"ex4-80","tcgdexId":"ex4-80","name":"Team Magma Ball","localId":"80","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275857,"correct":276057},
+        {"id":"ex4-82","tcgdexId":"ex4-82","name":"Team Magma Conspirator","localId":"82","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275859,"correct":276059},
+        {"id":"ex4-85","tcgdexId":"ex4-85","name":"Warp Point","localId":"85","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275862,"correct":276062},
+        {"id":"ex4-87","tcgdexId":"ex4-87","name":"Magma Energy","localId":"87","set":{"id":"ex4","name":"EX Team Magma vs Team Aqua"},"wrong":275864,"correct":276064},
+    ]
+    for card in fixtures["ex4_verified_batch"]:
+        card["variants"] = {"normal": False, "holo": True, "reverse": True}
+        card["variants_detailed"] = [{"type":"holo","thirdParty":{"cardmarket":card["wrong"]},"pricing":{"cardmarket":{"idProduct":card["wrong"],"trend":1}}}]
+        card["pricing"] = {"cardmarket":{"idProduct":card["wrong"],"trend":1}}
     harness = r"""
 const assert=require('assert');
 const fs=require('fs');
@@ -387,6 +420,14 @@ for(const card of fixtures.ex4_high_impact){
   assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
   const value=r.cardmarketValueForCardVariant(card,'Holo');
   assert.deepStrictEqual(JSON.parse(JSON.stringify({value:value.value,productId:value.productId})),{value:card.expected,productId:card.correct});
+}
+for(const card of fixtures.ex4_verified_batch){
+  const o=r.verifiedBaseCardmarketProductOverride(card);
+  assert.strictEqual(o?.pricing?.idProduct,card.correct);
+  assert.strictEqual(r.resolvedCardmarketPricingForCard(card)?.idProduct,card.correct);
+  assert.strictEqual(r.knownCardmarketIdentityConflict(card,card.wrong)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,id:card.id+'-wrong',tcgdexId:card.tcgdexId+'-wrong',localId:'999'},card.correct)?.kind,'identity-mismatch');
+  assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
 }
 const normal=r.cardmarketValueForCardVariant(p,'Normal');
 const reverse=r.cardmarketValueForCardVariant(p,'Reverse Holo');
@@ -502,7 +543,7 @@ def main():
     source = INDEX.read_text(encoding="utf-8")
     base_overrides = extract_js_object(source, "VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
-        raise AssertionError("Base Cardmarket override registry differs from the eleven audited P0 identities")
+        raise AssertionError("Base Cardmarket override registry differs from the 20 audited P0 identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
     torkoal_guard = "knownCardmarketIdentityConflict" in source and "sm12-29" in source and "398524" in source
     protected_reverse = {card_id: card_id in source for card_id in sorted(PROTECTED_REVERSE)}
@@ -702,7 +743,7 @@ def main():
                             "candidateIdentitiesDeepAudited": len(cases), "liveDetailRequests": len(live_targets),
                             "liveApiErrors": live_errors}},
         "classificationTotals": {name: counts.get(name, 0) for name in ("SAFE", "EXACT_ALTERNATE_PRODUCT", "P0_WRONG_PRODUCT", "P1_AMBIGUOUS_PRODUCT", "SOURCE_CONFLICT", "UNMAPPED_EXACT_PRODUCT")},
-        "p0Regression": {"before": 11, "after": len(known_phase_a_p0),
+        "p0Regression": {"before": 20, "after": len(known_phase_a_p0),
                          "exactOverridesApplied": sum(bool(c.get("baseOverrideApplied")) for c in cases),
                          "registry": base_overrides,
                          "noP1AutoMapped": not any(c.get("baseOverrideApplied") for c in cases if c["tcgdexId"] not in EXPECTED_BASE_OVERRIDES),
@@ -724,7 +765,7 @@ def main():
                          "maximumConfirmedP0Undervaluation": None,
                          "method": "Differenze fra soli campi trend reali Cardmarket; nessuna stima o interpolazione."},
         "safety": {"productionFilesModified": True, "indexHtmlModified": True,
-                   "productionChangeScope": "Eleven exact Cardmarket base-product identity overrides; latest block adds five exact EX Team Magma vs Team Aqua identities",
+                   "productionChangeScope": "20 exact Cardmarket base-product identity overrides; latest batch adds 9 metacard-verified EX Team Magma vs Team Aqua identities",
                    "cardmarketDataModified": False,
                    "retailModified": False, "retailPricesModified": False, "scannerOcrSearchModified": False,
                    "finishesModified": True, "workflowAdded": False, "mergePerformed": False},
