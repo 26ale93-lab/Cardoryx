@@ -1,0 +1,102 @@
+name: TEMP fix Celebrations Classic Cardmarket guards
+
+on:
+  push:
+    branches:
+      - fix/cardmarket-celebrations-classic-guard-20260917
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-test:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply surgical fix
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          index = Path('index.html')
+          src = index.read_text()
+          before = src
+          for key in ('cel25cc-cc020','cel25cc-cc021'):
+              pat = rf"^\s*'{re.escape(key)}':\{{[^\n]*\}},\n"
+              src, n = re.subn(pat, '', src, flags=re.M)
+              if n != 1:
+                  raise SystemExit(f'expected exactly one production override for {key}, found {n}')
+          # Remove only these ids from the batch-2 guard list, if present there.
+          m = re.search(r"const VERIFIED_BATCH2_BASE_CARDMARKET_OVERRIDE_IDS\s*=\s*new Set\(\[(.*?)\]\);", src, re.S)
+          if m:
+              body = m.group(1)
+              for key in ('cel25cc-cc020','cel25cc-cc021'):
+                  body = re.sub(rf"\s*'{re.escape(key)}'\s*,?", '', body)
+              src = src[:m.start(1)] + body + src[m.end(1):]
+          if src == before:
+              raise SystemExit('index.html unchanged')
+          if "'cel25cc-cc020':{" in src or "'cel25cc-cc021':{" in src:
+              raise SystemExit('Celebrations wrong override still present')
+          index.write_text(src)
+
+          audit = Path('scripts/test_card_identity_cardmarket_audit.py')
+          s = audit.read_text()
+          old = s
+          for key in ('cel25cc-cc020','cel25cc-cc021'):
+              pat = rf'^\s*"{re.escape(key)}":\s*\([^\n]*\),\n'
+              s, n = re.subn(pat, '', s, flags=re.M)
+              if n != 1:
+                  raise SystemExit(f'expected exactly one audit batch row for {key}, found {n}')
+          needle = '    if base_overrides != EXPECTED_BASE_OVERRIDES:\n        raise AssertionError("Base Cardmarket override registry differs from the audited P0 identities")\n'
+          guard = needle + '    for forbidden in ("cel25cc-cc020", "cel25cc-cc021"):\n        if forbidden in base_overrides:\n            raise AssertionError(f"Celebrations Classic must not use base override: {forbidden}")\n'
+          if needle not in s:
+              raise SystemExit('audit insertion point not found')
+          s = s.replace(needle, guard, 1)
+          if s == old:
+              raise SystemExit('audit script unchanged')
+          audit.write_text(s)
+
+          # Remove this temporary workflow from the final branch diff.
+          Path('.github/workflows/temp-fix-celebrations-classic-cardmarket.yml').unlink()
+          PY
+      - name: Runtime audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Verify counters and exact Celebrations state
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          c=d['classifications']
+          print('CLASSIFICATIONS',json.dumps(c,sort_keys=True))
+          if c.get('P0_WRONG_PRODUCT') != 0: raise SystemExit('P0 regression')
+          if c.get('UNMAPPED_EXACT_PRODUCT') != 0: raise SystemExit('UNMAPPED regression')
+          cases={x.get('tcgdexId'):x for x in d.get('caseIndex',[]) if isinstance(x,dict)}
+          for cid in ('cel25cc-CC020','cel25cc-CC021'):
+              row=cases.get(cid)
+              print(cid,json.dumps(row,ensure_ascii=False))
+              if not row or row.get('classification')!='P1_AMBIGUOUS_PRODUCT':
+                  raise SystemExit(f'{cid} must remain fail-closed P1')
+          PY
+          git diff --check
+      - name: Commit tested fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html scripts/test_card_identity_cardmarket_audit.py .github/workflows/temp-fix-celebrations-classic-cardmarket.yml
+          git commit -m 'Remove invalid Celebrations Classic Cardmarket overrides'
+          git push origin HEAD:fix/cardmarket-celebrations-classic-guard-20260917
