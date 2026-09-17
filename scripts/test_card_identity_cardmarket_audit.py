@@ -106,6 +106,11 @@ VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS = {
     "ex5-98": {"setId":"ex5","localId":"98","name":"Regirock ex","primary":276172,"primaryType":"holo","primaryFoil":"cracked-ice","primaryStamp":[],"alternate":869536,"alternateType":"normal","alternateFoil":"","alternateStamp":["jason-klaczynski"]},
     "swshp-SWSH039": {"setId":"swshp","localId":"SWSH039","name":"Pikachu","primary":491189,"primaryType":"holo","primaryFoil":"cosmos","primaryStamp":[],"alternate":549406,"alternateType":"holo","alternateFoil":"","alternateStamp":["25th-celebration"]},
 }
+VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS = {
+    "swshp-SWSH296": {"setId":"swshp","localId":"SWSH296","name":"Champions Festival","stamp":"worlds-2022","productId":671798,"staffProductId":672087},
+    "svp-045": {"setId":"svp","localId":"045","name":"Paradise Resort","stamp":"worlds-2023","productId":726924,"staffProductId":727542},
+    "svp-150": {"setId":"svp","localId":"150","name":"Paradise Resort","stamp":"worlds-2024","productId":783445,"staffProductId":783446},
+}
 VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS = {
     "svp-067": {"setId": "svp", "localId": "067", "name": "Roaring Moon ex", "expansion": 5241, "metacard": 426438, "standard": 740407, "jumbo": 740408, "stamp": []},
     "swshp-SWSH055": {"setId": "swshp", "localId": "SWSH055", "name": "Hatterene V", "expansion": 2916, "metacard": 322125, "standard": 510180, "jumbo": 510175, "stamp": []},
@@ -1445,6 +1450,7 @@ def main():
     live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |
                     set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) | set(VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS) |
+                    set(VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS) |
                     {"sv09-055", "me01-073"} |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
@@ -1641,6 +1647,27 @@ def main():
             if len(exact_rows) == 1:
                 live_swsh028_gamestop = True
                 live_swsh028_gamestop_pid = 742039
+
+        exact_primary_worlds_pair = False
+        exact_primary_worlds_products = None
+        if card_id in VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS:
+            rule=VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS[card_id]
+            identity_ok=bool((card.get("set") or {}).get("id")==rule["setId"] and norm_local(card.get("localId"))==norm_local(rule["localId"]) and card_identity(card).get("name")==rule["name"])
+            def exact_worlds_row(expected_pid, expected_stamps):
+                matched=[]
+                for row in live_card_detail.get("variants_detailed") or []:
+                    stamps=row.get("stamp") or []
+                    if isinstance(stamps,str): stamps=[stamps]
+                    cm=((row.get("pricing") or {}).get("cardmarket") or {})
+                    try: ppid=int(cm.get("idProduct") or cm.get("id_product"))
+                    except (TypeError,ValueError): ppid=None
+                    usable=any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+                    if cm_id(row)==expected_pid and ppid==expected_pid and usable and str(row.get("type") or "").lower()=="normal" and not row.get("foil") and sorted(map(str,stamps))==sorted(expected_stamps) and str(row.get("size") or "standard").lower()=="standard": matched.append(row)
+                return matched
+            base_rows=exact_worlds_row(rule["productId"],[rule["stamp"]])
+            staff_rows=exact_worlds_row(rule["staffProductId"],[rule["stamp"],"staff"])
+            exact_primary_worlds_pair=bool(identity_ok and current_pid==rule["productId"] and len(base_rows)==1 and len(staff_rows)==1 and prices.get(rule["productId"]) and prices.get(rule["staffProductId"]))
+            if exact_primary_worlds_pair: exact_primary_worlds_products={"base":rule["productId"],"staff":rule["staffProductId"]}
 
         exact_primary_special_pair = False
         exact_primary_special_products = None
@@ -1928,6 +1955,18 @@ def main():
             reason = ("Il prodotto corrente appartiene all'identità checklist esatta; ogni altra identità "
                       "TCGdex che lo riusava è ora protetta da un override Cardmarket esatto e fail-closed.")
             action = "Mantenere le guardie EX Deoxys esatte; nessun riuso del prodotto condiviso."
+        elif card_id in VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS:
+            if exact_primary_worlds_pair and "VERIFIED_PRIMARY_WORLDS_STAMPS" in source and "tcgdexExactWorldsStampPrice" in source:
+                rule=VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS[card_id]
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid=rule["productId"]
+                resolved_value=(prices.get(rule["productId"]) or {}).get("trend")
+                reason="TCGdex live prova la stampa Worlds base top-level e la Staff separata con productId e Price Guide distinti; il runtime usa solo stamp, identità e prodotto esatti."
+                action="Mantenere resolver Worlds esatto; piazzamenti senza productId restano fail-closed."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason="La coppia Worlds base/Staff non supera più tutti i gate esatti."
+                action="Fail-closed; nessuna euristica Worlds generica."
         elif card_id in VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS:
             if exact_primary_special_pair and "VERIFIED_EXACT_PRIMARY_SPECIAL_CARDMARKET_ROWS" in source:
                 rule=VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS[card_id]
@@ -2039,6 +2078,8 @@ def main():
             "liveExactEx5BeldumProducts": live_ex5_beldum_products,
             "liveExactSwsh028GameStop": live_swsh028_gamestop,
             "liveExactSwsh028GameStopProductId": live_swsh028_gamestop_pid,
+            "verifiedPrimaryWorldsPair": exact_primary_worlds_pair,
+            "verifiedPrimaryWorldsProducts": exact_primary_worlds_products,
             "verifiedPrimarySpecialPair": exact_primary_special_pair,
             "verifiedPrimarySpecialProducts": exact_primary_special_products,
             "verifiedStandardJumboPair": exact_standard_jumbo_pair,
