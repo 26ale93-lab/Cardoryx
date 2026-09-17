@@ -1,0 +1,85 @@
+name: TEMP Neo Discovery P1 audit
+on:
+  push:
+    branches: [diagnostic/neo2-p1-20260917]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Run current full audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Inspect all residual neo2 identities
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,tempfile,pathlib,collections
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          ids=[x for x in d.get('p1AmbiguousProductIds',[]) if x.startswith('neo2-')]
+          print('NEO2_COUNT',len(ids))
+          print('NEO2_IDS',json.dumps(ids))
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          product_ids=set();cards={};name_groups=collections.defaultdict(list)
+          for cid in ids:
+              try:
+                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
+                  with urllib.request.urlopen(req,timeout=60) as r:c=json.load(r)
+              except Exception as e:
+                  print('CARD_ERROR',cid,repr(e));continue
+              cards[cid]=c;name_groups[str(c.get('name') or '')].append(cid)
+              top=((c.get('pricing') or {}).get('cardmarket') or {})
+              rows=[]
+              for x in c.get('variants_detailed') or []:
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
+                  if pid:product_ids.add(int(pid))
+                  stamps=x.get('stamp') or []
+                  if isinstance(stamps,str):stamps=[stamps]
+                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':stamps,'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo'),'avg7':cm.get('avg7'),'avg7Holo':cm.get('avg7-holo'),'low':cm.get('low'),'lowHolo':cm.get('low-holo')})
+              if top.get('idProduct'):product_ids.add(int(top['idProduct']))
+              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'rarity':c.get('rarity'),'topProduct':top.get('idProduct'),'topTrend':top.get('trend'),'topTrendHolo':top.get('trend-holo'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
+          print('NAME_GROUPS',json.dumps({k:v for k,v in name_groups.items() if len(v)>1},ensure_ascii=False,sort_keys=True))
+          def dl(section,name):
+              path=pathlib.Path(tempfile.gettempdir())/name
+              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
+              with urllib.request.urlopen(req,timeout=300) as r,path.open('wb') as f:
+                  while chunk:=r.read(1024*1024):f.write(chunk)
+              return json.load(open(path))
+          prod=dl('productList','products_singles_6.json');price=dl('priceGuide','price_guide_6.json')
+          def rows(obj,keys):
+              if isinstance(obj,list):return obj
+              for k in keys:
+                  v=obj.get(k) if isinstance(obj,dict) else None
+                  if isinstance(v,list):return v
+              return []
+          product_map={}
+          for r in rows(prod,('products',)):
+              pid=int(r.get('idProduct') or 0)
+              if pid in product_ids:
+                  product_map[pid]=r
+                  print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          for r in rows(price,('priceGuides','priceGuide')):
+              pid=int(r.get('idProduct') or 0)
+              if pid in product_ids:
+                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','trend-holo','avg7-holo','avg30-holo','low-holo')}
+                  print('CM_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          # Group P1 cards by product id so shared-product patterns are explicit.
+          pid_cards=collections.defaultdict(list)
+          for cid,c in cards.items():
+              pids=set()
+              top=((c.get('pricing') or {}).get('cardmarket') or {}).get('idProduct')
+              if top:pids.add(int(top))
+              for x in c.get('variants_detailed') or []:
+                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
+                  if pid:pids.add(int(pid))
+              for pid in pids:pid_cards[pid].append(cid)
+          print('SHARED_PIDS',json.dumps({str(k):v for k,v in pid_cards.items() if len(v)>1},sort_keys=True))
+          PY
