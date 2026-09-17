@@ -5485,6 +5485,9 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // product 727118 at top level; the unstamped Holo/Reverse base product is 725142.
   // Pre-release remains a separate exact stamped printing below.
   'sv03-062':{setId:'sv03',localId:'062',conflictingProduct:727118,baseProduct:725142},
+  // Obsidian Flames — Froakie 056. Cardmarket Version 1 is the standard
+  // Normal/Reverse product; Version 2 is the later Cosmos Holo reprint.
+  'sv03-056':{setId:'sv03',localId:'056',conflictingProduct:781857,baseProduct:725136},
   // EX Hidden Legends — Beldum 29/101. TCGdex exposes the Gym Challenge
   // special-print product at top level; V1 product 276103 is the standard
   // Normal/Reverse identity. Product 280585 remains valid only as the exact
@@ -5918,6 +5921,14 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
     pricing:{idProduct:674207,trend:20.65,avg7:20.82,avg30:19.59,avg:19.03,low:9.90}
   },
+  'sv03-056':{
+    setId:'sv03',localId:'056',name:'Froakie',productId:725136,
+    verified:'2026-09-17T01:54:00+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Obsidian Flames · Froakie 056 Version 1 base · product 725136',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:725136,trend:0.03,avg7:0.03,avg30:0.04,avg:0.04,low:0.02,
+      'trend-holo':0.13,'avg7-holo':0.09,'avg30-holo':0.12,'avg-holo':0.13,'low-holo':0.02}
+  },
   'sv03-062':{
     setId:'sv03',localId:'062',name:'Palafin',productId:725142,
     verified:'2026-09-17T00:47:03+0200',
@@ -6047,6 +6058,11 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
         ?'Il prodotto 836009 appartiene a Throh [Shoulder Throw] e non può valutare Bisharp 065'
         :'Il prodotto 836043 è consentito solo per Bisharp sv10.5b-065 / 065'
     };
+  }
+  const exactFroakie056=id==='sv03-056'&&setId==='sv03'&&local==='056'&&name==='froakie';
+  if((product===725136||product===781857)&&!exactFroakie056){
+    return {kind:'identity-mismatch',source:'Cardmarket · Obsidian Flames Froakie 056 prodotti verificati',
+      reason:`Il prodotto ${product} è consentito solo per Froakie sv03-056 / 056`};
   }
   const exactPalafin062=id==='sv03-062'&&setId==='sv03'&&local==='062'&&name==='palafin';
   const targetsPalafin062=id==='sv03-062'||(setId==='sv03'&&local==='062'&&name==='palafin');
@@ -6229,6 +6245,23 @@ function verifiedMcdonalds2021CardmarketVariant(card,variant){
   return {handled:true,matched:true,variant:v,pricing,productId:pricing.idProduct,
     source:"Cardmarket · McDonald's Collection 2021 · prodotto esatto per finitura"};
 }
+
+function verifiedFroakie056CosmosCardmarketVariant(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
+  const local=exactLocalIdKey(card?.localId||'');
+  const name=normText(card?.name||'');
+  if(id!=='sv03-056'||setId!=='sv03'||local!==exactLocalIdKey('056')||name!=='froakie')return null;
+  if(canonicalVariant(variant)!=='Cosmos Holo')return null;
+  const exactRow=tcgdexVariantDetails(card).find(row=>{
+    const pid=Number(row?.thirdParty?.cardmarket||row?.pricing?.cardmarket?.idProduct||0);
+    return pid===781857 && canonicalFinishFoilLabel(row?.foil||'')==='cosmos';
+  });
+  if(!exactRow)return {handled:true,matched:false,kind:'needs-exact-variant'};
+  const pricing={idProduct:781857,trend:0.20,avg7:0.21,avg30:0.25,avg:0.25,low:0.02};
+  return {handled:true,matched:true,pricing,productId:781857,
+    source:'Cardmarket · Obsidian Flames · Froakie 056 Version 2 Cosmos Holo · prodotto esatto'};
+}
 function verifiedGiratinaVstar201CardmarketVariant(card,variant){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
@@ -6248,6 +6281,12 @@ function verifiedGiratinaVstar201CardmarketVariant(card,variant){
     source:'Cardmarket · Lost Origin · Giratina VSTAR 201 Rainbow · prodotto esatto'};
 }
 function cardmarketValueForCardVariant(card,variant){
+  const froakieCosmos=verifiedFroakie056CosmosCardmarketVariant(card,variant);
+  if(froakieCosmos?.handled){
+    if(!froakieCosmos.matched)return {value:0,kind:froakieCosmos.kind||'needs-exact-variant'};
+    const value=Number(froakieCosmos.pricing?.trend||0);
+    return {value:Number.isFinite(value)&&value>0?value:0,kind:'exact-froakie-056-cosmos',productId:froakieCosmos.productId,source:froakieCosmos.source};
+  }
   const giratina=verifiedGiratinaVstar201CardmarketVariant(card,variant);
   if(giratina?.handled){
     if(!giratina.matched)return {value:0,kind:giratina.kind||'needs-exact-variant'};
@@ -6327,6 +6366,12 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
+  const froakieCosmos=verifiedFroakie056CosmosCardmarketVariant(card,variant);
+  if(froakieCosmos?.handled){
+    if(!froakieCosmos.matched)return {low:null,trend:null,avg7:null,avg30:null};
+    const p=froakieCosmos.pricing||{};
+    return {low:p.low??null,trend:p.trend??null,avg7:p.avg7??null,avg30:p.avg30??null};
+  }
   const giratina=verifiedGiratinaVstar201CardmarketVariant(card,variant);
   if(giratina?.handled){
     if(!giratina.matched)return {low:null,trend:null,avg7:null,avg30:null};

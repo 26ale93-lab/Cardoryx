@@ -50,6 +50,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv10.5b-065": {"base": 836043, "alternate": 836009, "stamp": "wrong-card-identity", "cardmarketCode": "BLK065"},
     "swsh11-201": {"base": 674207, "alternate": 670816, "stamp": "wrong-card-identity", "cardmarketCode": "LOR201"},
     "sv03-062": {"base": 725142, "alternate": 727118, "stamp": "pre-release-top-level", "cardmarketCode": "OBF062"},
+    "sv03-056": {"base": 725136, "alternate": 781857, "stamp": "cosmos-reprint-top-level", "cardmarketCode": "OBF056"},
     "ex4-6": {"base": 275983, "alternate": 275783, "stamp": "wrong-card-identity", "cardmarketCode": "MA6"},
     "ex4-7": {"base": 275984, "alternate": 275784, "stamp": "wrong-card-identity", "cardmarketCode": "MA7"},
     "ex4-89": {"base": 276066, "alternate": 275866, "stamp": "wrong-card-identity", "cardmarketCode": "MA89"},
@@ -136,6 +137,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sv10.5b-065": {"setId": "sv10.5b", "localId": "065", "conflictingProduct": 836009, "baseProduct": 836043},
     "swsh11-201": {"setId": "swsh11", "localId": "201", "conflictingProduct": 670816, "baseProduct": 674207},
     "sv03-062": {"setId": "sv03", "localId": "062", "conflictingProduct": 727118, "baseProduct": 725142},
+    "sv03-056": {"setId": "sv03", "localId": "056", "conflictingProduct": 781857, "baseProduct": 725136},
     "ex5-29": {"setId": "ex5", "localId": "029", "conflictingProduct": 280585, "baseProduct": 276103},
     "ex4-6": {"setId": "ex4", "localId": "006", "conflictingProduct": 275783, "baseProduct": 275983},
     "ex4-7": {"setId": "ex4", "localId": "007", "conflictingProduct": 275784, "baseProduct": 275984},
@@ -453,6 +455,20 @@ def runtime_cardmarket_regression():
         ],
         "pricing": {"cardmarket": {"idProduct": 670816, "trend": 1.46}},
     }
+    fixtures["froakie056"] = {
+        "id": "sv03-056", "tcgdexId": "sv03-056", "name": "Froakie", "localId": "056",
+        "set": {"id": "sv03", "name": "Obsidian Flames"}, "rarity": "Common", "regulationMark": "G",
+        "variants": {"normal": True, "holo": True, "reverse": True},
+        "variants_detailed": [
+            {"type": "reverse", "thirdParty": {"cardmarket": 725136},
+             "pricing": {"cardmarket": {"idProduct": 725136, "trend": 0.03, "avg7": 0.03, "avg30": 0.04, "avg": 0.04, "low": 0.02, "trend-holo": 0.13, "avg7-holo": 0.09, "avg30-holo": 0.12, "avg-holo": 0.13, "low-holo": 0.02}}},
+            {"type": "normal", "thirdParty": {"cardmarket": 781857},
+             "pricing": {"cardmarket": {"idProduct": 781857, "trend": 0.20, "avg7": 0.21, "avg30": 0.25, "avg": 0.25, "low": 0.02}}},
+            {"type": "holo", "foil": "cosmos", "thirdParty": {"cardmarket": 781857},
+             "pricing": {"cardmarket": {"idProduct": 781857, "trend": 0.20, "avg7": 0.21, "avg30": 0.25, "avg": 0.25, "low": 0.02}}},
+        ],
+        "pricing": {"cardmarket": {"idProduct": 781857, "trend": 0.20, "avg7": 0.21, "avg30": 0.25, "avg": 0.25, "low": 0.02}},
+    }
     fixtures["palafin062"] = {
         "id": "sv03-062", "tcgdexId": "sv03-062", "name": "Palafin", "localId": "062",
         "set": {"id": "sv03", "name": "Obsidian Flames"}, "rarity": "Rare", "regulationMark": "G",
@@ -645,6 +661,32 @@ const girUpstreamChanged={...gir,variants_detailed:[{type:'holo',foil:'rainbow',
 const changedResult=r.cardmarketValueForCardVariant(girUpstreamChanged,'Holo');
 assert.strictEqual(changedResult.value,0);
 assert.strictEqual(changedResult.kind,'needs-exact-variant');
+const fro=fixtures.froakie056;
+const froOverride=r.verifiedBaseCardmarketProductOverride(fro);
+assert.strictEqual(froOverride?.pricing?.idProduct,725136);
+assert.strictEqual(r.resolvedCardmarketPricingForCard(fro)?.idProduct,725136);
+assert.strictEqual(r.knownCardmarketIdentityConflict(fro,781857),null);
+assert.strictEqual(r.knownCardmarketIdentityConflict({...fro,id:'sv03-057',tcgdexId:'sv03-057',localId:'057',name:'Frogadier'},781857)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...fro,id:'sv03-055',tcgdexId:'sv03-055',localId:'055',name:'Buizel'},725136)?.kind,'identity-mismatch');
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...fro,localId:'057'}),null);
+assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...fro,name:'Frogadier'}),null);
+const froFinishes=[...r.documentedVariantsForCard(fro,'None','')];
+assert(froFinishes.includes('Normal'));
+assert(froFinishes.includes('Reverse Holo'));
+assert(froFinishes.includes('Cosmos Holo'));
+const froNormal=r.cardmarketValueForCardVariant(fro,'Normal');
+const froReverse=r.cardmarketValueForCardVariant(fro,'Reverse Holo');
+const froCosmos=r.cardmarketValueForCardVariant(fro,'Cosmos Holo');
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:froNormal.value,productId:froNormal.productId})),{value:0.03,productId:725136});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:froReverse.value,productId:froReverse.productId})),{value:0.13,productId:725136});
+assert.deepStrictEqual(JSON.parse(JSON.stringify({value:froCosmos.value,productId:froCosmos.productId,kind:froCosmos.kind})),{value:0.2,productId:781857,kind:'exact-froakie-056-cosmos'});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Normal'))),{low:0.02,trend:0.03,avg7:0.03,avg30:0.04});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Reverse Holo'))),{low:0.02,trend:0.13,avg7:0.09,avg30:0.12});
+assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Cosmos Holo'))),{low:0.02,trend:0.2,avg7:0.21,avg30:0.25});
+const froNoCosmosRow={...fro,variants_detailed:fro.variants_detailed.filter(x=>!/cosmos/i.test(String(x.foil||'')))};
+const froFailClosed=r.cardmarketValueForCardVariant(froNoCosmosRow,'Cosmos Holo');
+assert.strictEqual(froFailClosed.value,0);
+assert.strictEqual(froFailClosed.kind,'needs-exact-variant');
 const pal=fixtures.palafin062;
 const palOverride=r.verifiedBaseCardmarketProductOverride(pal);
 assert.strictEqual(palOverride?.pricing?.idProduct,725142);
