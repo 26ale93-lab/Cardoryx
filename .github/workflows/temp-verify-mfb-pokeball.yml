@@ -1,0 +1,52 @@
+name: TEMP verify MFB Poké Ball exact products
+on:
+  push:
+    branches: [fix/mfb-pokeball-exact-products-20260917]
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply MFB Poké Ball patch
+        run: |
+          python3 .github/scripts/temp_mfb_pokeball_patch.py
+          git diff --check
+      - name: Commit production patch and remove temporary files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/scripts/temp_mfb_pokeball_patch.py .github/workflows/temp-verify-mfb-pokeball.yml
+          git add index.html scripts/test_card_identity_cardmarket_audit.py
+          git commit -m 'Resolve exact My First Battle Poké Ball products'
+          git push origin HEAD:fix/mfb-pokeball-exact-products-20260917
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Assert exact MFB delta and exclusions
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          cls=d['classificationTotals']
+          expected={'SAFE':1777,'EXACT_ALTERNATE_PRODUCT':162,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':258,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
+          if cls!=expected: raise SystemExit(f'classification mismatch: {cls} != {expected}')
+          p1=set(d.get('p1AmbiguousProductIds') or [])
+          fixed={'mfb-1','mfb-8','mfb-16','mfb-17','mfb-24','mfb-25'}
+          if p1 & fixed: raise SystemExit('verified MFB ids still P1: '+repr(sorted(p1 & fixed)))
+          for required in {'mfb-9','mfb-33','mfb-34'}:
+              if required not in p1: raise SystemExit(required+' must remain P1')
+          print('MFB audit delta PASS',cls)
+          PY
+          git diff --check
