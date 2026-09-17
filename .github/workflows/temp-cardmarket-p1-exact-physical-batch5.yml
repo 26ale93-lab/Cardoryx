@@ -1,0 +1,91 @@
+name: TEMP Cardmarket P1 exact physical batch5
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-p1-exact-physical-batch5-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Run current Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Find exact physical P1 candidates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, concurrent.futures
+          from pathlib import Path
+
+          report=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          p1=[]
+          def walk(x):
+              if isinstance(x,dict):
+                  if x.get('classification')=='P1_AMBIGUOUS_PRODUCT' and x.get('tcgdexId'):
+                      p1.append(x['tcgdexId'])
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+          walk(report)
+          p1=sorted(set(p1))
+          print('P1_COUNT',len(p1))
+
+          with urllib.request.urlopen('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',timeout=90) as r:
+              products=json.load(r)['products']
+          bypid={int(x['idProduct']):x for x in products}
+
+          def fetch(cid):
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=20) as r:
+                      return cid,json.load(r),None
+              except Exception as e:
+                  return cid,None,str(e)
+
+          cards={}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
+              for cid,d,e in ex.map(fetch,p1):
+                  if d: cards[cid]=d
+
+          exact=[]
+          suspicious=[]
+          for cid,d in cards.items():
+              rows=[]
+              for row in d.get('variants_detailed') or []:
+                  cm=(row.get('thirdParty') or {}).get('cardmarket')
+                  if isinstance(cm,dict): pid=cm.get('idProduct')
+                  else: pid=cm
+                  if not pid:
+                      pcm=((row.get('pricing') or {}).get('cardmarket') or {})
+                      pid=pcm.get('idProduct') or pcm.get('id_product')
+                  try: pid=int(pid)
+                  except: continue
+                  rows.append({'type':row.get('type'),'subtype':row.get('subtype'),'size':row.get('size'),'foil':row.get('foil'),'stamp':row.get('stamp'),'firstEdition':row.get('firstEdition'),'pid':pid})
+              pids=sorted(set(r['pid'] for r in rows))
+              if len(pids)<2: continue
+              cats=[bypid.get(pid) for pid in pids if bypid.get(pid)]
+              if len(cats)!=len(pids): continue
+              exps={x.get('idExpansion') for x in cats}
+              metas={x.get('idMetacard') for x in cats}
+              names={x.get('name') for x in cats}
+              base_names={str(x.get('name') or '').split(' [',1)[0] for x in cats}
+              rec={'id':cid,'name':d.get('name'),'set':(d.get('set') or {}).get('id'),'localId':d.get('localId'),'current':((d.get('pricing') or {}).get('cardmarket') or {}).get('idProduct'),'rows':rows,'products':cats}
+              if len(exps)==1 and len(metas)==1 and len(names)==1 and len(base_names)==1:
+                  exact.append(rec)
+              elif len(metas)==1 and len(base_names)==1:
+                  suspicious.append(rec)
+
+          print('EXACT_SAME_EXP_META_NAME_COUNT',len(exact))
+          for r in exact[:80]: print('EXACT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          print('SAME_META_NAME_DIFF_EXP_COUNT',len(suspicious))
+          for r in suspicious[:50]: print('SUSPICIOUS',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          PY
