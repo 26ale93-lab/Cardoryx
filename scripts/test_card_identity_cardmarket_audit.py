@@ -98,6 +98,10 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "ex8-17": {"base": 276420, "alternate": 276419, "stamp": "wrong-card-identity", "cardmarketCode": "DX17"},
     "ex8-18": {"base": 276421, "alternate": 276419, "stamp": "wrong-card-identity", "cardmarketCode": "DX18"}
 }
+VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS = {
+    "sv05-041": {"setId": "sv05", "localId": "041", "name": "Feraligatr", "expansion": 5589, "metacard": 430014, "normal": 761970, "holo": 760671, "reverse": 760671},
+    "sv08-065": {"setId": "sv08", "localId": "065", "name": "Tapu Koko", "expansion": 5879, "metacard": 441182, "normal": 799718, "holo": 794346, "reverse": 794346},
+}
 MCDONALDS_2021_EXACT_PAIRS = {
     "2021swsh-1": {"localId": "1", "name": "Bulbasaur", "normal": 538778, "holo": 538783},
     "2021swsh-2": {"localId": "2", "name": "Chikorita", "normal": 538788, "holo": 538793},
@@ -477,6 +481,32 @@ def runtime_cardmarket_regression():
         }
         for card_id, (set_id, local_id, name, product) in sorted(BATCH2_SHARED_PRODUCT_OWNERS.items())
     ]
+    fixtures["dualBase"] = [
+        {
+            "id":"sv05-041","tcgdexId":"sv05-041","name":"Feraligatr","localId":"041","set":{"id":"sv05","name":"Temporal Forces"},
+            "variants":{"normal":True,"holo":True,"reverse":True},
+            "variants_detailed":[
+                {"type":"holo","size":"standard","thirdParty":{"cardmarket":760671},"pricing":{"cardmarket":{"idProduct":760671,"trend":0.10,"low":0.02,"avg7":0.12,"avg30":0.14,"avg":0.14,"trend-holo":0.19,"low-holo":0.02,"avg7-holo":0.19,"avg30-holo":0.28,"avg-holo":0.26}}},
+                {"type":"reverse","size":"standard","thirdParty":{"cardmarket":760671},"pricing":{"cardmarket":{"idProduct":760671,"trend":0.10,"low":0.02,"avg7":0.12,"avg30":0.14,"avg":0.14,"trend-holo":0.19,"low-holo":0.02,"avg7-holo":0.19,"avg30-holo":0.28,"avg-holo":0.26}}},
+                {"type":"normal","size":"standard","thirdParty":{"cardmarket":761970},"pricing":{"cardmarket":{"idProduct":761970,"trend":0.84,"low":0.02,"avg7":0.81,"avg30":0.52,"avg":0.69}}},
+                {"type":"normal","size":"standard","stamp":["player-rewards-program"]}
+            ],
+            "pricing":{"cardmarket":{"idProduct":760671,"trend":0.10,"low":0.02,"avg7":0.12,"avg30":0.14,"avg":0.14,"trend-holo":0.19,"low-holo":0.02,"avg7-holo":0.19,"avg30-holo":0.28,"avg-holo":0.26}},
+            "expected":{"normal":[0.84,761970],"holo":[0.10,760671],"reverse":[0.19,760671]}
+        },
+        {
+            "id":"sv08-065","tcgdexId":"sv08-065","name":"Tapu Koko","localId":"065","set":{"id":"sv08","name":"Surging Sparks"},
+            "variants":{"normal":True,"holo":True,"reverse":True},
+            "variants_detailed":[
+                {"type":"holo","size":"standard","thirdParty":{"cardmarket":794346},"pricing":{"cardmarket":{"idProduct":794346,"trend":0.07,"low":0.02,"avg7":0.06,"avg30":0.05,"avg":0.05,"trend-holo":0.24,"low-holo":0.02,"avg7-holo":0.23,"avg30-holo":0.16,"avg-holo":0.13}}},
+                {"type":"reverse","size":"standard","thirdParty":{"cardmarket":794346},"pricing":{"cardmarket":{"idProduct":794346,"trend":0.07,"low":0.02,"avg7":0.06,"avg30":0.05,"avg":0.05,"trend-holo":0.24,"low-holo":0.02,"avg7-holo":0.23,"avg30-holo":0.16,"avg-holo":0.13}}},
+                {"type":"normal","size":"standard","thirdParty":{"cardmarket":799718},"pricing":{"cardmarket":{"idProduct":799718,"trend":0.02,"low":0.02,"avg7":1.55,"avg30":2.48,"avg":1.12}}},
+                {"type":"normal","size":"standard","stamp":["player-rewards-program"]}
+            ],
+            "pricing":{"cardmarket":{"idProduct":794346,"trend":0.07,"low":0.02,"avg7":0.06,"avg30":0.05,"avg":0.05,"trend-holo":0.24,"low-holo":0.02,"avg7-holo":0.23,"avg30-holo":0.16,"avg-holo":0.13}},
+            "expected":{"normal":[0.02,799718],"holo":[0.07,794346],"reverse":[0.24,794346]}
+        },
+    ]
     fixtures["tyranitar"] = {
         "id": "ecard1-66", "tcgdexId": "ecard1-66", "name": "Tyranitar", "localId": "66",
         "set": {"id": "ecard1", "name": "Expedition Base Set"}, "rarity": "Rare",
@@ -709,7 +739,7 @@ function refreshScanProtectionRecommendation(){}
 syncStampAvailability=()=>[];
 syncVariantAvailability=()=>[];
 globalThis.runtime={
-  verifiedBaseCardmarketProductOverride,resolvedCardmarketPricingForCard,
+  verifiedDualBaseCardmarketVariant,verifiedBaseCardmarketProductOverride,resolvedCardmarketPricingForCard,
   pricingWithResolvedCardmarket,knownCardmarketIdentityConflict,
   cardmarketValueForCardVariant,cardmarketStatsForCardVariant,
   verifiedVariantPrice,verifiedStampPrice,verifiedMcdonalds2019CardmarketVariant,
@@ -726,6 +756,30 @@ assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,localId:'SM54'}
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,tcgdexId:'sm12-55',id:'sm12-55'}),null);
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,set:{...p.set,id:'sm11'}}),null);
 assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...p,name:'Prinplup'}),null);
+for(const card of fixtures.dualBase){
+  const normal=r.cardmarketValueForCardVariant(card,'Normal');
+  const holo=r.cardmarketValueForCardVariant(card,'Holo');
+  const reverse=r.cardmarketValueForCardVariant(card,'Reverse Holo');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify([normal.value,normal.productId])),card.expected.normal);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify([holo.value,holo.productId])),card.expected.holo);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify([reverse.value,reverse.productId])),card.expected.reverse);
+  assert.strictEqual(normal.kind,'exact-dual-base-cardmarket');
+  assert.strictEqual(holo.kind,'exact-dual-base-cardmarket');
+  assert.strictEqual(reverse.kind,'exact-dual-base-cardmarket');
+  assert.strictEqual(r.verifiedDualBaseCardmarketVariant({...card,set:{id:'wrong'}},'Normal'),null);
+  assert.strictEqual(r.verifiedDualBaseCardmarketVariant({...card,localId:'999'},'Normal'),null);
+  assert.strictEqual(r.verifiedDualBaseCardmarketVariant({...card,name:card.name+' wrong'},'Normal'),null);
+  const stampedOnly={...card,variants_detailed:card.variants_detailed.filter(x=>Array.isArray(x.stamp)&&x.stamp.includes('player-rewards-program'))};
+  const noLeak=r.verifiedDualBaseCardmarketVariant(stampedOnly,'Normal');
+  assert.strictEqual(noLeak?.handled,true);
+  assert.strictEqual(noLeak?.matched,false);
+  const ns=r.cardmarketStatsForCardVariant(card,'Normal');
+  const hs=r.cardmarketStatsForCardVariant(card,'Holo');
+  const rs=r.cardmarketStatsForCardVariant(card,'Reverse Holo');
+  assert.strictEqual(ns.trend,card.expected.normal[0]);
+  assert.strictEqual(hs.trend,card.expected.holo[0]);
+  assert.strictEqual(rs.trend,card.expected.reverse[0]);
+}
 const tyr=fixtures.tyranitar;
 const tyrOverride=r.verifiedBaseCardmarketProductOverride(tyr);
 assert.strictEqual(tyrOverride?.pricing?.idProduct,274941);
@@ -1374,7 +1428,7 @@ def main():
         )
     }
     live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
-                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) |
+                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
@@ -1571,6 +1625,44 @@ def main():
                 live_swsh028_gamestop = True
                 live_swsh028_gamestop_pid = 742039
 
+        live_dual_base_pair = False
+        if card_id in VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS:
+            rule = VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS[card_id]
+            expected = {"normal": rule["normal"], "holo": rule["holo"], "reverse": rule["reverse"]}
+            exact_rows = {}
+            for finish, expected_pid in expected.items():
+                matches = []
+                for row in live_card_detail.get("variants_detailed") or []:
+                    if str(row.get("type") or "").strip().lower() != finish:
+                        continue
+                    if row.get("stamp") or row.get("foil") or row.get("firstEdition"):
+                        continue
+                    if str(row.get("size") or "standard").strip().lower() not in {"", "standard"}:
+                        continue
+                    row_pid = cm_id(row)
+                    pricing_cm = ((row.get("pricing") or {}).get("cardmarket") or {})
+                    try:
+                        pricing_pid = int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+                    except (TypeError, ValueError):
+                        pricing_pid = None
+                    keys = ("trend-holo", "avg7-holo", "avg30-holo", "avg-holo", "low-holo") if finish == "reverse" else ("trend", "avg7", "avg30", "avg", "low")
+                    usable = any(isinstance(pricing_cm.get(k), (int, float)) and pricing_cm.get(k) > 0 for k in keys)
+                    if row_pid == expected_pid and pricing_pid == expected_pid and usable:
+                        matches.append(row)
+                exact_rows[finish] = matches
+            pn, ph = products.get(rule["normal"]), products.get(rule["holo"])
+            gn, gh = prices.get(rule["normal"]), prices.get(rule["holo"])
+            same_identity = bool(
+                pn and ph and pn.get("idExpansion") == rule["expansion"] and ph.get("idExpansion") == rule["expansion"] and
+                pn.get("idMetacard") == rule["metacard"] and ph.get("idMetacard") == rule["metacard"] and
+                pn.get("name") == ph.get("name") and str(pn.get("name") or "").split(" [", 1)[0] == rule["name"]
+            )
+            guides_ok = bool(gn and gh and int(gn.get("idProduct") or 0) == rule["normal"] and int(gh.get("idProduct") or 0) == rule["holo"])
+            live_dual_base_pair = bool(
+                current_pid == rule["holo"] and rule["normal"] != rule["holo"] and
+                all(len(exact_rows[k]) == 1 for k in ("normal", "holo", "reverse")) and same_identity and guides_ok
+            )
+
         classification, priority, confidence = "SAFE", None, "HIGH"
         reason = "Il prodotto corrente è associato a una riga base e le alternative restano identità fisiche esplicite."
         action = "Nessuna modifica."
@@ -1740,6 +1832,15 @@ def main():
                 classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
                 reason = "La distinzione standard/Oversized non è più dimostrata dalle fonti ufficiali correnti."
                 action = "Fail-closed e nuova verifica del catalogo Cardmarket."
+        elif live_dual_base_pair:
+            classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+            rule = VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS[card_id]
+            resolved_pid = rule["holo"]
+            resolved_value = (prices.get(rule["holo"]) or {}).get("trend")
+            reason = ("TCGdex live espone Normal e Holo/Reverse come prodotti Cardmarket fisicamente distinti; "
+                      "il catalogo ufficiale conferma stesso set, stesso metacard e stesso nome. Il runtime "
+                      "seleziona il productId esclusivamente dalla finitura esatta e non usa la stampa Player Rewards senza productId.")
+            action = "Mantenere il resolver esatto limitato a questa identità; nessuna generalizzazione ad altre carte o tassonomie."
         elif live_exact_base_evidence and not snapshot_exact_alternate_product:
             classification, priority, confidence = "SAFE", None, "HIGH"
             resolved_pid = live_pid
