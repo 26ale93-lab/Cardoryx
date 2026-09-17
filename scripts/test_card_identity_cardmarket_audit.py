@@ -263,6 +263,25 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS.update({
     for card_id, (_, local_id, wrong, correct) in BATCH2_BASE_OVERRIDE_ROWS.items()
 })
 
+GYM_SHARED_FINISH_PRODUCTS = {
+    "gym1-15": ("gym1","15","Brock","Holo",274151,1529,"gym1-98"),
+    "gym1-98": ("gym1","98","Brock","Normal",274151,1529,"gym1-15"),
+    "gym1-16": ("gym1","16","Erika","Holo",274152,1529,"gym1-100"),
+    "gym1-100": ("gym1","100","Erika","Normal",274152,1529,"gym1-16"),
+    "gym1-17": ("gym1","17","Lt. Surge","Holo",274153,1529,"gym1-101"),
+    "gym1-101": ("gym1","101","Lt. Surge","Normal",274153,1529,"gym1-17"),
+    "gym1-18": ("gym1","18","Misty","Holo",274154,1529,"gym1-102"),
+    "gym1-102": ("gym1","102","Misty","Normal",274154,1529,"gym1-18"),
+    "gym2-17": ("gym2","17","Blaine","Holo",274285,1530,"gym2-100"),
+    "gym2-100": ("gym2","100","Blaine","Normal",274285,1530,"gym2-17"),
+    "gym2-18": ("gym2","18","Giovanni","Holo",274286,1530,"gym2-104"),
+    "gym2-104": ("gym2","104","Giovanni","Normal",274286,1530,"gym2-18"),
+    "gym2-19": ("gym2","19","Koga","Holo",274287,1530,"gym2-106"),
+    "gym2-106": ("gym2","106","Koga","Normal",274287,1530,"gym2-19"),
+    "gym2-20": ("gym2","20","Sabrina","Holo",274288,1530,"gym2-110"),
+    "gym2-110": ("gym2","110","Sabrina","Normal",274288,1530,"gym2-20"),
+}
+
 BATCH2_SHARED_PRODUCT_OWNERS = {
     "gym1-6": ("gym1", "6", "Lt. Surge's Electabuzz", 274142),
     "gym1-35": ("gym1", "35", "Blaine's Growlithe", 274171),
@@ -1440,6 +1459,59 @@ process.stdout.write(JSON.stringify(out));
     return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(fixtures,ensure_ascii=False),json.dumps(MFB_POKEBALL_EXACT_ROWS)],text=True))
 
 
+def runtime_gym_shared_finish_regression():
+    source=INDEX.read_text(encoding="utf-8")
+    def extract_fn(name):
+        marker=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",source)
+        if not marker: raise AssertionError(f"Missing production function {name}")
+        brace=source.find("{",marker.end());depth=0;quote=None;esc=False
+        for i in range(brace,len(source)):
+            ch=source[i]
+            if quote:
+                if esc: esc=False
+                elif ch=="\\": esc=True
+                elif ch==quote: quote=None
+                continue
+            if ch in ("'",'"',"`"): quote=ch
+            elif ch=="{": depth+=1
+            elif ch=="}":
+                depth-=1
+                if depth==0:return source[marker.start():i+1]
+        raise AssertionError(f"Unclosed production function {name}")
+    fixtures={};errors={};cache=Path(tempfile.gettempdir())/"cardoryx_gym_shared_finish_v1"
+    for card_id in GYM_SHARED_FINISH_PRODUCTS:
+        value,error=live_card(card_id,cache)
+        if value: fixtures[card_id]=value
+        if error: errors[card_id]=error
+    if errors or len(fixtures)!=len(GYM_SHARED_FINISH_PRODUCTS): raise AssertionError(f"Gym live regression unavailable: {errors}")
+    start=source.index("const VERIFIED_GYM_SHARED_FINISH_PRODUCTS=")
+    end=source.index("const VERIFIED_VARIANT_PRICES =",start)
+    registry=source[start:end]
+    names=("normText","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel","cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails")
+    js="\n".join(extract_fn(n) for n in names)+"\n"+registry
+    harness=r'''
+const fixtures=JSON.parse(process.argv[1]);
+const rules=JSON.parse(process.argv[2]);
+function fail(m){throw new Error(m)}
+const out={};
+for(const [id,r] of Object.entries(rules)){
+  const [setId,localId,name,finish,pid,exp,pairId]=r,c=fixtures[id];
+  const ok=verifiedGymLeaderSharedFinishPrice(c,finish);
+  if(!ok||Number(ok.idProduct)!==Number(pid))fail(id+' exact product mismatch');
+  const row=(c.variants_detailed||[]).find(x=>Number(x?.thirdParty?.cardmarket||0)===Number(pid)&&(x.stamp||[]).includes('1st-edition')&&String(x.type||'').toLowerCase()===(finish==='Holo'?'holo':'normal'));
+  const cm=row?.pricing?.cardmarket||{};
+  const expected=Number(finish==='Holo'?cm['trend-holo']:cm.trend);
+  if(!(expected>0)||Math.abs(Number(ok.trend)-expected)>1e-9)fail(id+' wrong price field');
+  if(verifiedGymLeaderSharedFinishPrice(c,finish==='Holo'?'Normal':'Holo')!==null)fail(id+' wrong finish accepted');
+  for(const mutated of [{...c,localId:'999'},{...c,name:name+' wrong'},{...c,set:{...(c.set||{}),id:setId+'x'}}]) if(verifiedGymLeaderSharedFinishPrice(mutated,finish)!==null)fail(id+' wrong identity accepted');
+  const pair=rules[pairId];if(!pair||pair[4]!==pid||pair[3]===finish||pair[2]!==name)fail(id+' pair registry invalid');
+  out[id]={productId:ok.idProduct,finish,trend:ok.trend};
+}
+process.stdout.write(JSON.stringify(out));
+'''
+    return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(fixtures,ensure_ascii=False),json.dumps(GYM_SHARED_FINISH_PRODUCTS)],text=True))
+
+
 def main():
     args = cli()
     runtime_regression = runtime_cardmarket_regression()
@@ -1448,6 +1520,7 @@ def main():
     runtime_regression["ex5BeldumGymChallenge"] = runtime_ex5_beldum_gym_challenge_regression()
     runtime_regression["swsh028GameStop"] = runtime_swsh028_gamestop_regression()
     runtime_regression["mfbPokeball"] = runtime_mfb_pokeball_regression()
+    runtime_regression["gymSharedFinish"] = runtime_gym_shared_finish_regression()
     if args.runtime_only:
         print(json.dumps(runtime_regression, ensure_ascii=False, indent=2))
         return
@@ -2014,6 +2087,37 @@ def main():
                       "`set-logo + staff`, ciascuna con il proprio productId e Price Guide Cardmarket. "
                       "Il runtime Cardoryx le risolve separatamente senza fallback tra stamp.")
             action = "Mantenere il resolver set-logo esatto; nessun mapping statico e nessun riuso prezzo fra Set Stamp e Staff."
+        elif card_id in GYM_SHARED_FINISH_PRODUCTS:
+            owner_set, owner_local, owner_name, owner_finish, owner_product, expansion_id, pair_id = GYM_SHARED_FINISH_PRODUCTS[card_id]
+            catalogue = products.get(owner_product) or {}
+            guide = prices.get(owner_product) or {}
+            identity_ok = bool((card.get("set") or {}).get("id") == owner_set and norm_local(card.get("localId")) == norm_local(owner_local) and card_identity(card).get("name") == owner_name)
+            expected_type = "holo" if owner_finish == "Holo" else "normal"
+            live_rows=[]
+            for row in live_card_detail.get("variants_detailed") or []:
+                stamps=row.get("stamp") or []
+                if isinstance(stamps,str): stamps=[stamps]
+                cm=((row.get("pricing") or {}).get("cardmarket") or {})
+                try: ppid=int(cm.get("idProduct") or cm.get("id_product"))
+                except (TypeError,ValueError): ppid=None
+                if (sorted(map(str,stamps)) == ["1st-edition"] and str(row.get("type") or "").lower() == expected_type and not row.get("foil") and str(row.get("size") or "standard").lower() == "standard" and cm_id(row) == owner_product and ppid == owner_product):
+                    live_rows.append(row)
+            pair=GYM_SHARED_FINISH_PRODUCTS.get(pair_id)
+            pair_ok=bool(pair and pair[0] == owner_set and pair[2] == owner_name and pair[4] == owner_product and pair[3] != owner_finish and pair[1] != owner_local and pair[6] == card_id)
+            catalogue_ok=bool(catalogue and int(catalogue.get("idExpansion") or 0)==expansion_id and catalogue.get("name")==owner_name)
+            relevant_keys=("trend-holo","avg7-holo","avg30-holo","avg-holo","low-holo") if owner_finish=="Holo" else ("trend","avg7","avg30","avg","low")
+            guide_ok=bool(guide and int(guide.get("idProduct") or 0)==owner_product and any(isinstance(guide.get(k),(int,float)) and guide.get(k)>0 for k in relevant_keys))
+            source_guard=("VERIFIED_GYM_SHARED_FINISH_PRODUCTS" in source and "verifiedGymLeaderSharedFinishPrice" in source)
+            if identity_ok and len(live_rows)==1 and pair_ok and catalogue_ok and guide_ok and source_guard:
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid=owner_product
+                resolved_value=next((guide.get(k) for k in relevant_keys if isinstance(guide.get(k),(int,float)) and guide.get(k)>0), None)
+                reason=("Gym Heroes/Gym Challenge hanno due checklist fisiche distinte per lo stesso Leader: numero Holo e numero Non Holo. Cardmarket le accorpa nello stesso productId ma separa i valori standard e *-holo; Cardoryx usa set, numero, nome e finitura esatti prima di leggere il relativo campo prezzo.")
+                action="Mantenere il resolver sulle sole 16 identità verificate; nessuna regola generica per 1st Edition o altri prodotti condivisi."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason="La coppia Gym Leader condivisa non supera più tutti i gate esatti di checklist, prodotto, finitura o Price Guide."
+                action="Fail-closed; nessun riuso generico del productId condiviso."
         elif card_id in BATCH2_SHARED_PRODUCT_OWNERS:
             owner_set, owner_local, owner_name, owner_product = BATCH2_SHARED_PRODUCT_OWNERS[card_id]
             catalogue = products.get(owner_product) or {}
