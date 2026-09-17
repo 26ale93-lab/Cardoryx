@@ -16,35 +16,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate exact Cardmarket catalogue identities for 32 nonlegacy P1
+      - name: Inspect suspicious exact products and same-metacard groups
         shell: bash
         run: |
           python3 - <<'PY'
           import json, urllib.request
-          targets=[
-            '2018sm-fr-38','2018sm-fr-39','cel25cc-CC020','cel25cc-CC021','ex5-98','me01-073',
-            'mfb-1','mfb-8','mfb-9','mfb-16','mfb-17','mfb-24','mfb-25','mfb-33','mfb-34',
-            'sm12-237','sv05-041','sv08-065','sv09-055','svp-045','svp-067','svp-101','svp-150',
-            'swshp-SWSH039','swshp-SWSH055','swshp-SWSH132','swshp-SWSH133','swshp-SWSH134',
-            'swshp-SWSH136','swshp-SWSH137','swshp-SWSH138','swshp-SWSH296'
-          ]
           with urllib.request.urlopen('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',timeout=90) as r:
               products=json.load(r)['products']
-          bypid={int(x['idProduct']):x for x in products}
-          for cid in targets:
-              print('===',cid,'===')
-              try:
-                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=20) as r:
-                      d=json.load(r)
-              except Exception as e:
-                  print('LIVE_ERROR',repr(e)); continue
-              print('CARD',d.get('name'),d.get('localId'),(d.get('set') or {}).get('name'))
-              top=((d.get('pricing') or {}).get('cardmarket') or {}).get('idProduct')
-              print('TOP',top, json.dumps(bypid.get(int(top)) if top else None,ensure_ascii=False))
-              for row in d.get('variants_detailed') or []:
-                  pid=((row.get('thirdParty') or {}).get('cardmarket') or ((row.get('pricing') or {}).get('cardmarket') or {}).get('idProduct'))
-                  print('ROW',json.dumps({
-                    'type':row.get('type'),'subtype':row.get('subtype'),'size':row.get('size'),'foil':row.get('foil'),'stamp':row.get('stamp'),'pid':pid,
-                    'catalog':bypid.get(int(pid)) if pid else None
-                  },ensure_ascii=False))
+          with urllib.request.urlopen('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',timeout=90) as r:
+              prices=json.load(r)['priceGuides']
+          bypid={int(x['idProduct']):x for x in products}; pby={int(x['idProduct']):x for x in prices}
+          for pid in [576747,576755,576790,576791,398524,761970,760671,799718,794346,851144,851262]:
+              x=bypid.get(pid); print('PID',pid,json.dumps(x,ensure_ascii=False),'PRICE',json.dumps(pby.get(pid),ensure_ascii=False))
+              if x and x.get('idMetacard'):
+                  grp=sorted([r for r in products if r.get('idMetacard')==x['idMetacard']],key=lambda z:int(z['idProduct']))
+                  print('META_GROUP',pid,json.dumps(grp,ensure_ascii=False))
           PY
