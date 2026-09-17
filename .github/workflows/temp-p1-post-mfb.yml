@@ -18,28 +18,52 @@ jobs:
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
       - name: Run full audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Summarize residual P1
+      - name: Inspect Gym Heroes and Gym Challenge residuals
         run: |
           python3 - <<'PY'
-          import json,collections
+          import json,urllib.request,tempfile,pathlib
           d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          ids=d.get('p1AmbiguousProductIds') or []
-          c=collections.Counter(x.split('-',1)[0] for x in ids)
-          print('TOTAL',len(ids))
-          print('BY_SET',json.dumps(c.most_common(),ensure_ascii=False))
-          small=[]
-          for setid,n in sorted(c.items(),key=lambda kv:(kv[1],kv[0])):
-              if n<=12:
-                  xs=[x for x in ids if x.split('-',1)[0]==setid]
-                  small.append((setid,n,xs))
-          print('SMALL_SETS',json.dumps(small,ensure_ascii=False))
-          modern=[x for x in ids if x.startswith(('sv','swsh','sm','cel','mfb','me','202','2018','2019'))]
-          print('MODERN_OR_PROMO',json.dumps(modern,ensure_ascii=False))
-          # Compact case metadata for all small/modern residuals.
-          case={x.get('tcgdexId'):x for x in d.get('cases',[]) if x.get('tcgdexId')}
-          for cid in sorted(set(modern)|{z for _,_,xs in small for z in xs}):
-              row=case.get(cid)
-              if row:
-                  keep={k:row.get(k) for k in ('tcgdexId','classification','currentProductId','allProductIds','physicalVariants','sharedWithTcgdexIds','reason','action')}
-                  print('CASE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          ids=[x for x in d.get('p1AmbiguousProductIds',[]) if x.startswith(('gym1-','gym2-'))]
+          print('GYM_P1_IDS',json.dumps(ids))
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          products=set(); cards={}
+          for cid in ids:
+              try:
+                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
+                  with urllib.request.urlopen(req,timeout=60) as r:c=json.load(r)
+              except Exception as e:
+                  print('CARD_ERROR',cid,repr(e));continue
+              cards[cid]=c
+              top=((c.get('pricing') or {}).get('cardmarket') or {})
+              rows=[]
+              for x in c.get('variants_detailed') or []:
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
+                  if pid:products.add(int(pid))
+                  stamps=x.get('stamp') or []
+                  if isinstance(stamps,str):stamps=[stamps]
+                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':stamps,'firstEdition':x.get('firstEdition'),'size':x.get('size'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo'),'avg7':cm.get('avg7'),'low':cm.get('low')})
+              if top.get('idProduct'):products.add(int(top['idProduct']))
+              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'topProduct':top.get('idProduct'),'topTrend':top.get('trend'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
+          def dl(section,name):
+              path=pathlib.Path(tempfile.gettempdir())/name
+              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
+              with urllib.request.urlopen(req,timeout=300) as r,path.open('wb') as f:
+                  while chunk:=r.read(1024*1024):f.write(chunk)
+              return json.load(open(path))
+          prod=dl('productList','products_singles_6.json');price=dl('priceGuide','price_guide_6.json')
+          def rows(obj,keys):
+              if isinstance(obj,list):return obj
+              for k in keys:
+                  v=obj.get(k) if isinstance(obj,dict) else None
+                  if isinstance(v,list):return v
+              return []
+          for r in rows(prod,('products',)):
+              pid=int(r.get('idProduct') or 0)
+              if pid in products:print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          for r in rows(price,('priceGuides','priceGuide')):
+              pid=int(r.get('idProduct') or 0)
+              if pid in products:
+                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','trend-holo','avg7-holo','avg30-holo')}
+                  print('CM_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
           PY
