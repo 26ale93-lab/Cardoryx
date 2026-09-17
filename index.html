@@ -6891,7 +6891,50 @@ function verifiedGiratinaVstar201CardmarketVariant(card,variant){
   return {handled:true,matched:true,pricing:guide.pricing,productId:674207,
     source:'Cardmarket · Lost Origin · Giratina VSTAR 201 Rainbow · prodotto esatto'};
 }
+const VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS={
+  'sv05-041':{setId:'sv05',localId:'41',name:'Feraligatr',normal:761970,holo:760671,reverse:760671},
+  'sv08-065':{setId:'sv08',localId:'65',name:'Tapu Koko',normal:799718,holo:794346,reverse:794346}
+};
+function verifiedDualBaseCardmarketVariant(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS[id];
+  if(!rule)return null;
+  const setId=String(card?.set?.id||card?._cardoryxSetId||'').trim().toLowerCase();
+  const localRaw=String(card?.localId||'').trim().toLowerCase();
+  const local=localRaw.match(/^\d+$/)?String(Number(localRaw)):localRaw.replace(/[^a-z0-9]+/g,'');
+  if(setId!==rule.setId||local!==rule.localId||normText(card?.name||'')!==normText(rule.name))return null;
+  const v=canonicalVariant(variant||'Normal');
+  const type=v==='Normal'?'normal':v==='Holo'?'holo':v==='Reverse Holo'?'reverse':'';
+  if(!type)return {handled:true,matched:false,kind:'needs-exact-variant'};
+  const expected=Number(rule[type]||0);
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    if(String(row?.type||'').trim().toLowerCase()!==type)return false;
+    if(row?.stamp&&(Array.isArray(row.stamp)?row.stamp.length:String(row.stamp).trim()))return false;
+    if(row?.foil&&(Array.isArray(row.foil)?row.foil.length:String(row.foil).trim()))return false;
+    const size=String(row?.size||'standard').trim().toLowerCase();
+    if(size&&size!=='standard')return false;
+    const rowPid=Number(row?.thirdParty?.cardmarket||row?.pricing?.cardmarket?.idProduct||row?.pricing?.cardmarket?.id_product||0);
+    return rowPid===expected;
+  });
+  if(rows.length!==1)return {handled:true,matched:false,kind:'needs-exact-variant'};
+  const pricing=rows[0]?.pricing?.cardmarket||null;
+  const pricingPid=Number(pricing?.idProduct||pricing?.id_product||0);
+  if(!pricing||pricingPid!==expected)return {handled:true,matched:false,kind:'base-product-price-unavailable'};
+  const keys=type==='reverse'?['trend-holo','avg7-holo','avg30-holo','avg-holo','low-holo']:['trend','avg7','avg30','avg','low'];
+  if(!keys.some(key=>Number(pricing?.[key]||0)>0))return {handled:true,matched:false,kind:'base-product-price-unavailable'};
+  return {handled:true,matched:true,productId:expected,pricing,finish:v,
+    source:`Cardmarket · prodotto fisico esatto ${expected}`};
+}
 function cardmarketValueForCardVariant(card,variant){
+  const dualBase=verifiedDualBaseCardmarketVariant(card,variant);
+  if(dualBase?.handled){
+    if(!dualBase.matched)return {value:0,kind:dualBase.kind||'needs-exact-variant'};
+    const p=dualBase.pricing||{};
+    const reverse=canonicalVariant(variant||'Normal')==='Reverse Holo';
+    const keys=reverse?['trend-holo','avg7-holo','avg30-holo','avg-holo','low-holo']:['trend','avg7','avg30','avg','low'];
+    const value=keys.map(k=>Number(p[k]||0)).find(x=>Number.isFinite(x)&&x>0)||0;
+    return {value,kind:'exact-dual-base-cardmarket',exact:true,productId:dualBase.productId,source:dualBase.source};
+  }
   const mcd2019=verifiedMcdonalds2019CardmarketVariant(card,variant);
   if(mcd2019?.handled){
     if(!mcd2019.matched)return {value:0,kind:mcd2019.kind||'needs-exact-variant'};
@@ -6983,6 +7026,15 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
+  const dualBase=verifiedDualBaseCardmarketVariant(card,variant);
+  if(dualBase?.handled){
+    if(!dualBase.matched)return {low:null,trend:null,avg7:null,avg30:null};
+    const p=dualBase.pricing||{};
+    const reverse=canonicalVariant(variant||'Normal')==='Reverse Holo';
+    return reverse
+      ?{low:p['low-holo']??null,trend:p['trend-holo']??null,avg7:p['avg7-holo']??null,avg30:p['avg30-holo']??null}
+      :{low:p.low??null,trend:p.trend??null,avg7:p.avg7??null,avg30:p.avg30??null};
+  }
   const mcd2019=verifiedMcdonalds2019CardmarketVariant(card,variant);
   if(mcd2019?.handled){
     if(!mcd2019.matched)return {low:null,trend:null,avg7:null,avg30:null};
