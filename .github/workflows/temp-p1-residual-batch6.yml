@@ -1,4 +1,4 @@
-name: TEMP P1 residual batch6 audit
+name: TEMP P1 modern exact verification
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     env:
       PYTHONDONTWRITEBYTECODE: '1'
@@ -18,44 +18,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Patch diagnostic report only
+      - name: Print live TCGdex evidence
         shell: bash
         run: |
           python3 - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/test_card_identity_cardmarket_audit.py')
-          s=p.read_text()
-          old='''        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n'''
-          new='''        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n        "p1AmbiguousProducts": p1,\n'''
-          if old not in s: raise SystemExit('diagnostic report anchor missing')
-          p.write_text(s.replace(old,new,1))
+          import json, urllib.request
+          for cid in ['sv09-055','me01-073']:
+              with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r:
+                  c=json.load(r)
+              def pid(row):
+                  x=(row.get('thirdParty') or {}).get('cardmarket')
+                  if isinstance(x,dict): x=x.get('idProduct') or x.get('id_product')
+                  return x
+              print('CARD',json.dumps({
+                  'id':c.get('id'),'name':c.get('name'),'localId':c.get('localId'),'set':c.get('set'),
+                  'topCardmarket':(c.get('pricing') or {}).get('cardmarket'),
+                  'variants':[{
+                      'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'subtype':x.get('subtype'),
+                      'pid':pid(x),'pricing':(x.get('pricing') or {}).get('cardmarket')
+                  } for x in (c.get('variants_detailed') or [])]
+              },ensure_ascii=False,sort_keys=True))
           PY
-      - name: Full Cardmarket audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Print residual P1 candidates
+      - name: Show production Cardmarket resolver anchors
         shell: bash
         run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
-          p1=r.get('p1AmbiguousProducts') or []
-          print('P1_COUNT',len(p1))
-          def score(x):
-              vals=x.get('trendDeltaVersusCurrent') or {}
-              nums=[]
-              for v in vals.values():
-                  try: nums.append(abs(float(v)))
-                  except: pass
-              return (max(nums) if nums else 0, -len(x.get('allProductIds') or []))
-          for x in sorted(p1,key=score,reverse=True)[:140]:
-              out={k:x.get(k) for k in (
-                  'tcgdexId','name','setId','localId','currentProductId','allProductIds',
-                  'physicalVariantsByProductId','cardmarketProductCatalog','realPriceGuideValues',
-                  'trendDeltaVersusCurrent','reason','recommendedAction','sharedWithTcgdexIds',
-                  'liveExactBaseEvidence','snapshotExactAlternateProductProtected'
-              )}
-              print('P1',json.dumps(out,ensure_ascii=False,sort_keys=True))
-          PY
+          grep -n -E 'VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES|verifiedBaseCardmarket|cardmarketValueForVariant|pricing\.cardmarket|idProduct' index.html | head -n 180
