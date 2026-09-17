@@ -34,59 +34,46 @@ jobs:
           PY
       - name: Full Cardmarket audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Summarize residual P1 taxonomy
+      - name: Verify small non-legacy residuals live
         shell: bash
         run: |
           python3 - <<'PY'
-          import json, collections, re
+          import json, urllib.request
           from pathlib import Path
           r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
           p1=r.get('p1AmbiguousProducts') or []
-          print('TOTAL',len(p1))
-          reason=collections.Counter()
-          sets=collections.Counter()
-          eras=collections.Counter()
-          for c in p1:
-              rs=str(c.get('reason') or '')
-              if 'più tcgdexId' in rs: key='shared-current-product'
-              elif 'non compare tra le righe fisiche base' in rs: key='top-not-base-row'
-              elif 'Più prodotti Cardmarket sono associati a finiture base' in rs: key='multiple-base-products'
-              elif 'non un product ID top-level' in rs: key='no-top-product'
-              elif 'non supera più' in rs: key='verified-rule-failed'
-              else: key='other'
-              reason[key]+=1
-              sid=str(c.get('setId') or c.get('tcgdexId','').split('-')[0])
-              sets[sid]+=1
-              if sid.startswith('base'): era='base'
-              elif sid.startswith(('jungle','fossil','gym','neo')): era='wotc-legacy'
-              elif sid.startswith(('ecard','ex')): era='e-card-ex'
-              elif sid.startswith(('dp','pl','hgss')): era='dp-hgss'
-              elif sid.startswith(('bw','xy','sm')): era='bw-xy-sm'
-              elif sid.startswith(('swsh','cel')): era='swsh'
-              elif sid.startswith(('sv','me')): era='sv-me'
-              elif sid.startswith(('mfb','svp','mep')): era='promo-special'
-              else: era='other'
-              eras[era]+=1
-          print('REASONS',json.dumps(reason,sort_keys=True))
-          print('ERAS',json.dumps(eras,sort_keys=True))
-          print('TOP_SETS',json.dumps(sets.most_common(35),ensure_ascii=False))
-          # Highest-priority non-Base candidates: modern-ish / special and small product sets.
-          candidates=[]
+          target_sets={'svp','swshp','cel25cc','ex5','sm12'}
+          targets=[]
           for c in p1:
               cid=str(c.get('tcgdexId') or '')
               sid=str(c.get('setId') or cid.split('-')[0])
-              if sid=='base1': continue
-              ids=c.get('allProductIds') or []
-              deltas=[]
-              for v in (c.get('trendDeltaVersusCurrent') or {}).values():
-                  try:deltas.append(abs(float(v)))
-                  except:pass
-              candidates.append((max(deltas) if deltas else 0,-len(ids),cid,c))
-          for _,__,cid,c in sorted(candidates,reverse=True)[:80]:
-              print('CANDIDATE',json.dumps({k:c.get(k) for k in (
-                  'tcgdexId','name','setId','localId','currentProductId','allProductIds',
-                  'baseRowProductIdsAccordingToTcgdex','sharedProductWithTcgdexIds',
-                  'physicalVariantsByProductId','cardmarketProductCatalog','realPriceGuideValues',
-                  'trendDeltaVersusCurrent','reason','recommendedAction'
-              )},ensure_ascii=False,sort_keys=True))
+              if sid in target_sets or sid.startswith(('sv','me')):
+                  targets.append(c)
+          print('SMALL_NONLEGACY_COUNT',len(targets))
+          for c in sorted(targets,key=lambda x:str(x.get('tcgdexId'))):
+              cid=c['tcgdexId']
+              live=None; err=None
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as fh:
+                      live=json.load(fh)
+              except Exception as e: err=repr(e)
+              rows=[]
+              if live:
+                  for v in live.get('variants_detailed') or []:
+                      p=(v.get('thirdParty') or {}).get('cardmarket')
+                      if isinstance(p,dict): p=p.get('idProduct') or p.get('id_product')
+                      pcm=(v.get('pricing') or {}).get('cardmarket') or {}
+                      rows.append({'type':v.get('type'),'foil':v.get('foil'),'stamp':v.get('stamp'),'size':v.get('size'),'subtype':v.get('subtype'),'pid':p,'pricingPid':pcm.get('idProduct') or pcm.get('id_product'),'trend':pcm.get('trend'),'trendHolo':pcm.get('trend-holo')})
+              lcm=((live or {}).get('pricing') or {}).get('cardmarket') or {}
+              out={
+                'id':cid,'name':c.get('name'),'setId':c.get('setId'),'localId':c.get('localId'),
+                'snapshotCurrent':c.get('currentProductId'),'allProductIds':c.get('allProductIds'),
+                'baseIds':c.get('baseRowProductIdsAccordingToTcgdex'),
+                'shared':c.get('sharedProductWithTcgdexIds'),'catalog':c.get('cardmarketProductCatalog'),
+                'reason':c.get('reason'),'liveError':err,
+                'liveName':(live or {}).get('name'),'liveLocalId':(live or {}).get('localId'),'liveSet':(live or {}).get('set'),
+                'liveTopPid':lcm.get('idProduct') or lcm.get('id_product'),'liveTopTrend':lcm.get('trend'),
+                'liveRows':rows,
+              }
+              print('SMALL',json.dumps(out,ensure_ascii=False,sort_keys=True))
           PY
