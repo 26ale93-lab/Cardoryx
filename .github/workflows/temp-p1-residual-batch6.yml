@@ -1,0 +1,49 @@
+name: TEMP P1 residual batch6 audit
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-p1-residual-batch6-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Print residual P1 candidates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          p1=[x for x in r.get('caseIndex',[]) if x.get('classification')=='P1_AMBIGUOUS_PRODUCT']
+          print('P1_COUNT',len(p1))
+          # Print compact evidence, prioritizing larger real-price deltas and small product sets.
+          def score(x):
+              vals=x.get('trendDeltaVersusCurrent') or {}
+              nums=[]
+              for v in vals.values():
+                  try: nums.append(abs(float(v)))
+                  except: pass
+              return (max(nums) if nums else 0, -len(x.get('allProductIds') or []))
+          for x in sorted(p1,key=score,reverse=True)[:120]:
+              out={k:x.get(k) for k in (
+                  'tcgdexId','name','setId','localId','currentProductId','allProductIds',
+                  'physicalVariantsByProductId','cardmarketProductCatalog','realPriceGuideValues',
+                  'trendDeltaVersusCurrent','reason','action','sharedWithTcgdexIds'
+              )}
+              print('P1',json.dumps(out,ensure_ascii=False,sort_keys=True))
+          PY
