@@ -163,7 +163,7 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify({value:froCosmos.value,productI
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Normal'))),{low:0.02,trend:0.03,avg7:0.03,avg30:0.04});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Reverse Holo'))),{low:0.02,trend:0.13,avg7:0.09,avg30:0.12});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Cosmos Holo'))),{low:0.02,trend:0.2,avg7:0.21,avg30:0.25});
-const froNoCosmosRow={...fro,variants_detailed:fro.variants_detailed.filter(x=>canonicalFinishFoilLabel(x.foil||'')!=='cosmos')};
+const froNoCosmosRow={...fro,variants_detailed:fro.variants_detailed.filter(x=>!/cosmos/i.test(String(x.foil||'')))};
 const froFailClosed=r.cardmarketValueForCardVariant(froNoCosmosRow,'Cosmos Holo');
 assert.strictEqual(froFailClosed.value,0);
 assert.strictEqual(froFailClosed.kind,'needs-exact-variant');
