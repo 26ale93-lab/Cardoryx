@@ -55,12 +55,11 @@ function verifiedFroakie056CosmosCardmarketVariant(card,variant){
   const setId=String(card?._cardoryxSetId||card?.set?.id||'').trim().toLowerCase();
   const local=exactLocalIdKey(card?.localId||'');
   const name=normText(card?.name||'');
-  if(id!=='sv03-056'||setId!=='sv03'||local!=='056'||name!=='froakie')return null;
+  if(id!=='sv03-056'||setId!=='sv03'||local!==exactLocalIdKey('056')||name!=='froakie')return null;
   if(canonicalVariant(variant)!=='Cosmos Holo')return null;
   const exactRow=tcgdexVariantDetails(card).find(row=>{
     const pid=Number(row?.thirdParty?.cardmarket||row?.pricing?.cardmarket?.idProduct||0);
-    const foil=Array.isArray(row?.foil)?row.foil.join(' '):String(row?.foil||'');
-    return pid===781857 && /cosmos/i.test(foil);
+    return pid===781857 && canonicalFinishFoilLabel(row?.foil||'')==='cosmos';
   });
   if(!exactRow)return {handled:true,matched:false,kind:'needs-exact-variant'};
   const pricing={idProduct:781857,trend:0.20,avg7:0.21,avg30:0.25,avg:0.25,low:0.02};
@@ -164,7 +163,7 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify({value:froCosmos.value,productI
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Normal'))),{low:0.02,trend:0.03,avg7:0.03,avg30:0.04});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Reverse Holo'))),{low:0.02,trend:0.13,avg7:0.09,avg30:0.12});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(r.cardmarketStatsForCardVariant(fro,'Cosmos Holo'))),{low:0.02,trend:0.2,avg7:0.21,avg30:0.25});
-const froNoCosmosRow={...fro,variants_detailed:fro.variants_detailed.filter(x=>!/cosmos/i.test(String(x.foil||'')))};
+const froNoCosmosRow={...fro,variants_detailed:fro.variants_detailed.filter(x=>canonicalFinishFoilLabel(x.foil||'')!=='cosmos')};
 const froFailClosed=r.cardmarketValueForCardVariant(froNoCosmosRow,'Cosmos Holo');
 assert.strictEqual(froFailClosed.value,0);
 assert.strictEqual(froFailClosed.kind,'needs-exact-variant');
