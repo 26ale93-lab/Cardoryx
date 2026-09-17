@@ -15,12 +15,12 @@ jobs:
         run: |
           cd ../tcgdex-cards-database
           echo '=== WORLDS 2022 ==='
-          rg -n -l 'worlds-2022' data | sort
+          grep -RIl -- 'worlds-2022' data | sort
           echo '=== WORLDS 2023 ==='
-          rg -n -l 'worlds-2023' data | sort
+          grep -RIl -- 'worlds-2023' data | sort
           echo '=== WORLDS 2024 ==='
-          rg -n -l 'worlds-2024' data | sort
+          grep -RIl -- 'worlds-2024' data | sort
           echo '=== COUNTS ==='
-          printf '2022 '; rg -l 'worlds-2022' data | wc -l
-          printf '2023 '; rg -l 'worlds-2023' data | wc -l
-          printf '2024 '; rg -l 'worlds-2024' data | wc -l
+          printf '2022 '; grep -RIl -- 'worlds-2022' data | wc -l
+          printf '2023 '; grep -RIl -- 'worlds-2023' data | wc -l
+          printf '2024 '; grep -RIl -- 'worlds-2024' data | wc -l
