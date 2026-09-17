@@ -16,34 +16,35 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run full Cardmarket audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Inspect exact 32 nonlegacy P1 cases
+      - name: Validate exact Cardmarket catalogue identities for 32 nonlegacy P1
         shell: bash
         run: |
           python3 - <<'PY'
           import json, urllib.request
-          from pathlib import Path
-          targets={
+          targets=[
             '2018sm-fr-38','2018sm-fr-39','cel25cc-CC020','cel25cc-CC021','ex5-98','me01-073',
             'mfb-1','mfb-8','mfb-9','mfb-16','mfb-17','mfb-24','mfb-25','mfb-33','mfb-34',
             'sm12-237','sv05-041','sv08-065','sv09-055','svp-045','svp-067','svp-101','svp-150',
             'swshp-SWSH039','swshp-SWSH055','swshp-SWSH132','swshp-SWSH133','swshp-SWSH134',
             'swshp-SWSH136','swshp-SWSH137','swshp-SWSH138','swshp-SWSH296'
-          }
-          d=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
-          cases={str(x.get('tcgdexId')):x for x in d.get('caseIndex',[]) if isinstance(x,dict) and str(x.get('tcgdexId')) in targets}
-          print('TARGET_COUNT',len(cases),'MISSING',sorted(targets-set(cases)))
-          for cid in sorted(targets):
-              print('=== CASE',cid,'===')
-              print(json.dumps(cases.get(cid),ensure_ascii=False))
+          ]
+          with urllib.request.urlopen('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',timeout=90) as r:
+              products=json.load(r)['products']
+          bypid={int(x['idProduct']):x for x in products}
+          for cid in targets:
+              print('===',cid,'===')
               try:
                   with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=20) as r:
-                      live=json.load(r)
-                  keep={k:live.get(k) for k in ('id','name','localId','set','variants','variants_detailed','pricing')}
-                  print('LIVE',json.dumps(keep,ensure_ascii=False))
+                      d=json.load(r)
               except Exception as e:
-                  print('LIVE_ERROR',repr(e))
+                  print('LIVE_ERROR',repr(e)); continue
+              print('CARD',d.get('name'),d.get('localId'),(d.get('set') or {}).get('name'))
+              top=((d.get('pricing') or {}).get('cardmarket') or {}).get('idProduct')
+              print('TOP',top, json.dumps(bypid.get(int(top)) if top else None,ensure_ascii=False))
+              for row in d.get('variants_detailed') or []:
+                  pid=((row.get('thirdParty') or {}).get('cardmarket') or ((row.get('pricing') or {}).get('cardmarket') or {}).get('idProduct'))
+                  print('ROW',json.dumps({
+                    'type':row.get('type'),'subtype':row.get('subtype'),'size':row.get('size'),'foil':row.get('foil'),'stamp':row.get('stamp'),'pid':pid,
+                    'catalog':bypid.get(int(pid)) if pid else None
+                  },ensure_ascii=False))
           PY
