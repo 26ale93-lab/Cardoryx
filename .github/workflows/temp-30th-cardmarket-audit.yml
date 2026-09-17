@@ -16,64 +16,48 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Inspect official Cardmarket schemas and 30th products
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Validate 30th standard Cardmarket products
         shell: bash
         run: |
           python3 - <<'PY'
-          import json, urllib.request, datetime
+          import json, urllib.request, re
+          from pathlib import Path
           PU='https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json'
           GU='https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json'
-          with urllib.request.urlopen(PU,timeout=60) as r: products=json.load(r)
-          with urllib.request.urlopen(GU,timeout=60) as r: guide=json.load(r)
-          print('PRODUCTS_TYPE',type(products).__name__,'KEYS',list(products)[:20] if isinstance(products,dict) else 'LIST')
-          print('GUIDE_TYPE',type(guide).__name__,'KEYS',list(guide)[:30] if isinstance(guide,dict) else 'LIST')
-          if isinstance(guide,dict):
-              for k,v in list(guide.items())[:10]:
-                  print('GUIDE_TOP',k,type(v).__name__, (list(v)[:5] if isinstance(v,dict) else v[:2] if isinstance(v,list) else str(v)[:200]))
-          def product_rows(x):
-              if isinstance(x,list): return x
-              for k in ('products','product','data'):
-                  if isinstance(x,dict) and isinstance(x.get(k),list): return x[k]
-              return []
-          prows=product_rows(products)
-          names={'exeggcute','nidorina','pikachu','charizard','ninetales','ultra ball','yveltal'}
-          candidates=[]
-          for x in prows:
-              nm=str(x.get('name') or x.get('Name') or '').strip().lower()
-              da=str(x.get('dateAdded') or '')
-              if nm in names and da>='2026-09-10': candidates.append(x)
-              elif '[psychic | 30c]' in nm: candidates.append(x)
-          print('CANDIDATES',len(candidates))
-          for x in candidates[:300]: print('PRODUCT',json.dumps(x,ensure_ascii=False))
-          # Find all recently-added products grouped by expansion id, to identify 30th expansions without guessing.
-          recent={}
-          for x in prows:
-              da=str(x.get('dateAdded') or '')
-              if da>='2026-09-10':
-                  eid=x.get('idExpansion'); recent.setdefault(str(eid),[]).append(x)
-          for eid,rows in sorted(recent.items(), key=lambda kv:-len(kv[1]))[:40]:
-              sample=[r.get('name') for r in rows[:8]]
-              print('RECENT_EXPANSION',eid,'COUNT',len(rows),'SAMPLE',json.dumps(sample,ensure_ascii=False))
-          # Generic guide row extraction after schema inspection.
-          def guide_rows(x):
-              if isinstance(x,list): return x
-              if isinstance(x,dict):
-                  for k,v in x.items():
-                      if isinstance(v,list) and v and isinstance(v[0],dict) and any(q in v[0] for q in ('idProduct','id_product','trend','TREND')):
-                          return v
-                  for k,v in x.items():
-                      if isinstance(v,dict):
-                          vals=list(v.values())
-                          if vals and isinstance(vals[0],dict):
-                              out=[]
-                              for pid,row in v.items():
-                                  rr=dict(row); rr.setdefault('idProduct',pid); out.append(rr)
-                              return out
-              return []
-          grows=guide_rows(guide)
-          print('GUIDE_ROWS_EXTRACTED',len(grows))
-          gby={str(r.get('idProduct') or r.get('id_product') or ''):r for r in grows}
-          for x in candidates[:300]:
-              pid=str(x.get('idProduct') or x.get('id_product') or '')
-              if pid in gby: print('MATCHED_PRICE',pid,json.dumps(gby[pid],ensure_ascii=False))
+          with urllib.request.urlopen(PU,timeout=60) as r: products=json.load(r)['products']
+          with urllib.request.urlopen(GU,timeout=60) as r: guide=json.load(r)['priceGuides']
+          cm=sorted([x for x in products if x.get('idExpansion')==6601], key=lambda x:int(x['idProduct']))
+          print('CM6601_COUNT',len(cm),'FIRST',cm[0] if cm else None,'LAST',cm[-1] if cm else None)
+          pby={int(x['idProduct']):x for x in guide}
+          root=Path('../tcgdex-cards-database/data/Mega Evolution/30th Celebration')
+          tcg=[]
+          for n in range(1,129):
+              p=root/f'{n:03d}.ts'
+              src=p.read_text(encoding='utf-8')
+              m=re.search(r'en:\s*["\']([^"\']+)["\']',src)
+              name=m.group(1) if m else ''
+              tcg.append((n,name))
+          def base_name(s):
+              return re.sub(r'\s*\[.*$','',str(s)).strip().lower().replace('’',"'")
+          mismatches=[]; rows=[]
+          for i,(num,tname) in enumerate(tcg):
+              x=cm[i] if i<len(cm) else None
+              if not x:
+                  mismatches.append((num,tname,'MISSING'))
+                  continue
+              cname=base_name(x.get('name'))
+              tn=base_name(tname)
+              if cname!=tn: mismatches.append((num,tname,x.get('idProduct'),x.get('name')))
+              g=pby.get(int(x['idProduct']),{})
+              rows.append({'num':num,'tcg':tname,'pid':x['idProduct'],'cm':x.get('name'),'trend':g.get('trend'),'avg':g.get('avg'),'low':g.get('low')})
+          print('MISMATCH_COUNT',len(mismatches))
+          for m in mismatches[:50]: print('MISMATCH',m)
+          real=[r for r in rows if isinstance(r.get('trend'),(int,float)) and r['trend']>0]
+          print('FIRST128_REAL_TREND',len(real),'NO_TREND',128-len(real))
+          for r in rows: print('ROW',json.dumps(r,ensure_ascii=False))
+          # Verify the apparent contiguous product sequence explicitly, but do not turn it into a production formula.
+          seq=[int(r['pid']) for r in rows]
+          print('CONTIGUOUS',all(seq[i]==seq[0]+i for i in range(len(seq))),'START',seq[0] if seq else None,'END',seq[-1] if seq else None)
           PY
