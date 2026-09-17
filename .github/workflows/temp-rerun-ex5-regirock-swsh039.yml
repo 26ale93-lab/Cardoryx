@@ -1,0 +1,97 @@
+name: TEMP rerun exact Regirock SWSH039 verification
+
+on:
+  push:
+    branches:
+      - fix/ex5-regirock-swsh039-exact-primary-20260917
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Focused resolver assertions
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, re, urllib.request, subprocess
+          from pathlib import Path
+          src=Path('index.html').read_text()
+          cm=re.search(r"const VERIFIED_EXACT_PRIMARY_SPECIAL_CARDMARKET_ROWS=\{.*?\n\};",src,re.S)
+          if not cm: raise SystemExit('missing VERIFIED_EXACT_PRIMARY_SPECIAL_CARDMARKET_ROWS')
+          def fn(name):
+              m=re.search(rf'\bfunction\s+{re.escape(name)}\s*\(',src)
+              if not m: raise SystemExit('missing '+name)
+              b=src.find('{',m.end()); d=0; q=None; esc=False
+              for i in range(b,len(src)):
+                  ch=src[i]
+                  if q:
+                      if esc: esc=False
+                      elif ch=='\\': esc=True
+                      elif ch==q: q=None
+                      continue
+                  if ch in "'\"`": q=ch
+                  elif ch=='{': d+=1
+                  elif ch=='}':
+                      d-=1
+                      if d==0:return src[m.start():i+1]
+              raise SystemExit('unclosed '+name)
+          names=['normText','canonicalPrintedLocalId','printedLocalIdParts','cardSetId','exactLocalIdKey','canonicalVariant','canonicalFinishTypeLabel','canonicalFinishFoilLabel','tcgdexVariantDetails','verifiedExactPrimarySpecialCardmarketVariant']
+          js=cm.group(0)+'\n'+'\n'.join(fn(n) for n in names)
+          cards={}
+          for cid in ('ex5-98','swshp-SWSH039'):
+              with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r: cards[cid]=json.load(r)
+          harness=r'''
+          const cards=JSON.parse(process.argv[1]);
+          function fail(m){throw new Error(m)}
+          const r=verifiedExactPrimarySpecialCardmarketVariant(cards['ex5-98'],'Holo');
+          if(!r?.matched||Number(r.productId)!==276172||Number(r.pricing?.trend||0)<=0)fail('Regirock exact primary resolver failed');
+          if(verifiedExactPrimarySpecialCardmarketVariant(cards['ex5-98'],'Normal')?.matched)fail('Regirock wrong finish accepted');
+          const p=verifiedExactPrimarySpecialCardmarketVariant(cards['swshp-SWSH039'],'Cosmos Holo');
+          if(!p?.matched||Number(p.productId)!==491189||Number(p.pricing?.trend||0)<=0)fail('SWSH039 Cosmos resolver failed');
+          if(verifiedExactPrimarySpecialCardmarketVariant(cards['swshp-SWSH039'],'Holo')?.matched)fail('SWSH039 generic Holo accepted');
+          const wrong={...cards['ex5-98'],localId:'99'};
+          if(verifiedExactPrimarySpecialCardmarketVariant(wrong,'Holo')?.matched)fail('wrong Regirock localId accepted');
+          process.stdout.write(JSON.stringify({regirock:{pid:r.productId,trend:r.pricing.trend},pikachu:{pid:p.productId,trend:p.pricing.trend}}));
+          '''
+          print(subprocess.check_output(['node','-e',js+'\n'+harness,json.dumps(cards)],text=True))
+          PY
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Assert exact audit delta
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          expected={'SAFE':1774,'EXACT_ALTERNATE_PRODUCT':156,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':267,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
+          if r['classificationTotals']!=expected: raise SystemExit(f"unexpected totals {r['classificationTotals']} != {expected}")
+          idx={x['tcgdexId']:x for x in r['caseIndex']}
+          for cid in ('ex5-98','swshp-SWSH039'):
+              if idx.get(cid,{}).get('classification')!='SAFE': raise SystemExit(f'{cid} not SAFE: {idx.get(cid)}')
+          print(json.dumps({'totals':r['classificationTotals'],'verified':['ex5-98','swshp-SWSH039']},indent=2))
+          PY
+      - name: Remove temporary workflow
+        if: always()
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/temp-rerun-ex5-regirock-swsh039.yml
+          git commit -m 'Remove temporary Regirock Pikachu verification workflow'
+          git push origin HEAD:fix/ex5-regirock-swsh039-exact-primary-20260917
