@@ -14,68 +14,47 @@ jobs:
           python-version: '3.12'
       - name: Clone TCGdex database
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Inspect AR identities and Cardmarket catalogue
+      - name: Document AR duplicate source and catalogue
         run: |
           python3 - <<'PY'
-          import json, pathlib, re, urllib.request, tempfile
+          import json,pathlib,urllib.request,tempfile,re
           db=pathlib.Path('../tcgdex-cards-database')
-          # Locate any source files referencing AR1..AR9 or the exact tcgdex ids.
-          for token in ['AR1','AR2','AR3','AR4','AR5','AR6','AR7','AR8','AR9','pl3-AR','pl4-AR']:
-              hits=[]
-              for p in db.rglob('*.ts'):
-                  try:t=p.read_text(errors='ignore')
-                  except:continue
-                  if token in t or token in p.name:
-                      hits.append(str(p.relative_to(db)))
-              print('FILES',token,json.dumps(hits[:40]))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          product_ids=set()
-          for prefix in ('pl3','pl4'):
+          for folder in ('data/Platinum/Arceus','data/Platinum/Supreme Victors'):
+              print('FOLDER',folder)
               for n in range(1,10):
-                  cid=f'{prefix}-AR{n}'
-                  try:
-                      req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
-                      with urllib.request.urlopen(req,timeout=30) as r:c=json.load(r)
-                      top=((c.get('pricing') or {}).get('cardmarket') or {})
-                      rows=[]
-                      for x in c.get('variants_detailed') or []:
-                          cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                          pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                          if pid:product_ids.add(int(pid))
-                          rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo')})
-                      if top.get('idProduct'):product_ids.add(int(top['idProduct']))
-                      print('API',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'top':top.get('idProduct'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
-                  except Exception as e:
-                      print('API_ERROR',cid,repr(e))
-          # Parse source files that define localId AR1..AR9 and print relevant lines.
-          for p in db.rglob('*.ts'):
-              try:t=p.read_text(errors='ignore')
-              except:continue
-              if re.search(r"localId\s*:\s*['\"]AR[1-9]['\"]",t,re.I):
-                  print('SOURCE_FILE',str(p.relative_to(db)))
-                  print(t[:5000])
-          # Official Cardmarket product + price records for any discovered products.
+                  p=db/folder/f'AR{n}.ts'
+                  print('FILE',p.relative_to(db),'exists',p.exists())
+                  if p.exists():
+                      text=p.read_text(errors='ignore')
+                      keep=[]
+                      for line in text.splitlines():
+                          if any(k in line for k in ('id:', 'name:', 'types:', 'attacks:', 'thirdParty', 'cardmarket', 'variants:')):
+                              keep.append(line.strip())
+                      print('\n'.join(keep[:80]))
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
           def dl(section,name):
               path=pathlib.Path(tempfile.gettempdir())/name
               req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
               with urllib.request.urlopen(req,timeout=300) as r,path.open('wb') as f:
                   while chunk:=r.read(1024*1024):f.write(chunk)
               return json.load(open(path))
-          prod=dl('productList','products_singles_6.json'); price=dl('priceGuide','price_guide_6.json')
+          prod=dl('productList','products_singles_6.json');price=dl('priceGuide','price_guide_6.json')
           def rows(obj,keys):
               if isinstance(obj,list):return obj
               for k in keys:
                   v=obj.get(k) if isinstance(obj,dict) else None
                   if isinstance(v,list):return v
               return []
-          # Also show any Cardmarket products whose name/code references Arceus subset candidates by metacard/product ids discovered.
+          ar=[]
           for r in rows(prod,('products',)):
-              pid=int(r.get('idProduct') or 0)
-              if pid in product_ids:
-                  print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+              if int(r.get('idExpansion') or 0)==1565 and str(r.get('name') or '').lower().startswith('arceus'):
+                  ar.append(r)
+          print('ARCEUS_CATALOGUE_COUNT',len(ar))
+          for r in sorted(ar,key=lambda x:int(x.get('idProduct') or 0)):
+              print('ARCEUS_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          pids={int(r['idProduct']) for r in ar if r.get('idProduct')}
           for r in rows(price,('priceGuides','priceGuide')):
-              pid=int(r.get('idProduct') or 0)
-              if pid in product_ids:
+              if int(r.get('idProduct') or 0) in pids:
                   keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','trend-holo','avg7-holo','avg30-holo')}
-                  print('CM_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+                  print('ARCEUS_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
           PY
