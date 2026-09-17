@@ -5486,6 +5486,63 @@ function verifiedExactVariantPrice(card,variant){
   return rule;
 }
 
+const VERIFIED_GYM_SHARED_FINISH_PRODUCTS={
+  'gym1-15':{setId:'gym1',localId:'15',name:'Brock',finish:'Holo',productId:274151,expansionId:1529,pairId:'gym1-98'},
+  'gym1-98':{setId:'gym1',localId:'98',name:'Brock',finish:'Normal',productId:274151,expansionId:1529,pairId:'gym1-15'},
+  'gym1-16':{setId:'gym1',localId:'16',name:'Erika',finish:'Holo',productId:274152,expansionId:1529,pairId:'gym1-100'},
+  'gym1-100':{setId:'gym1',localId:'100',name:'Erika',finish:'Normal',productId:274152,expansionId:1529,pairId:'gym1-16'},
+  'gym1-17':{setId:'gym1',localId:'17',name:'Lt. Surge',finish:'Holo',productId:274153,expansionId:1529,pairId:'gym1-101'},
+  'gym1-101':{setId:'gym1',localId:'101',name:'Lt. Surge',finish:'Normal',productId:274153,expansionId:1529,pairId:'gym1-17'},
+  'gym1-18':{setId:'gym1',localId:'18',name:'Misty',finish:'Holo',productId:274154,expansionId:1529,pairId:'gym1-102'},
+  'gym1-102':{setId:'gym1',localId:'102',name:'Misty',finish:'Normal',productId:274154,expansionId:1529,pairId:'gym1-18'},
+  'gym2-17':{setId:'gym2',localId:'17',name:'Blaine',finish:'Holo',productId:274285,expansionId:1530,pairId:'gym2-100'},
+  'gym2-100':{setId:'gym2',localId:'100',name:'Blaine',finish:'Normal',productId:274285,expansionId:1530,pairId:'gym2-17'},
+  'gym2-18':{setId:'gym2',localId:'18',name:'Giovanni',finish:'Holo',productId:274286,expansionId:1530,pairId:'gym2-104'},
+  'gym2-104':{setId:'gym2',localId:'104',name:'Giovanni',finish:'Normal',productId:274286,expansionId:1530,pairId:'gym2-18'},
+  'gym2-19':{setId:'gym2',localId:'19',name:'Koga',finish:'Holo',productId:274287,expansionId:1530,pairId:'gym2-106'},
+  'gym2-106':{setId:'gym2',localId:'106',name:'Koga',finish:'Normal',productId:274287,expansionId:1530,pairId:'gym2-19'},
+  'gym2-20':{setId:'gym2',localId:'20',name:'Sabrina',finish:'Holo',productId:274288,expansionId:1530,pairId:'gym2-110'},
+  'gym2-110':{setId:'gym2',localId:'110',name:'Sabrina',finish:'Normal',productId:274288,expansionId:1530,pairId:'gym2-20'}
+};
+const VERIFIED_GYM_SHARED_PRICE_GUIDES={
+  274151:{idProduct:274151,trend:31.30,avg7:30.86,avg30:35.88,avg:35.39,low:10,'trend-holo':23.27,'avg7-holo':25.93,'avg30-holo':15.31},
+  274152:{idProduct:274152,trend:44.25,avg7:48.35,avg30:41.07,avg:44.56,low:18,'trend-holo':37.42,'avg7-holo':44.56,'avg30-holo':25.65},
+  274153:{idProduct:274153,trend:30.95,avg7:34.08,avg30:30.15,avg:31.46,low:6,'trend-holo':22.68,'avg7-holo':24.79,'avg30-holo':22.13},
+  274154:{idProduct:274154,trend:39.46,avg7:36.66,avg30:56.73,avg:35.62,low:22.89,'trend-holo':19.12,'avg7-holo':18.65,'avg30-holo':16.42},
+  274285:{idProduct:274285,trend:52.47,avg7:101.08,avg30:59.92,avg:76.97,low:12.9,'trend-holo':24.93,'avg7-holo':29.60,'avg30-holo':22.43},
+  274286:{idProduct:274286,trend:61.45,avg7:59.99,avg30:61.13,avg:58.74,low:24,'trend-holo':27.31,'avg7-holo':36.00,'avg30-holo':24.58},
+  274287:{idProduct:274287,trend:45.76,avg7:48.36,avg30:43.43,avg:47.92,low:10,'trend-holo':26.88,'avg7-holo':28.79,'avg30-holo':23.25},
+  274288:{idProduct:274288,trend:79.05,avg7:59.25,avg30:55.96,avg:53.79,low:22,'trend-holo':22.98,'avg7-holo':26.07,'avg30-holo':23.32}
+};
+function verifiedGymLeaderSharedFinishPrice(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_GYM_SHARED_FINISH_PRODUCTS[id];
+  if(!rule||cardSetId(card)!==rule.setId||exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||normText(card?.name||'')!==normText(rule.name))return null;
+  const target=canonicalVariant(variant||'Normal');
+  if(target!==rule.finish)return null;
+  const expectedType=target==='Holo'?'holo':'normal';
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=Array.isArray(row?.stamp)?row.stamp:[];
+    const cm=row?.pricing?.cardmarket||{};
+    return stamps.length===1&&normText(stamps[0])===normText('1st-edition')&&
+      canonicalFinishTypeLabel(row?.type)===expectedType&&!canonicalFinishFoilLabel(row?.foil)&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard'&&
+      Number(row?.thirdParty?.cardmarket||0)===rule.productId&&Number(cm?.idProduct||cm?.id_product||0)===rule.productId;
+  });
+  const live=rows.length===1?(rows[0]?.pricing?.cardmarket||null):null;
+  const cm=live||VERIFIED_GYM_SHARED_PRICE_GUIDES[rule.productId]||null;
+  if(!cm||Number(cm?.idProduct||cm?.id_product||0)!==rule.productId)return null;
+  const pick=(base)=>{
+    const key=target==='Holo'?`${base}-holo`:base;
+    const v=Number(cm?.[key]||0);return Number.isFinite(v)&&v>0?v:null;
+  };
+  const out={idProduct:rule.productId,trend:pick('trend'),avg7:pick('avg7'),avg30:pick('avg30'),avg:pick('avg'),low:pick('low'),
+    source:`Cardmarket · ${rule.setId==='gym1'?'Gym Heroes':'Gym Challenge'} · ${rule.name} ${rule.localId} · ${target} · product ${rule.productId}`,
+    verified:String(cm?.updated||'2026-09-17T20:17:05Z')};
+  if(![out.trend,out.avg7,out.avg30,out.avg,out.low].some(v=>Number(v)>0))return null;
+  return out;
+}
+
 const VERIFIED_VARIANT_PRICES = {
   // V1.1.0 — Ascesa Eroica / Ascended Heroes additionals.
   // Cardmarket publishes the Poké Ball parallel as a separate xASC product.
@@ -5523,6 +5580,8 @@ function variantPriceKey(card,variant){
   return `${setName}|${num}|${canonicalVariant(variant||'Normal')}`;
 }
 function verifiedVariantPrice(card,variant){
+  const gymShared=verifiedGymLeaderSharedFinishPrice(card,variant);
+  if(gymShared)return gymShared;
   const exact=verifiedExactVariantPrice(card,variant);
   if(exact)return exact;
   const setName=normText(card?.set?.name||card?.set||'');
