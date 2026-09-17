@@ -9,61 +9,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run current full audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Inspect all residual mfb P1 identities
+      - name: Print exact runtime anchors
         run: |
           python3 - <<'PY'
-          import json, urllib.request, tempfile, pathlib
-          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          ids=[x for x in d.get('p1AmbiguousProductIds',[]) if x.startswith('mfb-')]
-          print('MFB_P1_IDS',json.dumps(ids))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          products=set()
-          cards={}
-          for cid in ids:
-              try:
-                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
-                  with urllib.request.urlopen(req,timeout=60) as r: c=json.load(r)
-              except Exception as e:
-                  print('CARD_ERROR',cid,repr(e)); continue
-              cards[cid]=c
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid: products.add(int(pid))
-                  stamps=x.get('stamp') or []
-                  if isinstance(stamps,str): stamps=[stamps]
-                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':stamps,'size':x.get('size'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'avg7':cm.get('avg7'),'low':cm.get('low')})
-              if top.get('idProduct'): products.add(int(top['idProduct']))
-              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'rarity':c.get('rarity'),'topProduct':top.get('idProduct'),'topTrend':top.get('trend'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
-          def dl(section,name):
-              path=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r, path.open('wb') as f:
-                  while chunk:=r.read(1024*1024): f.write(chunk)
-              return json.load(open(path))
-          prod=dl('productList','products_singles_6.json')
-          price=dl('priceGuide','price_guide_6.json')
-          def rows(obj,keys):
-              if isinstance(obj,list): return obj
-              for k in keys:
-                  v=obj.get(k) if isinstance(obj,dict) else None
-                  if isinstance(v,list): return v
-              return []
-          for r in rows(prod,('products',)):
-              pid=int(r.get('idProduct') or 0)
-              if pid in products: print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
-          for r in rows(price,('priceGuides','priceGuide')):
-              pid=int(r.get('idProduct') or 0)
-              if pid in products:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','trend-holo','avg7-holo','avg30-holo')}
-                  print('CM_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          needles=['function canonicalStamp(','function stampExistsForCard(','function verifiedStampPrice(','Worlds 2024</option>','VERIFIED_PRIMARY_WORLDS_STAMPS']
+          lines=s.splitlines()
+          for needle in needles:
+              print('\n===',needle,'===')
+              hits=[i for i,l in enumerate(lines) if needle in l]
+              print('hits',hits)
+              for i in hits[:4]:
+                  a=max(0,i-10); b=min(len(lines),i+45)
+                  for n in range(a,b): print(f'{n+1}: {lines[n]}')
           PY
