@@ -1,0 +1,57 @@
+name: TEMP 30th Cardmarket read-only audit
+
+on:
+  push:
+    branches:
+      - diagnostic/30th-cardmarket-price-audit-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run existing Cardmarket full audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py
+      - name: Extract 30th Anniversary evidence
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/card_identity_cardmarket_audit_report.json')
+          d=json.loads(p.read_text())
+          hits=[]
+          def walk(x,path=''):
+              if isinstance(x,dict):
+                  s=' '.join(str(x.get(k,'')) for k in ('tcgdexId','id','setId','name','setName','cardmarketCode')).lower()
+                  if '30th' in s or '30°' in s or '30c' in s:
+                      hits.append((path,x))
+                  for k,v in x.items(): walk(v,f'{path}/{k}')
+              elif isinstance(x,list):
+                  for i,v in enumerate(x): walk(v,f'{path}/{i}')
+          walk(d)
+          print('=== 30TH HITS ===')
+          print('count',len(hits))
+          seen=set()
+          for path,x in hits:
+              ident=str(x.get('tcgdexId') or x.get('id') or '')
+              key=(ident,str(x.get('currentProductId') or x.get('productId') or ''))
+              if key in seen: continue
+              seen.add(key)
+              keep={k:x.get(k) for k in ('tcgdexId','id','name','setId','localId','currentProductId','alternateProductIds','allProductIds','realPriceGuideValues','cardmarketProductCatalog','reason','classification') if k in x}
+              print(path, json.dumps(keep, ensure_ascii=False))
+          print('=== COUNTERS ===')
+          for k in ('SAFE','EXACT_ALTERNATE_PRODUCT','P0_WRONG_PRODUCT','P1_AMBIGUOUS_PRODUCT','SOURCE_CONFLICT','UNMAPPED_EXACT_PRODUCT'):
+              if k in d: print(k,d[k])
+          PY
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: 30th-cardmarket-audit
+          path: artifacts/card_identity_cardmarket_audit_report.json
