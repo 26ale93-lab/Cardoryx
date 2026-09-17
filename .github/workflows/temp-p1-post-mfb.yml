@@ -1,0 +1,45 @@
+name: TEMP P1 post-MFB distribution audit
+on:
+  push:
+    branches: [diagnostic/cardmarket-p1-post-mfb-20260917]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Run full audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Summarize residual P1
+        run: |
+          python3 - <<'PY'
+          import json,collections
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          ids=d.get('p1AmbiguousProductIds') or []
+          c=collections.Counter(x.split('-',1)[0] for x in ids)
+          print('TOTAL',len(ids))
+          print('BY_SET',json.dumps(c.most_common(),ensure_ascii=False))
+          small=[]
+          for setid,n in sorted(c.items(),key=lambda kv:(kv[1],kv[0])):
+              if n<=12:
+                  xs=[x for x in ids if x.split('-',1)[0]==setid]
+                  small.append((setid,n,xs))
+          print('SMALL_SETS',json.dumps(small,ensure_ascii=False))
+          modern=[x for x in ids if x.startswith(('sv','swsh','sm','cel','mfb','me','202','2018','2019'))]
+          print('MODERN_OR_PROMO',json.dumps(modern,ensure_ascii=False))
+          # Compact case metadata for all small/modern residuals.
+          case={x.get('tcgdexId'):x for x in d.get('cases',[]) if x.get('tcgdexId')}
+          for cid in sorted(set(modern)|{z for _,_,xs in small for z in xs}):
+              row=case.get(cid)
+              if row:
+                  keep={k:row.get(k) for k in ('tcgdexId','classification','currentProductId','allProductIds','physicalVariants','sharedWithTcgdexIds','reason','action')}
+                  print('CASE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          PY
