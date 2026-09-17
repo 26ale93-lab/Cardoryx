@@ -9,16 +9,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect stamp UI and resolver neighborhoods
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit complete cel25cc set
         run: |
           python3 - <<'PY'
-          from pathlib import Path
-          s=Path('index.html').read_text().splitlines()
-          needles=['id="stamp"','id="editStamp"','function tcgdexExactSvpStampPrice','function verifiedExactSpecialStampPrice','function verifiedStampPrice']
-          for n in needles:
-              print('\n###',n)
-              hits=[i for i,x in enumerate(s) if n in x]
-              for i in hits[:3]:
-                  for j in range(max(0,i-8),min(len(s),i+90)):
-                      print(f'{j+1}:{s[j]}')
+          import json, urllib.request
+          with urllib.request.urlopen('https://api.tcgdex.net/v2/en/sets/cel25cc',timeout=60) as r:
+              s=json.load(r)
+          cards=s.get('cards') or []
+          print('SET',json.dumps({'id':s.get('id'),'name':s.get('name'),'cardCount':s.get('cardCount'),'listed':len(cards)},ensure_ascii=False))
+          summary={'total':len(cards),'fetched':0,'errors':0,'exact25thHolo':0,'missingProduct':0,'multipleRows':0,'otherStamp':0,'otherFinish':0}
+          anomalies=[]
+          for stub in cards:
+              cid=stub.get('id')
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r:
+                      c=json.load(r)
+              except Exception as e:
+                  summary['errors']+=1; anomalies.append({'id':cid,'error':repr(e)}); continue
+              summary['fetched']+=1
+              rows=c.get('variants_detailed') or []
+              if len(rows)!=1: summary['multipleRows']+=1
+              exact=False
+              clean=[]
+              for x in rows:
+                  stamps=x.get('stamp') or []
+                  if isinstance(stamps,str): stamps=[stamps]
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  pid=(x.get('thirdParty') or {}).get('cardmarket')
+                  ppid=cm.get('idProduct') or cm.get('id_product')
+                  rec={'type':x.get('type'),'foil':x.get('foil'),'stamp':stamps,'size':x.get('size'),'pid':pid,'ppid':ppid,'trend':cm.get('trend'),'low':cm.get('low')}
+                  clean.append(rec)
+                  if stamps!=['25th-celebration']: summary['otherStamp']+=1
+                  if x.get('type')!='holo' or x.get('foil'): summary['otherFinish']+=1
+                  if not pid or int(ppid or 0)!=int(pid or 0): summary['missingProduct']+=1
+              if len(rows)==1:
+                  x=rows[0]; stamps=x.get('stamp') or []
+                  if isinstance(stamps,str): stamps=[stamps]
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  pid=(x.get('thirdParty') or {}).get('cardmarket')
+                  ppid=cm.get('idProduct') or cm.get('id_product')
+                  exact=(x.get('type')=='holo' and not x.get('foil') and stamps==['25th-celebration'] and str(x.get('size') or 'standard').lower()=='standard' and pid and int(ppid or 0)==int(pid))
+              if exact: summary['exact25thHolo']+=1
+              else: anomalies.append({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'rows':clean,'top':((c.get('pricing') or {}).get('cardmarket') or {}).get('idProduct')})
+          print('SUMMARY',json.dumps(summary,ensure_ascii=False,sort_keys=True))
+          for a in anomalies: print('ANOMALY',json.dumps(a,ensure_ascii=False,sort_keys=True))
           PY
