@@ -1,0 +1,49 @@
+name: TEMP SVP101 player rewards audit
+on:
+  push:
+    branches: [diagnostic/svp101-player-rewards-20260917]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect TCGdex and official Cardmarket identities
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, tempfile, pathlib
+          cid='svp-101'
+          with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r:
+              c=json.load(r)
+          top=((c.get('pricing') or {}).get('cardmarket') or {})
+          print('TOP',json.dumps({'id':c.get('id'),'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'variants':c.get('variants'),'product':top.get('idProduct'),'trend':top.get('trend')},ensure_ascii=False))
+          ids=set()
+          for row in c.get('variants_detailed') or []:
+              cm=((row.get('pricing') or {}).get('cardmarket') or {})
+              pid=((row.get('thirdParty') or {}).get('cardmarket'))
+              if pid: ids.add(int(pid))
+              print('ROW',json.dumps({'type':row.get('type'),'foil':row.get('foil'),'stamp':row.get('stamp'),'size':row.get('size'),'languages':row.get('languages'),'product':pid,'priceProduct':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'avg7':cm.get('avg7'),'low':cm.get('low')},ensure_ascii=False,sort_keys=True))
+          def dl(name):
+              path=pathlib.Path(tempfile.gettempdir())/name
+              urllib.request.urlretrieve('https://downloads.s3.cardmarket.com/productCatalog/'+name,path)
+              return json.load(open(path))
+          prod=dl('products_singles_6.json')
+          price=dl('price_guide_6.json')
+          def rows(obj,keys):
+              if isinstance(obj,list): return obj
+              for k in keys:
+                  v=obj.get(k) if isinstance(obj,dict) else None
+                  if isinstance(v,list): return v
+              return []
+          for r in rows(prod,('products',)):
+              if int(r.get('idProduct') or 0) in ids:
+                  print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          for r in rows(price,('priceGuides','priceGuide')):
+              if int(r.get('idProduct') or 0) in ids:
+                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','trend-holo','avg7-holo','avg30-holo')}
+                  print('CM_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          PY
