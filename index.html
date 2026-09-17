@@ -4536,6 +4536,23 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   if(isMee30CelebrationEnergy(card) && stamp==='30° Anniversario'){
     return new Set(['Holo','Speciale / Altro','Non so']);
   }
+  // Exact EX Hidden Legends Regirock ex 98/101: the standard card is the
+  // Cracked Ice Holo printing. Keep this identity-specific; do not generalize
+  // Cracked Ice to other cards or promo reprints.
+  if(String(card?.tcgdexId||card?.id||'').trim().toLowerCase()==='ex5-98' &&
+     cardSetId(card)==='ex5' && exactLocalIdKey(card?.localId||'')==='98' &&
+     normText(card?.name||'')==='regirockex' && stamp==='None'){
+    const rows=tcgdexVariantDetails(card).filter(row=>{
+      const stamps=Array.isArray(row?.stamp)?row.stamp:[];
+      const pid=Number(row?.thirdParty?.cardmarket||row?.pricing?.cardmarket?.idProduct||row?.pricing?.cardmarket?.id_product||0);
+      const pricingPid=Number(row?.pricing?.cardmarket?.idProduct||row?.pricing?.cardmarket?.id_product||0);
+      return canonicalFinishTypeLabel(row?.type)==='holo' && canonicalFinishFoilLabel(row?.foil)==='crackedice' &&
+             !stamps.length && String(row?.size||'standard').toLowerCase()==='standard' &&
+             pid===276172 && pricingPid===276172;
+    });
+    if(rows.length===1)return new Set(['Holo','Speciale / Altro','Non so']);
+  }
+
   // V2.1.32 — standard Mega Evolution Energies MEE001–008 are the non-stamped
   // Normal printing. Do not expose a generic Reverse Holo merely because the
   // card is classified as Common by the provider.
@@ -6925,7 +6942,41 @@ function verifiedDualBaseCardmarketVariant(card,variant){
   return {handled:true,matched:true,productId:expected,pricing,finish:v,
     source:`Cardmarket · prodotto fisico esatto ${expected}`};
 }
+const VERIFIED_EXACT_PRIMARY_SPECIAL_CARDMARKET_ROWS={
+  'ex5-98':{setId:'ex5',localId:'98',name:'Regirock ex',finish:'Holo',type:'holo',foil:'crackedice',productId:276172},
+  'swshp-SWSH039':{setId:'swshp',localId:'SWSH039',name:'Pikachu',finish:'Cosmos Holo',type:'holo',foil:'cosmos',productId:491189}
+};
+function verifiedExactPrimarySpecialCardmarketVariant(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_EXACT_PRIMARY_SPECIAL_CARDMARKET_ROWS[id];
+  if(!rule)return null;
+  if(cardSetId(card)!==rule.setId || exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
+     normText(card?.name||'')!==normText(rule.name) || canonicalVariant(variant||'Normal')!==rule.finish){
+    return {handled:true,matched:false,kind:'needs-exact-variant'};
+  }
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=Array.isArray(row?.stamp)?row.stamp:[];
+    const rowPid=Number(row?.thirdParty?.cardmarket||row?.pricing?.cardmarket?.idProduct||row?.pricing?.cardmarket?.id_product||0);
+    const pricing=row?.pricing?.cardmarket||{};
+    const pricingPid=Number(pricing?.idProduct||pricing?.id_product||0);
+    const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(pricing?.[k]||0)>0);
+    return canonicalFinishTypeLabel(row?.type)===rule.type && canonicalFinishFoilLabel(row?.foil)===rule.foil &&
+           !stamps.length && String(row?.size||'standard').trim().toLowerCase()==='standard' &&
+           rowPid===rule.productId && pricingPid===rule.productId && usable;
+  });
+  if(rows.length!==1)return {handled:true,matched:false,kind:'base-product-price-unavailable'};
+  return {handled:true,matched:true,productId:rule.productId,pricing:rows[0].pricing.cardmarket,finish:rule.finish,
+    source:`Cardmarket · riga fisica primaria esatta ${rule.productId}`};
+}
+
 function cardmarketValueForCardVariant(card,variant){
+  const exactPrimary=verifiedExactPrimarySpecialCardmarketVariant(card,variant);
+  if(exactPrimary?.handled){
+    if(!exactPrimary.matched)return {value:0,kind:exactPrimary.kind||'needs-exact-variant'};
+    const p=exactPrimary.pricing||{};
+    const value=['trend','avg7','avg30','avg','low'].map(k=>Number(p[k]||0)).find(x=>Number.isFinite(x)&&x>0)||0;
+    return {value,kind:'exact-primary-special-cardmarket',exact:true,productId:exactPrimary.productId,source:exactPrimary.source};
+  }
   const dualBase=verifiedDualBaseCardmarketVariant(card,variant);
   if(dualBase?.handled){
     if(!dualBase.matched)return {value:0,kind:dualBase.kind||'needs-exact-variant'};
@@ -7026,6 +7077,12 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
+  const exactPrimary=verifiedExactPrimarySpecialCardmarketVariant(card,variant);
+  if(exactPrimary?.handled){
+    if(!exactPrimary.matched)return {low:null,trend:null,avg7:null,avg30:null};
+    const p=exactPrimary.pricing||{};
+    return {low:p.low??null,trend:p.trend??null,avg7:p.avg7??null,avg30:p.avg30??null};
+  }
   const dualBase=verifiedDualBaseCardmarketVariant(card,variant);
   if(dualBase?.handled){
     if(!dualBase.matched)return {low:null,trend:null,avg7:null,avg30:null};

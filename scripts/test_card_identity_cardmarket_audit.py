@@ -102,6 +102,10 @@ VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS = {
     "sv05-041": {"setId": "sv05", "localId": "041", "name": "Feraligatr", "expansion": 5589, "metacard": 430014, "normal": 761970, "holo": 760671, "reverse": 760671},
     "sv08-065": {"setId": "sv08", "localId": "065", "name": "Tapu Koko", "expansion": 5879, "metacard": 441182, "normal": 799718, "holo": 794346, "reverse": 794346},
 }
+VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS = {
+    "ex5-98": {"setId":"ex5","localId":"98","name":"Regirock ex","primary":276172,"primaryType":"holo","primaryFoil":"cracked-ice","primaryStamp":[],"alternate":869536,"alternateType":"normal","alternateFoil":"","alternateStamp":["jason-klaczynski"]},
+    "swshp-SWSH039": {"setId":"swshp","localId":"SWSH039","name":"Pikachu","primary":491189,"primaryType":"holo","primaryFoil":"cosmos","primaryStamp":[],"alternate":549406,"alternateType":"holo","alternateFoil":"","alternateStamp":["25th-celebration"]},
+}
 VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS = {
     "svp-067": {"setId": "svp", "localId": "067", "name": "Roaring Moon ex", "expansion": 5241, "metacard": 426438, "standard": 740407, "jumbo": 740408, "stamp": []},
     "swshp-SWSH055": {"setId": "swshp", "localId": "SWSH055", "name": "Hatterene V", "expansion": 2916, "metacard": 322125, "standard": 510180, "jumbo": 510175, "stamp": []},
@@ -1440,7 +1444,7 @@ def main():
     }
     live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |
-                    set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) |
+                    set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) | set(VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS) |
                     {"sv09-055", "me01-073"} |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
@@ -1637,6 +1641,44 @@ def main():
             if len(exact_rows) == 1:
                 live_swsh028_gamestop = True
                 live_swsh028_gamestop_pid = 742039
+
+        exact_primary_special_pair = False
+        exact_primary_special_products = None
+        if card_id in VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS:
+            rule = VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS[card_id]
+            identity_ok = bool(
+                (card.get("set") or {}).get("id") == rule["setId"] and
+                norm_local(card.get("localId")) == norm_local(rule["localId"]) and
+                card_identity(card).get("name") == rule["name"]
+            )
+            def exact_special_row(pid, row_type, foil, stamp):
+                matches=[]
+                for row in live_card_detail.get("variants_detailed") or []:
+                    row_stamp=row.get("stamp") or []
+                    if isinstance(row_stamp,str): row_stamp=[row_stamp]
+                    pricing_cm=((row.get("pricing") or {}).get("cardmarket") or {})
+                    try: pricing_pid=int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+                    except (TypeError,ValueError): pricing_pid=None
+                    usable=any(isinstance(pricing_cm.get(k),(int,float)) and pricing_cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+                    if (cm_id(row)==pid and pricing_pid==pid and usable and
+                        str(row.get("type") or "").strip().lower()==row_type and
+                        str(row.get("foil") or "").strip().lower()==foil and
+                        sorted(map(str,row_stamp))==sorted(map(str,stamp)) and
+                        str(row.get("size") or "standard").strip().lower()=="standard"):
+                        matches.append(row)
+                return matches
+            primary_rows=exact_special_row(rule["primary"],rule["primaryType"],rule["primaryFoil"],rule["primaryStamp"])
+            alternate_rows=exact_special_row(rule["alternate"],rule["alternateType"],rule["alternateFoil"],rule["alternateStamp"])
+            pp,pa=products.get(rule["primary"]),products.get(rule["alternate"])
+            gp,ga=prices.get(rule["primary"]),prices.get(rule["alternate"])
+            catalogue_ok=bool(pp and pa and pp.get("idMetacard")==pa.get("idMetacard") and pp.get("name")==pa.get("name"))
+            guides_ok=bool(gp and ga and int(gp.get("idProduct") or 0)==rule["primary"] and int(ga.get("idProduct") or 0)==rule["alternate"])
+            exact_primary_special_pair=bool(
+                identity_ok and current_pid==rule["primary"] and set(ids)=={rule["primary"],rule["alternate"]} and
+                len(primary_rows)==1 and len(alternate_rows)==1 and catalogue_ok and guides_ok
+            )
+            if exact_primary_special_pair:
+                exact_primary_special_products={"primary":rule["primary"],"alternate":rule["alternate"]}
 
         exact_standard_jumbo_pair = False
         exact_standard_jumbo_products = None
@@ -1886,6 +1928,19 @@ def main():
             reason = ("Il prodotto corrente appartiene all'identità checklist esatta; ogni altra identità "
                       "TCGdex che lo riusava è ora protetta da un override Cardmarket esatto e fail-closed.")
             action = "Mantenere le guardie EX Deoxys esatte; nessun riuso del prodotto condiviso."
+        elif card_id in VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS:
+            if exact_primary_special_pair and "VERIFIED_EXACT_PRIMARY_SPECIAL_CARDMARKET_ROWS" in source:
+                rule=VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS[card_id]
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid=rule["primary"]
+                resolved_value=(prices.get(rule["primary"]) or {}).get("trend")
+                reason=("TCGdex live separa la stampa primaria non timbrata dalla ristampa/promozionale esplicita; "
+                        "entrambe hanno productId e Price Guide propri e il runtime risolve solo la riga fisica primaria esatta.")
+                action="Mantenere il resolver esatto per la riga primaria; nessun fallback verso la stampa alternativa."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason="La coppia primaria/promozionale registrata non supera più tutti i gate esatti."
+                action="Fail-closed e nuova verifica delle fonti; nessuna euristica di finitura o ristampa."
         elif card_id in VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS:
             if exact_standard_jumbo_pair:
                 rule = VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS[card_id]
@@ -1984,6 +2039,8 @@ def main():
             "liveExactEx5BeldumProducts": live_ex5_beldum_products,
             "liveExactSwsh028GameStop": live_swsh028_gamestop,
             "liveExactSwsh028GameStopProductId": live_swsh028_gamestop_pid,
+            "verifiedPrimarySpecialPair": exact_primary_special_pair,
+            "verifiedPrimarySpecialProducts": exact_primary_special_products,
             "verifiedStandardJumboPair": exact_standard_jumbo_pair,
             "verifiedStandardJumboProducts": exact_standard_jumbo_products,
             "snapshotExactAlternateProductProtected": snapshot_exact_alternate_product,
