@@ -5,29 +5,32 @@ on:
 permissions:
   contents: read
 jobs:
-  audit:
+  inspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run full Cardmarket audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Summarize residual P1
+      - name: Inspect nine residual P1 live identities
         run: |
           python3 - <<'PY'
-          import json, collections
-          from pathlib import Path
-          d=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
-          ids=list(d.get('p1AmbiguousProductIds') or [])
-          print('P1_COUNT',len(ids))
-          by=collections.Counter(x.split('-',1)[0] for x in ids)
-          print('P1_BY_SET',json.dumps(by.most_common(),ensure_ascii=False))
-          blocked={'base1','base2','base3','base4','base5','gym1','gym2','neo1','neo2','neo3','neo4','ecard1','ecard2','ecard3','pl3','mfb'}
-          small=[x for x in ids if x.split('-',1)[0] not in blocked]
-          print('NONBLOCKED_COUNT',len(small))
-          print('NONBLOCKED_IDS',json.dumps(small,ensure_ascii=False))
+          import json, urllib.request
+          ids=['2018sm-fr-38','2018sm-fr-39','cel25cc-CC020','cel25cc-CC021','sm12-237','svp-045','svp-101','svp-150','swshp-SWSH296']
+          for cid in ids:
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r:
+                      c=json.load(r)
+              except Exception as e:
+                  print('CARD',cid,'ERROR',repr(e)); continue
+              top=((c.get('pricing') or {}).get('cardmarket') or {})
+              rows=[]
+              for x in c.get('variants_detailed') or []:
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  rows.append({
+                    'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),
+                    'cardmarket':((x.get('thirdParty') or {}).get('cardmarket')),
+                    'priceProduct':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'low':cm.get('low')
+                  })
+              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'set':(c.get('set') or {}).get('id'),'localId':c.get('localId'),'rarity':c.get('rarity'),'topProduct':top.get('idProduct') or top.get('id_product'),'topTrend':top.get('trend'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
           PY
