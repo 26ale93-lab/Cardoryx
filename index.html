@@ -5538,7 +5538,12 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   "ex4-83":{setId:'ex4',localId:"083",conflictingProduct:275860,baseProduct:276060},
   "ex4-84":{setId:'ex4',localId:"084",conflictingProduct:275861,baseProduct:276061},
   "ex4-86":{setId:'ex4',localId:"086",conflictingProduct:275863,baseProduct:276063},
-  "ex4-88":{setId:'ex4',localId:"088",conflictingProduct:275865,baseProduct:276065}
+  "ex4-88":{setId:'ex4',localId:"088",conflictingProduct:275865,baseProduct:276065},
+  // EX Deoxys — TCGdex reuses the products for Deoxys 16 and Rayquaza 22
+  // across physically different checklist numbers. Each correction below is
+  // proven by the exact Cardmarket catalogue name/attacks and card number.
+  'ex8-17':{setId:'ex8',localId:'017',conflictingProduct:276419,baseProduct:276420},
+  'ex8-18':{setId:'ex8',localId:'018',conflictingProduct:276419,baseProduct:276421}
 };
 // Exact Cardmarket Price Guide row for CEC54. This is intentionally scoped to
 // one physical identity and one product id; it is not a V1/V2 or number rule.
@@ -5914,6 +5919,22 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
     pricing:{"idProduct":276065,"trend":3.13,"avg7":3.03,"avg30":2.51,"avg":2.08,"low":0.49,"trend-holo":4.55,"avg7-holo":4.41,"avg30-holo":5.14,"avg-holo":5.9,"low-holo":1}
   },
+  'ex8-17':{
+    setId:'ex8',localId:'017',name:'Deoxys',productId:276420,
+    verified:'2026-09-17T09:14:00Z',
+    source:'Cardmarket Product Catalogue + Price Guide · EX Deoxys · Deoxys 17 Energy Crush · product 276420',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:276420,trend:15.66,avg7:34.48,avg30:11.78,avg:21.22,low:0.26,
+      'trend-holo':62.08,'avg7-holo':33.12,'avg30-holo':45.36,'avg-holo':34.95,'low-holo':10}
+  },
+  'ex8-18':{
+    setId:'ex8',localId:'018',name:'Deoxys',productId:276421,
+    verified:'2026-09-17T09:14:00Z',
+    source:'Cardmarket Product Catalogue + Price Guide · EX Deoxys · Deoxys 18 Barrier Attack · product 276421',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:276421,trend:6.22,avg7:4.87,avg30:5.43,avg:4.91,low:0.20,
+      'trend-holo':57.09,'avg7-holo':45.50,'avg30-holo':38.43,'avg-holo':40,'low-holo':7}
+  },
   'swsh11-201':{
     setId:'swsh11',localId:'201',name:'Giratina VSTAR',productId:674207,
     verified:'2026-09-17T00:34:29+0200',
@@ -6146,6 +6167,38 @@ function knownCardmarketIdentityConflict(card,resolvedProduct){
       };
     }
   }
+  const ex8ExactConflicts=[
+    ['ex8-17','17','deoxys',276419,276420],
+    ['ex8-18','18','deoxys',276419,276421]
+  ];
+  for(const [exactId,exactLocal,exactName,wrongProduct,correctProduct] of ex8ExactConflicts){
+    const guide=VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES[exactId];
+    const exactIdentity=exactCardmarketGuideIdentity(card,exactId,guide);
+    const targets=id===exactId||(setId==='ex8'&&local===exactLocal&&name===exactName);
+    if((product===wrongProduct&&targets)||(product===correctProduct&&!exactIdentity)){
+      return {
+        kind:'identity-mismatch',
+        source:`Cardmarket · EX Deoxys ${exactId} product ${correctProduct} verificato`,
+        reason:product===wrongProduct
+          ?`Il prodotto ${wrongProduct} appartiene a un'altra carta EX Deoxys e non può valutare ${exactId}`
+          :`Il prodotto ${correctProduct} è consentito solo per l'identità esatta ${exactId}`
+      };
+    }
+  }
+  const exactDeoxys16=id==='ex8-16'&&setId==='ex8'&&local==='16'&&name==='deoxys';
+  const exactRayquaza22=id==='ex8-22'&&setId==='ex8'&&local==='22'&&name==='rayquaza';
+  if((product===276419&&!exactDeoxys16)||(product===276425&&!exactRayquaza22)){
+    return {kind:'identity-mismatch',source:'Cardmarket · EX Deoxys prodotti checklist verificati',
+      reason:`Il prodotto ${product} è consentito solo per la sua identità EX Deoxys esatta`};
+  }
+  const exactZacianVUnion=id==='swshp-swsh163'&&setId==='swshp'&&local==='SWSH163'&&name==='zacianvunion';
+  const targetsZacianVUnion=id==='swshp-swsh163'||(setId==='swshp'&&local==='SWSH163'&&name==='zacianvunion');
+  if((product===576915&&targetsZacianVUnion)||(product===572163&&!exactZacianVUnion)){
+    return {kind:'identity-mismatch',source:'Cardmarket · Zacian V-UNION standard / Oversized verificati',
+      reason:product===576915
+        ?'Il prodotto 576915 è Oversized e non può valutare la carta standard SWSH163'
+        :'Il prodotto 572163 è consentito solo per Zacian V-UNION SWSH163 standard'};
+  }
   const isTorkoal29=id==='sm12-29'||(setId==='sm12'&&local==='29'&&name==='torkoal');
   if(isTorkoal29 && product===398524){
     return {
@@ -6197,6 +6250,70 @@ function knownReverseCardmarketProductConflict(card){
     };
   }
   return null;
+}
+// Collection McDonald's 2019 (France) — 39 exact Normal/Holo product pairs.
+// Every pair is independently verified in Cardmarket expansion 3354 against
+// the same exact metacard and the 2026-09-17 official Price Guide snapshot.
+// Names are restricted to the official English catalogue name or TCGdex French
+// name; no arithmetic product rule and no cross-finish fallback is allowed.
+const VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS={
+  '2019sm-fr-1':{localId:'1',names:["Bulbasaur","Bulbizarre"],normal:{idProduct:479674,trend:0.44,avg7:0.52,avg30:0.59,avg:0.46,low:0.1},holo:{idProduct:581844,trend:1.67,avg7:1.62,avg30:1.6,avg:1.76,low:0.5}},
+  '2019sm-fr-2':{localId:'2',names:["Caterpie","Chenipan"],normal:{idProduct:479679,trend:0.54,avg7:0.56,avg30:0.52,avg:0.55,low:0.1},holo:{idProduct:581845,trend:0.97,avg7:0.92,avg30:0.86,avg:1.09,low:0.19}},
+  '2019sm-fr-3':{localId:'3',names:["Paras"],normal:{idProduct:479684,trend:0.48,avg7:0.49,avg30:0.39,avg:0.58,low:0.2},holo:{idProduct:581846,trend:0.81,avg7:0.74,avg30:0.93,avg:0.69,low:0.05}},
+  '2019sm-fr-4':{localId:'4',names:["Bellsprout","Chétiflor"],normal:{idProduct:479689,trend:0.49,avg7:0.66,avg30:0.43,avg:0.71,low:0.12},holo:{idProduct:581847,trend:0.64,avg7:0.84,avg30:0.98,avg:0.82,low:0.1}},
+  '2019sm-fr-5':{localId:'5',names:["Alolan Exeggutor","Noadkoko d'Alola"],normal:{idProduct:479694,trend:0.41,avg7:0.48,avg30:0.39,avg:0.43,low:0.02},holo:{idProduct:581848,trend:0.74,avg7:0.71,avg30:0.86,avg:0.7,low:0.2}},
+  '2019sm-fr-6':{localId:'6',names:["Tangela","Saquedeneu"],normal:{idProduct:479699,trend:0.44,avg7:0.46,avg30:0.44,avg:0.6,low:0.1},holo:{idProduct:581849,trend:1.39,avg7:1.55,avg30:1.35,avg:1.37,low:0.19}},
+  '2019sm-fr-7':{localId:'7',names:["Scyther","Insécateur"],normal:{idProduct:479704,trend:0.85,avg7:0.81,avg30:0.8,avg:0.75,low:0.1},holo:{idProduct:581850,trend:1.28,avg7:1.12,avg30:1.42,avg:1.47,low:0.35}},
+  '2019sm-fr-8':{localId:'8',names:["Pinsir","Scarabrute"],normal:{idProduct:479709,trend:0.75,avg7:0.74,avg30:0.52,avg:0.79,low:0.08},holo:{idProduct:581851,trend:0.83,avg7:0.6,avg30:0.78,avg:0.59,low:0.1}},
+  '2019sm-fr-9':{localId:'9',names:["Charmander","Salamèche"],normal:{idProduct:479714,trend:1.82,avg7:1.71,avg30:1.14,avg:2.13,low:0.5},holo:{idProduct:581852,trend:4.68,avg7:5.12,avg30:4.77,avg:4.39,low:2}},
+  '2019sm-fr-10':{localId:'10',names:["Magmar"],normal:{idProduct:479719,trend:0.44,avg7:0.39,avg30:0.34,avg:0.43,low:0.05},holo:{idProduct:581853,trend:0.88,avg7:1.01,avg30:1.14,avg:1.14,low:0.3}},
+  '2019sm-fr-11':{localId:'11',names:["Moltres","Sulfura"],normal:{idProduct:479724,trend:1.21,avg7:1.08,avg30:1.23,avg:1.39,low:0.2},holo:{idProduct:581854,trend:2.5,avg7:2.23,avg30:2.64,avg:2.25,low:1}},
+  '2019sm-fr-12':{localId:'12',names:["Alolan Sandshrew","Sabelette d'Alola"],normal:{idProduct:479729,trend:0.49,avg7:0.54,avg30:0.54,avg:0.53,low:0.04},holo:{idProduct:581855,trend:0.58,avg7:0.59,avg30:0.68,avg:0.71,low:0.05}},
+  '2019sm-fr-13':{localId:'13',names:["Alolan Vulpix","Goupix d'Alola"],normal:{idProduct:479734,trend:0.97,avg7:0.65,avg30:1.03,avg:0.91,low:0.5},holo:{idProduct:581856,trend:16.02,avg7:14.13,avg30:11.57,avg:6.83,low:8}},
+  '2019sm-fr-14':{localId:'14',names:["Slowpoke","Ramoloss"],normal:{idProduct:479739,trend:0.95,avg7:1.07,avg30:0.94,avg:1.16,low:0.2},holo:{idProduct:581857,trend:6.65,avg7:7.12,avg30:4.41,avg:7.12,low:3}},
+  '2019sm-fr-15':{localId:'15',names:["Horsea","Hypotrempe"],normal:{idProduct:479744,trend:0.61,avg7:0.62,avg30:0.55,avg:0.49,low:0.15},holo:{idProduct:581858,trend:0.89,avg7:1.09,avg30:1.13,avg:1.14,low:0.2}},
+  '2019sm-fr-16':{localId:'16',names:["Staryu","Stari"],normal:{idProduct:479749,trend:0.54,avg7:0.49,avg30:0.5,avg:0.6,low:0.1},holo:{idProduct:581859,trend:1.19,avg7:1.02,avg30:1.28,avg:1.16,low:0.15}},
+  '2019sm-fr-17':{localId:'17',names:["Magikarp","Magicarpe"],normal:{idProduct:479754,trend:0.78,avg7:0.69,avg30:0.64,avg:0.67,low:0.41},holo:{idProduct:581860,trend:3.56,avg7:3.17,avg30:3.53,avg:3.13,low:0.4}},
+  '2019sm-fr-18':{localId:'18',names:["Lapras","Lokhlass"],normal:{idProduct:479759,trend:0.74,avg7:0.72,avg30:0.73,avg:0.9,low:0.04},holo:{idProduct:581861,trend:1.24,avg7:1.48,avg30:1.71,avg:1.36,low:0.3}},
+  '2019sm-fr-19':{localId:'19',names:["Articuno","Artikodin"],normal:{idProduct:479764,trend:1.67,avg7:1.9,avg30:1.45,avg:2.17,low:0.49},holo:{idProduct:581862,trend:1.68,avg7:1.48,avg30:2.72,avg:1.56,low:0.15}},
+  '2019sm-fr-20':{localId:'20',names:["Pikachu"],normal:{idProduct:479769,trend:2.36,avg7:2.21,avg30:2.12,avg:2.38,low:0.99},holo:{idProduct:581863,trend:5.97,avg7:4.79,avg30:5.69,avg:4.08,low:1.5}},
+  '2019sm-fr-21':{localId:'21',names:["Alolan Raichu","Raichu d'Alola"],normal:{idProduct:479774,trend:0.53,avg7:0.67,avg30:0.65,avg:0.83,low:0.05},holo:{idProduct:581865,trend:2.12,avg7:1.98,avg30:1.95,avg:1.95,low:0.5}},
+  '2019sm-fr-22':{localId:'22',names:["Alolan Geodude","Racaillou d'Alola"],normal:{idProduct:479779,trend:0.27,avg7:0.32,avg30:0.39,avg:0.36,low:0.15},holo:{idProduct:581866,trend:0.63,avg7:0.55,avg30:0.68,avg:0.55,low:0.1}},
+  '2019sm-fr-23':{localId:'23',names:["Magnemite","Magnéti"],normal:{idProduct:479784,trend:0.43,avg7:0.45,avg30:0.45,avg:0.39,low:0.02},holo:{idProduct:581867,trend:0.61,avg7:0.95,avg30:0.96,avg:0.62,low:0.02}},
+  '2019sm-fr-24':{localId:'24',names:["Voltorb","Voltorbe"],normal:{idProduct:479789,trend:0.52,avg7:0.49,avg30:0.5,avg:0.58,low:0.02},holo:{idProduct:581868,trend:0.88,avg7:0.68,avg30:1.16,avg:0.64,low:0.05}},
+  '2019sm-fr-25':{localId:'25',names:["Electabuzz","Élektek"],normal:{idProduct:479794,trend:0.46,avg7:0.32,avg30:0.44,avg:0.44,low:0.05},holo:{idProduct:581869,trend:1.11,avg7:1.02,avg30:1.18,avg:1.03,low:0.3}},
+  '2019sm-fr-26':{localId:'26',names:["Zapdos","Électhor"],normal:{idProduct:479799,trend:1.39,avg7:1.33,avg30:1.45,avg:1.9,low:0.49},holo:{idProduct:581870,trend:2.33,avg7:2.4,avg30:2.45,avg:2.43,low:0.5}},
+  '2019sm-fr-27':{localId:'27',names:["Gastly","Fantominus"],normal:{idProduct:479804,trend:0.7,avg7:0.79,avg30:0.63,avg:0.7,low:0.02},holo:{idProduct:581872,trend:0.81,avg7:0.82,avg30:1.09,avg:0.66,low:0.1}},
+  '2019sm-fr-28':{localId:'28',names:["Mankey","Férosinge"],normal:{idProduct:479809,trend:0.5,avg7:0.41,avg30:0.47,avg:0.42,low:0.02},holo:{idProduct:581874,trend:0.88,avg7:0.87,avg30:0.84,avg:0.6,low:0.1}},
+  '2019sm-fr-29':{localId:'29',names:["Onix"],normal:{idProduct:479814,trend:0.49,avg7:0.49,avg30:0.43,avg:0.45,low:0.02},holo:{idProduct:581876,trend:1.17,avg7:1.02,avg30:1.16,avg:1.04,low:0.25}},
+  '2019sm-fr-30':{localId:'30',names:["Cubone","Osselait"],normal:{idProduct:479819,trend:1.77,avg7:2.01,avg30:1.23,avg:2.58,low:0.2},holo:{idProduct:581878,trend:8.37,avg7:8.38,avg30:4.61,avg:9.55,low:10}},
+  '2019sm-fr-31':{localId:'31',names:["Rhyhorn","Rhinocorne"],normal:{idProduct:479824,trend:0.38,avg7:0.37,avg30:0.43,avg:0.31,low:0.08},holo:{idProduct:581880,trend:0.77,avg7:0.95,avg30:0.89,avg:0.8,low:0.2}},
+  '2019sm-fr-32':{localId:'32',names:["Alolan Meowth","Miaouss d'Alola"],normal:{idProduct:479829,trend:0.43,avg7:0.49,avg30:0.57,avg:0.69,low:0.25},holo:{idProduct:581882,trend:0.98,avg7:0.68,avg30:1.17,avg:0.68,low:0.1}},
+  '2019sm-fr-34':{localId:'34',names:["Alolan Dugtrio","Triopikeur d'Alola"],normal:{idProduct:479844,trend:0.6,avg7:0.67,avg30:0.58,avg:0.7,low:0.1},holo:{idProduct:581884,trend:0.87,avg7:0.88,avg30:0.81,avg:0.56,low:0.1}},
+  '2019sm-fr-35':{localId:'35',names:["Jigglypuff","Rondoudou"],normal:{idProduct:479849,trend:0.47,avg7:0.58,avg30:0.57,avg:0.54,low:0.15},holo:{idProduct:581886,trend:1.37,avg7:1.13,avg30:1.33,avg:1.25,low:0.45}},
+  '2019sm-fr-36':{localId:'36',names:["Dratini","Minidraco"],normal:{idProduct:479854,trend:0.48,avg7:0.47,avg30:0.55,avg:0.47,low:0.05},holo:{idProduct:581888,trend:1.47,avg7:1.55,avg30:1.57,avg:1.48,low:0.3}},
+  '2019sm-fr-37':{localId:'37',names:["Lickitung","Excelangue"],normal:{idProduct:479859,trend:0.62,avg7:0.59,avg30:0.58,avg:0.62,low:0.1},holo:{idProduct:581890,trend:0.99,avg7:1.11,avg30:1.22,avg:0.88,low:0.05}},
+  '2019sm-fr-38':{localId:'38',names:["Chansey","Leveinard"],normal:{idProduct:479864,trend:0.74,avg7:0.91,avg30:0.6,avg:0.97,low:0.25},holo:{idProduct:581892,trend:1.6,avg7:2.02,avg30:1.73,avg:1.8,low:0.5}},
+  '2019sm-fr-39':{localId:'39',names:["Kangaskhan","Kangourex"],normal:{idProduct:479869,trend:0.56,avg7:0.57,avg30:0.62,avg:0.57,low:0.19},holo:{idProduct:581893,trend:1.26,avg7:1.34,avg30:1.21,avg:1.19,low:0.25}},
+  '2019sm-fr-40':{localId:'40',names:["Eevee","Évoli"],normal:{idProduct:479874,trend:1.39,avg7:1.57,avg30:1.95,avg:1.65,low:0.38},holo:{idProduct:581895,trend:3.79,avg7:4.05,avg30:3.89,avg:3.11,low:1}}
+};
+
+function verifiedMcdonalds2019CardmarketVariant(card,variant){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS[id];
+  if(!rule)return null;
+  const setId=String(card?.set?.id||card?.setId||'').trim();
+  const local=exactLocalIdKey(card?.localId||card?.local_id||'');
+  const name=normText(card?.name||'');
+  const exactName=rule.names.some(x=>normText(x)===name);
+  if(setId!=='2019sm-fr'||local!==rule.localId||!exactName){
+    return {handled:true,matched:false,kind:'identity-mismatch'};
+  }
+  const v=canonicalVariant(variant||'Normal');
+  if(v!=='Normal'&&v!=='Holo')return {handled:true,matched:false,kind:'needs-exact-variant'};
+  const pricing=v==='Holo'?rule.holo:rule.normal;
+  return {handled:true,matched:true,variant:v,pricing,productId:pricing.idProduct,
+    source:"Cardmarket · Collection McDonald's 2019 · prodotto esatto per finitura · 2026-09-17"};
 }
 // McDonald's Collection 2021 — exact official Cardmarket Normal/Holo pairs.
 // Each pair was verified in expansion 3738 against the same exact metacard.
@@ -6281,6 +6398,12 @@ function verifiedGiratinaVstar201CardmarketVariant(card,variant){
     source:'Cardmarket · Lost Origin · Giratina VSTAR 201 Rainbow · prodotto esatto'};
 }
 function cardmarketValueForCardVariant(card,variant){
+  const mcd2019=verifiedMcdonalds2019CardmarketVariant(card,variant);
+  if(mcd2019?.handled){
+    if(!mcd2019.matched)return {value:0,kind:mcd2019.kind||'needs-exact-variant'};
+    const value=Number(mcd2019.pricing?.trend||0);
+    return {value:Number.isFinite(value)&&value>0?value:0,kind:'exact-mcdonalds-2019',productId:mcd2019.productId,source:mcd2019.source};
+  }
   const froakieCosmos=verifiedFroakie056CosmosCardmarketVariant(card,variant);
   if(froakieCosmos?.handled){
     if(!froakieCosmos.matched)return {value:0,kind:froakieCosmos.kind||'needs-exact-variant'};
@@ -6366,6 +6489,12 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
+  const mcd2019=verifiedMcdonalds2019CardmarketVariant(card,variant);
+  if(mcd2019?.handled){
+    if(!mcd2019.matched)return {low:null,trend:null,avg7:null,avg30:null};
+    const p=mcd2019.pricing||{};
+    return {low:p.low??null,trend:p.trend??null,avg7:p.avg7??null,avg30:p.avg30??null};
+  }
   const froakieCosmos=verifiedFroakie056CosmosCardmarketVariant(card,variant);
   if(froakieCosmos?.handled){
     if(!froakieCosmos.matched)return {low:null,trend:null,avg7:null,avg30:null};
