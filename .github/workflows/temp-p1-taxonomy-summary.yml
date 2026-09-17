@@ -1,0 +1,92 @@
+name: TEMP P1 taxonomy summary
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-p1-taxonomy-summary-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Expose P1 bodies in diagnostic report only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/test_card_identity_cardmarket_audit.py')
+          s=p.read_text()
+          old='''        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n'''
+          new='''        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n        "p1AmbiguousProducts": p1,\n'''
+          if old not in s: raise SystemExit('report anchor missing')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Summarize residual P1 taxonomy
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, collections, re
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          p1=r.get('p1AmbiguousProducts') or []
+          print('TOTAL',len(p1))
+          reason=collections.Counter()
+          sets=collections.Counter()
+          eras=collections.Counter()
+          for c in p1:
+              rs=str(c.get('reason') or '')
+              if 'più tcgdexId' in rs: key='shared-current-product'
+              elif 'non compare tra le righe fisiche base' in rs: key='top-not-base-row'
+              elif 'Più prodotti Cardmarket sono associati a finiture base' in rs: key='multiple-base-products'
+              elif 'non un product ID top-level' in rs: key='no-top-product'
+              elif 'non supera più' in rs: key='verified-rule-failed'
+              else: key='other'
+              reason[key]+=1
+              sid=str(c.get('setId') or c.get('tcgdexId','').split('-')[0])
+              sets[sid]+=1
+              if sid.startswith('base'): era='base'
+              elif sid.startswith(('jungle','fossil','gym','neo')): era='wotc-legacy'
+              elif sid.startswith(('ecard','ex')): era='e-card-ex'
+              elif sid.startswith(('dp','pl','hgss')): era='dp-hgss'
+              elif sid.startswith(('bw','xy','sm')): era='bw-xy-sm'
+              elif sid.startswith(('swsh','cel')): era='swsh'
+              elif sid.startswith(('sv','me')): era='sv-me'
+              elif sid.startswith(('mfb','svp','mep')): era='promo-special'
+              else: era='other'
+              eras[era]+=1
+          print('REASONS',json.dumps(reason,sort_keys=True))
+          print('ERAS',json.dumps(eras,sort_keys=True))
+          print('TOP_SETS',json.dumps(sets.most_common(35),ensure_ascii=False))
+          # Highest-priority non-Base candidates: modern-ish / special and small product sets.
+          candidates=[]
+          for c in p1:
+              cid=str(c.get('tcgdexId') or '')
+              sid=str(c.get('setId') or cid.split('-')[0])
+              if sid=='base1': continue
+              ids=c.get('allProductIds') or []
+              deltas=[]
+              for v in (c.get('trendDeltaVersusCurrent') or {}).values():
+                  try:deltas.append(abs(float(v)))
+                  except:pass
+              candidates.append((max(deltas) if deltas else 0,-len(ids),cid,c))
+          for _,__,cid,c in sorted(candidates,reverse=True)[:80]:
+              print('CANDIDATE',json.dumps({k:c.get(k) for k in (
+                  'tcgdexId','name','setId','localId','currentProductId','allProductIds',
+                  'baseRowProductIdsAccordingToTcgdex','sharedProductWithTcgdexIds',
+                  'physicalVariantsByProductId','cardmarketProductCatalog','realPriceGuideValues',
+                  'trendDeltaVersusCurrent','reason','recommendedAction'
+              )},ensure_ascii=False,sort_keys=True))
+          PY
