@@ -61,6 +61,14 @@ jobs:
 
           Path('.github/workflows/temp-fix-celebrations-classic-cardmarket.yml').unlink()
           PY
+      - name: Commit clean candidate
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Remove invalid Celebrations Classic Cardmarket overrides'
+          git push origin HEAD:fix/cardmarket-celebrations-classic-guard-20260917
       - name: Runtime audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
       - name: Clone TCGdex database
@@ -86,11 +94,3 @@ jobs:
                   raise SystemExit(f'{cid} must remain fail-closed P1')
           PY
           git diff --check
-      - name: Commit tested fix
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'Remove invalid Celebrations Classic Cardmarket overrides'
-          git push origin HEAD:fix/cardmarket-celebrations-classic-guard-20260917
