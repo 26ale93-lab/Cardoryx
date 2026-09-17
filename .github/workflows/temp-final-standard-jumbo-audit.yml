@@ -1,0 +1,68 @@
+name: TEMP finalize exact Standard Jumbo audit
+
+on:
+  push:
+    branches:
+      - fix/cardmarket-exact-standard-jumbo-audit-20260917
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Include exact Standard Jumbo identities in live audit fetches
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/test_card_identity_cardmarket_audit.py')
+          s=p.read_text()
+          old='''                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |\n                    {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)'''
+          new='''                    set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |\n                    set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) |\n                    {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)'''
+          if old not in s: raise SystemExit('live_targets anchor missing')
+          p.write_text(s.replace(old,new,1))
+          PY
+          git diff --check
+      - name: Commit and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/temp-final-standard-jumbo-audit.yml
+          git add scripts/test_card_identity_cardmarket_audit.py
+          git commit -m 'Fetch exact Standard Jumbo identities for audit'
+          git push origin HEAD:fix/cardmarket-exact-standard-jumbo-audit-20260917
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Assert exact delta and clean worktree
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          expected={'SAFE':1770,'EXACT_ALTERNATE_PRODUCT':156,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':271,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
+          if r['classificationTotals'] != expected:
+              raise SystemExit(f"unexpected totals {r['classificationTotals']} != {expected}")
+          ids=['svp-067','swshp-SWSH055','swshp-SWSH132','swshp-SWSH133','swshp-SWSH134','swshp-SWSH136','swshp-SWSH137','swshp-SWSH138']
+          idx={x['tcgdexId']:x for x in r['caseIndex']}
+          bad={i:idx.get(i) for i in ids if idx.get(i,{}).get('classification')!='SAFE'}
+          if bad: raise SystemExit(f'pair classifications failed: {bad}')
+          print(json.dumps({'totals':r['classificationTotals'],'verifiedStandardJumboIds':ids},indent=2))
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)" || { git status --short; exit 1; }
