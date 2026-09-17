@@ -1,0 +1,84 @@
+name: TEMP modern Additionals batch7 audit
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-modern-additionals-batch7-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Expose P1 bodies in diagnostic report only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/test_card_identity_cardmarket_audit.py')
+          s=p.read_text()
+          old='''        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n'''
+          new='''        "p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n        "p1AmbiguousProducts": p1,\n'''
+          if old not in s: raise SystemExit('report anchor missing')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Find modern cross-expansion candidates and verify live top-level
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          p1=r.get('p1AmbiguousProducts') or []
+          out=[]
+          for c in p1:
+              cid=str(c.get('tcgdexId') or '')
+              if not (cid.startswith('sv') or cid.startswith('me')):
+                  continue
+              ids=[int(x) for x in (c.get('allProductIds') or []) if x]
+              if len(ids)<2: continue
+              cat=c.get('cardmarketProductCatalog') or {}
+              rows=[cat.get(str(pid)) for pid in ids]
+              if any(not x for x in rows): continue
+              exps={x.get('idExpansion') for x in rows}
+              metas={x.get('idMetacard') for x in rows}
+              names={x.get('name') for x in rows}
+              if len(exps)<2 or len(metas)!=1 or None in metas or len(names)!=1:
+                  continue
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=45) as fh:
+                      live=json.load(fh)
+              except Exception as e:
+                  print('LIVE_ERROR',cid,repr(e)); continue
+              cm=(live.get('pricing') or {}).get('cardmarket') or {}
+              try: livepid=int(cm.get('idProduct') or cm.get('id_product') or 0)
+              except: livepid=0
+              variants=[]
+              for v in live.get('variants_detailed') or []:
+                  p=(v.get('thirdParty') or {}).get('cardmarket')
+                  if isinstance(p,dict): p=p.get('idProduct') or p.get('id_product')
+                  variants.append({'type':v.get('type'),'foil':v.get('foil'),'stamp':v.get('stamp'),'size':v.get('size'),'pid':p})
+              rec={
+                  'id':cid,'name':c.get('name'),'setId':c.get('setId'),'localId':c.get('localId'),
+                  'snapshotCurrent':c.get('currentProductId'),'allProductIds':ids,
+                  'catalog':{str(pid):cat.get(str(pid)) for pid in ids},
+                  'prices':c.get('realPriceGuideValues'),'liveTopProduct':livepid,
+                  'liveSet':live.get('set'),'liveVariants':variants,
+              }
+              out.append(rec)
+          print('MODERN_CROSS_EXPANSION_COUNT',len(out))
+          for x in out:
+              print('CANDIDATE',json.dumps(x,ensure_ascii=False,sort_keys=True))
+          PY
