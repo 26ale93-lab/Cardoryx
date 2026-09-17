@@ -1,0 +1,64 @@
+name: TEMP Cardmarket P1 exact physical batch4
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-p1-exact-physical-batch4-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Run current Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Inspect exact physical candidates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+
+          targets=['sv05-041','sv08-065','me01-073']
+          with urllib.request.urlopen('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',timeout=90) as r:
+              products=json.load(r)['products']
+          with urllib.request.urlopen('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',timeout=90) as r:
+              prices=json.load(r)['priceGuides']
+          bypid={int(x['idProduct']):x for x in products}
+          pby={int(x['idProduct']):x for x in prices}
+
+          report=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          def walk(obj):
+              if isinstance(obj,dict):
+                  if obj.get('tcgdexId') in targets:
+                      print('AUDIT_CASE',json.dumps(obj,ensure_ascii=False,sort_keys=True))
+                  for v in obj.values(): walk(v)
+              elif isinstance(obj,list):
+                  for v in obj: walk(v)
+          walk(report)
+
+          for cid in targets:
+              print('===',cid,'===')
+              with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=20) as r:
+                  d=json.load(r)
+              print('CARD',json.dumps({'id':d.get('id'),'name':d.get('name'),'localId':d.get('localId'),'set':d.get('set'),'pricing':d.get('pricing')},ensure_ascii=False))
+              seen=set()
+              for row in d.get('variants_detailed') or []:
+                  cm=(row.get('thirdParty') or {}).get('cardmarket') or (row.get('pricing') or {}).get('cardmarket') or {}
+                  pid=cm.get('idProduct') if isinstance(cm,dict) else cm
+                  print('ROW',json.dumps({'type':row.get('type'),'subtype':row.get('subtype'),'size':row.get('size'),'foil':row.get('foil'),'stamp':row.get('stamp'),'pid':pid,'catalog':bypid.get(int(pid)) if pid else None,'price':pby.get(int(pid)) if pid else None},ensure_ascii=False))
+                  if pid: seen.add(int(pid))
+              for pid in sorted(seen):
+                  x=bypid.get(pid)
+                  if x and x.get('idMetacard'):
+                      grp=sorted([r for r in products if r.get('idMetacard')==x['idMetacard']], key=lambda z:int(z['idProduct']))
+                      print('META_GROUP',pid,json.dumps(grp,ensure_ascii=False))
+          PY
