@@ -1,0 +1,43 @@
+name: TEMP verify exact Standard Jumbo audit
+
+on:
+  push:
+    branches:
+      - fix/cardmarket-exact-standard-jumbo-audit-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Assert exact delta
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
+          c=r['classificationTotals']
+          expected={'SAFE':1770,'EXACT_ALTERNATE_PRODUCT':156,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':271,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
+          if c != expected: raise SystemExit(f'unexpected totals {c} != {expected}')
+          ids=['svp-067','swshp-SWSH055','swshp-SWSH132','swshp-SWSH133','swshp-SWSH134','swshp-SWSH136','swshp-SWSH137','swshp-SWSH138']
+          idx={x['tcgdexId']:x for x in r['caseIndex']}
+          bad={i:idx.get(i) for i in ids if idx.get(i,{}).get('classification')!='SAFE'}
+          if bad: raise SystemExit(f'pair classifications failed: {bad}')
+          print(json.dumps({'totals':c,'verifiedStandardJumboIds':ids},indent=2))
+          PY
+          git diff --check
