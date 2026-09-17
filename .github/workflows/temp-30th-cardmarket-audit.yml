@@ -16,45 +16,36 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Clone pinned TCGdex database dependency
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run existing Cardmarket full audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Extract 30th Anniversary evidence
+      - name: Inspect live 30th TCGdex cards
         shell: bash
         run: |
           python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('artifacts/card_identity_cardmarket_audit_report.json')
-          d=json.loads(p.read_text())
-          hits=[]
-          def walk(x,path=''):
-              if isinstance(x,dict):
-                  s=' '.join(str(x.get(k,'')) for k in ('tcgdexId','id','setId','name','setName','cardmarketCode')).lower()
-                  if '30th' in s or '30°' in s or '30c' in s:
-                      hits.append((path,x))
-                  for k,v in x.items(): walk(v,f'{path}/{k}')
-              elif isinstance(x,list):
-                  for i,v in enumerate(x): walk(v,f'{path}/{i}')
-          walk(d)
-          print('=== 30TH HITS ===')
-          print('count',len(hits))
-          seen=set()
-          for path,x in hits:
-              ident=str(x.get('tcgdexId') or x.get('id') or '')
-              key=(ident,str(x.get('currentProductId') or x.get('productId') or ''))
-              if key in seen: continue
-              seen.add(key)
-              keep={k:x.get(k) for k in ('tcgdexId','id','name','setId','localId','currentProductId','alternateProductIds','allProductIds','realPriceGuideValues','cardmarketProductCatalog','reason','classification') if k in x}
-              print(path, json.dumps(keep, ensure_ascii=False))
-          print('=== COUNTERS ===')
-          for k,v in d.items():
-              if k in ('SAFE','EXACT_ALTERNATE_PRODUCT','P0_WRONG_PRODUCT','P1_AMBIGUOUS_PRODUCT','SOURCE_CONFLICT','UNMAPPED_EXACT_PRODUCT'):
-                  print(k,v)
+          import json, urllib.request
+          ids=['30th-001','30th-002','30th-010','30th-050','30th-100','30th-128']
+          for cid in ids:
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid, timeout=20) as r:
+                      d=json.load(r)
+                  print('===',cid,'===')
+                  print(json.dumps({
+                    'id':d.get('id'),'name':d.get('name'),'localId':d.get('localId'),
+                    'set':d.get('set'),'variants':d.get('variants'),'variants_detailed':d.get('variants_detailed'),
+                    'pricing':d.get('pricing')
+                  },ensure_ascii=False))
+              except Exception as e:
+                  print('===',cid,'ERROR===',repr(e))
           PY
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: 30th-cardmarket-audit
-          path: artifacts/card_identity_cardmarket_audit_report.json
+      - name: Inspect live 30th Classic sample
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          for cid in ['30th-c-001','30th-c-1']:
+              try:
+                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid, timeout=20) as r:
+                      d=json.load(r)
+                  print('===',cid,'===')
+                  print(json.dumps({'id':d.get('id'),'name':d.get('name'),'localId':d.get('localId'),'set':d.get('set'),'variants':d.get('variants'),'variants_detailed':d.get('variants_detailed'),'pricing':d.get('pricing')},ensure_ascii=False))
+              except Exception as e:
+                  print('===',cid,'ERROR===',repr(e))
+          PY
