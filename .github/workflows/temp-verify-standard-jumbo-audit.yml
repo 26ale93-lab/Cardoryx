@@ -1,4 +1,4 @@
-name: TEMP inspect exact Standard Jumbo audit
+name: TEMP inspect exact Standard Jumbo gates
 
 on:
   push:
@@ -18,34 +18,52 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Full Cardmarket audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Print target evidence
+      - name: Inspect exact gates
         shell: bash
         run: |
           python3 - <<'PY'
-          import json
-          from pathlib import Path
-          r=json.loads(Path('artifacts/card_identity_cardmarket_audit_report.json').read_text())
-          ids=['svp-067','swshp-SWSH055','swshp-SWSH132','swshp-SWSH133','swshp-SWSH134','swshp-SWSH136','swshp-SWSH137','swshp-SWSH138']
-          cases={x['tcgdexId']:x for x in r.get('p1WrongProduct',[]) + r.get('sourceConflicts',[]) + r.get('unmappedExactProduct',[])}
-          # Full case bodies are not indexed separately, so scan top-level recursively.
-          def walk(x):
-              if isinstance(x,dict):
-                  if x.get('tcgdexId') in ids and 'classification' in x and 'allProductIds' in x:
-                      cases[x['tcgdexId']]=x
-                  for v in x.values(): walk(v)
-              elif isinstance(x,list):
-                  for v in x: walk(v)
-          walk(r)
-          for i in ids:
-              c=cases.get(i)
-              if not c:
-                  print('MISSING',i); continue
-              out={k:c.get(k) for k in ['tcgdexId','name','setId','localId','currentProductId','allProductIds','classification','verifiedStandardJumboPair','verifiedStandardJumboProducts','physicalVariantsByProductId','cardmarketProductCatalog','realPriceGuideValues','reason']}
-              print('TARGET',json.dumps(out,ensure_ascii=False,sort_keys=True))
-          print('TOTALS',json.dumps(r['classificationTotals'],sort_keys=True))
+          import json, urllib.request
+          targets={
+            'svp-067': {'setId':'svp','localId':'067','name':'Roaring Moon ex','expansion':5241,'metacard':426438,'standard':740407,'jumbo':740408,'stamp':[]},
+            'swshp-SWSH055': {'setId':'swshp','localId':'SWSH055','name':'Hatterene V','expansion':2916,'metacard':322125,'standard':510180,'jumbo':510175,'stamp':[]},
+            'swshp-SWSH132': {'setId':'swshp','localId':'SWSH132','name':'Dragapult','expansion':2916,'metacard':345894,'standard':576731,'jumbo':576905,'stamp':['25th-celebration']},
+            'swshp-SWSH133': {'setId':'swshp','localId':'SWSH133','name':"Lance's Charizard V",'expansion':2916,'metacard':345895,'standard':576732,'jumbo':576906,'stamp':['25th-celebration']},
+            'swshp-SWSH134': {'setId':'swshp','localId':'SWSH134','name':'Dark Sylveon V','expansion':2916,'metacard':345896,'standard':576733,'jumbo':576907,'stamp':['25th-celebration']},
+            'swshp-SWSH136': {'setId':'swshp','localId':'SWSH136','name':'Mimikyu','expansion':2916,'metacard':345898,'standard':576735,'jumbo':576908,'stamp':['25th-celebration']},
+            'swshp-SWSH137': {'setId':'swshp','localId':'SWSH137','name':'Light Toxtricity','expansion':2916,'metacard':345899,'standard':576736,'jumbo':576909,'stamp':['25th-celebration']},
+            'swshp-SWSH138': {'setId':'swshp','localId':'SWSH138','name':'Hydreigon C','expansion':2916,'metacard':345900,'standard':576737,'jumbo':576910,'stamp':['25th-celebration']},
+          }
+          def get(url):
+            with urllib.request.urlopen(url,timeout=90) as r: return json.load(r)
+          products=get('https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json')['products']
+          guides=get('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json')['priceGuides']
+          bypid={int(x['idProduct']):x for x in products}
+          price={int(x['idProduct']):x for x in guides}
+          def pid(row):
+            cm=(row.get('thirdParty') or {}).get('cardmarket')
+            if isinstance(cm,dict): cm=cm.get('idProduct') or cm.get('id_product')
+            if not cm:
+              cm=((row.get('pricing') or {}).get('cardmarket') or {}).get('idProduct')
+            try:return int(cm)
+            except:return None
+          for cid,r in targets.items():
+            d=get('https://api.tcgdex.net/v2/en/cards/'+cid)
+            cm=(d.get('pricing') or {}).get('cardmarket') or {}
+            current=int(cm.get('idProduct') or cm.get('id_product') or 0)
+            rows=d.get('variants_detailed') or []
+            sr=[x for x in rows if pid(x)==r['standard']]
+            jr=[x for x in rows if pid(x)==r['jumbo']]
+            ps,pj=bypid.get(r['standard']),bypid.get(r['jumbo'])
+            gs,gj=price.get(r['standard']),price.get(r['jumbo'])
+            identity=(d.get('set') or {}).get('id')==r['setId'] and str(d.get('localId'))==r['localId'] and d.get('name')==r['name']
+            catalog=bool(ps and pj and ps.get('idExpansion')==r['expansion']==pj.get('idExpansion') and ps.get('idMetacard')==r['metacard']==pj.get('idMetacard') and ps.get('name')==pj.get('name'))
+            def shape(x,size):
+              return str(x.get('size') or ('standard' if size=='standard' else '')).lower()==size and sorted(x.get('stamp') or [])==sorted(r['stamp'])
+            srshape=[x for x in sr if shape(x,'standard')]
+            jrshape=[x for x in jr if shape(x,'jumbo')]
+            rowsok=len(srshape)==1 and len(jrshape)==1 and srshape[0].get('type')==jrshape[0].get('type')
+            sp=bool(gs and int(gs.get('idProduct') or 0)==r['standard'] and any(isinstance(gs.get(k),(int,float)) and gs.get(k)>0 for k in ('trend','avg7','avg30','avg','low')))
+            jp=bool(gj and int(gj.get('idProduct') or 0)==r['jumbo'] and any(isinstance(gj.get(k),(int,float)) and gj.get(k)>0 for k in ('trend','avg7','avg30','avg','low')))
+            out={'id':cid,'current':current,'identity':identity,'catalog':catalog,'standardRows':srshape,'jumboRows':jrshape,'rowsOk':rowsok,'standardGuideExists':bool(gs),'standardGuidePositive':sp,'jumboGuideExists':bool(gj),'jumboGuidePositive':jp,'standardGuide':gs,'jumboGuide':gj,'catalogStandard':ps,'catalogJumbo':pj}
+            print('GATE',json.dumps(out,ensure_ascii=False,sort_keys=True))
           PY
-          git diff --check
