@@ -1441,6 +1441,7 @@ def main():
     live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |
                     set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) |
+                    {"sv09-055", "me01-073"} |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
