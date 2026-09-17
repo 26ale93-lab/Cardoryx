@@ -106,6 +106,14 @@ VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS = {
     "ex5-98": {"setId":"ex5","localId":"98","name":"Regirock ex","primary":276172,"primaryType":"holo","primaryFoil":"cracked-ice","primaryStamp":[],"alternate":869536,"alternateType":"normal","alternateFoil":"","alternateStamp":["jason-klaczynski"]},
     "swshp-SWSH039": {"setId":"swshp","localId":"SWSH039","name":"Pikachu","primary":491189,"primaryType":"holo","primaryFoil":"cosmos","primaryStamp":[],"alternate":549406,"alternateType":"holo","alternateFoil":"","alternateStamp":["25th-celebration"]},
 }
+MFB_POKEBALL_EXACT_ROWS = {
+    "mfb-1": {"setId":"mfb","localId":"1","name":"Bulbasaur","deckToken":"bulbasaur","base":741976,"pokeball":741975},
+    "mfb-8": {"setId":"mfb","localId":"8","name":"Grass Energy","deckToken":"bulbasaur","base":741986,"pokeball":741985},
+    "mfb-16": {"setId":"mfb","localId":"16","name":"Fire Energy","deckToken":"charmander","base":741998,"pokeball":741997},
+    "mfb-17": {"setId":"mfb","localId":"17","name":"Pikachu","deckToken":"pikachu","base":742000,"pokeball":741999},
+    "mfb-24": {"setId":"mfb","localId":"24","name":"Lightning Energy","deckToken":"pikachu","base":742010,"pokeball":742009},
+    "mfb-25": {"setId":"mfb","localId":"25","name":"Squirtle","deckToken":"squirtle","base":742012,"pokeball":742011},
+}
 VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS = {
     "swshp-SWSH296": {"setId":"swshp","localId":"SWSH296","name":"Champions Festival","stamp":"worlds-2022","productId":671798,"staffProductId":672087},
     "svp-045": {"setId":"svp","localId":"045","name":"Paradise Resort","stamp":"worlds-2023","productId":726924,"staffProductId":727542},
@@ -1380,6 +1388,58 @@ process.stdout.write(JSON.stringify({productId:ok.idProduct,trend:ok.trend,low:o
     return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(card)],text=True))
 
 
+def runtime_mfb_pokeball_regression():
+    source=INDEX.read_text(encoding="utf-8")
+    def extract_fn(name):
+        marker=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",source)
+        if not marker: raise AssertionError(f"Missing production function {name}")
+        brace=source.find("{",marker.end());depth=0;quote=None;esc=False
+        for i in range(brace,len(source)):
+            ch=source[i]
+            if quote:
+                if esc: esc=False
+                elif ch=="\\": esc=True
+                elif ch==quote: quote=None
+                continue
+            if ch in ("'",'"',"`"): quote=ch
+            elif ch=="{": depth+=1
+            elif ch=="}":
+                depth-=1
+                if depth==0:return source[marker.start():i+1]
+        raise AssertionError(f"Unclosed production function {name}")
+    ids=list(MFB_POKEBALL_EXACT_ROWS)+["mfb-9"]
+    fixtures={};errors={};cache=Path(tempfile.gettempdir())/"cardoryx_mfb_pokeball_regression_v1"
+    for card_id in ids:
+        value,error=live_card(card_id,cache)
+        if value: fixtures[card_id]=value
+        if error: errors[card_id]=error
+    if errors or len(fixtures)!=len(ids): raise AssertionError(f"MFB live regression unavailable: {errors}")
+    start=source.index("const VERIFIED_MFB_POKEBALL_ROWS=")
+    end=source.index("const VERIFIED_PRIMARY_WORLDS_STAMPS=",start)
+    registry=source[start:end]
+    names=("normText","canonicalStamp","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel","cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails","tcgdexExactMfbPokeballPrice")
+    js="\n".join(extract_fn(n) for n in names if n!="tcgdexExactMfbPokeballPrice")+"\n"+registry+"\n"+extract_fn("tcgdexExactMfbPokeballPrice")
+    harness=r'''
+const fixtures=JSON.parse(process.argv[1]);
+const rules=JSON.parse(process.argv[2]);
+function fail(m){throw new Error(m)}
+if(canonicalStamp('MFB Poké Ball')!=='MFB Poké Ball')fail('taxonomy not canonicalized');
+const out={};
+for(const [id,rule] of Object.entries(rules)){
+  const c=fixtures[id];
+  const ok=tcgdexExactMfbPokeballPrice(c,'Normal','MFB Poké Ball');
+  if(!ok||Number(ok.idProduct)!==Number(rule.pokeball))fail(id+' exact Poké Ball product mismatch');
+  if(tcgdexExactMfbPokeballPrice(c,'Holo','MFB Poké Ball')!==null)fail(id+' wrong finish accepted');
+  if(tcgdexExactMfbPokeballPrice(c,'Normal','None')!==null)fail(id+' None stamp accepted');
+  if(tcgdexExactMfbPokeballPrice({...c,localId:'999'},'Normal','MFB Poké Ball')!==null)fail(id+' wrong localId accepted');
+  out[id]=Number(ok.idProduct);
+}
+if(tcgdexExactMfbPokeballPrice(fixtures['mfb-9'],'Normal','MFB Poké Ball')!==null)fail('mfb-9 contaminated special row accepted');
+process.stdout.write(JSON.stringify(out));
+'''
+    return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(fixtures,ensure_ascii=False),json.dumps(MFB_POKEBALL_EXACT_ROWS)],text=True))
+
+
 def main():
     args = cli()
     runtime_regression = runtime_cardmarket_regression()
@@ -1387,6 +1447,7 @@ def main():
     runtime_regression["mepSetLogoStaff"] = runtime_mep_set_logo_staff_regression()
     runtime_regression["ex5BeldumGymChallenge"] = runtime_ex5_beldum_gym_challenge_regression()
     runtime_regression["swsh028GameStop"] = runtime_swsh028_gamestop_regression()
+    runtime_regression["mfbPokeball"] = runtime_mfb_pokeball_regression()
     if args.runtime_only:
         print(json.dumps(runtime_regression, ensure_ascii=False, indent=2))
         return
@@ -1450,7 +1511,7 @@ def main():
     live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |
                     set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) | set(VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS) |
-                    set(VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS) |
+                    set(VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS) | set(MFB_POKEBALL_EXACT_ROWS) |
                     {"sv09-055", "me01-073"} |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
@@ -1647,6 +1708,33 @@ def main():
             if len(exact_rows) == 1:
                 live_swsh028_gamestop = True
                 live_swsh028_gamestop_pid = 742039
+
+        exact_mfb_pokeball_pair = False
+        exact_mfb_pokeball_products = None
+        if card_id in MFB_POKEBALL_EXACT_ROWS:
+            rule=MFB_POKEBALL_EXACT_ROWS[card_id]
+            identity_ok=bool((card.get("set") or {}).get("id")==rule["setId"] and norm_local(card.get("localId"))==norm_local(rule["localId"]) and card_identity(card).get("name")==rule["name"])
+            def exact_mfb_row(expected_pid, expected_stamps):
+                matched=[]
+                for row in live_card_detail.get("variants_detailed") or []:
+                    stamps=row.get("stamp") or []
+                    if isinstance(stamps,str): stamps=[stamps]
+                    cm=((row.get("pricing") or {}).get("cardmarket") or {})
+                    try: ppid=int(cm.get("idProduct") or cm.get("id_product"))
+                    except (TypeError,ValueError): ppid=None
+                    usable=any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+                    if (cm_id(row)==expected_pid and ppid==expected_pid and usable and str(row.get("type") or "").lower()=="normal" and not row.get("foil") and sorted(map(str,stamps))==sorted(expected_stamps) and str(row.get("size") or "standard").lower()=="standard"):
+                        matched.append(row)
+                return matched
+            base_rows=exact_mfb_row(rule["base"],[rule["deckToken"]])
+            pokeball_rows=exact_mfb_row(rule["pokeball"],[rule["deckToken"],"pokeball"])
+            pb,pp=products.get(rule["base"]),products.get(rule["pokeball"])
+            gb,gp=prices.get(rule["base"]),prices.get(rule["pokeball"])
+            catalogue_ok=bool(pb and pp and pb.get("idExpansion")==pp.get("idExpansion")==5526 and pb.get("idMetacard")==pp.get("idMetacard") and pb.get("name")==pp.get("name"))
+            guides_ok=bool(gb and gp and int(gb.get("idProduct") or 0)==rule["base"] and int(gp.get("idProduct") or 0)==rule["pokeball"])
+            exact_mfb_pokeball_pair=bool(identity_ok and current_pid==rule["base"] and set(ids)=={rule["base"],rule["pokeball"]} and len(base_rows)==1 and len(pokeball_rows)==1 and catalogue_ok and guides_ok)
+            if exact_mfb_pokeball_pair:
+                exact_mfb_pokeball_products={"base":rule["base"],"pokeball":rule["pokeball"]}
 
         exact_primary_worlds_pair = False
         exact_primary_worlds_products = None
@@ -1955,6 +2043,18 @@ def main():
             reason = ("Il prodotto corrente appartiene all'identità checklist esatta; ogni altra identità "
                       "TCGdex che lo riusava è ora protetta da un override Cardmarket esatto e fail-closed.")
             action = "Mantenere le guardie EX Deoxys esatte; nessun riuso del prodotto condiviso."
+        elif card_id in MFB_POKEBALL_EXACT_ROWS:
+            if exact_mfb_pokeball_pair and "VERIFIED_MFB_POKEBALL_ROWS" in source and "tcgdexExactMfbPokeballPrice" in source and "MFB Poké Ball" in source:
+                rule=MFB_POKEBALL_EXACT_ROWS[card_id]
+                classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+                resolved_pid=rule["base"]
+                resolved_value=(prices.get(rule["base"]) or {}).get("trend")
+                reason=("My First Battle espone una stampa regolare e una variante fisica First Pokémon/Starting Energy con bordo blu e simbolo Poké Ball; TCGdex e Cardmarket separano le due righe con productId e Price Guide distinti. Il runtime risolve la variante Poké Ball solo dopo selezione manuale esplicita.")
+                action="Mantenere il mapping sulle sole 6 identità verificate; nessuna regola per provenienza mini-mazzo, Potion/Switch o mfb-9."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason="La coppia My First Battle regolare/Poké Ball non supera più tutti i gate fisici e Cardmarket esatti."
+                action="Fail-closed; non usare provenienza del mini-mazzo come variante fisica."
         elif card_id in VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS:
             if exact_primary_worlds_pair and "VERIFIED_PRIMARY_WORLDS_STAMPS" in source and "tcgdexExactWorldsStampPrice" in source:
                 rule=VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS[card_id]
