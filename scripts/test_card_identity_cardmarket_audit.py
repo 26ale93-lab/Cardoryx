@@ -94,7 +94,9 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "ex4-83": {"base": 276060, "alternate": 275860, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-83"},
     "ex4-84": {"base": 276061, "alternate": 275861, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-84"},
     "ex4-86": {"base": 276063, "alternate": 275863, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-86"},
-    "ex4-88": {"base": 276065, "alternate": 275865, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-88"}
+    "ex4-88": {"base": 276065, "alternate": 275865, "stamp": "wrong-card-identity", "cardmarketCode": "EX4-88"},
+    "ex8-17": {"base": 276420, "alternate": 276419, "stamp": "wrong-card-identity", "cardmarketCode": "DX17"},
+    "ex8-18": {"base": 276421, "alternate": 276419, "stamp": "wrong-card-identity", "cardmarketCode": "DX18"}
 }
 MCDONALDS_2021_EXACT_PAIRS = {
     "2021swsh-1": {"localId": "1", "name": "Bulbasaur", "normal": 538778, "holo": 538783},
@@ -124,6 +126,10 @@ MCDONALDS_2021_EXACT_PAIRS = {
     "2021swsh-25": {"localId": "25", "name": "Pikachu", "normal": 539018, "holo": 539023},
 }
 PROTECTED_REVERSE = {"pl2-102", "pl3-26", "pl3-5", "pl3-59", "pl3-83", "sv10.5b-013"}
+EX8_VERIFIED_SHARED_PRODUCT_OWNERS = {
+    "ex8-16": {"productId": 276419, "blockedTcgdexIds": {"ex8-17", "ex8-18", "ex8-98", "ex8-99"}},
+    "ex8-22": {"productId": 276425, "blockedTcgdexIds": {"ex8-107"}},
+}
 EXPECTED_BASE_OVERRIDES = {
     "sv08-029": {"setId": "sv08", "localId": "029", "conflictingProduct": 794946, "baseProduct": 794286},
     "sv08-050": {"setId": "sv08", "localId": "050", "conflictingProduct": 794947, "baseProduct": 794316},
@@ -182,7 +188,9 @@ EXPECTED_BASE_OVERRIDES = {
     "ex4-83": {"setId": "ex4", "localId": "083", "conflictingProduct": 275860, "baseProduct": 276060},
     "ex4-84": {"setId": "ex4", "localId": "084", "conflictingProduct": 275861, "baseProduct": 276061},
     "ex4-86": {"setId": "ex4", "localId": "086", "conflictingProduct": 275863, "baseProduct": 276063},
-    "ex4-88": {"setId": "ex4", "localId": "088", "conflictingProduct": 275865, "baseProduct": 276065}
+    "ex4-88": {"setId": "ex4", "localId": "088", "conflictingProduct": 275865, "baseProduct": 276065},
+    "ex8-17": {"setId": "ex8", "localId": "017", "conflictingProduct": 276419, "baseProduct": 276420},
+    "ex8-18": {"setId": "ex8", "localId": "018", "conflictingProduct": 276419, "baseProduct": 276421}
 }
 
 
@@ -361,6 +369,10 @@ def override_matches(rule, card_id, set_id, local_id, current_product):
 
 def runtime_cardmarket_regression():
     """Execute the production JavaScript resolvers against focused runtime fixtures."""
+    mcd2019_rules = extract_js_object(
+        INDEX.read_text(encoding="utf-8"),
+        "VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS",
+    )
     fixtures = {
         "piplup": {
             "id": "sm12-54", "tcgdexId": "sm12-54", "name": "Piplup", "localId": "54",
@@ -551,6 +563,32 @@ def runtime_cardmarket_regression():
         card["variants"] = {"normal": False, "holo": True, "reverse": True}
         card["variants_detailed"] = [{"type":"holo","thirdParty":{"cardmarket":card["wrong"]},"pricing":{"cardmarket":{"idProduct":card["wrong"],"trend":1}}}]
         card["pricing"] = {"cardmarket":{"idProduct":card["wrong"],"trend":1}}
+    fixtures["mcd2019"] = [
+        {
+            "id": card_id, "tcgdexId": card_id, "name": rule["names"][0],
+            "localId": rule["localId"], "set": {"id": "2019sm-fr"},
+            "variants": {"normal": True, "holo": True, "reverse": False},
+            "normalProduct": rule["normal"]["idProduct"],
+            "holoProduct": rule["holo"]["idProduct"],
+            "normalTrend": rule["normal"]["trend"],
+            "holoTrend": rule["holo"]["trend"],
+        }
+        for card_id, rule in sorted(mcd2019_rules.items())
+    ]
+    fixtures["ex8_verified_batch"] = [
+        {"id":"ex8-17","tcgdexId":"ex8-17","name":"Deoxys","localId":"17","set":{"id":"ex8"},"wrong":276419,"correct":276420,"variant":"Normal","expected":15.66},
+        {"id":"ex8-18","tcgdexId":"ex8-18","name":"Deoxys","localId":"18","set":{"id":"ex8"},"wrong":276419,"correct":276421,"variant":"Normal","expected":6.22},
+    ]
+    for card in fixtures["ex8_verified_batch"]:
+        is_holo = card["variant"] == "Holo"
+        card["variants"] = {"normal": not is_holo, "holo": is_holo, "reverse": not is_holo}
+        card["variants_detailed"] = [{"type":"holo" if is_holo else "normal","thirdParty":{"cardmarket":card["wrong"]}}]
+        card["pricing"] = {"cardmarket":{"idProduct":card["wrong"],"trend":1}}
+    fixtures["zacianVUnion"] = {
+        "id":"swshp-SWSH163","tcgdexId":"swshp-SWSH163","name":"Zacian V-UNION",
+        "localId":"SWSH163","set":{"id":"swshp"},"variants":{"holo":True},
+        "pricing":{"cardmarket":{"idProduct":572163,"trend":3.58}},
+    }
     harness = r"""
 const assert=require('assert');
 const fs=require('fs');
@@ -597,7 +635,8 @@ globalThis.runtime={
   verifiedBaseCardmarketProductOverride,resolvedCardmarketPricingForCard,
   pricingWithResolvedCardmarket,knownCardmarketIdentityConflict,
   cardmarketValueForCardVariant,cardmarketStatsForCardVariant,
-  verifiedVariantPrice,verifiedStampPrice,documentedVariantsForCard,renderScanValue,cardPriceInfo,
+  verifiedVariantPrice,verifiedStampPrice,verifiedMcdonalds2019CardmarketVariant,
+  documentedVariantsForCard,renderScanValue,cardPriceInfo,
   setSelected:c=>{selectedCard=c;scanPriceCard=null}
 };`,context);
 const r=context.runtime;
@@ -800,6 +839,42 @@ for(const card of fixtures.ex4_verified_batch){
   assert.strictEqual(r.knownCardmarketIdentityConflict({...card,id:card.id+'-wrong',tcgdexId:card.tcgdexId+'-wrong',localId:'999'},card.correct)?.kind,'identity-mismatch');
   assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
 }
+for(const card of fixtures.ex8_verified_batch){
+  const o=r.verifiedBaseCardmarketProductOverride(card);
+  assert.strictEqual(o?.pricing?.idProduct,card.correct);
+  assert.strictEqual(r.resolvedCardmarketPricingForCard(card)?.idProduct,card.correct);
+  assert.strictEqual(r.knownCardmarketIdentityConflict(card,card.wrong)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,id:card.id+'-wrong',tcgdexId:card.tcgdexId+'-wrong',localId:'999'},card.correct)?.kind,'identity-mismatch');
+  assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
+  const value=r.cardmarketValueForCardVariant(card,card.variant);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify({value:value.value,productId:value.productId})),{value:card.expected,productId:card.correct});
+}
+const ex8Deoxys16={id:'ex8-16',tcgdexId:'ex8-16',name:'Deoxys',localId:'16',set:{id:'ex8'},pricing:{cardmarket:{idProduct:276419,trend:2}}};
+const ex8Rayquaza22={id:'ex8-22',tcgdexId:'ex8-22',name:'Rayquaza',localId:'22',set:{id:'ex8'},pricing:{cardmarket:{idProduct:276425,trend:3}}};
+assert.strictEqual(r.knownCardmarketIdentityConflict(ex8Deoxys16,276419),null);
+assert.strictEqual(r.knownCardmarketIdentityConflict(ex8Rayquaza22,276425),null);
+assert.strictEqual(r.knownCardmarketIdentityConflict({...ex8Deoxys16,localId:'17'},276419)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...ex8Rayquaza22,localId:'107'},276425)?.kind,'identity-mismatch');
+for(const [id,local,name,product] of [['ex8-98','98','Deoxys ex',276419],['ex8-99','99','Deoxys ex',276419],['ex8-107','107','Rayquaza ☆',276425]]){
+  assert.strictEqual(r.knownCardmarketIdentityConflict({id,tcgdexId:id,localId:local,name,set:{id:'ex8'}},product)?.kind,'identity-mismatch');
+}
+for(const card of fixtures.mcd2019){
+  const normal=r.verifiedMcdonalds2019CardmarketVariant(card,'Normal');
+  const holo=r.verifiedMcdonalds2019CardmarketVariant(card,'Holo');
+  assert.strictEqual(normal?.productId,card.normalProduct);
+  assert.strictEqual(holo?.productId,card.holoProduct);
+  assert.strictEqual(r.cardmarketValueForCardVariant(card,'Normal').value,card.normalTrend);
+  assert.strictEqual(r.cardmarketValueForCardVariant(card,'Holo').value,card.holoTrend);
+  assert.strictEqual(r.cardmarketValueForCardVariant(card,'Reverse Holo').value,0);
+  assert.strictEqual(r.verifiedMcdonalds2019CardmarketVariant({...card,id:card.id+'x',tcgdexId:card.tcgdexId+'x'},'Normal'),null);
+  assert.strictEqual(r.verifiedMcdonalds2019CardmarketVariant({...card,set:{id:'2019sm-fr-wrong'}},'Normal')?.matched,false);
+  assert.strictEqual(r.verifiedMcdonalds2019CardmarketVariant({...card,localId:'999'},'Normal')?.matched,false);
+  assert.strictEqual(r.verifiedMcdonalds2019CardmarketVariant({...card,name:card.name+' wrong'},'Normal')?.matched,false);
+}
+const zacian=fixtures.zacianVUnion;
+assert.strictEqual(r.knownCardmarketIdentityConflict(zacian,572163),null);
+assert.strictEqual(r.knownCardmarketIdentityConflict(zacian,576915)?.kind,'identity-mismatch');
+assert.strictEqual(r.knownCardmarketIdentityConflict({...zacian,id:'swshp-SWSH164',tcgdexId:'swshp-SWSH164',localId:'SWSH164'},572163)?.kind,'identity-mismatch');
 const normal=r.cardmarketValueForCardVariant(p,'Normal');
 const reverse=r.cardmarketValueForCardVariant(p,'Reverse Holo');
 assert.deepStrictEqual(JSON.parse(JSON.stringify({value:normal.value,productId:normal.productId})),{value:0.17,productId:407919});
@@ -1220,8 +1295,11 @@ def main():
 
     source = INDEX.read_text(encoding="utf-8")
     base_overrides = extract_js_object(source, "VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
+    mcd2019_pairs = extract_js_object(source, "VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
-        raise AssertionError("Base Cardmarket override registry differs from the 20 audited P0 identities")
+        raise AssertionError("Base Cardmarket override registry differs from the audited P0 identities")
+    if len(mcd2019_pairs) != 39:
+        raise AssertionError("McDonald's Collection 2019 registry must contain exactly 39 audited identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
     torkoal_guard = "knownCardmarketIdentityConflict" in source and "sm12-29" in source and "398524" in source
     protected_reverse = {card_id: card_id in source for card_id in sorted(PROTECTED_REVERSE)}
@@ -1439,6 +1517,39 @@ def main():
         elif card_id in PROTECTED_REVERSE:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "Conflitto Reverse Cardmarket noto e già protetto con identità/prodotto esatti.", "Mantenere il fail-closed esistente."
+        elif card_id in mcd2019_pairs:
+            rule = mcd2019_pairs[card_id]
+            normal, holo = rule.get("normal") or {}, rule.get("holo") or {}
+            pn, ph = products.get(int(normal.get("idProduct") or 0)), products.get(int(holo.get("idProduct") or 0))
+            gn, gh = prices.get(int(normal.get("idProduct") or 0)), prices.get(int(holo.get("idProduct") or 0))
+            same_meta = bool(pn and ph and pn.get("idExpansion") == 3354 and ph.get("idExpansion") == 3354 and
+                             pn.get("idMetacard") == ph.get("idMetacard") and pn.get("idMetacard") is not None)
+            exact_names = bool(pn and ph and pn.get("name") == ph.get("name") and
+                               norm_local(card.get("localId")) == norm_local(rule.get("localId")))
+            exact_rows = bool(
+                set(ids) == {int(normal.get("idProduct") or 0), int(holo.get("idProduct") or 0)} and
+                any(v.get("finish") == "normal" for v in details.get(int(normal.get("idProduct") or 0), [])) and
+                any(v.get("finish") == "holo" for v in details.get(int(holo.get("idProduct") or 0), []))
+            )
+            priced = bool(gn and gh and isinstance(gn.get("trend"), (int, float)) and gn.get("trend") > 0 and
+                          isinstance(gh.get("trend"), (int, float)) and gh.get("trend") > 0)
+            snapshot_matches = all(
+                (rule.get(finish) or {}).get(key) == guide.get(key)
+                for finish, guide in (("normal", gn or {}), ("holo", gh or {}))
+                for key in ("idProduct", "trend", "avg7", "avg30", "avg", "low")
+            )
+            if same_meta and exact_names and exact_rows and priced and snapshot_matches:
+                classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+                resolved_pid = int(normal["idProduct"])
+                resolved_value = normal.get("trend")
+                reason = ("McDonald's Collection 2019 ha prodotti Cardmarket Normal/Holo distinti, "
+                          "verificati nello stesso set e metacard ufficiale; il runtime li separa per "
+                          "identità, nome localizzato e finitura esatti.")
+                action = "Mantenere le 39 coppie esatte; nessuna formula productId e nessun fallback fra finiture."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La coppia McDonald's 2019 non supera più i controlli catalogo/metacard/righe/prezzo ufficiali."
+                action = "Fail-closed e nuova verifica del catalogo Cardmarket."
         elif card_id in MCDONALDS_2021_EXACT_PAIRS:
             rule = MCDONALDS_2021_EXACT_PAIRS[card_id]
             pn, ph = products.get(rule["normal"]), products.get(rule["holo"])
@@ -1478,6 +1589,31 @@ def main():
                       "`set-logo + staff`, ciascuna con il proprio productId e Price Guide Cardmarket. "
                       "Il runtime Cardoryx le risolve separatamente senza fallback tra stamp.")
             action = "Mantenere il resolver set-logo esatto; nessun mapping statico e nessun riuso prezzo fra Set Stamp e Staff."
+        elif (card_id in EX8_VERIFIED_SHARED_PRODUCT_OWNERS and
+              current_pid == EX8_VERIFIED_SHARED_PRODUCT_OWNERS[card_id]["productId"] and
+              set(shared) == EX8_VERIFIED_SHARED_PRODUCT_OWNERS[card_id]["blockedTcgdexIds"] and
+              "EX Deoxys prodotti checklist verificati" in source):
+            classification, priority, confidence = "SAFE", None, "HIGH"
+            reason = ("Il prodotto corrente appartiene all'identità checklist esatta; ogni altra identità "
+                      "TCGdex che lo riusava è ora protetta da un override Cardmarket esatto e fail-closed.")
+            action = "Mantenere le guardie EX Deoxys esatte; nessun riuso del prodotto condiviso."
+        elif card_id == "swshp-SWSH163":
+            standard, oversized = products.get(572163), products.get(576915)
+            exact_oversized_pair = bool(
+                current_pid == 572163 and set(ids) == {572163, 576915} and standard and oversized and
+                standard.get("name") == "Zacian V-UNION [Union Gain]" and
+                oversized.get("name") == "Zacian V-UNION [Oversized]" and
+                prices.get(572163) and prices.get(576915)
+            )
+            if exact_oversized_pair:
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                reason = ("Il prodotto 572163 è la carta standard SWSH163; 576915 è esplicitamente Oversized "
+                          "nel catalogo ufficiale ed è bloccato dal runtime per la carta standard.")
+                action = "Mantenere la guardia esatta standard/Oversized; nessun fallback fra formati fisici."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La distinzione standard/Oversized non è più dimostrata dalle fonti ufficiali correnti."
+                action = "Fail-closed e nuova verifica del catalogo Cardmarket."
         elif live_exact_base_evidence and not snapshot_exact_alternate_product:
             classification, priority, confidence = "SAFE", None, "HIGH"
             resolved_pid = live_pid
