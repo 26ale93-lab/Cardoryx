@@ -1,0 +1,62 @@
+name: TEMP Base Set edition taxonomy audit
+
+on:
+  push:
+    branches:
+      - diagnostic/cardmarket-base1-edition-taxonomy-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch Cardmarket catalogue and price guide
+        shell: bash
+        run: |
+          curl -fsSL https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json -o /tmp/products.json
+          curl -fsSL https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json -o /tmp/prices.json
+      - name: Inspect representative Base Set identities
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          products=json.load(open('/tmp/products.json'))['products']
+          guides=json.load(open('/tmp/prices.json'))['priceGuides']
+          bypid={int(x['idProduct']):x for x in products}
+          price={int(x['idProduct']):x for x in guides}
+          ids=['base1-4','base1-2','base1-15','base1-52']
+          for cid in ids:
+              with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r:
+                  c=json.load(r)
+              pids=set()
+              variants=[]
+              for v in c.get('variants_detailed') or []:
+                  p=(v.get('thirdParty') or {}).get('cardmarket')
+                  if isinstance(p,dict): p=p.get('idProduct') or p.get('id_product')
+                  try:p=int(p)
+                  except:p=None
+                  if p:pids.add(p)
+                  variants.append({
+                    'type':v.get('type'),'foil':v.get('foil'),'stamp':v.get('stamp'),'size':v.get('size'),
+                    'firstEdition':v.get('firstEdition'),'subtype':v.get('subtype'),'pid':p,
+                    'pricing':(v.get('pricing') or {}).get('cardmarket')
+                  })
+              cm=(c.get('pricing') or {}).get('cardmarket') or {}
+              try:top=int(cm.get('idProduct') or cm.get('id_product') or 0)
+              except:top=0
+              if top:pids.add(top)
+              print('BASE1',json.dumps({
+                'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':c.get('set'),
+                'topProduct':top,'topPricing':cm,'variants':variants,
+                'catalog':{str(p):bypid.get(p) for p in sorted(pids)},
+                'priceGuide':{str(p):price.get(p) for p in sorted(pids)}
+              },ensure_ascii=False,sort_keys=True))
+          PY
