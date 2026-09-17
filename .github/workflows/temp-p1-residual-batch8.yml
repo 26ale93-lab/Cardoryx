@@ -1,0 +1,48 @@
+name: TEMP residual P1 batch 8 diagnostic
+on:
+  push:
+    branches: [diagnostic/cardmarket-p1-residual-batch8-20260917]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Run full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Summarize residual P1
+        run: |
+          python3 - <<'PY'
+          import json, collections
+          from pathlib import Path
+          p=Path('artifacts/card_identity_cardmarket_audit_report.json')
+          d=json.loads(p.read_text())
+          cases=d.get('cases') or d.get('results') or []
+          if isinstance(cases, dict):
+              rows=list(cases.values())
+          else:
+              rows=list(cases)
+          p1=[]
+          for r in rows:
+              if not isinstance(r,dict): continue
+              cls=r.get('classification') or r.get('status')
+              if cls!='P1_AMBIGUOUS_PRODUCT': continue
+              cid=r.get('tcgdexId') or r.get('id') or r.get('cardId') or ''
+              if not cid: continue
+              x=dict(r); x['_id']=cid; p1.append(x)
+          print('P1_COUNT',len(p1))
+          by=collections.Counter(x['_id'].split('-',1)[0] for x in p1)
+          print('P1_BY_SET',json.dumps(by.most_common(),ensure_ascii=False))
+          blocked_prefix={'base1','base2','base3','base4','base5','gym1','gym2','neo1','neo2','neo3','neo4','ecard1','ecard2','ecard3','pl3','mfb'}
+          small=[x for x in p1 if x['_id'].split('-',1)[0] not in blocked_prefix]
+          print('NONBLOCKED_COUNT',len(small))
+          for x in small:
+              keep={k:x.get(k) for k in ['_id','tcgdexId','id','name','setId','localId','currentProductId','alternateProductIds','currentCardoryxValue','classification','reason','action','confidence','verifiedPrimarySpecialPair','liveCurrentProductId','liveProductIds'] if k in x or k=='_id'}
+              print('CASE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          PY
