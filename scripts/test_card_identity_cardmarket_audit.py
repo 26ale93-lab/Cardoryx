@@ -193,6 +193,64 @@ EXPECTED_BASE_OVERRIDES = {
     "ex8-18": {"setId": "ex8", "localId": "018", "conflictingProduct": 276419, "baseProduct": 276421}
 }
 
+# P1 mass batch 2: every tuple is an independently verified exact catalogue
+# identity (set/localId/current wrong product/correct product). No arithmetic
+# relationship between Cardmarket IDs is used by either audit or production.
+BATCH2_BASE_OVERRIDE_ROWS = {
+    "gym1-27": ("gym1", "27", 274142, 274163), "gym1-62": ("gym1", "62", 274171, 274198),
+    "gym1-46": ("gym1", "46", 274152, 274182), "gym1-49": ("gym1", "49", 274152, 274185),
+    "gym1-57": ("gym1", "57", 274154, 274193), "gym1-66": ("gym1", "66", 274151, 274202),
+    "gym1-68": ("gym1", "68", 274151, 274204), "gym1-69": ("gym1", "69", 274151, 274205),
+    "gym1-70": ("gym1", "70", 274151, 274206), "gym1-72": ("gym1", "72", 274151, 274208),
+    "gym1-74": ("gym1", "74", 274151, 274210), "gym1-76": ("gym1", "76", 274152, 274212),
+    "gym1-77": ("gym1", "77", 274152, 274213), "gym1-78": ("gym1", "78", 274152, 274214),
+    "gym1-80": ("gym1", "80", 274153, 274216), "gym1-83": ("gym1", "83", 274153, 274219),
+    "gym1-85": ("gym1", "85", 274154, 274221), "gym2-74": ("gym2", "74", 274286, 274342),
+    "gym2-79": ("gym2", "79", 274287, 274347), "gym2-80": ("gym2", "80", 274287, 274348),
+    "gym2-94": ("gym2", "94", 274288, 274362), "gym2-97": ("gym2", "97", 274288, 274365),
+    "neo1-11": ("neo1", "11", 274410, 274411), "neo1-18": ("neo1", "18", 274417, 274418),
+    "neo1-29": ("neo1", "29", 274428, 274429), "neo1-32": ("neo1", "32", 274431, 274432),
+    "neo1-5": ("neo1", "5", 274404, 274405), "neo1-47": ("neo1", "47", 274446, 274447),
+    "neo1-54": ("neo1", "54", 274453, 274454), "neo1-57": ("neo1", "57", 274456, 274457),
+    "neo1-81": ("neo1", "81", 274480, 274481), "neo2-20": ("neo2", "20", 274512, 274531),
+    "neo2-32": ("neo2", "32", 274524, 274543), "neo2-39": ("neo2", "39", 274516, 274550),
+    "neo3-16": ("neo3", "16", 274589, 274602), "neo3-17": ("neo3", "17", 274592, 274603),
+    "neo3-18": ("neo3", "18", 274593, 274604), "neo3-22": ("neo3", "22", 274599, 274608),
+    "neo3-27": ("neo3", "27", 274600, 274613), "hgss1-108": ("hgss1", "108", 278992, 279080),
+    "hgss1-110": ("hgss1", "110", 279004, 279082), "hgss1-123": ("hgss1", "123", 278976, 279095),
+    "pl2-1": ("pl2", "1", 278570, 278575), "pl2-2": ("pl2", "2", 278569, 278576),
+    "pl2-3": ("pl2", "3", 278572, 278577), "pl2-4": ("pl2", "4", 278571, 278578),
+    "pl2-6": ("pl2", "6", 278574, 278580),
+    "cel25cc-cc020": ("cel25cc", "CC020", 576747, 576790),
+    "cel25cc-cc021": ("cel25cc", "CC021", 576755, 576791),
+    "swshp-swsh055": ("swshp", "SWSH055", 510175, 510180),
+}
+EXPECTED_BASE_OVERRIDES.update({
+    card_id: {"setId": set_id, "localId": local_id, "conflictingProduct": wrong, "baseProduct": correct}
+    for card_id, (set_id, local_id, wrong, correct) in BATCH2_BASE_OVERRIDE_ROWS.items()
+})
+CONFIRMED_BASE_PRODUCT_CONFLICTS.update({
+    card_id: {"base": correct, "alternate": wrong, "stamp": "exact-wrong-physical-product", "cardmarketCode": local_id}
+    for card_id, (_, local_id, wrong, correct) in BATCH2_BASE_OVERRIDE_ROWS.items()
+})
+
+BATCH2_SHARED_PRODUCT_OWNERS = {
+    "gym1-6": ("gym1", "6", "Lt. Surge's Electabuzz", 274142),
+    "gym1-35": ("gym1", "35", "Blaine's Growlithe", 274171),
+    "neo1-10": ("neo1", "10", "Meganium", 274410), "neo1-17": ("neo1", "17", "Typhlosion", 274417),
+    "neo1-28": ("neo1", "28", "Bayleef", 274428), "neo1-31": ("neo1", "31", "Croconaw", 274431),
+    "neo1-4": ("neo1", "4", "Feraligatr", 274404), "neo1-46": ("neo1", "46", "Quilava", 274446),
+    "neo1-53": ("neo1", "53", "Chikorita", 274453), "neo1-56": ("neo1", "56", "Cyndaquil", 274456),
+    "neo1-80": ("neo1", "80", "Totodile", 274480), "neo2-1": ("neo2", "1", "Espeon", 274512),
+    "neo2-13": ("neo2", "13", "Umbreon", 274524), "neo3-3": ("neo3", "3", "Celebi", 274589),
+    "neo3-6": ("neo3", "6", "Entei", 274592), "neo3-7": ("neo3", "7", "Ho-oh", 274593),
+    "neo3-13": ("neo3", "13", "Raikou", 274599), "neo3-14": ("neo3", "14", "Suicune", 274600),
+    "hgss1-20": ("hgss1", "20", "Feraligatr", 278992), "hgss1-32": ("hgss1", "32", "Typhlosion", 279004),
+    "hgss1-4": ("hgss1", "4", "Gyarados", 278976), "pl2-RT1": ("pl2", "RT1", "Fan Rotom", 278570),
+    "pl2-RT2": ("pl2", "RT2", "Frost Rotom", 278569), "pl2-RT3": ("pl2", "RT3", "Heat Rotom", 278572),
+    "pl2-RT4": ("pl2", "RT4", "Mow Rotom", 278571), "pl2-RT6": ("pl2", "RT6", "Charon's Choice", 278574),
+}
+
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -373,6 +431,10 @@ def runtime_cardmarket_regression():
         INDEX.read_text(encoding="utf-8"),
         "VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS",
     )
+    exact_guides = extract_js_object(
+        INDEX.read_text(encoding="utf-8"),
+        "VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES",
+    )
     fixtures = {
         "piplup": {
             "id": "sm12-54", "tcgdexId": "sm12-54", "name": "Piplup", "localId": "54",
@@ -400,6 +462,23 @@ def runtime_cardmarket_regression():
         "pikachu": {"id": "sv05-051", "tcgdexId": "sv05-051", "name": "Pikachu",
                     "localId": "051", "set": {"id": "sv05", "name": "Cronoforze"}},
     }
+    fixtures["batch2_base"] = [
+        {
+            "id": card_id, "tcgdexId": card_id, "name": exact_guides[card_id]["name"],
+            "localId": local_id, "set": {"id": set_id}, "wrong": wrong, "correct": correct,
+            "pricing": {"cardmarket": {"idProduct": wrong, "trend": 999}},
+            "variants_detailed": [],
+        }
+        for card_id, (set_id, local_id, wrong, correct) in sorted(BATCH2_BASE_OVERRIDE_ROWS.items())
+    ]
+    fixtures["batch2_owners"] = [
+        {
+            "id": card_id, "tcgdexId": card_id, "name": name, "localId": local_id,
+            "set": {"id": set_id}, "product": product,
+            "pricing": {"cardmarket": {"idProduct": product, "trend": 1}},
+        }
+        for card_id, (set_id, local_id, name, product) in sorted(BATCH2_SHARED_PRODUCT_OWNERS.items())
+    ]
     fixtures["tyranitar"] = {
         "id": "ecard1-66", "tcgdexId": "ecard1-66", "name": "Tyranitar", "localId": "66",
         "set": {"id": "ecard1", "name": "Expedition Base Set"}, "rarity": "Rare",
@@ -848,6 +927,23 @@ for(const card of fixtures.ex8_verified_batch){
   assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
   const value=r.cardmarketValueForCardVariant(card,card.variant);
   assert.deepStrictEqual(JSON.parse(JSON.stringify({value:value.value,productId:value.productId})),{value:card.expected,productId:card.correct});
+}
+for(const card of fixtures.batch2_base){
+  const o=r.verifiedBaseCardmarketProductOverride(card);
+  assert.strictEqual(o?.pricing?.idProduct,card.correct);
+  assert.strictEqual(r.resolvedCardmarketPricingForCard(card)?.idProduct,card.correct);
+  assert.strictEqual(r.knownCardmarketIdentityConflict(card,card.wrong)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,id:card.id+'-other',tcgdexId:card.tcgdexId+'-other'},card.correct)?.kind,'identity-mismatch');
+  assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,set:{id:card.set.id+'-other'}}),null);
+  assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,localId:card.localId+'X'}),null);
+  assert.strictEqual(r.verifiedBaseCardmarketProductOverride({...card,name:card.name+' wrong'}),null);
+}
+for(const card of fixtures.batch2_owners){
+  assert.strictEqual(r.knownCardmarketIdentityConflict(card,card.product),null);
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,id:card.id+'-other',tcgdexId:card.tcgdexId+'-other'},card.product)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,set:{id:card.set.id+'-other'}},card.product)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,localId:card.localId+'X'},card.product)?.kind,'identity-mismatch');
+  assert.strictEqual(r.knownCardmarketIdentityConflict({...card,name:card.name+' wrong'},card.product)?.kind,'identity-mismatch');
 }
 const ex8Deoxys16={id:'ex8-16',tcgdexId:'ex8-16',name:'Deoxys',localId:'16',set:{id:'ex8'},pricing:{cardmarket:{idProduct:276419,trend:2}}};
 const ex8Rayquaza22={id:'ex8-22',tcgdexId:'ex8-22',name:'Rayquaza',localId:'22',set:{id:'ex8'},pricing:{cardmarket:{idProduct:276425,trend:3}}};
@@ -1501,12 +1597,18 @@ def main():
                 resolved_pid = inversion["base"]
                 resolved_value = next((exact_cm.get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
                                        if isinstance(exact_cm.get(key), (int, float)) and exact_cm.get(key) > 0), None)
+                if resolved_value is None:
+                    official_guide = prices.get(inversion["base"]) or {}
+                    resolved_value = next((official_guide.get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
+                                           if isinstance(official_guide.get(key), (int, float)) and official_guide.get(key) > 0), None)
                 classification, priority = "SAFE", None
                 if exact_cm:
                     reason = "Il resolver applica il prodotto base verificato solo alla quadrupla identità esatta e legge la Price Guide dalla riga live esatta."
+                elif resolved_value is not None:
+                    reason = "Il resolver applica il prodotto esatto solo alla quadrupla identità verificata e usa la Price Guide ufficiale congelata per quel productId."
                 else:
                     reason = "La quadrupla identità esatta blocca il prodotto conflittuale; la Price Guide del prodotto base non è presente nella riga live e il resolver resta fail-closed."
-                action = "Mantenere la guardia esatta e il fail-closed; nessun prezzo statico."
+                action = "Mantenere la guardia bidirezionale esatta; nessuna euristica o condivisione cross-identità."
             else:
                 classification, priority = "P0_WRONG_PRODUCT", "P0"
                 reason = "Il conflitto di prodotto è dimostrato ma la guardia esatta non è disponibile."
@@ -1533,10 +1635,12 @@ def main():
             )
             priced = bool(gn and gh and isinstance(gn.get("trend"), (int, float)) and gn.get("trend") > 0 and
                           isinstance(gh.get("trend"), (int, float)) and gh.get("trend") > 0)
+            # Cardmarket prices are mutable market observations. Identity must
+            # remain exact when those values move, so this gate compares the
+            # independently verified product IDs, not stale numeric prices.
             snapshot_matches = all(
-                (rule.get(finish) or {}).get(key) == guide.get(key)
+                int((rule.get(finish) or {}).get("idProduct") or 0) == int((guide or {}).get("idProduct") or 0)
                 for finish, guide in (("normal", gn or {}), ("holo", gh or {}))
-                for key in ("idProduct", "trend", "avg7", "avg30", "avg", "low")
             )
             if same_meta and exact_names and exact_rows and priced and snapshot_matches:
                 classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
@@ -1589,6 +1693,27 @@ def main():
                       "`set-logo + staff`, ciascuna con il proprio productId e Price Guide Cardmarket. "
                       "Il runtime Cardoryx le risolve separatamente senza fallback tra stamp.")
             action = "Mantenere il resolver set-logo esatto; nessun mapping statico e nessun riuso prezzo fra Set Stamp e Staff."
+        elif card_id in BATCH2_SHARED_PRODUCT_OWNERS:
+            owner_set, owner_local, owner_name, owner_product = BATCH2_SHARED_PRODUCT_OWNERS[card_id]
+            catalogue = products.get(owner_product) or {}
+            guide = prices.get(owner_product) or {}
+            source_guard = "VERIFIED_SHARED_CARDMARKET_PRODUCT_OWNERS" in source
+            exact_owner = bool(
+                (card.get("set") or {}).get("id") == owner_set and
+                norm_local(card.get("localId")) == norm_local(owner_local) and
+                card_identity(card).get("name") == owner_name and current_pid == owner_product
+            )
+            official_evidence = bool(catalogue and guide and isinstance(guide.get("trend"), (int, float)))
+            if exact_owner and official_evidence and source_guard:
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid, resolved_value = owner_product, guide.get("trend")
+                reason = ("Il productId condiviso appartiene a questa identità fisica esatta secondo il catalogo "
+                          "ufficiale; il runtime ne vieta l'uso a qualsiasi tcgdexId/set/numero/nome diverso.")
+                action = "Mantenere la guardia esatta del proprietario; nessun riuso del prodotto condiviso."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La proprietà esatta del productId condiviso non supera più tutti i gate catalogo/runtime."
+                action = "Fail-closed e nuova verifica delle fonti ufficiali."
         elif (card_id in EX8_VERIFIED_SHARED_PRODUCT_OWNERS and
               current_pid == EX8_VERIFIED_SHARED_PRODUCT_OWNERS[card_id]["productId"] and
               set(shared) == EX8_VERIFIED_SHARED_PRODUCT_OWNERS[card_id]["blockedTcgdexIds"] and
