@@ -1653,14 +1653,35 @@ def main():
                 ps.get("name") == pj.get("name")
             )
             expected_stamp = sorted(rule.get("stamp") or [])
-            standard_rows = [v for v in details.get(rule["standard"], [])
-                             if str(v.get("size") or "standard").lower() == "standard" and
-                             sorted(v.get("stamp") or []) == expected_stamp]
-            jumbo_rows = [v for v in details.get(rule["jumbo"], [])
-                          if str(v.get("size") or "").lower() == "jumbo" and
-                          sorted(v.get("stamp") or []) == expected_stamp]
+            def exact_live_size_rows(expected_pid, expected_size):
+                matched = []
+                for row in live_card_detail.get("variants_detailed") or []:
+                    if cm_id(row) != expected_pid:
+                        continue
+                    if str(row.get("size") or ("standard" if expected_size == "standard" else "")).strip().lower() != expected_size:
+                        continue
+                    stamps = row.get("stamp") or []
+                    if isinstance(stamps, str):
+                        stamps = [stamps]
+                    if sorted(map(str, stamps)) != expected_stamp:
+                        continue
+                    pricing_cm = ((row.get("pricing") or {}).get("cardmarket") or {})
+                    try:
+                        pricing_pid = int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+                    except (TypeError, ValueError):
+                        pricing_pid = None
+                    usable = any(
+                        isinstance(pricing_cm.get(k), (int, float)) and pricing_cm.get(k) > 0
+                        for k in ("trend", "avg7", "avg30", "avg", "low")
+                    )
+                    if pricing_pid == expected_pid and usable:
+                        matched.append(row)
+                return matched
+
+            standard_rows = exact_live_size_rows(rule["standard"], "standard")
+            jumbo_rows = exact_live_size_rows(rule["jumbo"], "jumbo")
             rows_ok = bool(len(standard_rows) == 1 and len(jumbo_rows) == 1 and
-                           standard_rows[0].get("finish") == jumbo_rows[0].get("finish"))
+                           standard_rows[0].get("type") == jumbo_rows[0].get("type"))
             guides_ok = bool(
                 gs and gj and int(gs.get("idProduct") or 0) == rule["standard"] and int(gj.get("idProduct") or 0) == rule["jumbo"] and
                 any(isinstance(gs.get(k), (int, float)) and gs.get(k) > 0 for k in ("trend", "avg7", "avg30", "avg", "low")) and
