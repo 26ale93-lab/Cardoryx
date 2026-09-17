@@ -102,6 +102,16 @@ VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS = {
     "sv05-041": {"setId": "sv05", "localId": "041", "name": "Feraligatr", "expansion": 5589, "metacard": 430014, "normal": 761970, "holo": 760671, "reverse": 760671},
     "sv08-065": {"setId": "sv08", "localId": "065", "name": "Tapu Koko", "expansion": 5879, "metacard": 441182, "normal": 799718, "holo": 794346, "reverse": 794346},
 }
+VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS = {
+    "svp-067": {"setId": "svp", "localId": "067", "name": "Roaring Moon ex", "expansion": 5241, "metacard": 426438, "standard": 740407, "jumbo": 740408, "stamp": []},
+    "swshp-SWSH055": {"setId": "swshp", "localId": "SWSH055", "name": "Hatterene V", "expansion": 2916, "metacard": 322125, "standard": 510180, "jumbo": 510175, "stamp": []},
+    "swshp-SWSH132": {"setId": "swshp", "localId": "SWSH132", "name": "Dragapult", "expansion": 2916, "metacard": 345894, "standard": 576731, "jumbo": 576905, "stamp": ["25th-celebration"]},
+    "swshp-SWSH133": {"setId": "swshp", "localId": "SWSH133", "name": "Lance's Charizard V", "expansion": 2916, "metacard": 345895, "standard": 576732, "jumbo": 576906, "stamp": ["25th-celebration"]},
+    "swshp-SWSH134": {"setId": "swshp", "localId": "SWSH134", "name": "Dark Sylveon V", "expansion": 2916, "metacard": 345896, "standard": 576733, "jumbo": 576907, "stamp": ["25th-celebration"]},
+    "swshp-SWSH136": {"setId": "swshp", "localId": "SWSH136", "name": "Mimikyu", "expansion": 2916, "metacard": 345898, "standard": 576735, "jumbo": 576908, "stamp": ["25th-celebration"]},
+    "swshp-SWSH137": {"setId": "swshp", "localId": "SWSH137", "name": "Light Toxtricity", "expansion": 2916, "metacard": 345899, "standard": 576736, "jumbo": 576909, "stamp": ["25th-celebration"]},
+    "swshp-SWSH138": {"setId": "swshp", "localId": "SWSH138", "name": "Hydreigon C", "expansion": 2916, "metacard": 345900, "standard": 576737, "jumbo": 576910, "stamp": ["25th-celebration"]},
+}
 MCDONALDS_2021_EXACT_PAIRS = {
     "2021swsh-1": {"localId": "1", "name": "Bulbasaur", "normal": 538778, "holo": 538783},
     "2021swsh-2": {"localId": "2", "name": "Chikorita", "normal": 538788, "holo": 538793},
@@ -335,6 +345,7 @@ def physical_variant(row):
         foils = [foils]
     return {
         "finish": row.get("type"), "foil": sorted(map(str, foils)), "stamp": sorted(map(str, stamps)),
+        "size": row.get("size"), "subtype": row.get("subtype"),
         "language": row.get("language") or row.get("languages"), "variantId": row.get("variantId"),
         "firstEdition": row.get("firstEdition"),
     }
@@ -1429,6 +1440,7 @@ def main():
     }
     live_targets = ((multi_ids - historical_ids) | shared_identity_ids | verified_set_logo_ids | {"swshp-SWSH028", "ex5-29"} |
                     set(CONFIRMED_BASE_PRODUCT_CONFLICTS) | set(VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS) |
+                    set(VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS) |
                     {"sm12-29", "sm12-54", "sm12-237"} | PROTECTED_REVERSE)
     live, live_errors = {}, {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
@@ -1625,6 +1637,64 @@ def main():
                 live_swsh028_gamestop = True
                 live_swsh028_gamestop_pid = 742039
 
+        exact_standard_jumbo_pair = False
+        exact_standard_jumbo_products = None
+        if card_id in VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS:
+            rule = VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS[card_id]
+            ps, pj = products.get(rule["standard"]), products.get(rule["jumbo"])
+            gs, gj = prices.get(rule["standard"]), prices.get(rule["jumbo"])
+            identity_ok = bool(
+                (card.get("set") or {}).get("id") == rule["setId"] and
+                norm_local(card.get("localId")) == norm_local(rule["localId"]) and
+                card_identity(card).get("name") == rule["name"]
+            )
+            catalog_ok = bool(
+                ps and pj and ps.get("idExpansion") == rule["expansion"] and pj.get("idExpansion") == rule["expansion"] and
+                ps.get("idMetacard") == rule["metacard"] and pj.get("idMetacard") == rule["metacard"] and
+                ps.get("name") == pj.get("name")
+            )
+            expected_stamp = sorted(rule.get("stamp") or [])
+            def exact_live_size_rows(expected_pid, expected_size):
+                matched = []
+                for row in live_card_detail.get("variants_detailed") or []:
+                    if cm_id(row) != expected_pid:
+                        continue
+                    if str(row.get("size") or ("standard" if expected_size == "standard" else "")).strip().lower() != expected_size:
+                        continue
+                    stamps = row.get("stamp") or []
+                    if isinstance(stamps, str):
+                        stamps = [stamps]
+                    if sorted(map(str, stamps)) != expected_stamp:
+                        continue
+                    pricing_cm = ((row.get("pricing") or {}).get("cardmarket") or {})
+                    try:
+                        pricing_pid = int(pricing_cm.get("idProduct") or pricing_cm.get("id_product"))
+                    except (TypeError, ValueError):
+                        pricing_pid = None
+                    usable = any(
+                        isinstance(pricing_cm.get(k), (int, float)) and pricing_cm.get(k) > 0
+                        for k in ("trend", "avg7", "avg30", "avg", "low")
+                    )
+                    if pricing_pid == expected_pid and usable:
+                        matched.append(row)
+                return matched
+
+            standard_rows = exact_live_size_rows(rule["standard"], "standard")
+            jumbo_rows = exact_live_size_rows(rule["jumbo"], "jumbo")
+            rows_ok = bool(len(standard_rows) == 1 and len(jumbo_rows) == 1 and
+                           standard_rows[0].get("type") == jumbo_rows[0].get("type"))
+            guides_ok = bool(
+                gs and gj and int(gs.get("idProduct") or 0) == rule["standard"] and int(gj.get("idProduct") or 0) == rule["jumbo"] and
+                any(isinstance(gs.get(k), (int, float)) and gs.get(k) > 0 for k in ("trend", "avg7", "avg30", "avg", "low")) and
+                any(isinstance(gj.get(k), (int, float)) and gj.get(k) > 0 for k in ("trend", "avg7", "avg30", "avg", "low"))
+            )
+            exact_standard_jumbo_pair = bool(
+                identity_ok and current_pid == rule["standard"] and set(ids) == {rule["standard"], rule["jumbo"]} and
+                catalog_ok and rows_ok and guides_ok
+            )
+            if exact_standard_jumbo_pair:
+                exact_standard_jumbo_products = {"standard": rule["standard"], "jumbo": rule["jumbo"]}
+
         live_dual_base_pair = False
         if card_id in VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS:
             rule = VERIFIED_DUAL_BASE_CARDMARKET_PRODUCTS[card_id]
@@ -1815,6 +1885,20 @@ def main():
             reason = ("Il prodotto corrente appartiene all'identità checklist esatta; ogni altra identità "
                       "TCGdex che lo riusava è ora protetta da un override Cardmarket esatto e fail-closed.")
             action = "Mantenere le guardie EX Deoxys esatte; nessun riuso del prodotto condiviso."
+        elif card_id in VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS:
+            if exact_standard_jumbo_pair:
+                rule = VERIFIED_STANDARD_JUMBO_CARDMARKET_PAIRS[card_id]
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid = rule["standard"]
+                resolved_value = (prices.get(rule["standard"]) or {}).get("trend")
+                reason = ("TCGdex documenta due formati fisici distinti della stessa promo: una riga Standard e una Jumbo, "
+                          "con productId Cardmarket separati. Catalogo ufficiale, set, metacard, nome, stamp e Price Guide "
+                          "coincidono; il prodotto top-level corrente è esclusivamente quello Standard.")
+                action = "Nessuna modifica runtime: mantenere il prodotto Standard corrente e non trasferire il prezzo alla Jumbo."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La coppia Standard/Jumbo registrata non supera più tutti i gate esatti di identità, formato o Price Guide."
+                action = "Fail-closed e nuova verifica delle fonti ufficiali; nessuna euristica Standard/Jumbo."
         elif card_id == "swshp-SWSH163":
             standard, oversized = products.get(572163), products.get(576915)
             exact_oversized_pair = bool(
@@ -1899,6 +1983,8 @@ def main():
             "liveExactEx5BeldumProducts": live_ex5_beldum_products,
             "liveExactSwsh028GameStop": live_swsh028_gamestop,
             "liveExactSwsh028GameStopProductId": live_swsh028_gamestop_pid,
+            "verifiedStandardJumboPair": exact_standard_jumbo_pair,
+            "verifiedStandardJumboProducts": exact_standard_jumbo_products,
             "snapshotExactAlternateProductProtected": snapshot_exact_alternate_product,
             "realPriceGuideValues": {str(pid): price_compact(prices.get(pid)) for pid in ids if prices.get(pid)},
             "trendDeltaVersusCurrent": {str(pid): round(row["trend"] - current_value, 2) for pid, row in prices.items()
