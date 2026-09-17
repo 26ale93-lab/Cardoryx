@@ -9,18 +9,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Print exact runtime anchors
+      - name: Print exact audit anchors
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          s=Path('index.html').read_text()
-          needles=['function canonicalStamp(','function stampExistsForCard(','function verifiedStampPrice(','Worlds 2024</option>','VERIFIED_PRIMARY_WORLDS_STAMPS']
+          s=Path('scripts/test_card_identity_cardmarket_audit.py').read_text()
+          needles=['VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS = {','set(VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS)','exact_primary_worlds_pair = False','elif card_id in VERIFIED_PRIMARY_WORLDS_CARDMARKET_ROWS:','verifiedPrimaryWorldsPair']
           lines=s.splitlines()
           for needle in needles:
               print('\n===',needle,'===')
               hits=[i for i,l in enumerate(lines) if needle in l]
               print('hits',hits)
-              for i in hits[:4]:
-                  a=max(0,i-10); b=min(len(lines),i+45)
+              for i in hits[:5]:
+                  a=max(0,i-15); b=min(len(lines),i+55)
                   for n in range(a,b): print(f'{n+1}: {lines[n]}')
           PY
