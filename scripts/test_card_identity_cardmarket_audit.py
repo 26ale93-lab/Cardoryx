@@ -221,8 +221,6 @@ BATCH2_BASE_OVERRIDE_ROWS = {
     "pl2-1": ("pl2", "1", 278570, 278575), "pl2-2": ("pl2", "2", 278569, 278576),
     "pl2-3": ("pl2", "3", 278572, 278577), "pl2-4": ("pl2", "4", 278571, 278578),
     "pl2-6": ("pl2", "6", 278574, 278580),
-    "cel25cc-cc020": ("cel25cc", "CC020", 576747, 576790),
-    "cel25cc-cc021": ("cel25cc", "CC021", 576755, 576791),
     "swshp-swsh055": ("swshp", "SWSH055", 510175, 510180),
 }
 EXPECTED_BASE_OVERRIDES.update({
@@ -1394,6 +1392,9 @@ def main():
     mcd2019_pairs = extract_js_object(source, "VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
         raise AssertionError("Base Cardmarket override registry differs from the audited P0 identities")
+    for forbidden in ("cel25cc-cc020", "cel25cc-cc021"):
+        if forbidden in base_overrides:
+            raise AssertionError(f"Celebrations Classic must not use base override: {forbidden}")
     if len(mcd2019_pairs) != 39:
         raise AssertionError("McDonald's Collection 2019 registry must contain exactly 39 audited identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
