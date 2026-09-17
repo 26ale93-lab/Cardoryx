@@ -62,3 +62,34 @@ jobs:
                       grp=sorted([r for r in products if r.get('idMetacard')==x['idMetacard']], key=lambda z:int(z['idProduct']))
                       print('META_GROUP',pid,json.dumps(grp,ensure_ascii=False))
           PY
+      - name: Inspect production runtime functions
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path('index.html').read_text()
+          def extract(name):
+              m=re.search(rf'\bfunction\s+{re.escape(name)}\s*\(',src)
+              if not m:
+                  print('MISSING',name); return
+              brace=src.find('{',m.end()); depth=0; quote=None; esc=False
+              for i in range(brace,len(src)):
+                  ch=src[i]
+                  if quote:
+                      if esc: esc=False
+                      elif ch=='\\': esc=True
+                      elif ch==quote: quote=None
+                      continue
+                  if ch in "'\"`": quote=ch
+                  elif ch=='{': depth+=1
+                  elif ch=='}':
+                      depth-=1
+                      if depth==0:
+                          print('===FUNCTION',name,'===')
+                          print(src[m.start():i+1])
+                          return
+              print('UNCLOSED',name)
+          for name in ['tcgdexVariantDetails','cardmarketValueForCardVariant','cardmarketStatsForCardVariant','pricingWithResolvedCardmarket','resolvedCardmarketPricingForCard','verifiedVariantPrice']:
+              extract(name)
+          PY
