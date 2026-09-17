@@ -16,36 +16,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Inspect live 30th TCGdex cards
+      - name: Audit official Cardmarket 30th bulk files
         shell: bash
         run: |
           python3 - <<'PY'
-          import json, urllib.request
-          ids=['30th-001','30th-002','30th-010','30th-050','30th-100','30th-128']
-          for cid in ids:
-              try:
-                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid, timeout=20) as r:
-                      d=json.load(r)
-                  print('===',cid,'===')
-                  print(json.dumps({
-                    'id':d.get('id'),'name':d.get('name'),'localId':d.get('localId'),
-                    'set':d.get('set'),'variants':d.get('variants'),'variants_detailed':d.get('variants_detailed'),
-                    'pricing':d.get('pricing')
-                  },ensure_ascii=False))
-              except Exception as e:
-                  print('===',cid,'ERROR===',repr(e))
-          PY
-      - name: Inspect live 30th Classic sample
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import json, urllib.request
-          for cid in ['30th-c-001','30th-c-1']:
-              try:
-                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid, timeout=20) as r:
-                      d=json.load(r)
-                  print('===',cid,'===')
-                  print(json.dumps({'id':d.get('id'),'name':d.get('name'),'localId':d.get('localId'),'set':d.get('set'),'variants':d.get('variants'),'variants_detailed':d.get('variants_detailed'),'pricing':d.get('pricing')},ensure_ascii=False))
-              except Exception as e:
-                  print('===',cid,'ERROR===',repr(e))
+          import json, urllib.request, re
+          products_url='https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json'
+          prices_url='https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json'
+          with urllib.request.urlopen(products_url,timeout=60) as r: products=json.load(r)
+          with urllib.request.urlopen(prices_url,timeout=60) as r: prices=json.load(r)
+          def rows(x):
+              if isinstance(x,list): return x
+              for k in ('products','product','data','priceGuide','price_guide'):
+                  if isinstance(x,dict) and isinstance(x.get(k),list): return x[k]
+              return []
+          prows=rows(products); pricerows=rows(prices)
+          pby={int(x.get('idProduct') or x.get('id_product') or 0):x for x in pricerows if int(x.get('idProduct') or x.get('id_product') or 0)>0}
+          hits=[]
+          for x in prows:
+              txt=' '.join(str(x.get(k,'')) for k in ('name','Name','categoryName','category_name','expansionName','expansion_name','number','Number','cardmarketCode','cardmarket_code'))
+              if '30C' in txt.upper() or '30TH CELEBRATION' in txt.upper() or '30° ANNIVERSARIO' in txt.upper():
+                  hits.append(x)
+          print('products_total',len(prows),'price_rows',len(pricerows),'30th_hits',len(hits))
+          for x in hits[:260]:
+              pid=int(x.get('idProduct') or x.get('id_product') or 0)
+              price=pby.get(pid,{})
+              print(json.dumps({'product':x,'price':price},ensure_ascii=False))
           PY
