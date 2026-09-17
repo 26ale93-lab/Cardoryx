@@ -9,28 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Inspect nine residual P1 live identities
+      - name: Inspect stamp UI and resolver neighborhoods
         run: |
           python3 - <<'PY'
-          import json, urllib.request
-          ids=['2018sm-fr-38','2018sm-fr-39','cel25cc-CC020','cel25cc-CC021','sm12-237','svp-045','svp-101','svp-150','swshp-SWSH296']
-          for cid in ids:
-              try:
-                  with urllib.request.urlopen('https://api.tcgdex.net/v2/en/cards/'+cid,timeout=60) as r:
-                      c=json.load(r)
-              except Exception as e:
-                  print('CARD',cid,'ERROR',repr(e)); continue
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  rows.append({
-                    'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),
-                    'cardmarket':((x.get('thirdParty') or {}).get('cardmarket')),
-                    'priceProduct':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'low':cm.get('low')
-                  })
-              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'set':(c.get('set') or {}).get('id'),'localId':c.get('localId'),'rarity':c.get('rarity'),'topProduct':top.get('idProduct') or top.get('id_product'),'topTrend':top.get('trend'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
+          from pathlib import Path
+          s=Path('index.html').read_text().splitlines()
+          needles=['id="stamp"','id="editStamp"','function tcgdexExactSvpStampPrice','function verifiedExactSpecialStampPrice','function verifiedStampPrice']
+          for n in needles:
+              print('\n###',n)
+              hits=[i for i,x in enumerate(s) if n in x]
+              for i in hits[:3]:
+                  for j in range(max(0,i-8),min(len(s),i+90)):
+                      print(f'{j+1}:{s[j]}')
           PY
