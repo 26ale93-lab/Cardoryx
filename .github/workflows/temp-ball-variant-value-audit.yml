@@ -1,0 +1,200 @@
+name: TEMP ball variant value audit
+
+on:
+  push:
+    branches:
+      - audit/ball-variant-values-20260919
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone TCGdex cards database read-only
+        run: |
+          git clone --depth 1 https://github.com/tcgdex/cards-database.git /tmp/tcgdex-cards-database
+
+      - name: Audit all Pokeball and Masterball physical rows
+        run: |
+          python - <<'PY'
+          import json, re, urllib.request, concurrent.futures, time
+          from pathlib import Path
+          import importlib.util
+
+          root=Path(".")
+          index=(root/"index.html").read_text(encoding="utf-8")
+
+          spec=importlib.util.spec_from_file_location("finish_audit", root/"scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+
+          cards, parse_errors, upstream_sha = mod.load_official_database(Path("/tmp/tcgdex-cards-database"))
+
+          exact=mod.extract_js_object(index,"VERIFIED_EXACT_VARIANT_PRICES")
+          legacy=mod.extract_js_object(index,"VERIFIED_VARIANT_PRICES")
+
+          def norm(v):
+            return mod.norm(v)
+
+          def canonical_local(v):
+            s=str(v or "").strip()
+            t=s.lstrip("0")
+            return t or s or "0"
+
+          def finish_for_row(row):
+            return mod.canonical_row_finish(row)
+
+          candidates=[]
+          totals={"pokeball":0,"masterball":0}
+          for c in cards:
+            for row in c.get("variants_detailed") or []:
+              finish=finish_for_row(row)
+              if finish not in ("Poké Ball Reverse Holo","Master Ball Reverse Holo"):
+                continue
+              foil="pokeball" if finish.startswith("Poké") else "masterball"
+              totals[foil]+=1
+              pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+              if not pid:
+                continue
+              cid=str(c.get("id") or "").strip().lower()
+              set_id=str((c.get("set") or {}).get("id") or "").strip().lower()
+              local=str(c.get("localId") or "")
+              name=str(c.get("name") or "")
+              covered=False
+              reason=None
+
+              rule=exact.get(cid)
+              if isinstance(rule,dict):
+                if (str(rule.get("setId") or "").lower()==set_id and
+                    canonical_local(rule.get("localId"))==canonical_local(local) and
+                    int(rule.get("productId") or 0)==pid and
+                    mod.canonical_finish(rule.get("finish"))==finish):
+                    covered=True; reason="exact-registry"
+
+              if not covered:
+                # legacy set-name registry can also cover exact visible runtime cards
+                set_name=norm((c.get("set") or {}).get("name") or "")
+                local_key=canonical_local(local)
+                for k,v in legacy.items():
+                  try: ks,kn,kf=k.split("|",2)
+                  except ValueError: continue
+                  if norm(ks)==set_name and canonical_local(kn)==local_key and mod.canonical_finish(kf)==finish:
+                    covered=True; reason="legacy-registry"; break
+
+              if not covered:
+                candidates.append({
+                  "tcgdexId":cid,"setId":set_id,"setName":(c.get("set") or {}).get("name"),
+                  "localId":local,"name":name,"finish":finish,"productId":pid
+                })
+
+          # Deduplicate exact identity+finish+product.
+          uniq={}
+          for x in candidates:
+            uniq[(x["tcgdexId"],x["finish"],x["productId"])]=x
+          candidates=list(uniq.values())
+
+          def fetch_live(x):
+            cid=x["tcgdexId"]
+            url=f"https://api.tcgdex.net/v2/en/cards/{cid}"
+            last=None
+            for attempt in range(3):
+              try:
+                req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-ball-audit/1.0"})
+                with urllib.request.urlopen(req,timeout=30) as r:
+                  c=json.load(r)
+                rows=[]
+                for row in c.get("variants_detailed") or []:
+                  if mod.canonical_row_finish(row)!=x["finish"]: continue
+                  pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+                  cm=(row.get("pricing") or {}).get("cardmarket") or {}
+                  rows.append({
+                    "productId":pid,
+                    "pricingProductId":int(cm.get("idProduct") or cm.get("id_product") or 0),
+                    "low":cm.get("low"),"trend":cm.get("trend"),"avg1":cm.get("avg1"),
+                    "avg7":cm.get("avg7"),"avg30":cm.get("avg30"),"avg":cm.get("avg"),
+                    "updated":cm.get("updated"),
+                    "foil":row.get("foil"),"type":row.get("type"),"size":row.get("size"),
+                    "stamp":row.get("stamp")
+                  })
+                exact_rows=[r for r in rows if r["productId"]==x["productId"] and r["pricingProductId"]==x["productId"]]
+                if len(exact_rows)==1:
+                  row=exact_rows[0]
+                  vals=[row.get(k) for k in ("trend","avg7","avg30","avg","low")]
+                  has_price=any(isinstance(v,(int,float)) and v>0 for v in vals)
+                  return {**x,"liveStatus":"SAFE_EXACT" if has_price else "NO_PRICE","liveRows":rows,"exactRow":row}
+                return {**x,"liveStatus":"AMBIGUOUS_OR_MISSING","liveRows":rows}
+              except Exception as e:
+                last=repr(e); time.sleep(0.4*(attempt+1))
+            return {**x,"liveStatus":"FETCH_ERROR","error":last}
+
+          results=[]
+          with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
+            for r in ex.map(fetch_live,candidates):
+              results.append(r)
+
+          safe=[r for r in results if r["liveStatus"]=="SAFE_EXACT"]
+          ambiguous=[r for r in results if r["liveStatus"]=="AMBIGUOUS_OR_MISSING"]
+          no_price=[r for r in results if r["liveStatus"]=="NO_PRICE"]
+          errors=[r for r in results if r["liveStatus"]=="FETCH_ERROR"]
+
+          # Priority buckets: exact rows with a current price; no assumptions.
+          by_finish={}
+          for finish in ("Poké Ball Reverse Holo","Master Ball Reverse Holo"):
+            rows=[r for r in safe if r["finish"]==finish]
+            by_finish[finish]={
+              "count":len(rows),
+              "cards":sorted(rows,key=lambda x:(x["setId"],x["localId"],x["tcgdexId"]))
+            }
+
+          report={
+            "audit":"Cardoryx missing ball variant Cardmarket values",
+            "mode":"read-only",
+            "mainSha":"3fdaa8d75ce3574a3b7f4a082ec171d4e3a531e7",
+            "tcgdexDatabaseSha":upstream_sha,
+            "upstreamParseErrors":len(parse_errors),
+            "physicalRowsSeen":totals,
+            "uncoveredIdentityFinishProducts":len(candidates),
+            "safeExactRecoverable":len(safe),
+            "ambiguousOrMissing":len(ambiguous),
+            "noCurrentPrice":len(no_price),
+            "fetchErrors":len(errors),
+            "byFinish":by_finish,
+            "ambiguous":sorted(ambiguous,key=lambda x:(x["setId"],x["localId"],x["tcgdexId"])),
+            "noPrice":sorted(no_price,key=lambda x:(x["setId"],x["localId"],x["tcgdexId"])),
+            "fetchErrorsDetail":errors,
+            "safety":{
+              "productionModified":False,"cardmarketDataModified":False,"retailModified":False,
+              "retailPricesModified":False,"genericFallbackAdded":False
+            }
+          }
+          out=Path("/tmp/ball_variant_value_audit_report.json")
+          out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          print(json.dumps({
+            "physicalRowsSeen":totals,
+            "uncoveredIdentityFinishProducts":len(candidates),
+            "safeExactRecoverable":len(safe),
+            "ambiguousOrMissing":len(ambiguous),
+            "noCurrentPrice":len(no_price),
+            "fetchErrors":len(errors),
+            "safePokeball":len(by_finish["Poké Ball Reverse Holo"]["cards"]),
+            "safeMasterball":len(by_finish["Master Ball Reverse Holo"]["cards"])
+          },ensure_ascii=False,indent=2))
+          print("SAFE_SAMPLE")
+          for row in safe[:40]:
+            e=row["exactRow"]
+            print(json.dumps({
+              "tcgdexId":row["tcgdexId"],"name":row["name"],"setId":row["setId"],
+              "localId":row["localId"],"finish":row["finish"],"productId":row["productId"],
+              "trend":e.get("trend"),"avg7":e.get("avg7"),"avg30":e.get("avg30"),"low":e.get("low")
+            },ensure_ascii=False))
+          PY
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ball-variant-value-audit-report
+          path: /tmp/ball_variant_value_audit_report.json
