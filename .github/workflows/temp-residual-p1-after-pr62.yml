@@ -18,48 +18,33 @@ jobs:
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
       - name: Run full audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Audit all pl3 residuals
+      - name: Audit all pl3 residuals from official TS snapshot
         run: |
           python3 - <<'PY'
-          import json, pathlib, subprocess, urllib.request, tempfile, collections, os
+          import json, pathlib, tempfile, urllib.request, collections, importlib.util
           report=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
           ids=sorted(x for x in (report.get('p1AmbiguousProductIds') or []) if x.startswith('pl3-'))
           print('PL3_COUNT',len(ids)); print('PL3_IDS',json.dumps(ids))
-          root='../tcgdex-cards-database'
+          spec=importlib.util.spec_from_file_location('vf','scripts/test_variant_finish_audit.py')
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          cards,errors,snapshot=mod.load_official_database(pathlib.Path('../tcgdex-cards-database'))
+          byid={c['id']:c for c in cards}
+          print('SNAPSHOT',snapshot,'PARSE_ERRORS',len(errors))
           pids=set(); names=set()
-          def walk(obj):
-              if isinstance(obj,dict):
-                  yield obj
-                  for v in obj.values(): yield from walk(v)
-              elif isinstance(obj,list):
-                  for v in obj: yield from walk(v)
           for cid in ids:
-              cp=subprocess.run(['grep','-R','-l','--include=*.json',cid,root],capture_output=True,text=True)
-              files=[x for x in cp.stdout.splitlines() if x.strip()]
-              print('LOCAL_FILES',cid,json.dumps(files[:20]))
-              found=[]
-              for fn in files[:20]:
-                  try: data=json.load(open(fn,encoding='utf-8'))
-                  except Exception: continue
-                  for o in walk(data):
-                      if str(o.get('id') or '')==cid:
-                          found.append((fn,o))
-              if not found:
-                  print('LOCAL_NOT_FOUND',cid)
-                  continue
-              for fn,c in found:
-                  name=c.get('name')
-                  if isinstance(name,dict): name=name.get('en') or next(iter(name.values()),None)
-                  names.add(str(name or ''))
-                  top=((c.get('pricing') or {}).get('cardmarket') or {})
-                  if top.get('idProduct'): pids.add(int(top['idProduct']))
-                  rows=[]
-                  for x in c.get('variants_detailed') or []:
-                      cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                      pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                      if pid: pids.add(int(pid))
-                      rows.append({'type':x.get('type'),'subtype':x.get('subtype'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product')})
-                  print('LOCAL_CARD',json.dumps({'file':fn,'id':cid,'name':name,'localId':c.get('localId'),'set':c.get('set'),'rarity':c.get('rarity'),'top':top.get('idProduct'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
+              c=byid.get(cid)
+              if not c:
+                  print('LOCAL_NOT_FOUND',cid); continue
+              name=c.get('name')
+              if isinstance(name,dict): name=name.get('en') or next(iter(name.values()),None)
+              names.add(str(name or ''))
+              rows=[]
+              for x in c.get('variants_detailed') or []:
+                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
+                  if pid: pids.add(int(pid))
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  rows.append({'type':x.get('type'),'subtype':x.get('subtype'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product')})
+              print('LOCAL_CARD',json.dumps({'id':cid,'name':name,'localId':c.get('localId'),'set':c.get('set'),'rarity':c.get('rarity'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
           headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
           def dl(section,name):
               p=pathlib.Path(tempfile.gettempdir())/name
@@ -81,14 +66,12 @@ jobs:
           for r in selected: print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
           exps=set(expids)
           exp_rows=[r for r in products if int(r.get('idExpansion') or 0) in exps]
-          # names from local DB: expose every exact-name catalogue candidate in touched expansions
           norm=lambda s:' '.join(str(s or '').casefold().split())
           nset={norm(x) for x in names if x}
           for r in exp_rows:
               base=str(r.get('name') or '').split(' [',1)[0]
               if norm(base) in nset and int(r.get('idProduct') or 0) not in pids:
-                  print('CM_NAME_CANDIDATE',json.dumps(r,ensure_ascii=False,sort_keys=True))
-                  pids.add(int(r.get('idProduct') or 0))
+                  print('CM_NAME_CANDIDATE',json.dumps(r,ensure_ascii=False,sort_keys=True)); pids.add(int(r.get('idProduct') or 0))
           bymeta=collections.defaultdict(list)
           for r in exp_rows:
               mid=int(r.get('idMetacard') or 0)
