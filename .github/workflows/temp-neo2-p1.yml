@@ -147,3 +147,40 @@ jobs:
               except Exception as e:
                   print('PUBLIC_INDEX_ERROR',u,repr(e))
           PY
+      - name: Resolve every exact page against its two candidate product IDs
+        run: |
+          python3 - <<'PY'
+          import urllib.request
+          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
+          checks=[]
+          neo=[
+            ('forretress',2,21,274513,274532),('hitmontop',3,22,274514,274533),
+            ('houndoom',4,23,274515,274534),('houndour',5,24,274516,274535),
+            ('kabutops',6,25,274517,274536),('magnemite',7,26,274518,274537),
+            ('politoed',8,27,274519,274538),('poliwrath',9,28,274520,274539),
+            ('scizor',10,29,274521,274540),('smeargle',11,30,274522,274541),
+            ('tyranitar',12,31,274523,274542),('unown-a',14,33,274525,274544),
+            ('ursaring',15,34,274526,274545),('wobbuffet',16,35,274527,274546),
+            ('yanma',17,36,274528,274547)]
+          for slug,a,b,p1,p2 in neo:
+              checks += [('neo-discovery',slug,a,p1,(p1,p2)),('neo-discovery',slug,b,p2,(p1,p2))]
+          gym1=[('brock',15,98,274151,274234),('erika',16,100,274152,274236),('lt-surge',17,101,274153,274237),('misty',18,102,274154,274238)]
+          for slug,a,b,p1,p2 in gym1:
+              checks += [('gym-heroes',slug,a,p1,(p1,p2)),('gym-heroes',slug,b,p2,(p1,p2))]
+          gym2=[('blaine',17,100,274285,274368),('giovanni',18,104,274286,274372),('koga',19,106,274287,274374),('sabrina',20,110,274288,274378)]
+          for slug,a,b,p1,p2 in gym2:
+              checks += [('gym-challenge',slug,a,p1,(p1,p2)),('gym-challenge',slug,b,p2,(p1,p2))]
+          bad=[]
+          for setslug,slug,num,expected,cands in checks:
+              u=f'https://www.tcggo.com/pokemon/{setslug}/{slug}-{num}'
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(u,headers=headers),timeout=30) as r:t=r.read().decode('utf-8','ignore')
+                  hits=[p for p in cands if str(p) in t]
+                  ok=expected in hits and len(hits)==1
+                  print('PAGE_MAP',setslug,slug,num,'expected',expected,'hits',hits,'OK' if ok else 'BAD')
+                  if not ok: bad.append((u,expected,hits))
+              except Exception as e:
+                  print('PAGE_MAP_ERROR',u,repr(e)); bad.append((u,expected,[]))
+          print('PAGE_MAP_BAD_COUNT',len(bad))
+          if bad: print('PAGE_MAP_BAD',bad)
+          PY
