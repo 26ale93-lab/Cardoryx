@@ -612,11 +612,21 @@ def runtime_cardmarket_regression():
         INDEX.read_text(encoding="utf-8"),
         "VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES",
     )
-    ball_rules = extract_js_object(
-        INDEX.read_text(encoding="utf-8"),
-        "VERIFIED_EXACT_BALL_VARIANT_PRICES",
-    )
-    assert len(ball_rules) == 508
+    ball_source = INDEX.read_text(encoding="utf-8")
+    ball_begin = "// CARDORYX GENERATED EXACT BALL VARIANT PRICES — BEGIN"
+    ball_end = "// CARDORYX GENERATED EXACT BALL VARIANT PRICES — END"
+    assert ball_source.count(ball_begin) == 1 and ball_source.count(ball_end) == 1
+    ball_block = ball_source.split(ball_begin, 1)[1].split(ball_end, 1)[0]
+    ball_rules = {}
+    for line in ball_block.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith('"') or '":{' not in stripped:
+            continue
+        key_text, value_text = stripped.rsplit(":", 1)
+        key = json.loads(key_text)
+        value = json.loads(value_text.rstrip(","))
+        ball_rules[key] = value
+    assert len(ball_rules) == 508, len(ball_rules)
     assert len({int(v["productId"]) for v in ball_rules.values()}) == 508
     assert sum(1 for v in ball_rules.values() if v["finish"] == "Poké Ball Reverse Holo") == 299
     assert sum(1 for v in ball_rules.values() if v["finish"] == "Master Ball Reverse Holo") == 209
