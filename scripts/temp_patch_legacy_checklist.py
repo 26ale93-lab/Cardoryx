@@ -236,7 +236,11 @@ for(const [id,r] of Object.entries(rules)){
 }
 process.stdout.write(JSON.stringify(out));
 """
-    fixture_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_fixtures.json"\n    rules_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_rules.json"\n    fixture_path.write_text(json.dumps(fixtures,ensure_ascii=False),encoding="utf-8")\n    rules_path.write_text(json.dumps(LEGACY_CHECKLIST_PRODUCTS,ensure_ascii=False),encoding="utf-8")\n    return json.loads(subprocess.check_output(["node","-e",js+"\\n"+harness,str(fixture_path),str(rules_path)],text=True))
+    fixture_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_fixtures.json"
+    rules_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_rules.json"
+    fixture_path.write_text(json.dumps(fixtures,ensure_ascii=False),encoding="utf-8")
+    rules_path.write_text(json.dumps(LEGACY_CHECKLIST_PRODUCTS,ensure_ascii=False),encoding="utf-8")
+    return json.loads(subprocess.check_output(["node","-e",js+"\\n"+harness,str(fixture_path),str(rules_path)],text=True))
 
 
 '''
