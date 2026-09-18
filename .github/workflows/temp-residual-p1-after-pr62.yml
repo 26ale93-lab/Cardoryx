@@ -1,4 +1,4 @@
-name: TEMP pl3 AR physical identity audit
+name: TEMP pl3 AR source locator
 on:
   push:
     branches: [diagnostic/residual-base1-after-pr66-20260918]
@@ -11,15 +11,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Clone TCGdex database
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Extract AR1-AR9 source evidence
+      - name: Locate AR1-AR9 source files
         run: |
           for n in 1 2 3 4 5 6 7 8 9; do
-            echo "===== AR${n} ====="
-            f=$(find ../tcgdex-cards-database/data -type f -path "*/pl3/AR${n}.ts" | head -n 1)
-            if [ -z "$f" ]; then
-              echo "FAIL_CLOSED missing AR${n}"
-              exit 1
-            fi
-            echo "AR_FILE $f"
-            cat "$f"
+            echo "===== AR${n} PATHS ====="
+            find ../tcgdex-cards-database/data -type f -name "AR${n}.ts" -print
           done
