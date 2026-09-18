@@ -1,0 +1,31 @@
+name: TEMP Exeggcute 001 Pokeball regression
+
+on:
+  push:
+    branches:
+      - fix/exeggcute-001-pokeball-20260919
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Diff check
+        run: |
+          git fetch origin main --depth=1
+          git diff --check origin/main...HEAD
+      - name: Runtime Cardmarket regression
+        run: |
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          p=Path('scripts/test_card_identity_cardmarket_audit.py')
+          spec=importlib.util.spec_from_file_location('audit',p)
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          result=mod.runtime_cardmarket_regression()
+          print(result.get('exeggcute001'))
+          PY
