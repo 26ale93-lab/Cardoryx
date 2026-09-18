@@ -127,3 +127,23 @@ jobs:
                   keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
                   print('EXACT_GUIDE',json.dumps(keep,sort_keys=True))
           PY
+      - name: Verify exact card-number to Cardmarket IDs on public indexes
+        run: |
+          python3 - <<'PY'
+          import urllib.request,re,json
+          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
+          urls=[
+            'https://www.tcggo.com/pokemon/gym-challenge/blaine-100',
+            'https://www.tcggo.com/pokemon/gym-heroes/brock-98',
+            'https://www.tcggo.com/pokemon/neo-discovery/forretress-2',
+            'https://www.tcggo.com/pokemon/neo-discovery/forretress-21',
+          ]
+          for u in urls:
+              try:
+                  req=urllib.request.Request(u,headers=headers)
+                  with urllib.request.urlopen(req,timeout=30) as r:t=r.read().decode('utf-8','ignore')
+                  ids=sorted(set(re.findall(r'Cardmarket(?:\\s|<[^>]+>)*ID(?:\\s|<[^>]+>)*([0-9]{6})',t,re.I)))
+                  print('PUBLIC_INDEX',u,'status=200','ids=',ids,'len=',len(t))
+              except Exception as e:
+                  print('PUBLIC_INDEX_ERROR',u,repr(e))
+          PY
