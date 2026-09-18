@@ -1,80 +1,57 @@
-name: TEMP base5 Team Rocket P1 audit
+name: TEMP base5 Team Rocket exact page mapping
 on:
   push:
     branches: [diagnostic/base5-team-rocket-p1-20260918]
 permissions:
   contents: read
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
-    env:
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run full audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Audit all base5 residuals
+      - name: Verify Team Rocket numbered mappings
         run: |
           python3 - <<'PY'
-          import json,urllib.request,pathlib,tempfile,collections
-          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          ids=sorted(x for x in (d.get('p1AmbiguousProductIds') or []) if x.startswith('base5-'))
-          print('BASE5_COUNT',len(ids)); print('BASE5_IDS',json.dumps(ids))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          cards={}; pids=set(); byname=collections.defaultdict(list)
-          for cid in ids:
-              try:
-                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
-                  with urllib.request.urlopen(req,timeout=60) as r:c=json.load(r)
-              except Exception as e:
-                  print('API_ERROR',cid,repr(e)); continue
-              cards[cid]=c; byname[str(c.get('name') or '')].append(cid)
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              if top.get('idProduct'): pids.add(int(top['idProduct']))
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid:pids.add(int(pid))
-                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo')})
-              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'rarity':c.get('rarity'),'top':top.get('idProduct'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
-          print('NAME_GROUPS',json.dumps({k:v for k,v in byname.items() if len(v)>1},ensure_ascii=False,sort_keys=True))
-          def dl(section,name):
-              p=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
-                  while chunk:=r.read(1024*1024):out.write(chunk)
-              return json.load(open(p))
-          prod=dl('productList','products_singles_6.json'); price=dl('priceGuide','price_guide_6.json')
-          def rows(root,keys):
-              if isinstance(root,list):return root
-              for k in keys:
-                  v=root.get(k) if isinstance(root,dict) else None
-                  if isinstance(v,list):return v
-              return []
-          products=rows(prod,('products',))
-          selected=[r for r in products if int(r.get('idProduct') or 0) in pids]
-          expids=collections.Counter(int(r.get('idExpansion') or 0) for r in selected)
-          print('EXPANSIONS',json.dumps(expids))
-          for r in selected: print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
-          exps=set(expids)
-          exp_rows=[r for r in products if int(r.get('idExpansion') or 0) in exps]
-          bymeta=collections.defaultdict(list)
-          for r in exp_rows:
-              mid=int(r.get('idMetacard') or 0)
-              if mid:bymeta[mid].append(r)
-          for mid,vals in sorted(bymeta.items()):
-              if len(vals)>1 and any(int(v.get('idProduct') or 0) in pids for v in vals):
-                  print('DUP_META',mid,json.dumps([{'idProduct':v.get('idProduct'),'idExpansion':v.get('idExpansion'),'name':v.get('name')} for v in vals],ensure_ascii=False,sort_keys=True))
-                  for v in vals:pids.add(int(v.get('idProduct') or 0))
-          for r in rows(price,('priceGuides','priceGuide')):
-              pid=int(r.get('idProduct') or 0)
-              if pid in pids:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
-                  print('CM_PRICE',json.dumps(keep,sort_keys=True))
+          import urllib.request
+          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
+          pairs=[
+            ('dark-alakazam',1,18,274054,274071),
+            ('dark-arbok',2,19,274055,274072),
+            ('dark-blastoise',3,20,274056,274073),
+            ('dark-charizard',4,21,274057,274074),
+            ('dark-dragonite',5,22,274058,274075),
+            ('dark-dugtrio',6,23,274059,274076),
+            ('dark-golbat',7,24,274060,274077),
+            ('dark-gyarados',8,25,274061,274078),
+            ('dark-hypno',9,26,274062,274079),
+            ('dark-machamp',10,27,274063,274080),
+            ('dark-magneton',11,28,274064,274081),
+            ('dark-slowbro',12,29,274065,274082),
+            ('dark-vileplume',13,30,274066,274083),
+            ('dark-weezing',14,31,274067,274084),
+            ('here-comes-team-rocket',15,71,274068,274124),
+            ('rockets-sneak-attack',16,72,274069,274125),
+            ('rainbow-energy',17,80,274070,274133),
+          ]
+          bad=[]
+          for slug,a,b,p1,p2 in pairs:
+              for num,expected,cands in ((a,p1,(p1,p2)),(b,p2,(p1,p2))):
+                  urls=[
+                    f'https://www.tcggo.com/pokemon/team-rocket/{slug}-{num}',
+                    f'https://www.tcggo.com/pokemon/team-rocket/{slug}-{num}-1',
+                  ]
+                  hits=[]; okurl=None; errors=[]
+                  for u in urls:
+                      try:
+                          with urllib.request.urlopen(urllib.request.Request(u,headers=headers),timeout=30) as r:
+                              t=r.read().decode('utf-8','ignore')
+                          hh=[p for p in cands if str(p) in t]
+                          if hh:
+                              hits=hh;okurl=u;break
+                      except Exception as e: errors.append(repr(e))
+                  ok=expected in hits and len(hits)==1
+                  print('MAP',slug,num,'EXPECTED',expected,'HITS',hits,'URL',okurl,'OK' if ok else 'BAD')
+                  if not ok: bad.append((slug,num,expected,hits,errors))
+          print('BAD_COUNT',len(bad))
+          if bad: print('BAD',bad)
           PY
