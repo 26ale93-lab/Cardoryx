@@ -11,127 +11,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Diagnose live TCGdex and production resolver
+      - name: Audit 26 verified Normal identities for Holo value regression
         run: |
           python - <<'PY'
-          import json, urllib.request, subprocess, re
-          from pathlib import Path
+          import json, urllib.request
 
-          urls=[
-            "https://api.tcgdex.net/v2/it/cards/sv10-051",
-            "https://api.tcgdex.net/v2/en/cards/sv10-051",
+          ids=[
+            "svp-107","me04-013","me01-064","me01-073","me03-045","me03-086","me03-087","me03-088",
+            "me02-045","me02-053","sv10-034","sv10-049","sv10-051","sv10-096","sv09-055","svp-190",
+            "svp-221","svp-222","svp-223","sv08-014","sv08-065","sv05-041","sv05-062","sv05-119",
+            "sv05-121","sv06-100"
           ]
-          cards={}
-          for u in urls:
-            try:
-              with urllib.request.urlopen(u, timeout=20) as r:
-                cards[u]=json.load(r)
+          def get(cid):
+            with urllib.request.urlopen(f"https://api.tcgdex.net/v2/en/cards/{cid}",timeout=20) as r:
+              return json.load(r)
+          def norm_type(v):
+            return str(v or "").strip().lower()
+          out=[]
+          for cid in ids:
+            try:c=get(cid)
             except Exception as e:
-              cards[u]={"error":repr(e)}
-
-          def slim(c):
-            if not isinstance(c,dict): return c
-            return {
-              "id":c.get("id"),"name":c.get("name"),"localId":c.get("localId"),
-              "set":c.get("set"),"rarity":c.get("rarity"),
-              "variants":c.get("variants"),"variants_detailed":c.get("variants_detailed"),
-              "pricing":c.get("pricing"),
-            }
-
-          print("LIVE_TCGDEX")
-          print(json.dumps({u:slim(c) for u,c in cards.items()},ensure_ascii=False,indent=2))
-
-          s=Path("index.html").read_text(encoding="utf-8")
-          for needle in ["sv10-051","function cardmarketValueForCardVariant","function documentedVariantsForCard"]:
-            print("HAS",needle,needle in s)
-
-          # Run the exact production audit helper so we can reuse its JS extraction logic.
-          import importlib.util
-          p=Path("scripts/test_card_identity_cardmarket_audit.py")
-          spec=importlib.util.spec_from_file_location("audit",p)
-          mod=importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(mod)
-
-          # Focused JS extraction copied from production audit style.
-          def extract_fn(name):
-            marker=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",s)
-            assert marker, name
-            brace=s.find("{",marker.start())
-            depth=0; quote=None; esc=False
-            for i in range(brace,len(s)):
-              ch=s[i]
-              if quote:
-                if esc: esc=False
-                elif ch=="\\": esc=True
-                elif ch==quote: quote=None
-                continue
-              if ch in ("'",'"',"`"):
-                quote=ch; continue
-              if ch=="{": depth+=1
-              elif ch=="}":
-                depth-=1
-                if depth==0: return s[marker.start():i+1]
-            raise AssertionError("unclosed "+name)
-
-          def extract_obj(name):
-            marker=re.search(rf"\bconst\s+{re.escape(name)}\s*=\s*",s)
-            assert marker, name
-            start=s.find("{",marker.end())
-            depth=0; quote=None; esc=False
-            for i in range(start,len(s)):
-              ch=s[i]
-              if quote:
-                if esc: esc=False
-                elif ch=="\\": esc=True
-                elif ch==quote: quote=None
-                continue
-              if ch in ("'",'"',"`"):
-                quote=ch; continue
-              if ch=="{": depth+=1
-              elif ch=="}":
-                depth-=1
-                if depth==0: return s[start:i+1]
-            raise AssertionError("unclosed obj "+name)
-
-          it=cards[urls[0]]
-          en=cards[urls[1]]
-          fixture=it if isinstance(it,dict) and not it.get("error") else en
-          if not isinstance(fixture,dict) or fixture.get("error"):
-            raise SystemExit("No live fixture")
-
-          names=[
-            "normText","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel",
-            "canonicalStamp","exactLocalIdKey","cardSetId","isModernParallelEra",
-            "rarityForcesStandardHolo","tcgdexVariantDetails","verifiedNormalFinish",
-            "verifiedReverseFinish","documentedVariantsForCard","knownReverseCardmarketProductConflict",
-            "knownCardmarketIdentityConflict","verifiedBaseCardmarketProductOverride",
-            "verifiedExactPrimarySpecialCardmarketVariant","verifiedDualBaseCardmarketVariant",
-            "verifiedMcdonalds2019CardmarketVariant","verifiedFroakie056CosmosCardmarketVariant",
-            "verifiedGiratinaVstar201CardmarketVariant","verifiedMcdonalds2021CardmarketVariant",
-            "cardmarketValueForVariant","cardmarketValueForCardVariant"
-          ]
-          objs=["VERIFIED_NORMAL_FINISHES","VERIFIED_REVERSE_FINISHES"]
-          js="const document={};\n"
-          for o in objs: js+=f"const {o}="+extract_obj(o)+";\n"
-          for n in names:
-            try: js+=extract_fn(n)+"\n"
-            except Exception as e: print("SKIP_FN",n,e)
-
-          js+=r"""
-          const c=JSON.parse(process.argv[1]);
-          const allowed=[...documentedVariantsForCard(c,'None','')];
-          const out={allowed};
-          for(const v of ['Normal','Holo','Reverse Holo']){
-            try{out[v]=cardmarketValueForCardVariant(c,v)}catch(e){out[v]={error:String(e)}}
-          }
-          process.stdout.write(JSON.stringify(out));
-          """
-          try:
-            out=subprocess.check_output(["node","-e",js,json.dumps(fixture,ensure_ascii=False)],text=True,stderr=subprocess.STDOUT)
-            print("RUNTIME",out)
-          except subprocess.CalledProcessError as e:
-            print("RUNTIME_ERROR",e.output)
-
+              out.append({"id":cid,"error":repr(e)});continue
+            rows=c.get("variants_detailed") or []
+            base=[r for r in rows if not r.get("foil") and not r.get("stamp") and str(r.get("size") or "standard").lower()=="standard"]
+            nr=[r for r in base if norm_type(r.get("type"))=="normal"]
+            hr=[r for r in base if norm_type(r.get("type"))=="holo"]
+            rr=[r for r in base if norm_type(r.get("type"))=="reverse"]
+            top=((c.get("pricing") or {}).get("cardmarket") or {})
+            top_pid=int(top.get("idProduct") or 0)
+            hpids=[int((r.get("thirdParty") or {}).get("cardmarket") or 0) for r in hr]
+            npids=[int((r.get("thirdParty") or {}).get("cardmarket") or 0) for r in nr]
+            rpids=[int((r.get("thirdParty") or {}).get("cardmarket") or 0) for r in rr]
+            holo_exact_same_top=(len(hr)==1 and hpids[0]>0 and hpids[0]==top_pid and
+              int((((hr[0].get("pricing") or {}).get("cardmarket") or {}).get("idProduct") or 0))==top_pid)
+            current_holo_would_fail=bool(nr and hr)  # production rule: hasNormal + Holo => needs-exact-variant
+            out.append({
+              "id":cid,"name":c.get("name"),"topProduct":top_pid,
+              "normalProducts":npids,"holoProducts":hpids,"reverseProducts":rpids,
+              "normalRows":len(nr),"holoRows":len(hr),"reverseRows":len(rr),
+              "holoExactSameTop":holo_exact_same_top,
+              "currentHoloWouldFail":current_holo_would_fail,
+              "holoTrend":top.get("trend"),"reverseTrend":top.get("trend-holo")
+            })
+          affected=[x for x in out if x.get("currentHoloWouldFail")]
+          safe=[x for x in affected if x.get("holoExactSameTop")]
+          print(json.dumps({
+            "total":len(out),
+            "affectedCount":len(affected),
+            "safeExactHoloRecoveryCount":len(safe),
+            "affected":affected,
+            "notSafe":[x for x in affected if not x.get("holoExactSameTop")],
+            "errors":[x for x in out if x.get("error")]
+          },ensure_ascii=False,indent=2))
           PY
