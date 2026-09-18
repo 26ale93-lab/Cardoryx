@@ -1,4 +1,4 @@
-name: TEMP pl3 AR production regression
+name: TEMP pl3 AR final regression
 on:
   push:
     branches: [fix/pl3-ar-cardmarket-products-20260918]
@@ -20,21 +20,30 @@ jobs:
         run: git restore artifacts/card_identity_cardmarket_audit_report.json 2>/dev/null || true
       - name: Full Cardmarket audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Print protected counters and pl3 residuals
+      - name: Print exact counters and AR classifications
         run: |
           python3 - <<'PY'
           import json
-          p='artifacts/card_identity_cardmarket_audit_report.json'
-          d=json.load(open(p))
-          print('SUMMARY',json.dumps(d.get('summary') or {},sort_keys=True))
-          rows=d.get('cases') or d.get('cards') or []
-          pl3=[r for r in rows if str(r.get('tcgdexId') or r.get('id') or '').lower().startswith('pl3-') and r.get('classification')=='P1_AMBIGUOUS_PRODUCT']
-          print('PL3_P1_COUNT',len(pl3))
-          print('PL3_P1_IDS',[r.get('tcgdexId') or r.get('id') for r in pl3])
-          ar=[r for r in rows if str(r.get('tcgdexId') or r.get('id') or '').lower().startswith('pl3-ar')]
-          print('PL3_AR_CASES',json.dumps(ar,ensure_ascii=False,sort_keys=True))
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          print('CLASSIFICATIONS',json.dumps(d.get('classificationTotals') or {},sort_keys=True))
+          p1=d.get('p1AmbiguousProductIds') or []
+          print('PL3_P1_IDS',[x for x in p1 if str(x).lower().startswith('pl3-')])
+          ar=[x for x in (d.get('caseIndex') or []) if str(x.get('tcgdexId') or '').lower().startswith('pl3-ar')]
+          print('PL3_AR_CASES',json.dumps(ar,sort_keys=True))
           PY
-      - name: 30th anniversary regression
-        run: python3 scripts/test_30th_anniversary_finish_stamp.py
+      - name: Compare 30th regression with main baseline
+        run: |
+          set +e
+          python3 scripts/test_30th_anniversary_finish_stamp.py > /tmp/branch30.log 2>&1
+          BRANCH_RC=$?
+          git fetch origin main:refs/remotes/origin/main --depth=1
+          git worktree add --detach /tmp/cardoryx-main refs/remotes/origin/main >/dev/null 2>&1
+          (cd /tmp/cardoryx-main && python3 scripts/test_30th_anniversary_finish_stamp.py > /tmp/main30.log 2>&1)
+          MAIN_RC=$?
+          echo "BRANCH_30TH_RC=$BRANCH_RC"
+          echo "MAIN_30TH_RC=$MAIN_RC"
+          echo "BRANCH_30TH_ERROR=$(grep -m1 -E 'ReferenceError|AssertionError|Error:' /tmp/branch30.log || true)"
+          echo "MAIN_30TH_ERROR=$(grep -m1 -E 'ReferenceError|AssertionError|Error:' /tmp/main30.log || true)"
+          test "$BRANCH_RC" -eq "$MAIN_RC"
       - name: Diff check
         run: git diff --check
