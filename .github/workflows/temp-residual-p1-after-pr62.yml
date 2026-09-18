@@ -1,0 +1,42 @@
+name: TEMP residual P1 distribution after PR62
+on:
+  push:
+    branches: [diagnostic/residual-p1-after-pr62-20260918]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Run full audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Summarize residual P1
+        run: |
+          python3 - <<'PY'
+          import json,collections,re
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          ids=d.get('p1AmbiguousProductIds') or []
+          print('P1_TOTAL',len(ids))
+          byset=collections.Counter(x.rsplit('-',1)[0] for x in ids)
+          print('BY_SET',json.dumps(byset.most_common(),ensure_ascii=False))
+          # print exact IDs grouped by set, shortest/smallest clusters first
+          groups=collections.defaultdict(list)
+          for x in ids: groups[x.rsplit('-',1)[0]].append(x)
+          for setid,vals in sorted(groups.items(), key=lambda kv:(len(kv[1]),kv[0])):
+              print('SET',setid,'COUNT',len(vals),'IDS',json.dumps(sorted(vals)))
+          # Include report case metadata for P1s when present.
+          cases=d.get('cases') or d.get('cards') or []
+          for row in cases:
+              cid=row.get('tcgdexId') or row.get('id')
+              if cid in ids:
+                  keep={k:row.get(k) for k in ('tcgdexId','setId','localId','name','classification','currentProductId','alternateProductIds','sharedWith','reason','action') if k in row}
+                  print('CASE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+          PY
