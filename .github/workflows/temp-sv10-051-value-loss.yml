@@ -20,8 +20,8 @@ jobs:
           from pathlib import Path
 
           urls=[
-            "https://api.tcgdex.net/v2/it/cards/sv10-51",
-            "https://api.tcgdex.net/v2/en/cards/sv10-51",
+            "https://api.tcgdex.net/v2/it/cards/sv10-051",
+            "https://api.tcgdex.net/v2/en/cards/sv10-051",
           ]
           cards={}
           for u in urls:
