@@ -94,3 +94,24 @@ jobs:
                   keep={k:row.get(k) for k in ('tcgdexId','setId','localId','name','classification','currentProductId','alternateProductIds','sharedWith','reason','action') if k in row}
                   print('REPORT_CASE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
           PY
+      - name: Inspect existing exact guards for special residuals
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for fn in ('index.html','scripts/test_card_identity_cardmarket_audit.py'):
+              t=Path(fn).read_text(encoding='utf-8')
+              print('FILE',fn)
+              seen=[]
+              for needle in ('sm12-29','sm12-237','398524','407794','cel25cc-CC020','576747','576755','25th-celebration','mfb-9','741988','741976'):
+                  pos=0
+                  while True:
+                      i=t.find(needle,pos)
+                      if i<0: break
+                      a=max(0,i-1800); b=min(len(t),i+4200)
+                      if not any(a>=x and b<=y for x,y in seen):
+                          print('ANCHOR',needle,i)
+                          print(t[a:b])
+                          seen.append((a,b))
+                      pos=i+len(needle)
+          PY
+
