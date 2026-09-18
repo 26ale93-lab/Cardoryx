@@ -5,56 +5,49 @@ on:
 permissions:
   contents: read
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify exact Fossil numbered pages against candidate Cardmarket products
+      - name: Verify Fossil exact numbered mappings
         run: |
           python3 - <<'PY'
-          import urllib.request
+          import urllib.request,re,json
           headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
           pairs=[
-            ('aerodactyl',1,16,273862,273877,[275573]),
-            ('articuno',2,17,273863,273878,[]),
-            ('ditto',3,18,273864,273879,[]),
-            ('dragonite',4,19,273865,273880,[]),
-            ('gengar',5,20,273866,273881,[]),
-            ('haunter',6,21,273867,273882,[]),
-            ('hitmonlee',7,22,273868,273883,[]),
-            ('hypno',8,23,273869,273884,[]),
-            ('kabutops',9,24,273870,273885,[]),
-            ('lapras',10,25,273871,273886,[]),
-            ('magneton',11,26,273872,273887,[]),
-            ('moltres',12,27,273873,273888,[]),
-            ('muk',13,28,273874,273889,[]),
-            ('raichu',14,29,273875,273890,[]),
-            ('zapdos',15,30,273876,273891,[]),
-          ]
-          checks=[]
-          for slug,holo,normal,hpid,npid,extras in pairs:
-              candidates=tuple([hpid,npid]+extras)
-              checks += [(slug,holo,hpid,candidates),(slug,normal,npid,candidates)]
+            ('aerodactyl',1,16,273862,273877),('articuno',2,17,273863,273878),
+            ('ditto',3,18,273864,273879),('dragonite',4,19,273865,273880),
+            ('gengar',5,20,273866,273881),('haunter',6,21,273867,273882),
+            ('hitmonlee',7,22,273868,273883),('hypno',8,23,273869,273884),
+            ('kabutops',9,24,273870,273885),('lapras',10,25,273871,273886),
+            ('magneton',11,26,273872,273887),('moltres',12,27,273873,273888),
+            ('muk',13,28,273874,273889),('raichu',14,29,273875,273890),
+            ('zapdos',15,30,273876,273891)]
           bad=[]
-          for slug,num,expected,cands in checks:
-              urls=[
-                f'https://www.tcggo.com/pokemon/fossil/{slug}-{num}',
-                f'https://www.tcggo.com/pokemon/fossil/{slug}-{num}-62',
-              ]
-              ok=False; seen=[]
-              for u in urls:
+          for slug,a,b,p1,p2 in pairs:
+              for num,expected,cands in ((a,p1,(p1,p2)),(b,p2,(p1,p2))):
+                  u=f'https://www.tcggo.com/pokemon/fossil/{slug}-{num}'
                   try:
-                      with urllib.request.urlopen(urllib.request.Request(u,headers=headers),timeout=30) as r:
-                          t=r.read().decode('utf-8','ignore')
+                      req=urllib.request.Request(u,headers=headers)
+                      with urllib.request.urlopen(req,timeout=30) as r:t=r.read().decode('utf-8','ignore')
                       hits=[p for p in cands if str(p) in t]
-                      print('PAGE',u,'EXPECTED',expected,'HITS',hits)
-                      seen.append((u,hits))
-                      if expected in hits and len(hits)==1:
-                          ok=True;break
+                      ok=expected in hits and len(hits)==1
+                      print('PAGE_MAP',slug,num,'expected',expected,'hits',hits,'OK' if ok else 'BAD')
+                      if not ok: bad.append((u,expected,hits))
                   except Exception as e:
-                      print('PAGE_ERROR',u,repr(e))
-              print('MAP',slug,num,'EXPECTED',expected,'OK' if ok else 'BAD')
-              if not ok:bad.append((slug,num,expected,seen))
-          print('BAD_COUNT',len(bad))
-          if bad:print('BAD',bad)
+                      print('PAGE_MAP_ERROR',u,repr(e));bad.append((u,expected,[]))
+          print('PAGE_MAP_BAD_COUNT',len(bad))
+          if bad: print('PAGE_MAP_BAD',bad)
+          # Inspect Aerodactyl third product on public/cardmarket-facing indexes without bypassing blocks.
+          for u in [
+              'https://www.tcggo.com/pokemon/fossil/aerodactyl-1',
+              'https://www.tcggo.com/pokemon/fossil/aerodactyl-16',
+          ]:
+              try:
+                  req=urllib.request.Request(u,headers=headers)
+                  with urllib.request.urlopen(req,timeout=30) as r:t=r.read().decode('utf-8','ignore')
+                  print('AERO_PAGE',u,'HAS273862',str(273862) in t,'HAS273877',str(273877) in t,'HAS275573',str(275573) in t)
+                  for m in re.finditer('275573',t):
+                      print('AERO_275573_CONTEXT',re.sub(r'\s+',' ',t[max(0,m.start()-300):m.end()+300]))
+              except Exception as e: print('AERO_PAGE_ERROR',u,repr(e))
           PY
