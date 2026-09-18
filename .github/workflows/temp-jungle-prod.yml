@@ -102,17 +102,24 @@ jobs:
           d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
           summary=d.get('summary') or {}
           print('SUMMARY',summary)
+          print('TOP_LEVEL_CLASSIFICATIONS',{k:d.get(k) for k in ('SAFE','EXACT_ALTERNATE_PRODUCT','P0_WRONG_PRODUCT','P1_AMBIGUOUS_PRODUCT','SOURCE_CONFLICT','UNMAPPED_EXACT_PRODUCT')})
           p1=d.get('p1AmbiguousProductIds') or []
           residual=[x for x in p1 if x.startswith('base2-')]
           print('BASE2_RESIDUAL',residual)
           if residual: raise SystemExit('Jungle P1 residuals remain')
           expected={'SAFE':1885,'EXACT_ALTERNATE_PRODUCT':162,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':150,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
-          # Support either direct summary keys or classificationCounts.
-          counts=summary.get('classificationCounts') or summary
+          candidates=[
+              d,
+              d.get('counts') or {},
+              d.get('classificationCounts') or {},
+              summary,
+              summary.get('classificationCounts') or {},
+          ]
+          counts=next((x for x in candidates if all(k in x for k in expected)),None)
+          if counts is None:
+              raise SystemExit('Classification counters not found in audit report')
           for k,v in expected.items():
               actual=counts.get(k)
-              if actual is None:
-                  actual=(d.get('classificationCounts') or {}).get(k)
               if actual!=v: raise SystemExit(f'{k}: expected {v}, got {actual}')
           PY
       - name: Diff safety
