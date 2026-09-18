@@ -192,7 +192,7 @@ jobs:
           python3 - <<'PY'
           import subprocess
           changed=set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())
-          expected={'index.html','scripts/test_card_identity_cardmarket_audit.py'}
+          expected={'index.html','scripts/test_card_identity_cardmarket_audit.py','.github/workflows/temp-base3-fossil-cardmarket.yml'}
           if changed!=expected:
               raise SystemExit(f'Unexpected staged files: {sorted(changed)}')
           PY
