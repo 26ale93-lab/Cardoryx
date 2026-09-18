@@ -1,4 +1,4 @@
-name: TEMP pl3 Arceus catalogue audit
+name: TEMP pl3 AR physical identity audit
 on:
   push:
     branches: [diagnostic/residual-base1-after-pr66-20260918]
@@ -9,38 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Inspect exact Arceus catalogue candidates
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Extract AR1-AR9 source evidence
         run: |
-          python3 - <<'PY'
-          import json, pathlib, tempfile, urllib.request
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          def dl(section,name):
-              p=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
-                  while chunk:=r.read(1024*1024): out.write(chunk)
-              return json.load(open(p))
-          def rows(root,keys):
-              if isinstance(root,list): return root
-              for k in keys:
-                  v=root.get(k) if isinstance(root,dict) else None
-                  if isinstance(v,list): return v
-              return []
-          prod=dl('productList','products_singles_6.json')
-          price=dl('priceGuide','price_guide_6.json')
-          products=rows(prod,('products',))
-          candidates=[r for r in products if int(r.get('idExpansion') or 0)==1565 and 'arceus' in str(r.get('name') or '').casefold()]
-          print('ARCEUS_CANDIDATE_COUNT',len(candidates))
-          pids={int(r['idProduct']) for r in candidates}
-          for r in candidates:
-              print('ARCEUS_CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
-          for r in rows(price,('priceGuides','priceGuide')):
-              if int(r.get('idProduct') or 0) in pids:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
-                  print('ARCEUS_CM_PRICE',json.dumps(keep,sort_keys=True))
-          if len(candidates)<9:
-              raise SystemExit('FAIL_CLOSED: fewer than 9 Arceus candidates in expansion 1565')
-          PY
+          for n in 1 2 3 4 5 6 7 8 9; do
+            echo "===== AR${n} ====="
+            f=$(find ../tcgdex-cards-database/data -type f -path "*/pl3/AR${n}.ts" | head -n 1)
+            if [ -z "$f" ]; then
+              echo "FAIL_CLOSED missing AR${n}"
+              exit 1
+            fi
+            echo "AR_FILE $f"
+            cat "$f"
+          done
