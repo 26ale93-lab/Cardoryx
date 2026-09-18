@@ -42,7 +42,7 @@ jobs:
           entries=[]
           for cid,setid,local,name,finish,pid,source,exp,pair in rows:
               entries.append(f'  "{cid}":{{setId:"{setid}",localId:"{local}",name:{json.dumps(name)},finish:"{finish}",productId:{pid},sourceProduct:{source},expansionId:{exp},pairId:"{pair}"}},')
-          insert='\n'+'\n'.join(entries)
+          insert=',\n'+'\n'.join(entries)
           s=s[:end]+insert+s[end:]
 
           # Freeze standard price-guide fields for exact Cardmarket products.
