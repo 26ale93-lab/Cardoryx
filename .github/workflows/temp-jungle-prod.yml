@@ -109,6 +109,7 @@ jobs:
           if residual: raise SystemExit('Jungle P1 residuals remain')
           expected={'SAFE':1885,'EXACT_ALTERNATE_PRODUCT':162,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':150,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
           candidates=[
+              d.get('classificationTotals') or {},
               d,
               d.get('counts') or {},
               d.get('classificationCounts') or {},
