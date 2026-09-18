@@ -1,190 +1,14 @@
-name: TEMP Neo Discovery P1 audit
+name: TEMP Neo Discovery implementation anchors
 on:
   push:
     branches: [diagnostic/neo2-p1-20260917]
 permissions:
   contents: read
 jobs:
-  audit:
+  inspect:
     runs-on: ubuntu-latest
-    env:
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run current full audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Inspect all residual neo2 identities
-        run: |
-          python3 - <<'PY'
-          import json,urllib.request,tempfile,pathlib,collections
-          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          ids=[x for x in d.get('p1AmbiguousProductIds',[]) if x.startswith('neo2-')]
-          print('NEO2_COUNT',len(ids))
-          print('NEO2_IDS',json.dumps(ids))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          product_ids=set();cards={};name_groups=collections.defaultdict(list)
-          for cid in ids:
-              try:
-                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
-                  with urllib.request.urlopen(req,timeout=60) as r:c=json.load(r)
-              except Exception as e:
-                  print('CARD_ERROR',cid,repr(e));continue
-              cards[cid]=c;name_groups[str(c.get('name') or '')].append(cid)
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid:product_ids.add(int(pid))
-                  stamps=x.get('stamp') or []
-                  if isinstance(stamps,str):stamps=[stamps]
-                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':stamps,'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo'),'avg7':cm.get('avg7'),'avg7Holo':cm.get('avg7-holo'),'low':cm.get('low'),'lowHolo':cm.get('low-holo')})
-              if top.get('idProduct'):product_ids.add(int(top['idProduct']))
-              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'rarity':c.get('rarity'),'topProduct':top.get('idProduct'),'topTrend':top.get('trend'),'topTrendHolo':top.get('trend-holo'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
-          print('NAME_GROUPS',json.dumps({k:v for k,v in name_groups.items() if len(v)>1},ensure_ascii=False,sort_keys=True))
-          def dl(section,name):
-              path=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r,path.open('wb') as f:
-                  while chunk:=r.read(1024*1024):f.write(chunk)
-              return json.load(open(path))
-          prod=dl('productList','products_singles_6.json');price=dl('priceGuide','price_guide_6.json')
-          def rows(obj,keys):
-              if isinstance(obj,list):return obj
-              for k in keys:
-                  v=obj.get(k) if isinstance(obj,dict) else None
-                  if isinstance(v,list):return v
-              return []
-          product_map={}
-          for r in rows(prod,('products',)):
-              pid=int(r.get('idProduct') or 0)
-              if pid in product_ids:
-                  product_map[pid]=r
-                  print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
-          for r in rows(price,('priceGuides','priceGuide')):
-              pid=int(r.get('idProduct') or 0)
-              if pid in product_ids:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','trend-holo','avg7-holo','avg30-holo','low-holo')}
-                  print('CM_PRICE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
-          # Group P1 cards by product id so shared-product patterns are explicit.
-          pid_cards=collections.defaultdict(list)
-          for cid,c in cards.items():
-              pids=set()
-              top=((c.get('pricing') or {}).get('cardmarket') or {}).get('idProduct')
-              if top:pids.add(int(top))
-              for x in c.get('variants_detailed') or []:
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid:pids.add(int(pid))
-              for pid in pids:pid_cards[pid].append(cid)
-          print('SHARED_PIDS',json.dumps({str(k):v for k,v in pid_cards.items() if len(v)>1},sort_keys=True))
-          PY
-      - name: Deep audit duplicate Cardmarket catalogue rows
-        run: |
-          python3 - <<'PY'
-          import json,urllib.request,tempfile,pathlib,collections
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          def dl(section,name):
-              p=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as f:
-                  while chunk:=r.read(1024*1024):f.write(chunk)
-              return json.load(open(p))
-          prod=dl('productList','products_singles_6.json')
-          def rows(obj):
-              if isinstance(obj,list): return obj
-              return obj.get('products') or []
-          for exp,label in ((1532,'NEO2'),(1529,'GYM1'),(1530,'GYM2')):
-              rr=[r for r in rows(prod) if int(r.get('idExpansion') or 0)==exp]
-              groups=collections.defaultdict(list)
-              for r in rr: groups[str(r.get('name') or '')].append(r)
-              print('EXPANSION',label,'COUNT',len(rr),'DUP_GROUPS',sum(1 for v in groups.values() if len(v)>1))
-              for name,vals in sorted(groups.items()):
-                  if len(vals)>1:
-                      print('DUP',label,name,json.dumps([{'idProduct':x.get('idProduct'),'idMetacard':x.get('idMetacard'),'name':x.get('name')} for x in vals],ensure_ascii=False,sort_keys=True))
-          PY
-      - name: Extract exact alternate price guides
-        run: |
-          python3 - <<'PY'
-          import json,urllib.request,tempfile,pathlib
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          p=pathlib.Path(tempfile.gettempdir())/'price_guide_6.json'
-          req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',headers=headers)
-          with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as f:
-              while chunk:=r.read(1024*1024): f.write(chunk)
-          d=json.load(open(p))
-          rows=d if isinstance(d,list) else (d.get('priceGuides') or d.get('priceGuide') or [])
-          neo=list(range(274513,274524))+list(range(274525,274529))+list(range(274532,274543))+list(range(274544,274548))
-          gym=[274151,274234,274152,274236,274153,274237,274154,274238,274285,274368,274286,274372,274287,274374,274288,274378]
-          wanted=set(neo+gym)
-          for r in rows:
-              pid=int(r.get('idProduct') or 0)
-              if pid in wanted:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
-                  print('EXACT_GUIDE',json.dumps(keep,sort_keys=True))
-          PY
-      - name: Verify exact card-number to Cardmarket IDs on public indexes
-        run: |
-          python3 - <<'PY'
-          import urllib.request,re,json
-          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
-          urls=[
-            'https://www.tcggo.com/pokemon/gym-challenge/blaine-100',
-            'https://www.tcggo.com/pokemon/gym-heroes/brock-98',
-            'https://www.tcggo.com/pokemon/neo-discovery/forretress-2',
-            'https://www.tcggo.com/pokemon/neo-discovery/forretress-21',
-          ]
-          for u in urls:
-              try:
-                  req=urllib.request.Request(u,headers=headers)
-                  with urllib.request.urlopen(req,timeout=30) as r:t=r.read().decode('utf-8','ignore')
-                  ids=sorted(set(re.findall(r'Cardmarket(?:\\s|<[^>]+>)*ID(?:\\s|<[^>]+>)*([0-9]{6})',t,re.I)))
-                  print('PUBLIC_INDEX',u,'status=200','ids=',ids,'len=',len(t))
-              except Exception as e:
-                  print('PUBLIC_INDEX_ERROR',u,repr(e))
-          PY
-      - name: Resolve every exact page against its two candidate product IDs
-        run: |
-          python3 - <<'PY'
-          import urllib.request
-          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
-          checks=[]
-          neo=[
-            ('forretress',2,21,274513,274532),('hitmontop',3,22,274514,274533),
-            ('houndoom',4,23,274515,274534),('houndour',5,24,274516,274535),
-            ('kabutops',6,25,274517,274536),('magnemite',7,26,274518,274537),
-            ('politoed',8,27,274519,274538),('poliwrath',9,28,274520,274539),
-            ('scizor',10,29,274521,274540),('smeargle',11,30,274522,274541),
-            ('tyranitar',12,31,274523,274542),('unown-a',14,33,274525,274544),
-            ('ursaring',15,34,274526,274545),('wobbuffet',16,35,274527,274546),
-            ('yanma',17,36,274528,274547)]
-          for slug,a,b,p1,p2 in neo:
-              checks += [('neo-discovery',slug,a,p1,(p1,p2)),('neo-discovery',slug,b,p2,(p1,p2))]
-          gym1=[('brock',15,98,274151,274234),('erika',16,100,274152,274236),('lt-surge',17,101,274153,274237),('misty',18,102,274154,274238)]
-          for slug,a,b,p1,p2 in gym1:
-              checks += [('gym-heroes',slug,a,p1,(p1,p2)),('gym-heroes',slug,b,p2,(p1,p2))]
-          gym2=[('blaine',17,100,274285,274368),('giovanni',18,104,274286,274372),('koga',19,106,274287,274374),('sabrina',20,110,274288,274378)]
-          for slug,a,b,p1,p2 in gym2:
-              checks += [('gym-challenge',slug,a,p1,(p1,p2)),('gym-challenge',slug,b,p2,(p1,p2))]
-          bad=[]
-          for setslug,slug,num,expected,cands in checks:
-              u=f'https://www.tcggo.com/pokemon/{setslug}/{slug}-{num}'
-              try:
-                  with urllib.request.urlopen(urllib.request.Request(u,headers=headers),timeout=30) as r:t=r.read().decode('utf-8','ignore')
-                  hits=[p for p in cands if str(p) in t]
-                  ok=expected in hits and len(hits)==1
-                  print('PAGE_MAP',setslug,slug,num,'expected',expected,'hits',hits,'OK' if ok else 'BAD')
-                  if not ok: bad.append((u,expected,hits))
-              except Exception as e:
-                  print('PAGE_MAP_ERROR',u,repr(e)); bad.append((u,expected,[]))
-          print('PAGE_MAP_BAD_COUNT',len(bad))
-          if bad: print('PAGE_MAP_BAD',bad)
-          PY
-
       - name: Inspect current Gym implementation anchors
         run: |
           python3 - <<'PY'
@@ -192,19 +16,18 @@ jobs:
           for fn in ('index.html','scripts/test_card_identity_cardmarket_audit.py'):
               t=Path(fn).read_text()
               print('FILE_BEGIN',fn)
-              needles=['Gym','gym1-15','274151','shared finish','SHARED_FINISH','verifiedVariantPrice']
-              seen=[]
-              for needle in needles:
+              spans=[]
+              for needle in ['gym1-15','274151','Gym Leader','GYM','shared finish','verifiedVariantPrice']:
                   pos=0
                   while True:
                       i=t.find(needle,pos)
                       if i<0: break
-                      a=max(0,i-1800); b=min(len(t),i+4200)
-                      key=(a,b)
-                      if key not in seen:
-                          print('CONTEXT',needle,i)
-                          print(t[a:b])
-                          seen.append(key)
+                      a=max(0,i-2500); b=min(len(t),i+5500)
+                      if not any(a>=x and b<=y for x,y in spans):
+                          spans.append((a,b))
                       pos=i+len(needle)
+              for a,b in spans:
+                  print('CONTEXT_RANGE',a,b)
+                  print(t[a:b])
               print('FILE_END',fn)
           PY
