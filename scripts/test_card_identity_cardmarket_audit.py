@@ -590,7 +590,9 @@ def extract_js_object(source, name):
         raise AssertionError(f"Unclosed registry {name}")
     literal = source[start:end + 2]
     js = f"const value=({literal}); process.stdout.write(JSON.stringify(value));"
-    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+    # Feed large registries through stdin instead of argv: generated exact indexes
+    # can exceed the operating-system command-line size limit.
+    return json.loads(subprocess.check_output(["node"], input=js, text=True))
 
 
 def override_matches(rule, card_id, set_id, local_id, current_product):
