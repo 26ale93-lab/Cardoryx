@@ -310,6 +310,36 @@ LEGACY_CHECKLIST_PRODUCTS = {
     'neo2-35': ('neo2', '35', 'Wobbuffet', 'Normal', 274546, 274527, 1532, 'neo2-16'),
     'neo2-17': ('neo2', '17', 'Yanma', 'Holo', 274528, 274528, 1532, 'neo2-36'),
     'neo2-36': ('neo2', '36', 'Yanma', 'Normal', 274547, 274528, 1532, 'neo2-17'),
+    'base3-1': ('base3', '1', 'Aerodactyl', 'Holo', 273862, 273862, 1526, 'base3-16'),
+    'base3-16': ('base3', '16', 'Aerodactyl', 'Normal', 273877, 273862, 1526, 'base3-1'),
+    'base3-2': ('base3', '2', 'Articuno', 'Holo', 273863, 273863, 1526, 'base3-17'),
+    'base3-17': ('base3', '17', 'Articuno', 'Normal', 273878, 273863, 1526, 'base3-2'),
+    'base3-3': ('base3', '3', 'Ditto', 'Holo', 273864, 273864, 1526, 'base3-18'),
+    'base3-18': ('base3', '18', 'Ditto', 'Normal', 273879, 273864, 1526, 'base3-3'),
+    'base3-4': ('base3', '4', 'Dragonite', 'Holo', 273865, 273865, 1526, 'base3-19'),
+    'base3-19': ('base3', '19', 'Dragonite', 'Normal', 273880, 273865, 1526, 'base3-4'),
+    'base3-5': ('base3', '5', 'Gengar', 'Holo', 273866, 273866, 1526, 'base3-20'),
+    'base3-20': ('base3', '20', 'Gengar', 'Normal', 273881, 273866, 1526, 'base3-5'),
+    'base3-6': ('base3', '6', 'Haunter', 'Holo', 273867, 273867, 1526, 'base3-21'),
+    'base3-21': ('base3', '21', 'Haunter', 'Normal', 273882, 273867, 1526, 'base3-6'),
+    'base3-7': ('base3', '7', 'Hitmonlee', 'Holo', 273868, 273868, 1526, 'base3-22'),
+    'base3-22': ('base3', '22', 'Hitmonlee', 'Normal', 273883, 273868, 1526, 'base3-7'),
+    'base3-8': ('base3', '8', 'Hypno', 'Holo', 273869, 273869, 1526, 'base3-23'),
+    'base3-23': ('base3', '23', 'Hypno', 'Normal', 273884, 273869, 1526, 'base3-8'),
+    'base3-9': ('base3', '9', 'Kabutops', 'Holo', 273870, 273870, 1526, 'base3-24'),
+    'base3-24': ('base3', '24', 'Kabutops', 'Normal', 273885, 273870, 1526, 'base3-9'),
+    'base3-10': ('base3', '10', 'Lapras', 'Holo', 273871, 273871, 1526, 'base3-25'),
+    'base3-25': ('base3', '25', 'Lapras', 'Normal', 273886, 273871, 1526, 'base3-10'),
+    'base3-11': ('base3', '11', 'Magneton', 'Holo', 273872, 273872, 1526, 'base3-26'),
+    'base3-26': ('base3', '26', 'Magneton', 'Normal', 273887, 273872, 1526, 'base3-11'),
+    'base3-12': ('base3', '12', 'Moltres', 'Holo', 273873, 273873, 1526, 'base3-27'),
+    'base3-27': ('base3', '27', 'Moltres', 'Normal', 273888, 273873, 1526, 'base3-12'),
+    'base3-13': ('base3', '13', 'Muk', 'Holo', 273874, 273874, 1526, 'base3-28'),
+    'base3-28': ('base3', '28', 'Muk', 'Normal', 273889, 273874, 1526, 'base3-13'),
+    'base3-14': ('base3', '14', 'Raichu', 'Holo', 273875, 273875, 1526, 'base3-29'),
+    'base3-29': ('base3', '29', 'Raichu', 'Normal', 273890, 273875, 1526, 'base3-14'),
+    'base3-15': ('base3', '15', 'Zapdos', 'Holo', 273876, 273876, 1526, 'base3-30'),
+    'base3-30': ('base3', '30', 'Zapdos', 'Normal', 273891, 273876, 1526, 'base3-15'),
 }
 
 BATCH2_SHARED_PRODUCT_OWNERS = {
@@ -2142,7 +2172,7 @@ def main():
                 cm=((row.get("pricing") or {}).get("cardmarket") or {})
                 try: ppid=int(cm.get("idProduct") or cm.get("id_product"))
                 except (TypeError,ValueError): ppid=None
-                base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")
+                base_ok=(str(row.get("type") or "").lower()==expected_type and (not row.get("foil") or (owner_set=="base3" and str(row.get("foil") or "").lower()=="galaxy")) and str(row.get("size") or "standard").lower()=="standard")
                 if base_ok and cm_id(row)==source_product and ppid==source_product: source_rows.append(row)
                 if base_ok and cm_id(row)==owner_product and ppid==owner_product: exact_rows.append(row)
             pair=LEGACY_CHECKLIST_PRODUCTS.get(pair_id)
