@@ -5468,7 +5468,7 @@ function verifiedStampPrice(card,variant,stamp){
 // set-name registry: no other card/finish may inherit a special parallel price.
 const VERIFIED_EXACT_VARIANT_PRICES = {
   'me02.5-002':{
-    setId:'me02.5',localId:'002',name:"Erika's Gloom",finish:'Poké Ball Reverse Holo',productId:870138,
+    setId:'me02.5',localId:'002',name:"Erika's Gloom",names:["Erika's Gloom",'Gloom di Erika'],finish:'Poké Ball Reverse Holo',productId:870138,
     low:0.02,trend:0.13,avg1:0.14,avg7:0.15,avg30:0.15,
     source:"TCGdex riga fisica esatta Poké Ball · Cardmarket Ascended Heroes: Additionals · product 870138",
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json',
@@ -5487,9 +5487,11 @@ const VERIFIED_EXACT_VARIANT_PRICES = {
 function verifiedExactVariantPrice(card,variant){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const rule=VERIFIED_EXACT_VARIANT_PRICES[id];
+  const allowedNames=Array.isArray(rule?.names)&&rule.names.length?rule.names:[rule?.name||''];
+  const exactName=allowedNames.some(name=>normText(card?.name||'')===normText(name));
   if(!rule || cardSetId(card)!==rule.setId ||
      exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
-     normText(card?.name||'')!==normText(rule.name||'') ||
+     !exactName ||
      canonicalVariant(variant||'Normal')!==canonicalVariant(rule.finish))return null;
   return rule;
 }
