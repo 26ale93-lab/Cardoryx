@@ -618,6 +618,7 @@ def runtime_cardmarket_regression():
     assert ball_source.count(ball_begin) == 1 and ball_source.count(ball_end) == 1
     ball_block = ball_source.split(ball_begin, 1)[1].split(ball_end, 1)[0]
     ball_rules = {}
+    duplicate_ball_keys = {}
     for line in ball_block.splitlines():
         stripped = line.strip()
         if not stripped.startswith('"') or '":{' not in stripped:
@@ -628,7 +629,10 @@ def runtime_cardmarket_regression():
         value_text = stripped[split_at + 2:]
         key = json.loads(key_text)
         value = json.loads(value_text.rstrip(","))
+        if key in ball_rules:
+            duplicate_ball_keys.setdefault(key, [ball_rules[key]]).append(value)
         ball_rules[key] = value
+    assert not duplicate_ball_keys, duplicate_ball_keys
     assert len(ball_rules) == 508, len(ball_rules)
     assert len({int(v["productId"]) for v in ball_rules.values()}) == 508
     assert sum(1 for v in ball_rules.values() if v["finish"] == "Poké Ball Reverse Holo") == 299
