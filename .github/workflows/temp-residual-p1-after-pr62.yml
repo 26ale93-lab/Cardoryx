@@ -1,4 +1,4 @@
-name: TEMP pl3 AR final regression
+name: TEMP pl3 AR set identity diagnostic
 on:
   push:
     branches: [fix/pl3-ar-cardmarket-products-20260918]
@@ -9,41 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Clone TCGdex database
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Runtime-only Cardmarket audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only --tcgdex-db ../tcgdex-cards-database
-      - name: Restore generated audit report
-        run: git restore artifacts/card_identity_cardmarket_audit_report.json 2>/dev/null || true
-      - name: Full Cardmarket audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Print exact counters and AR classifications
+      - name: Print Platinum set ids and AR4 sources
         run: |
-          python3 - <<'PY'
-          import json
-          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          print('CLASSIFICATIONS',json.dumps(d.get('classificationTotals') or {},sort_keys=True))
-          p1=d.get('p1AmbiguousProductIds') or []
-          print('PL3_P1_IDS',[x for x in p1 if str(x).lower().startswith('pl3-')])
-          ar=[x for x in (d.get('caseIndex') or []) if str(x.get('tcgdexId') or '').lower().startswith('pl3-ar')]
-          print('PL3_AR_CASES',json.dumps(ar,sort_keys=True))
-          PY
-      - name: Compare 30th regression with main baseline
-        run: |
-          set +e
-          python3 scripts/test_30th_anniversary_finish_stamp.py > /tmp/branch30.log 2>&1
-          BRANCH_RC=$?
-          git fetch origin main:refs/remotes/origin/main --depth=1
-          git worktree add --detach /tmp/cardoryx-main refs/remotes/origin/main >/dev/null 2>&1
-          (cd /tmp/cardoryx-main && python3 scripts/test_30th_anniversary_finish_stamp.py > /tmp/main30.log 2>&1)
-          MAIN_RC=$?
-          echo "BRANCH_30TH_RC=$BRANCH_RC"
-          echo "MAIN_30TH_RC=$MAIN_RC"
-          echo "BRANCH_30TH_ERROR=$(grep -m1 -E 'ReferenceError|AssertionError|Error:' /tmp/branch30.log || true)"
-          echo "MAIN_30TH_ERROR=$(grep -m1 -E 'ReferenceError|AssertionError|Error:' /tmp/main30.log || true)"
-          test "$BRANCH_RC" -eq "$MAIN_RC"
-      - name: Diff check
-        run: git diff --check
+          echo "===== SET DEFINITIONS ====="
+          grep -nE "id:|name:|serie:" "../tcgdex-cards-database/data/Platinum/Arceus.ts" || true
+          grep -nE "id:|name:|serie:" "../tcgdex-cards-database/data/Platinum/Supreme Victors.ts" || true
+          echo "===== ARCEUS/AR4 ====="
+          cat "../tcgdex-cards-database/data/Platinum/Arceus/AR4.ts"
+          echo "===== SUPREME VICTORS/AR4 ====="
+          cat "../tcgdex-cards-database/data/Platinum/Supreme Victors/AR4.ts"
