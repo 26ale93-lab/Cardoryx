@@ -1,0 +1,35 @@
+name: TEMP Exeggcute 001 Pokeball
+
+on:
+  push:
+    branches:
+      - diagnostic/exeggcute-001-pokeball-20260919
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exact live identity
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          ids=["sv8.5-001","sv08.5-001","sv8pt5-001"]
+          for cid in ids:
+            for lang in ("it","en"):
+              u=f"https://api.tcgdex.net/v2/{lang}/cards/{cid}"
+              try:
+                with urllib.request.urlopen(u,timeout=20) as r:
+                  c=json.load(r)
+                print("OK",lang,cid)
+                print(json.dumps({
+                  "id":c.get("id"),"name":c.get("name"),"localId":c.get("localId"),
+                  "set":c.get("set"),"rarity":c.get("rarity"),
+                  "variants":c.get("variants"),
+                  "variants_detailed":c.get("variants_detailed"),
+                  "pricing":c.get("pricing")
+                },ensure_ascii=False,indent=2))
+              except Exception as e:
+                print("ERR",lang,cid,repr(e))
+          PY
