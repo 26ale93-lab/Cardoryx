@@ -634,6 +634,9 @@ def runtime_cardmarket_regression():
         ],
         "frillish": {"id": "sv10.5w-044", "tcgdexId": "sv10.5w-044", "name": "Frillish",
                      "localId": "044", "set": {"id": "sv10.5w", "name": "Fuoco Bianco"}},
+        "erikasGloom": {"id": "me02.5-002", "tcgdexId": "me02.5-002", "name": "Erika's Gloom",
+                        "localId": "002", "set": {"id": "me02.5", "name": "Ascesa Eroica"},
+                        "variant": "Poké Ball Reverse Holo", "stamp": "None"},
         "pikachu": {"id": "sv05-051", "tcgdexId": "sv05-051", "name": "Pikachu",
                     "localId": "051", "set": {"id": "sv05", "name": "Cronoforze"}},
     }
@@ -1226,6 +1229,14 @@ element('stamp').value='None';
   assert.strictEqual(frillish?.trend,3);
   assert.strictEqual(r.verifiedVariantPrice(fixtures.frillish,'Normal'),null);
   assert.strictEqual(r.verifiedVariantPrice(fixtures.frillish,'Poké Ball Reverse Holo'),null);
+  const gloom=r.verifiedVariantPrice(fixtures.erikasGloom,'Poké Ball Reverse Holo');
+  assert.strictEqual(gloom?.productId,870138);
+  assert.strictEqual(gloom?.trend,0.13);
+  assert.strictEqual(r.verifiedVariantPrice(fixtures.erikasGloom,'Normal'),null);
+  assert.strictEqual(r.verifiedVariantPrice({...fixtures.erikasGloom,localId:'003'},'Poké Ball Reverse Holo'),null);
+  assert.strictEqual(r.verifiedVariantPrice({...fixtures.erikasGloom,set:{id:'me02.5-other'}},'Poké Ball Reverse Holo'),null);
+  assert.strictEqual(r.verifiedVariantPrice({...fixtures.erikasGloom,name:"Erika's Oddish"},'Poké Ball Reverse Holo'),null);
+  assert.strictEqual(r.cardPriceInfo(fixtures.erikasGloom).value,0.13);
   const pikachu=r.verifiedStampPrice(fixtures.pikachu,'Holo','Pokémon Day');
   assert.strictEqual(pikachu?.productId,870424);
   assert.strictEqual(pikachu?.trend,3.88);
@@ -1235,6 +1246,7 @@ element('stamp').value='None';
     piplup:{normal,reverse,scanner:element('scanMarketValue').textContent,savedProductId:savedPricing.cardmarket.idProduct},
     surging:Object.fromEntries(fixtures.surging.map(c=>[c.id,r.resolvedCardmarketPricingForCard(c).idProduct])),
     frillish:{productId:frillish.productId,value:frillish.trend},
+    erikasGloom:{productId:gloom.productId,value:r.cardPriceInfo(fixtures.erikasGloom).value},
     pikachu:{productId:pikachu.productId,value:pikachu.trend}
   }));
 })().catch(error=>{console.error(error);process.exit(1)});
