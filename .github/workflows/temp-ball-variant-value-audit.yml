@@ -97,39 +97,65 @@ jobs:
             uniq[(x["tcgdexId"],x["finish"],x["productId"])]=x
           candidates=list(uniq.values())
 
-          def fetch_live(x):
-            cid=x["tcgdexId"]
-            url=f"https://api.tcgdex.net/v2/en/cards/{cid}"
+          def fetch_card(lang,cid):
+            url=f"https://api.tcgdex.net/v2/{lang}/cards/{cid}"
             last=None
             for attempt in range(3):
               try:
                 req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-ball-audit/1.0"})
                 with urllib.request.urlopen(req,timeout=30) as r:
-                  c=json.load(r)
-                rows=[]
-                for row in c.get("variants_detailed") or []:
-                  if mod.canonical_row_finish(row)!=x["finish"]: continue
-                  pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
-                  cm=(row.get("pricing") or {}).get("cardmarket") or {}
-                  rows.append({
-                    "productId":pid,
-                    "pricingProductId":int(cm.get("idProduct") or cm.get("id_product") or 0),
-                    "low":cm.get("low"),"trend":cm.get("trend"),"avg1":cm.get("avg1"),
-                    "avg7":cm.get("avg7"),"avg30":cm.get("avg30"),"avg":cm.get("avg"),
-                    "updated":cm.get("updated"),
-                    "foil":row.get("foil"),"type":row.get("type"),"size":row.get("size"),
-                    "stamp":row.get("stamp")
-                  })
-                exact_rows=[r for r in rows if r["productId"]==x["productId"] and r["pricingProductId"]==x["productId"]]
-                if len(exact_rows)==1:
-                  row=exact_rows[0]
-                  vals=[row.get(k) for k in ("trend","avg7","avg30","avg","low")]
-                  has_price=any(isinstance(v,(int,float)) and v>0 for v in vals)
-                  return {**x,"liveStatus":"SAFE_EXACT" if has_price else "NO_PRICE","liveRows":rows,"exactRow":row}
-                return {**x,"liveStatus":"AMBIGUOUS_OR_MISSING","liveRows":rows}
+                  return json.load(r),None
               except Exception as e:
-                last=repr(e); time.sleep(0.4*(attempt+1))
-            return {**x,"liveStatus":"FETCH_ERROR","error":last}
+                last=repr(e); time.sleep(0.35*(attempt+1))
+            return None,last
+
+          def relevant_rows(card,finish):
+            rows=[]
+            for row in (card or {}).get("variants_detailed") or []:
+              if mod.canonical_row_finish(row)!=finish: continue
+              pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+              cm=(row.get("pricing") or {}).get("cardmarket") or {}
+              rows.append({
+                "productId":pid,
+                "pricingProductId":int(cm.get("idProduct") or cm.get("id_product") or 0),
+                "low":cm.get("low"),"trend":cm.get("trend"),"avg1":cm.get("avg1"),
+                "avg7":cm.get("avg7"),"avg30":cm.get("avg30"),"avg":cm.get("avg"),
+                "updated":cm.get("updated"),
+                "foil":row.get("foil"),"type":row.get("type"),"size":row.get("size"),
+                "stamp":row.get("stamp")
+              })
+            return rows
+
+          def fetch_live(x):
+            cid=x["tcgdexId"]
+            en,en_err=fetch_card("en",cid)
+            it,it_err=fetch_card("it",cid)
+            if not en:
+              return {**x,"liveStatus":"FETCH_ERROR","error":en_err}
+            en_rows=relevant_rows(en,x["finish"])
+            exact_en=[r for r in en_rows if r["productId"]==x["productId"] and r["pricingProductId"]==x["productId"]]
+            if len(exact_en)!=1:
+              return {**x,"liveStatus":"AMBIGUOUS_OR_MISSING","liveRows":en_rows}
+            row=exact_en[0]
+            vals=[row.get(k) for k in ("trend","avg7","avg30","avg","low")]
+            has_price=any(isinstance(v,(int,float)) and v>0 for v in vals)
+            if not has_price:
+              return {**x,"liveStatus":"NO_PRICE","liveRows":en_rows,"exactRow":row}
+
+            it_status="MISSING"
+            it_rows=[]
+            it_name=None
+            if it:
+              it_name=it.get("name")
+              it_rows=relevant_rows(it,x["finish"])
+              exact_it=[r for r in it_rows if r["productId"]==x["productId"] and r["pricingProductId"]==x["productId"]]
+              it_status="MATCH" if len(exact_it)==1 else "MISMATCH"
+            elif it_err:
+              it_status="FETCH_ERROR"
+
+            return {**x,"liveStatus":"SAFE_EXACT","liveRows":en_rows,"exactRow":row,
+                    "englishName":en.get("name"),"italianName":it_name,
+                    "italianStatus":it_status,"italianRows":it_rows}
 
           results=[]
           with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
@@ -140,6 +166,17 @@ jobs:
           ambiguous=[r for r in results if r["liveStatus"]=="AMBIGUOUS_OR_MISSING"]
           no_price=[r for r in results if r["liveStatus"]=="NO_PRICE"]
           errors=[r for r in results if r["liveStatus"]=="FETCH_ERROR"]
+          italian_match=[r for r in safe if r.get("italianStatus")=="MATCH"]
+          italian_mismatch=[r for r in safe if r.get("italianStatus")=="MISMATCH"]
+          italian_missing=[r for r in safe if r.get("italianStatus") in ("MISSING","FETCH_ERROR")]
+
+          from collections import Counter, defaultdict
+          set_distribution=defaultdict(lambda:{"Poké Ball Reverse Holo":0,"Master Ball Reverse Holo":0})
+          product_usage=defaultdict(list)
+          for r in safe:
+            set_distribution[r["setId"]][r["finish"]]+=1
+            product_usage[r["productId"]].append((r["tcgdexId"],r["finish"]))
+          duplicate_products={str(pid):rows for pid,rows in product_usage.items() if len(rows)>1}
 
           # Priority buckets: exact rows with a current price; no assumptions.
           by_finish={}
@@ -162,6 +199,11 @@ jobs:
             "ambiguousOrMissing":len(ambiguous),
             "noCurrentPrice":len(no_price),
             "fetchErrors":len(errors),
+            "italianExactMatches":len(italian_match),
+            "italianMismatches":len(italian_mismatch),
+            "italianMissingOrFetchError":len(italian_missing),
+            "setDistribution":dict(sorted(set_distribution.items())),
+            "duplicateCardmarketProductsAcrossIdentities":duplicate_products,
             "byFinish":by_finish,
             "ambiguous":sorted(ambiguous,key=lambda x:(x["setId"],x["localId"],x["tcgdexId"])),
             "noPrice":sorted(no_price,key=lambda x:(x["setId"],x["localId"],x["tcgdexId"])),
@@ -180,6 +222,11 @@ jobs:
             "ambiguousOrMissing":len(ambiguous),
             "noCurrentPrice":len(no_price),
             "fetchErrors":len(errors),
+            "italianExactMatches":len(italian_match),
+            "italianMismatches":len(italian_mismatch),
+            "italianMissingOrFetchError":len(italian_missing),
+            "duplicateCardmarketProductsAcrossIdentities":len(duplicate_products),
+            "setDistribution":dict(sorted(set_distribution.items())),
             "safePokeball":len(by_finish["Poké Ball Reverse Holo"]["cards"]),
             "safeMasterball":len(by_finish["Master Ball Reverse Holo"]["cards"])
           },ensure_ascii=False,indent=2))
