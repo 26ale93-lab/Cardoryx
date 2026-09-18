@@ -1,84 +1,26 @@
-name: TEMP Base Set P1 structure audit
+name: TEMP Base Set stamp taxonomy inspect
 on:
   push:
     branches: [diagnostic/base1-structure-p1-20260918]
 permissions:
   contents: read
 jobs:
-  audit:
+  inspect:
     runs-on: ubuntu-latest
-    env:
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Clone TCGdex database
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run full audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Characterize Base Set residual structure
+      - name: Inspect edition and stamp taxonomy
         run: |
           python3 - <<'PY'
-          import json,urllib.request,pathlib,tempfile,collections
-          report=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          ids=sorted(x for x in (report.get('p1AmbiguousProductIds') or []) if x.startswith('base1-'))
-          print('BASE1_P1',len(ids))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          cards={}; seed=set()
-          patterns=collections.Counter()
-          for cid in ids:
-              try:
-                  with urllib.request.urlopen(urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers),timeout=60) as r:c=json.load(r)
-              except Exception as e:
-                  print('API_ERROR',cid,repr(e));continue
-              cards[cid]=c
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              if top.get('idProduct'): seed.add(int(top['idProduct']))
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid: seed.add(int(pid))
-                  stamps=x.get('stamp') or []
-                  if isinstance(stamps,str):stamps=[stamps]
-                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':stamps,'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product')})
-              key=tuple(sorted((str(r['type']),str(r['foil']),tuple(r['stamp']),str(r['firstEdition']),str(r['pid'])) for r in rows))
-              patterns[key]+=1
-              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'rarity':c.get('rarity'),'top':top.get('idProduct'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
-          print('ROW_PATTERN_COUNT',len(patterns))
-          for k,n in patterns.most_common():
-              print('ROW_PATTERN',n,json.dumps(k,ensure_ascii=False))
-
-          def dl(section,name):
-              p=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
-                  while chunk:=r.read(1024*1024):out.write(chunk)
-              return json.load(open(p))
-          prod=dl('productList','products_singles_6.json')
-          def rows(root,keys):
-              if isinstance(root,list):return root
-              for k in keys:
-                  v=root.get(k) if isinstance(root,dict) else None
-                  if isinstance(v,list):return v
-              return []
-          products=rows(prod,('products',))
-          bypid={int(r.get('idProduct') or 0):r for r in products if r.get('idProduct')}
-          seeded=[bypid[p] for p in seed if p in bypid]
-          expids=collections.Counter(int(r.get('idExpansion') or 0) for r in seeded)
-          print('SEED_EXPANSIONS',json.dumps(expids))
-          metas={int(r.get('idMetacard') or 0) for r in seeded if int(r.get('idMetacard') or 0)}
-          # Every product with a seeded metacard, across all expansions: exposes Unlimited/Shadowless/1E structures.
-          related=[r for r in products if int(r.get('idMetacard') or 0) in metas]
-          bymeta=collections.defaultdict(list)
-          for r in related:bymeta[int(r.get('idMetacard') or 0)].append(r)
-          meta_shapes=collections.Counter()
-          for mid,vals in bymeta.items():
-              shape=tuple(sorted((int(v.get('idExpansion') or 0),int(v.get('idProduct') or 0),str(v.get('name') or '')) for v in vals))
-              meta_shapes[tuple(x[0] for x in shape)]+=1
-              print('META',mid,json.dumps([{'idProduct':v.get('idProduct'),'idExpansion':v.get('idExpansion'),'name':v.get('name'),'dateAdded':v.get('dateAdded')} for v in sorted(vals,key=lambda z:(int(z.get('idExpansion') or 0),int(z.get('idProduct') or 0)))],ensure_ascii=False))
-          print('META_EXPANSION_SHAPES')
-          for shape,n in meta_shapes.most_common():print('SHAPE',n,json.dumps(shape))
+          from pathlib import Path
+          t=Path('index.html').read_text()
+          for needle in ('function canonicalStamp','canonicalStamp=','1st-edition','1st Edition','Shadowless','STAMP_OPTIONS','stampOptions'):
+              print('NEEDLE',needle)
+              p=0
+              while True:
+                  i=t.find(needle,p)
+                  if i<0: break
+                  print('CONTEXT',i)
+                  print(t[max(0,i-1800):min(len(t),i+4800)])
+                  p=i+len(needle)
           PY
