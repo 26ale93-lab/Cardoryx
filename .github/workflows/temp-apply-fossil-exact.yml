@@ -138,6 +138,8 @@ jobs:
               raise SystemExit(f'P0 regression: count={p0_count} ids={p0_ids}')
           bad=[x for x in (d.get('p1AmbiguousProductIds') or []) if x.startswith('base3-')]
           if bad: raise SystemExit(f'base3 residuals remain: {bad}')
+          # Full audit artifact is diagnostic output only: restore it before scope validation.
+          subprocess.check_call(['git','checkout','--','artifacts/card_identity_cardmarket_audit_report.json'])
           changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
           allowed={'index.html','scripts/test_card_identity_cardmarket_audit.py','.github/workflows/temp-apply-fossil-exact.yml'}
           extra=[x for x in changed if x not in allowed]
