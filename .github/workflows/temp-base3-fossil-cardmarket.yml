@@ -188,8 +188,13 @@ jobs:
           git config user.email "26ale93@gmail.com"
           git add index.html scripts/test_card_identity_cardmarket_audit.py .github/workflows/temp-base3-fossil-cardmarket.yml
           git diff --cached --check
-          changed="$(git diff --cached --name-only)"
-          echo "$changed"
-          test "$changed" = "$(printf 'index.html\nscripts/test_card_identity_cardmarket_audit.py')"
+          git diff --cached --name-only
+          python3 - <<'PY'
+          import subprocess
+          changed=set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())
+          expected={'index.html','scripts/test_card_identity_cardmarket_audit.py'}
+          if changed!=expected:
+              raise SystemExit(f'Unexpected staged files: {sorted(changed)}')
+          PY
           git commit -m "Resolve exact Fossil Cardmarket checklist products"
           git push origin HEAD:fix/base3-fossil-cardmarket-products-20260918
