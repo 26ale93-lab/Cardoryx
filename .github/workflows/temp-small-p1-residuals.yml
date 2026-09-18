@@ -1,0 +1,73 @@
+name: TEMP small residual P1 audit
+on:
+  push:
+    branches: [diagnostic/small-p1-residuals-20260918]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect 18 non-Base-Set residual identities
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,tempfile,pathlib,collections
+          ids=[
+            'pl3-AR1','pl3-AR2','pl3-AR3','pl3-AR4','pl3-AR5','pl3-AR6','pl3-AR7','pl3-AR8','pl3-AR9',
+            'mfb-33','mfb-34','mfb-9','2018sm-fr-38','2018sm-fr-39',
+            'cel25cc-CC020','cel25cc-CC021','sm12-237','svp-101'
+          ]
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          cards={};wanted=set()
+          for cid in ids:
+              try:
+                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
+                  with urllib.request.urlopen(req,timeout=60) as r:c=json.load(r)
+              except Exception as e:
+                  print('CARD_ERROR',cid,repr(e));continue
+              cards[cid]=c
+              top=((c.get('pricing') or {}).get('cardmarket') or {})
+              if top.get('idProduct'): wanted.add(int(top['idProduct']))
+              rows=[]
+              for x in c.get('variants_detailed') or []:
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
+                  if pid:wanted.add(int(pid))
+                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo')})
+              print('CARD',json.dumps({'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),'rarity':c.get('rarity'),'top':top.get('idProduct'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
+          def dl(section,name):
+              p=pathlib.Path(tempfile.gettempdir())/name
+              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
+              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
+                  while chunk:=r.read(1024*1024):out.write(chunk)
+              return json.load(open(p))
+          prod=dl('productList','products_singles_6.json');price=dl('priceGuide','price_guide_6.json')
+          def rows(root,keys):
+              if isinstance(root,list):return root
+              for k in keys:
+                  v=root.get(k) if isinstance(root,dict) else None
+                  if isinstance(v,list):return v
+              return []
+          products=rows(prod,('products',)); prices=rows(price,('priceGuides','priceGuide'))
+          bypid={int(r.get('idProduct') or 0):r for r in products if r.get('idProduct')}
+          seed=[bypid[p] for p in wanted if p in bypid]
+          exps={int(r.get('idExpansion') or 0) for r in seed}
+          metas={int(r.get('idMetacard') or 0) for r in seed if int(r.get('idMetacard') or 0)}
+          # Same expansion + same metacard are the only alternate catalogue candidates.
+          candidates=[r for r in products if int(r.get('idExpansion') or 0) in exps and int(r.get('idMetacard') or 0) in metas]
+          candidate_ids={int(r.get('idProduct') or 0) for r in candidates}
+          print('SEED_PRODUCTS',json.dumps(sorted(wanted)))
+          for r in sorted(candidates,key=lambda x:(int(x.get('idExpansion') or 0),int(x.get('idMetacard') or 0),int(x.get('idProduct') or 0))):
+              print('CM_CANDIDATE',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          for r in prices:
+              pid=int(r.get('idProduct') or 0)
+              if pid in candidate_ids:
+                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
+                  print('CM_PRICE',json.dumps(keep,sort_keys=True))
+          PY
