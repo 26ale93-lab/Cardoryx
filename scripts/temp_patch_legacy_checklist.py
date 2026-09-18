@@ -240,7 +240,7 @@ process.stdout.write(JSON.stringify(out));
     rules_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_rules.json"
     fixture_path.write_text(json.dumps(fixtures,ensure_ascii=False),encoding="utf-8")
     rules_path.write_text(json.dumps(LEGACY_CHECKLIST_PRODUCTS,ensure_ascii=False),encoding="utf-8")
-    return json.loads(subprocess.check_output(["node","-e",js+"\\n"+harness,str(fixture_path),str(rules_path)],text=True))
+    return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,str(fixture_path),str(rules_path)],text=True))
 
 
 '''
