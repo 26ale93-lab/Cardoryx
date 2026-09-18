@@ -5778,9 +5778,85 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // product 278689. Cardmarket catalogue proves V1 product 278761 is the exact
   // Milotic Lv.49 70/147 standard product with standard + Reverse price fields.
   'pl3-70':{setId:'pl3',localId:'070',conflictingProduct:882910,baseProduct:278761},
+  // Platinum Arceus — TCGdex currently reuses the Water/Fastwave product
+  // 278861 for all nine AR checklist cards. AR4 is the verified owner of
+  // 278861; the other eight exact identities resolve to their own Cardmarket
+  // products, proven by attack/type in expansion 1565.
+  'pl3-ar1':{setId:'pl3',localId:'AR1',conflictingProduct:278861,baseProduct:278865},
+  'pl3-ar2':{setId:'pl3',localId:'AR2',conflictingProduct:278861,baseProduct:278864},
+  'pl3-ar3':{setId:'pl3',localId:'AR3',conflictingProduct:278861,baseProduct:278863},
+  'pl3-ar5':{setId:'pl3',localId:'AR5',conflictingProduct:278861,baseProduct:278867},
+  'pl3-ar6':{setId:'pl3',localId:'AR6',conflictingProduct:278861,baseProduct:278862},
+  'pl3-ar7':{setId:'pl3',localId:'AR7',conflictingProduct:278861,baseProduct:278866},
+  'pl3-ar8':{setId:'pl3',localId:'AR8',conflictingProduct:278861,baseProduct:278868},
+  'pl3-ar9':{setId:'pl3',localId:'AR9',conflictingProduct:278861,baseProduct:278871},
   // Black Bolt / Luce Nera — Cryogonal 027. TCGdex top-level currently points
   // to Golurk product 835994, while its exact Normal/Reverse physical rows use
   // Cryogonal product 835953. Poké Ball/Master Ball stay separate products.
+  'pl3-ar1':{
+    setId:'pl3',localId:'AR1',name:'Arceus',productId:278865,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Darkness / Prize Count · product 278865',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278865,trend:15.14,avg7:16.35,avg30:14.02,avg:20.05,low:4.00,
+      'trend-holo':8.36,'avg7-holo':6.78,'avg30-holo':5.72,'avg-holo':20.00,'low-holo':1.95}
+  },
+  'pl3-ar2':{
+    setId:'pl3',localId:'AR2',name:'Arceus',productId:278864,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Grass / Leaf Refresh · product 278864',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278864,trend:15.00,avg7:14.93,avg30:12.41,avg:13.55,low:2.45,
+      'trend-holo':6.15,'avg7-holo':5.40,'avg30-holo':4.54,'avg-holo':6.62,'low-holo':2.50}
+  },
+  'pl3-ar3':{
+    setId:'pl3',localId:'AR3',name:'Arceus',productId:278863,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Fire / Bright Flame · product 278863',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278863,trend:10.47,avg7:8.62,avg30:6.92,avg:7.28,low:0.99,
+      'trend-holo':2.38,'avg7-holo':2.63,'avg30-holo':3.25,'avg-holo':3.00,'low-holo':0.99}
+  },
+  'pl3-ar5':{
+    setId:'pl3',localId:'AR5',name:'Arceus',productId:278867,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Ripple Swell / Sky Spear · product 278867',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278867,trend:16.69,avg7:20.05,avg30:16.17,avg:15.86,low:2.50,
+      'trend-holo':9.60,'avg7-holo':9.36,'avg30-holo':5.72,'avg-holo':null,'low-holo':4.50}
+  },
+  'pl3-ar6':{
+    setId:'pl3',localId:'AR6',name:'Arceus',productId:278862,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Lightning Turn · product 278862',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278862,trend:6.90,avg7:3.68,avg30:8.62,avg:7.43,low:0.50,
+      'trend-holo':6.19,'avg7-holo':4.24,'avg30-holo':3.04,'avg-holo':7.13,'low-holo':1.49}
+  },
+  'pl3-ar7':{
+    setId:'pl3',localId:'AR7',name:'Arceus',productId:278866,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Psychic / Mind Bend · product 278866',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278866,trend:12.64,avg7:15.79,avg30:15.57,avg:24.85,low:2.95,
+      'trend-holo':11.14,'avg7-holo':12.31,'avg30-holo':8.73,'avg-holo':null,'low-holo':9.00}
+  },
+  'pl3-ar8':{
+    setId:'pl3',localId:'AR8',name:'Arceus',productId:278868,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Fighting / Break Ground · product 278868',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278868,trend:15.23,avg7:14.99,avg30:15.12,avg:17.73,low:1.99,
+      'trend-holo':6.38,'avg7-holo':6.39,'avg30-holo':4.77,'avg-holo':6.43,'low-holo':4.00}
+  },
+  'pl3-ar9':{
+    setId:'pl3',localId:'AR9',name:'Arceus',productId:278871,
+    verified:'2026-09-18T19:10:02+0200',
+    source:'Cardmarket Product Catalogue + Price Guide · Arceus · Metal Barrier · product 278871',
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:278871,trend:14.85,avg7:13.11,avg30:16.17,avg:15.62,low:4.00,
+      'trend-holo':7.53,'avg7-holo':5.49,'avg30-holo':4.87,'avg-holo':2.00,'low-holo':1.99}
+  },
   'sv10.5b-027':{setId:'sv10.5b',localId:'027',conflictingProduct:835994,baseProduct:835953},
   // Black Bolt / Luce Nera — Darmanitan 014. The current top-level product
   // 835069 is absent from the official current Cardmarket Product Catalogue
@@ -5939,7 +6015,8 @@ const VERIFIED_SHARED_CARDMARKET_PRODUCT_OWNERS = {
   'pl2-rt2':{setId:'pl2',localId:'RT2',name:'Frost Rotom',productId:278569},
   'pl2-rt3':{setId:'pl2',localId:'RT3',name:'Heat Rotom',productId:278572},
   'pl2-rt4':{setId:'pl2',localId:'RT4',name:'Mow Rotom',productId:278571},
-  'pl2-rt6':{setId:'pl2',localId:'RT6',name:"Charon's Choice",productId:278574}
+  'pl2-rt6':{setId:'pl2',localId:'RT6',name:"Charon's Choice",productId:278574},
+  'pl3-ar4':{setId:'pl3',localId:'AR4',name:'Arceus',productId:278861}
 };
 const VERIFIED_BATCH2_BASE_OVERRIDE_IDS = new Set([
   'gym1-27','gym1-62','gym1-46','gym1-49','gym1-57','gym1-66','gym1-68','gym1-69','gym1-70',
@@ -5948,6 +6025,7 @@ const VERIFIED_BATCH2_BASE_OVERRIDE_IDS = new Set([
   'neo1-11','neo1-18','neo1-29','neo1-32','neo1-5','neo1-47','neo1-54','neo1-57','neo1-81',
   'neo2-20','neo2-32','neo2-39','neo3-16','neo3-17','neo3-18','neo3-22','neo3-27',
   'hgss1-108','hgss1-110','hgss1-123','pl2-1','pl2-2','pl2-3','pl2-4','pl2-6',
+  'pl3-ar1','pl3-ar2','pl3-ar3','pl3-ar5','pl3-ar6','pl3-ar7','pl3-ar8','pl3-ar9',
   'cel25cc-cc020','cel25cc-cc021','swshp-swsh055'
 ]);
 // Exact Cardmarket Price Guide row for CEC54. This is intentionally scoped to
