@@ -1,0 +1,57 @@
+name: TEMP Erika Gloom Pokeball
+
+on:
+  push:
+    branches:
+      - fix/erikas-gloom-italian-runtime-20260918
+  workflow_dispatch:
+
+jobs:
+  exact-italian-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Diff check
+        run: git diff --check origin/main...HEAD
+      - name: Exact Italian runtime regression
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          s=Path("index.html").read_text(encoding="utf-8")
+          def fn(name):
+              m=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",s)
+              assert m, name
+              b=s.find("{",m.start()); d=0; q=None; esc=False
+              for i in range(b,len(s)):
+                  ch=s[i]
+                  if q:
+                      if esc: esc=False
+                      elif ch=="\\": esc=True
+                      elif ch==q: q=None
+                      continue
+                  if ch in "'\"\`": q=ch; continue
+                  if ch=="{": d+=1
+                  elif ch=="}":
+                      d-=1
+                      if d==0: return s[m.start():i+1]
+              raise AssertionError("unclosed "+name)
+          m=re.search(r"const VERIFIED_EXACT_VARIANT_PRICES\s*=\s*{",s); assert m
+          start=s.find("{",m.start()); end=s.find("\n};",start); assert end>start
+          obj=s[start:end+2]
+          js="const VERIFIED_EXACT_VARIANT_PRICES="+obj+";\n"
+          for name in ["normText","canonicalVariant","cardSetId","exactLocalIdKey","verifiedExactVariantPrice"]:
+              js+=fn(name)+"\n"
+          js+=r"""
+          const base={id:'me02.5-002',tcgdexId:'me02.5-002',name:'Gloom di Erika',localId:'002',set:{id:'me02.5'}};
+          const x=verifiedExactVariantPrice(base,'Poké Ball Reverse Holo');
+          if(!x||x.productId!==870138||x.trend!==0.13) throw new Error('Italian exact identity failed');
+          if(!verifiedExactVariantPrice({...base,name:"Erika's Gloom"},'Poké Ball Reverse Holo')) throw new Error('English alias regressed');
+          if(verifiedExactVariantPrice({...base,name:"Erika's Oddish"},'Poké Ball Reverse Holo')) throw new Error('wrong name accepted');
+          if(verifiedExactVariantPrice({...base,localId:'003'},'Poké Ball Reverse Holo')) throw new Error('wrong number accepted');
+          if(verifiedExactVariantPrice({...base,set:{id:'me02.5-other'}},'Poké Ball Reverse Holo')) throw new Error('wrong set accepted');
+          if(verifiedExactVariantPrice(base,'Normal')) throw new Error('wrong finish accepted');
+          console.log(JSON.stringify({productId:x.productId,trend:x.trend,name:base.name}));
+          """
+          subprocess.run(["node","-e",js],check=True)
+          PY
