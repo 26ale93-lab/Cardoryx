@@ -128,15 +128,7 @@ jobs:
           git checkout -- artifacts/card_identity_cardmarket_audit_report.json
           git diff --check
           git status --short
-          test -z "$(git status --short | grep -v -E '^( M|M ) (index.html|scripts/test_card_identity_cardmarket_audit.py)      - name: Commit verified production changes only
-        run: |
-          git rm .github/workflows/temp-jungle-prod.yml
-          git config user.name "26ale93-lab"
-          git config user.email "26ale93@gmail.com"
-          git add index.html scripts/test_card_identity_cardmarket_audit.py
-          git commit -m "Resolve exact Jungle Cardmarket checklist products"
-          git push origin HEAD:fix/base2-jungle-cardmarket-20260918
- || true)"
+          test -z "$(git status --short | grep -v -E '^( M|M ) (index.html|scripts/test_card_identity_cardmarket_audit.py)$' || true)"
       - name: Commit verified production changes only
         run: |
           git rm .github/workflows/temp-jungle-prod.yml
