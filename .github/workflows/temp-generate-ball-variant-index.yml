@@ -16,191 +16,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clone TCGdex cards database read-only
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git /tmp/tcgdex-cards-database
-
-      - name: Generate exact Ball registry and validate all rows
+      - name: Clone TCGdex cards database
         run: |
-          python - <<'PY'
-          import json, urllib.request, concurrent.futures, time, importlib.util, re
-          from pathlib import Path
+          git clone --depth 1 https://github.com/tcgdex/cards-database.git /tmp/tcgdex-cards-database
 
-          root=Path(".")
-          index_path=root/"index.html"
-          index=index_path.read_text(encoding="utf-8")
+      - name: Generate verified Ball index
+        run: |
+          python scripts/temp_generate_ball_variant_index.py
 
-          spec=importlib.util.spec_from_file_location("finish_audit", root/"scripts/test_variant_finish_audit.py")
-          mod=importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(mod)
-          cards, parse_errors, upstream_sha=mod.load_official_database(Path("/tmp/tcgdex-cards-database"))
-
-          exact=mod.extract_js_object(index,"VERIFIED_EXACT_VARIANT_PRICES")
-          legacy=mod.extract_js_object(index,"VERIFIED_VARIANT_PRICES")
-
-          def canonical_local(v):
-            s=str(v or "").strip()
-            return s.lstrip("0") or s or "0"
-
-          raw=[]
-          for c in cards:
-            for row in c.get("variants_detailed") or []:
-              finish=mod.canonical_row_finish(row)
-              if finish not in ("Poké Ball Reverse Holo","Master Ball Reverse Holo"): continue
-              pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
-              if not pid: continue
-              cid=str(c.get("id") or "").strip().lower()
-              set_id=str((c.get("set") or {}).get("id") or "").strip().lower()
-              local=str(c.get("localId") or "")
-              rule=exact.get(cid)
-              if isinstance(rule,dict) and str(rule.get("setId") or "").lower()==set_id and canonical_local(rule.get("localId"))==canonical_local(local) and int(rule.get("productId") or 0)==pid and mod.canonical_finish(rule.get("finish"))==finish:
-                continue
-              raw.append({"tcgdexId":cid,"setId":set_id,"localId":local,"finish":finish,"productId":pid})
-
-          uniq={(x["tcgdexId"],x["finish"],x["productId"]):x for x in raw}
-          raw=list(uniq.values())
-
-          def get(lang,cid):
-            u=f"https://api.tcgdex.net/v2/{lang}/cards/{cid}"
-            last=None
-            for attempt in range(3):
-              try:
-                req=urllib.request.Request(u,headers={"User-Agent":"Cardoryx-ball-index-generator/1.0"})
-                with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
-              except Exception as e:
-                last=e; time.sleep(.35*(attempt+1))
-            raise RuntimeError(f"{lang} {cid}: {last}")
-
-          def live_legacy_covered(x,en,it):
-            names={mod.norm((en.get("set") or {}).get("name") or ""),mod.norm((it.get("set") or {}).get("name") or "")}
-            for k in legacy:
-              try:ks,kn,kf=k.split("|",2)
-              except ValueError:continue
-              if mod.norm(ks) in names and canonical_local(kn)==canonical_local(x["localId"]) and mod.canonical_finish(kf)==x["finish"]:
-                return True
-            return False
-
-          def one(x):
-            en=get("en",x["tcgdexId"]); it=get("it",x["tcgdexId"])
-            if live_legacy_covered(x,en,it): return None
-            matched=[]
-            for lang,card in (("en",en),("it",it)):
-              rows=[]
-              for row in card.get("variants_detailed") or []:
-                if mod.canonical_row_finish(row)!=x["finish"]:continue
-                pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
-                cm=(row.get("pricing") or {}).get("cardmarket") or {}
-                ppid=int(cm.get("idProduct") or cm.get("id_product") or 0)
-                if pid==x["productId"] and ppid==x["productId"]:
-                  rows.append((row,cm))
-              if len(rows)!=1: raise AssertionError(f"{lang} exact row count {x}: {len(rows)}")
-              matched.append(rows[0][1])
-            cm=matched[0]
-            if not any(float(cm.get(k) or 0)>0 for k in ("trend","avg7","avg30","avg","low")):
-              raise AssertionError(f"No price {x}")
-            if any(int(m.get("idProduct") or m.get("id_product") or 0)!=x["productId"] for m in matched):
-              raise AssertionError(f"Pricing product mismatch {x}")
-            return {
-              **x,
-              "en":en.get("name") or "",
-              "it":it.get("name") or "",
-              "low":cm.get("low"),"trend":cm.get("trend"),"avg1":cm.get("avg1"),
-              "avg7":cm.get("avg7"),"avg30":cm.get("avg30"),"avg":cm.get("avg"),
-              "updated":cm.get("updated") or ""
-            }
-
-          rows=[]
-          with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
-            for v in ex.map(one,raw):
-              if v: rows.append(v)
-
-          rows.sort(key=lambda x:(x["setId"],x["tcgdexId"],x["finish"]))
-          assert len(rows)==508, f"Expected 508 exact missing rows, got {len(rows)}"
-          products={}
-          for r in rows:
-            if r["productId"] in products: raise AssertionError(f"Duplicate product {r['productId']}")
-            products[r["productId"]]=(r["tcgdexId"],r["finish"])
-
-          def js(v):
-            return json.dumps(v,ensure_ascii=False,separators=(",",":"))
-
-          lines=[
-            "// CARDORYX GENERATED EXACT BALL VARIANT PRICES — BEGIN",
-            "// Generated from exact TCGdex EN+IT physical rows; do not infer outside these identities.",
-            "const VERIFIED_EXACT_BALL_VARIANT_PRICES={"
-          ]
-          for r in rows:
-            key=f"{r['tcgdexId']}|{r['finish']}"
-            obj={
-              "setId":r["setId"],"localId":r["localId"],"names":[r["en"],r["it"]],
-              "finish":r["finish"],"productId":r["productId"],
-              "low":r["low"],"trend":r["trend"],"avg1":r["avg1"],"avg7":r["avg7"],"avg30":r["avg30"],"avg":r["avg"],
-              "verified":r["updated"],
-            }
-            lines.append(f"  {js(key)}:{js(obj)},")
-          lines += [
-            "};",
-            "function verifiedExactBallVariantPrice(card,variant){",
-            "  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();",
-            "  const finish=canonicalVariant(variant||'Normal');",
-            "  const rule=VERIFIED_EXACT_BALL_VARIANT_PRICES[\`\${id}|\${finish}\`];",
-            "  if(!rule||cardSetId(card)!==rule.setId||exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||canonicalVariant(rule.finish)!==finish)return null;",
-            "  const names=Array.isArray(rule.names)?rule.names:[];",
-            "  if(names.length&&!names.some(name=>normText(card?.name||'')===normText(name)))return null;",
-            "  return {...rule,source:\`Cardmarket · TCGdex EN/IT exact Ball row · product \${rule.productId}\`};",
-            "}",
-            "// CARDORYX GENERATED EXACT BALL VARIANT PRICES — END",
-          ]
-          block="\n".join(lines)
-
-          begin="// CARDORYX GENERATED EXACT BALL VARIANT PRICES — BEGIN"
-          end="// CARDORYX GENERATED EXACT BALL VARIANT PRICES — END"
-          if begin in index:
-            a=index.index(begin); b=index.index(end,a)+len(end)
-            index=index[:a]+block+index[b:]
-          else:
-            anchor="// Exact physical-identity variant prices. Keep these stricter than the legacy"
-            pos=index.index(anchor)
-            index=index[:pos]+block+"\n\n"+index[pos:]
-
-          old="""  const exact=verifiedExactVariantPrice(card,variant);
-  if(exact)return exact;"""
-          new="""  const exact=verifiedExactVariantPrice(card,variant);
-  if(exact)return exact;
-  const exactBall=verifiedExactBallVariantPrice(card,variant);
-  if(exactBall)return exactBall;"""
-          if new not in index:
-            if old not in index: raise AssertionError("verifiedVariantPrice anchor missing")
-            index=index.replace(old,new,1)
-
-          index_path.write_text(index,encoding="utf-8")
-
-          # Static integrity checks on generated production file.
-          final=index_path.read_text(encoding="utf-8")
-          assert final.count(begin)==1 and final.count(end)==1
-          assert final.count('"productId":')>=508
-          print(json.dumps({
-            "generated":len(rows),
-            "pokeball":sum(r["finish"].startswith("Poké") for r in rows),
-            "masterball":sum(r["finish"].startswith("Master") for r in rows),
-            "sets":sorted(set(r["setId"] for r in rows)),
-            "upstreamSha":upstream_sha,
-            "parseErrors":len(parse_errors)
-          },ensure_ascii=False,indent=2))
-          PY
-
-      - name: Syntax and diff checks
+      - name: Validate diff
         run: |
           git diff --check
           python - <<'PY'
           from pathlib import Path
           s=Path("index.html").read_text(encoding="utf-8")
-          assert "const VERIFIED_EXACT_BALL_VARIANT_PRICES={" in s
+          assert s.count("// CARDORYX GENERATED EXACT BALL VARIANT PRICES — BEGIN")==1
+          assert s.count("// CARDORYX GENERATED EXACT BALL VARIANT PRICES — END")==1
           assert "function verifiedExactBallVariantPrice(card,variant)" in s
           assert "const exactBall=verifiedExactBallVariantPrice(card,variant);" in s
-          print("generated Ball registry syntax anchors present")
+          print("Ball registry anchors OK")
           PY
 
-      - name: Commit generated production block
+      - name: Commit generated index
         run: |
           if git diff --quiet -- index.html; then
             echo "No generated changes"
