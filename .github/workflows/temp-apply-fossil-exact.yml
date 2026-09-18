@@ -105,6 +105,30 @@ jobs:
           print('SCRIPT_BLOCKS_CHECKED',checked)
           PY
           python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Diagnose Fossil live foil evidence
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          bad=[]
+          for n in range(1,31):
+              cid=f'base3-{n}'
+              with urllib.request.urlopen(urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers),timeout=60) as r:
+                  c=json.load(r)
+              expected='holo' if n<=15 else 'normal'
+              rows=[]
+              for x in c.get('variants_detailed') or []:
+                  stamps=x.get('stamp') or []
+                  if isinstance(stamps,str): stamps=[stamps]
+                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
+                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
+                  if str(x.get('type') or '').lower()==expected and not stamps and str(x.get('size') or 'standard').lower()=='standard':
+                      rows.append({'foil':x.get('foil'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product')})
+              ok=any(str(x.get('foil') or '').lower()=='galaxy' and x.get('pid') for x in rows)
+              print('FOSSIL_EVIDENCE',cid,expected,rows,'OK' if ok else 'BAD')
+              if not ok: bad.append(cid)
+          if bad: raise SystemExit(f'Fossil galaxy evidence incomplete: {bad}')
+          PY
       - name: Full Cardmarket audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
       - name: Verify expected delta and diff scope
