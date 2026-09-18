@@ -622,7 +622,10 @@ def runtime_cardmarket_regression():
         stripped = line.strip()
         if not stripped.startswith('"') or '":{' not in stripped:
             continue
-        key_text, value_text = stripped.rsplit(":", 1)
+        split_at = stripped.find('":{')
+        assert split_at > 0, stripped[:120]
+        key_text = stripped[:split_at + 1]
+        value_text = stripped[split_at + 2:]
         key = json.loads(key_text)
         value = json.loads(value_text.rstrip(","))
         ball_rules[key] = value
