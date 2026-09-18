@@ -83,3 +83,27 @@ jobs:
               for pid in pids:pid_cards[pid].append(cid)
           print('SHARED_PIDS',json.dumps({str(k):v for k,v in pid_cards.items() if len(v)>1},sort_keys=True))
           PY
+      - name: Deep audit duplicate Cardmarket catalogue rows
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,tempfile,pathlib,collections
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          def dl(section,name):
+              p=pathlib.Path(tempfile.gettempdir())/name
+              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
+              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as f:
+                  while chunk:=r.read(1024*1024):f.write(chunk)
+              return json.load(open(p))
+          prod=dl('productList','products_singles_6.json')
+          def rows(obj):
+              if isinstance(obj,list): return obj
+              return obj.get('products') or []
+          for exp,label in ((1532,'NEO2'),(1529,'GYM1'),(1530,'GYM2')):
+              rr=[r for r in rows(prod) if int(r.get('idExpansion') or 0)==exp]
+              groups=collections.defaultdict(list)
+              for r in rr: groups[str(r.get('name') or '')].append(r)
+              print('EXPANSION',label,'COUNT',len(rr),'DUP_GROUPS',sum(1 for v in groups.values() if len(v)>1))
+              for name,vals in sorted(groups.items()):
+                  if len(vals)>1:
+                      print('DUP',label,name,json.dumps([{'idProduct':x.get('idProduct'),'idMetacard':x.get('idMetacard'),'name':x.get('name')} for x in vals],ensure_ascii=False,sort_keys=True))
+          PY
