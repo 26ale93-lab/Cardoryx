@@ -950,7 +950,7 @@ globalThis.runtime={
   pricingWithResolvedCardmarket,knownCardmarketIdentityConflict,
   cardmarketValueForCardVariant,cardmarketStatsForCardVariant,
   verifiedVariantPrice,verifiedStampPrice,verifiedMcdonalds2019CardmarketVariant,
-  documentedVariantsForCard,renderScanValue,cardPriceInfo,
+  verifiedNormalFinishHoloPrice,documentedVariantsForCard,renderScanValue,cardPriceInfo,
   setSelected:c=>{selectedCard=c;scanPriceCard=null}
 };`,context);
 const r=context.runtime;
@@ -960,9 +960,11 @@ assert.strictEqual(articunoHolo.value,0.14);
 assert.strictEqual(articunoHolo.productId,825925);
 assert.strictEqual(articunoHolo.kind,'verified-normal-registry-holo');
 assert.strictEqual(r.cardPriceInfo(articuno).value,0.14);
-assert.strictEqual(r.cardmarketValueForCardVariant({...articuno,localId:'052'},'Holo').value,0);
-assert.strictEqual(r.cardmarketValueForCardVariant({...articuno,set:{id:'sv09'}},'Holo').value,0);
+assert.strictEqual(r.verifiedNormalFinishHoloPrice({...articuno,localId:'052'},'Holo'),null);
+assert.strictEqual(r.verifiedNormalFinishHoloPrice({...articuno,set:{id:'sv09'}},'Holo'),null);
+assert.strictEqual(r.verifiedNormalFinishHoloPrice({...articuno,tcgdexId:'sv10-052',id:'sv10-052'},'Holo'),null);
 const tyr96=fixtures.tyranitar96Ambiguous;
+assert.strictEqual(r.verifiedNormalFinishHoloPrice(tyr96,'Holo'),null);
 assert.strictEqual(r.cardmarketValueForCardVariant(tyr96,'Holo').value,0);
 assert.strictEqual(r.cardmarketValueForCardVariant(tyr96,'Holo').kind,'needs-exact-variant');
 
