@@ -126,6 +126,21 @@ jobs:
               })
             return rows
 
+          def live_legacy_covered(x,en,it):
+            local_key=canonical_local(x["localId"])
+            finish=x["finish"]
+            set_names=[]
+            for card in (en,it):
+              if card:
+                set_names.append(norm((card.get("set") or {}).get("name") or ""))
+            for k,v in legacy.items():
+              try: ks,kn,kf=k.split("|",2)
+              except ValueError: continue
+              if (norm(ks) in set_names and canonical_local(kn)==local_key and
+                  mod.canonical_finish(kf)==finish):
+                return True
+            return False
+
           def fetch_live(x):
             cid=x["tcgdexId"]
             en,en_err=fetch_card("en",cid)
@@ -155,6 +170,9 @@ jobs:
 
             return {**x,"liveStatus":"SAFE_EXACT","liveRows":en_rows,"exactRow":row,
                     "englishName":en.get("name"),"italianName":it_name,
+                    "englishSetName":(en.get("set") or {}).get("name"),
+                    "italianSetName":((it or {}).get("set") or {}).get("name") if it else None,
+                    "runtimeLegacyCovered":live_legacy_covered(x,en,it),
                     "italianStatus":it_status,"italianRows":it_rows}
 
           results=[]
@@ -169,11 +187,13 @@ jobs:
           italian_match=[r for r in safe if r.get("italianStatus")=="MATCH"]
           italian_mismatch=[r for r in safe if r.get("italianStatus")=="MISMATCH"]
           italian_missing=[r for r in safe if r.get("italianStatus") in ("MISSING","FETCH_ERROR")]
+          legacy_covered_live=[r for r in safe if r.get("runtimeLegacyCovered")]
+          safe_missing=[r for r in safe if not r.get("runtimeLegacyCovered")]
 
           from collections import Counter, defaultdict
           set_distribution=defaultdict(lambda:{"Poké Ball Reverse Holo":0,"Master Ball Reverse Holo":0})
           product_usage=defaultdict(list)
-          for r in safe:
+          for r in safe_missing:
             set_distribution[r["setId"]][r["finish"]]+=1
             product_usage[r["productId"]].append((r["tcgdexId"],r["finish"]))
           duplicate_products={str(pid):rows for pid,rows in product_usage.items() if len(rows)>1}
@@ -181,7 +201,7 @@ jobs:
           # Priority buckets: exact rows with a current price; no assumptions.
           by_finish={}
           for finish in ("Poké Ball Reverse Holo","Master Ball Reverse Holo"):
-            rows=[r for r in safe if r["finish"]==finish]
+            rows=[r for r in safe_missing if r["finish"]==finish]
             by_finish[finish]={
               "count":len(rows),
               "cards":sorted(rows,key=lambda x:(x["setId"],x["localId"],x["tcgdexId"]))
@@ -195,7 +215,9 @@ jobs:
             "upstreamParseErrors":len(parse_errors),
             "physicalRowsSeen":totals,
             "uncoveredIdentityFinishProducts":len(candidates),
-            "safeExactRecoverable":len(safe),
+            "safeExactPhysicalRows":len(safe),
+            "alreadyCoveredByLegacyRuntime":len(legacy_covered_live),
+            "safeExactRecoverable":len(safe_missing),
             "ambiguousOrMissing":len(ambiguous),
             "noCurrentPrice":len(no_price),
             "fetchErrors":len(errors),
@@ -218,7 +240,9 @@ jobs:
           print(json.dumps({
             "physicalRowsSeen":totals,
             "uncoveredIdentityFinishProducts":len(candidates),
-            "safeExactRecoverable":len(safe),
+            "safeExactPhysicalRows":len(safe),
+            "alreadyCoveredByLegacyRuntime":len(legacy_covered_live),
+            "safeExactRecoverable":len(safe_missing),
             "ambiguousOrMissing":len(ambiguous),
             "noCurrentPrice":len(no_price),
             "fetchErrors":len(errors),
@@ -231,7 +255,7 @@ jobs:
             "safeMasterball":len(by_finish["Master Ball Reverse Holo"]["cards"])
           },ensure_ascii=False,indent=2))
           print("SAFE_SAMPLE")
-          for row in safe[:40]:
+          for row in safe_missing[:40]:
             e=row["exactRow"]
             print(json.dumps({
               "tcgdexId":row["tcgdexId"],"name":row["name"],"setId":row["setId"],
