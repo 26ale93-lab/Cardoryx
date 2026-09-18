@@ -610,6 +610,15 @@ def runtime_cardmarket_regression():
         INDEX.read_text(encoding="utf-8"),
         "VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES",
     )
+    ball_rules = extract_js_object(
+        INDEX.read_text(encoding="utf-8"),
+        "VERIFIED_EXACT_BALL_VARIANT_PRICES",
+    )
+    assert len(ball_rules) == 508
+    assert len({int(v["productId"]) for v in ball_rules.values()}) == 508
+    assert sum(1 for v in ball_rules.values() if v["finish"] == "Poké Ball Reverse Holo") == 299
+    assert sum(1 for v in ball_rules.values() if v["finish"] == "Master Ball Reverse Holo") == 209
+    assert {v["setId"] for v in ball_rules.values()} == {"me02.5", "sv08.5", "sv10.5b", "sv10.5w", "sve"}
     fixtures = {
         "piplup": {
             "id": "sm12-54", "tcgdexId": "sm12-54", "name": "Piplup", "localId": "54",
@@ -637,6 +646,23 @@ def runtime_cardmarket_regression():
         "exeggcute001": {"id": "sv08.5-001", "tcgdexId": "sv08.5-001", "name": "Exeggcute",
                         "localId": "001", "set": {"id": "sv08.5", "name": "Evoluzioni Prismatiche"},
                         "variant": "Poké Ball Reverse Holo", "stamp": "None"},
+        "generatedBalls": [
+            {"id":"me02.5-001","tcgdexId":"me02.5-001","name":"Oddish di Erika","localId":"001",
+             "set":{"id":"me02.5","name":"Ascesa Eroica"},"variant":"Poké Ball Reverse Holo","stamp":"None",
+             "expectedProduct":870136,"expectedValue":0.13},
+            {"id":"sv08.5-020","tcgdexId":"sv08.5-020","name":"Goldeen","localId":"020",
+             "set":{"id":"sv08.5","name":"Evoluzioni Prismatiche"},"variant":"Poké Ball Reverse Holo","stamp":"None",
+             "expectedProduct":806436,"expectedValue":0.74},
+            {"id":"sv10.5b-001","tcgdexId":"sv10.5b-001","name":"Snivy","localId":"001",
+             "set":{"id":"sv10.5b","name":"Fulmine Nero"},"variant":"Master Ball Reverse Holo","stamp":"None",
+             "expectedProduct":836269,"expectedValue":5},
+            {"id":"sv10.5w-001","tcgdexId":"sv10.5w-001","name":"Sewaddle","localId":"001",
+             "set":{"id":"sv10.5w","name":"Fuoco Bianco"},"variant":"Poké Ball Reverse Holo","stamp":"None",
+             "expectedProduct":836493,"expectedValue":1},
+            {"id":"sve-001","tcgdexId":"sve-001","name":"Energia Erba","localId":"001",
+             "set":{"id":"sve","name":"Energie Scarlatto e Violetto"},"variant":"Poké Ball Reverse Holo","stamp":"None",
+             "expectedProduct":780803,"expectedValue":0.02}
+        ],
         "erikasGloom": {"id": "me02.5-002", "tcgdexId": "me02.5-002", "name": "Erika's Gloom",
                         "localId": "002", "set": {"id": "me02.5", "name": "Ascesa Eroica"},
                         "variant": "Poké Ball Reverse Holo", "stamp": "None"},
@@ -1287,6 +1313,16 @@ element('stamp').value='None';
   assert.strictEqual(r.verifiedVariantPrice({...fixtures.exeggcute001,localId:'002'},'Poké Ball Reverse Holo'),null);
   assert.strictEqual(r.verifiedVariantPrice({...fixtures.exeggcute001,set:{id:'sv08.5-other'}},'Poké Ball Reverse Holo'),null);
   assert.strictEqual(r.verifiedVariantPrice({...fixtures.exeggcute001,name:'Exeggutor'},'Poké Ball Reverse Holo'),null);
+  for(const card of fixtures.generatedBalls){
+    const exactBall=r.verifiedVariantPrice(card,card.variant);
+    assert.strictEqual(exactBall?.productId,card.expectedProduct);
+    assert.strictEqual(r.cardPriceInfo(card).value,card.expectedValue);
+    assert.strictEqual(r.verifiedVariantPrice({...card,set:{id:'wrong'}},card.variant),null);
+    assert.strictEqual(r.verifiedVariantPrice({...card,localId:'999'},card.variant),null);
+    assert.strictEqual(r.verifiedVariantPrice({...card,name:card.name+' wrong'},card.variant),null);
+    const other=card.variant==='Poké Ball Reverse Holo'?'Master Ball Reverse Holo':'Poké Ball Reverse Holo';
+    assert.strictEqual(r.verifiedVariantPrice(card,other),null);
+  }
   const gloom=r.verifiedVariantPrice(fixtures.erikasGloom,'Poké Ball Reverse Holo');
   assert.strictEqual(gloom?.productId,870138);
   assert.strictEqual(gloom?.trend,0.13);
@@ -1310,6 +1346,7 @@ element('stamp').value='None';
     surging:Object.fromEntries(fixtures.surging.map(c=>[c.id,r.resolvedCardmarketPricingForCard(c).idProduct])),
     frillish:{productId:frillish.productId,value:frillish.trend},
     exeggcute001:{productId:exeggcute.productId,value:r.cardPriceInfo(fixtures.exeggcute001).value},
+    generatedBalls:Object.fromEntries(fixtures.generatedBalls.map(c=>[c.id+'|'+c.variant,{productId:r.verifiedVariantPrice(c,c.variant).productId,value:r.cardPriceInfo(c).value}])),
     erikasGloom:{productId:gloom.productId,value:r.cardPriceInfo(fixtures.erikasGloom).value},
     pikachu:{productId:pikachu.productId,value:pikachu.trend}
   }));
