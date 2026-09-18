@@ -1,0 +1,99 @@
+name: TEMP Jungle production patch
+on:
+  push:
+    branches: [fix/base2-jungle-cardmarket-products-20260918]
+permissions:
+  contents: write
+jobs:
+  patch-test:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PATCH_DATA: '{"pairs":[["base2-1","base2","1","Clefable","Holo",273798,273798,1525,"base2-17"],["base2-17","base2","17","Clefable","Normal",273814,273798,1525,"base2-1"],["base2-2","base2","2","Electrode","Holo",273799,273799,1525,"base2-18"],["base2-18","base2","18","Electrode","Normal",273815,273799,1525,"base2-2"],["base2-3","base2","3","Flareon","Holo",273800,273800,1525,"base2-19"],["base2-19","base2","19","Flareon","Normal",273816,273800,1525,"base2-3"],["base2-4","base2","4","Jolteon","Holo",273801,273801,1525,"base2-20"],["base2-20","base2","20","Jolteon","Normal",273817,273801,1525,"base2-4"],["base2-5","base2","5","Kangaskhan","Holo",273802,273802,1525,"base2-21"],["base2-21","base2","21","Kangaskhan","Normal",273818,273802,1525,"base2-5"],["base2-6","base2","6","Mr. Mime","Holo",273803,273803,1525,"base2-22"],["base2-22","base2","22","Mr. Mime","Normal",273819,273803,1525,"base2-6"],["base2-7","base2","7","Nidoqueen","Holo",273804,273804,1525,"base2-23"],["base2-23","base2","23","Nidoqueen","Normal",273820,273804,1525,"base2-7"],["base2-8","base2","8","Pidgeot","Holo",273805,273805,1525,"base2-24"],["base2-24","base2","24","Pidgeot","Normal",273821,273805,1525,"base2-8"],["base2-9","base2","9","Pinsir","Holo",273806,273806,1525,"base2-25"],["base2-25","base2","25","Pinsir","Normal",273822,273806,1525,"base2-9"],["base2-10","base2","10","Scyther","Holo",273807,273807,1525,"base2-26"],["base2-26","base2","26","Scyther","Normal",273823,273807,1525,"base2-10"],["base2-11","base2","11","Snorlax","Holo",273808,273808,1525,"base2-27"],["base2-27","base2","27","Snorlax","Normal",273824,273808,1525,"base2-11"],["base2-12","base2","12","Vaporeon","Holo",273809,273809,1525,"base2-28"],["base2-28","base2","28","Vaporeon","Normal",273825,273809,1525,"base2-12"],["base2-13","base2","13","Venomoth","Holo",273810,273810,1525,"base2-29"],["base2-29","base2","29","Venomoth","Normal",273826,273810,1525,"base2-13"],["base2-14","base2","14","Victreebel","Holo",273811,273811,1525,"base2-30"],["base2-30","base2","30","Victreebel","Normal",273827,273811,1525,"base2-14"],["base2-15","base2","15","Vileplume","Holo",273812,273812,1525,"base2-31"],["base2-31","base2","31","Vileplume","Normal",273828,273812,1525,"base2-15"],["base2-16","base2","16","Wigglytuff","Holo",273813,273813,1525,"base2-32"],["base2-32","base2","32","Wigglytuff","Normal",273829,273813,1525,"base2-16"]],"prices":{"273798":{"idProduct":273798,"avg":38.37,"low":3.95,"trend":25.2,"avg1":18,"avg7":30.59,"avg30":38.62},"273799":{"idProduct":273799,"avg":19.82,"low":4,"trend":21.97,"avg1":14.29,"avg7":17.93,"avg30":20.21},"273800":{"idProduct":273800,"avg":49.79,"low":9.99,"trend":47.58,"avg1":68,"avg7":51.77,"avg30":51.32},"273801":{"idProduct":273801,"avg":64.17,"low":4,"trend":45.38,"avg1":40,"avg7":38.53,"avg30":60.21},"273802":{"idProduct":273802,"avg":13.59,"low":0.5,"trend":9.49,"avg1":6.5,"avg7":14.71,"avg30":12.74},"273803":{"idProduct":273803,"avg":29.53,"low":4.99,"trend":30.56,"avg1":29.99,"avg7":25.73,"avg30":26.67},"273804":{"idProduct":273804,"avg":32.43,"low":2.95,"trend":30.35,"avg1":8,"avg7":20.92,"avg30":31.13},"273805":{"idProduct":273805,"avg":36.51,"low":5,"trend":12,"avg1":15,"avg7":22.66,"avg30":34.77},"273806":{"idProduct":273806,"avg":32.21,"low":2,"trend":26.26,"avg1":11.5,"avg7":34.93,"avg30":30.2},"273807":{"idProduct":273807,"avg":31.98,"low":6,"trend":29.03,"avg1":30,"avg7":24.53,"avg30":31.91},"273808":{"idProduct":273808,"avg":75.22,"low":9.9,"trend":57.97,"avg1":50,"avg7":47.05,"avg30":73.49},"273809":{"idProduct":273809,"avg":19.08,"low":2,"trend":22.32,"avg1":15.5,"avg7":18.61,"avg30":18.17},"273810":{"idProduct":273810,"avg":19.5,"low":4,"trend":28.65,"avg1":25,"avg7":26.67,"avg30":20.57},"273811":{"idProduct":273811,"avg":33.33,"low":6.43,"trend":13.55,"avg1":16.48,"avg7":28.69,"avg30":36.2},"273812":{"idProduct":273812,"avg":25.84,"low":3,"trend":17.91,"avg1":22.61,"avg7":26.67,"avg30":25.95},"273813":{"idProduct":273813,"avg":33.07,"low":4.5,"trend":20.51,"avg1":17,"avg7":24.32,"avg30":36.04},"273814":{"idProduct":273814,"avg":6.37,"low":0.5,"trend":7.49,"avg1":4.6,"avg7":6.44,"avg30":5.92},"273815":{"idProduct":273815,"avg":7.09,"low":0.5,"trend":3.19,"avg1":3.5,"avg7":3.99,"avg30":6.82},"273816":{"idProduct":273816,"avg":11.22,"low":2,"trend":12.71,"avg1":12,"avg7":8.44,"avg30":11.06},"273817":{"idProduct":273817,"avg":16.04,"low":1,"trend":12.75,"avg1":23.22,"avg7":11.43,"avg30":15.26},"273818":{"idProduct":273818,"avg":7.58,"low":0.3,"trend":4.55,"avg1":1.85,"avg7":5.82,"avg30":7.57},"273819":{"idProduct":273819,"avg":7.86,"low":0.5,"trend":7.5,"avg1":4.01,"avg7":5.92,"avg30":7.52},"273820":{"idProduct":273820,"avg":7.27,"low":0.9,"trend":7.43,"avg1":4.56,"avg7":7.06,"avg30":7.43},"273821":{"idProduct":273821,"avg":7.17,"low":0.02,"trend":7.59,"avg1":4.2,"avg7":6.06,"avg30":8.08},"273822":{"idProduct":273822,"avg":7.37,"low":0.25,"trend":6.73,"avg1":3.4,"avg7":3.96,"avg30":7.25},"273823":{"idProduct":273823,"avg":12.32,"low":1.59,"trend":8.11,"avg1":3,"avg7":7.74,"avg30":11.59},"273824":{"idProduct":273824,"avg":17.07,"low":1,"trend":17.09,"avg1":9.2,"avg7":15.55,"avg30":15.54},"273825":{"idProduct":273825,"avg":11.64,"low":1,"trend":9.1,"avg1":11,"avg7":8.06,"avg30":11.68},"273826":{"idProduct":273826,"avg":6.16,"low":0.49,"trend":7.64,"avg1":3.22,"avg7":5.06,"avg30":6.03},"273827":{"idProduct":273827,"avg":6.79,"low":0.5,"trend":6.38,"avg1":6.69,"avg7":7.15,"avg30":6.81},"273828":{"idProduct":273828,"avg":5.45,"low":0.4,"trend":5.1,"avg1":3,"avg7":5.8,"avg30":5.36},"273829":{"idProduct":273829,"avg":8.4,"low":0.5,"trend":10.23,"avg1":7.99,"avg7":8.91,"avg30":7.67}}}'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch exact Jungle checklist products
+        run: |
+          python3 - <<'PY'
+          import json,os,re
+          from pathlib import Path
+          d=json.loads(os.environ['PATCH_DATA'])
+          pairs=d['pairs']; prices=d['prices']
+
+          # Production registry + frozen Cardmarket Price Guide snapshot.
+          p=Path('index.html'); s=p.read_text()
+          start=s.index('const VERIFIED_LEGACY_CHECKLIST_PRODUCTS={')
+          end=s.index('\n};',start)
+          block=s[start:end]
+          if '"base2-1"' in block:
+              raise SystemExit('base2 already present')
+          js_lines=[]
+          for cid,setid,local,name,finish,pid,source,exp,pair in pairs:
+              js_lines.append(f'  "{cid}":{{setId:"{setid}",localId:"{local}",name:{json.dumps(name)},finish:"{finish}",productId:{pid},sourceProduct:{source},expansionId:{exp},pairId:"{pair}"}}')
+          insert=',\n'+',\n'.join(js_lines)
+          s=s[:end]+insert+s[end:]
+
+          pat=re.compile(r'const VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES=(\{.*?\});',re.S)
+          m=pat.search(s)
+          if not m: raise SystemExit('price registry missing')
+          guide=json.loads(m.group(1))
+          overlap=set(prices)&set(guide)
+          if overlap: raise SystemExit('price overlap '+repr(sorted(overlap)))
+          guide.update(prices)
+          repl='const VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES='+json.dumps(guide,separators=(',',':'))+';'
+          s=s[:m.start()]+repl+s[m.end():]
+          p.write_text(s)
+
+          # Audit mirror registry.
+          p=Path('scripts/test_card_identity_cardmarket_audit.py'); s=p.read_text()
+          start=s.index('LEGACY_CHECKLIST_PRODUCTS = {')
+          end=s.index('\n}\n\nBATCH2_SHARED_PRODUCT_OWNERS',start)
+          block=s[start:end]
+          if "'base2-1'" in block: raise SystemExit('base2 audit already present')
+          py_lines=[]
+          for cid,setid,local,name,finish,pid,source,exp,pair in pairs:
+              py_lines.append(f"    {cid!r}: ({setid!r}, {local!r}, {name!r}, {finish!r}, {pid}, {source}, {exp}, {pair!r}),")
+          s=s[:end]+'\n'+'\n'.join(py_lines)+s[end:]
+          p.write_text(s)
+          PY
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Verify expected delta and scope
+        run: |
+          python3 - <<'PY'
+          import json,subprocess
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          summary=d.get('summary') or {}
+          p1=d.get('p1AmbiguousProductIds') or []
+          print('SUMMARY',json.dumps(summary,sort_keys=True))
+          print('P1_TOTAL',len(p1),'BASE2_RESIDUAL',sum(x.startswith('base2-') for x in p1))
+          assert len(p1)==150, len(p1)
+          assert not any(x.startswith('base2-') for x in p1), [x for x in p1 if x.startswith('base2-')]
+          # Generic safety counters must stay zero where required.
+          assert int(summary.get('p0WrongProduct',summary.get('P0_WRONG_PRODUCT',0)) or 0)==0
+          assert int(summary.get('unmappedExactProduct',summary.get('UNMAPPED_EXACT_PRODUCT',0)) or 0)==0
+          # Clefable special third product must not be present as any Jungle checklist target.
+          text=open('index.html').read()
+          reg=text[text.index('const VERIFIED_LEGACY_CHECKLIST_PRODUCTS={'):text.index('\n};',text.index('const VERIFIED_LEGACY_CHECKLIST_PRODUCTS={'))]
+          assert '275572' not in reg, 'Clefable special product leaked into checklist registry'
+          PY
+          git diff --check
+          git diff --name-only
+      - name: Commit verified production-only change
+        run: |
+          git rm .github/workflows/temp-base2-production-patch.yml
+          git config user.name "26ale93-lab"
+          git config user.email "26ale93@gmail.com"
+          git add index.html scripts/test_card_identity_cardmarket_audit.py
+          test "$(git diff --cached --name-only | sort)" = "$(printf 'index.html\nscripts/test_card_identity_cardmarket_audit.py')"
+          git commit -m "Resolve exact Jungle Cardmarket checklist products"
+          git push origin HEAD:fix/base2-jungle-cardmarket-products-20260918
