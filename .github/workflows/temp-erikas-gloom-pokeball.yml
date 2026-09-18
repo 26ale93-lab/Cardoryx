@@ -1,0 +1,74 @@
+name: TEMP Erika Gloom Pokeball audit
+on:
+  push:
+    branches: [diagnostic/erikas-gloom-pokeball-20260918]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Audit exact Erika Gloom identity and Cardmarket products
+        run: |
+          python3 - <<'PY'
+          import pathlib,re,json,urllib.request,tempfile,collections
+          root=pathlib.Path('../tcgdex-cards-database')
+          hits=[]
+          for fn in root.rglob('*.ts'):
+              try: txt=fn.read_text(encoding='utf-8')
+              except Exception: continue
+              low=txt.casefold()
+              if 'erika' not in low or 'gloom' not in low: continue
+              # Keep all name matches; print exact file/set evidence.
+              set_import=re.search(r"import Set from ['\"]([^'\"]+)['\"]",txt)
+              cmids=sorted({int(x) for x in re.findall(r'cardmarket:\s*(\d+)',txt)})
+              hits.append((str(fn),set_import.group(1) if set_import else None,cmids,txt))
+          print('SOURCE_HIT_COUNT',len(hits))
+          allp=set()
+          for fn,setimp,cmids,txt in hits:
+              allp.update(cmids)
+              print('SOURCE_FILE',json.dumps({'file':fn,'setImport':setimp,'cardmarketIds':cmids,'raw':txt},ensure_ascii=False))
+          # Also identify likely Ascended Heroes set definition(s).
+          for fn in root.rglob('*.ts'):
+              if fn.is_dir(): continue
+              if fn.parent.name!='Mega Evolution' and 'Mega Evolution' not in str(fn): continue
+              try: txt=fn.read_text(encoding='utf-8')
+              except Exception: continue
+              if 'Ascended Heroes'.casefold() in txt.casefold():
+                  print('SET_DEF',json.dumps({'file':str(fn),'raw':txt},ensure_ascii=False))
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.3'}
+          def dl(section,name):
+              p=pathlib.Path(tempfile.gettempdir())/name
+              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
+              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
+                  while True:
+                      ch=r.read(1024*1024)
+                      if not ch: break
+                      out.write(ch)
+              return json.load(open(p))
+          prod=dl('productList','products_singles_6.json')
+          price=dl('priceGuide','price_guide_6.json')
+          prows=prod if isinstance(prod,list) else prod.get('products',[])
+          # First: exact known pids from source.
+          selected=[r for r in prows if int(r.get('idProduct') or 0) in allp]
+          expids=collections.Counter(int(r.get('idExpansion') or 0) for r in selected)
+          print('SOURCE_EXPANSIONS',json.dumps(expids))
+          for r in selected: print('CM_SOURCE_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          # Second: every Erika's Gloom product; this catches Additionals even if TCGdex has no mapping.
+          gloom=[r for r in prows if 'erika' in str(r.get('name') or '').casefold() and 'gloom' in str(r.get('name') or '').casefold()]
+          print('CM_GLOOM_COUNT',len(gloom))
+          ids=set()
+          for r in gloom:
+              ids.add(int(r.get('idProduct') or 0))
+              print('CM_GLOOM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          prices=price if isinstance(price,list) else price.get('priceGuides',price.get('priceGuide',[]))
+          for r in prices:
+              if int(r.get('idProduct') or 0) in ids|allp:
+                  print('CM_PRICE',json.dumps(r,sort_keys=True))
+          PY
