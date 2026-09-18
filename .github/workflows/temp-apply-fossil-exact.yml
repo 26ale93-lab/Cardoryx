@@ -1,0 +1,129 @@
+name: TEMP apply Fossil exact Cardmarket products
+on:
+  push:
+    branches: [fix/fossil-exact-cardmarket-products-20260918]
+permissions:
+  contents: write
+jobs:
+  patch-test:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Apply exact Fossil checklist mappings
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, urllib.request, tempfile
+
+          names=['Aerodactyl','Articuno','Ditto','Dragonite','Gengar','Haunter','Hitmonlee','Hypno','Kabutops','Lapras','Magneton','Moltres','Muk','Raichu','Zapdos']
+          rows=[]
+          for i,name in enumerate(names,1):
+              holo=273861+i
+              normal=273876+i
+              rows.append((f'base3-{i}','base3',str(i),name,'Holo',holo,holo,1526,f'base3-{i+15}'))
+              rows.append((f'base3-{i+15}','base3',str(i+15),name,'Normal',normal,holo,1526,f'base3-{i}'))
+
+          index=Path('index.html')
+          s=index.read_text(encoding='utf-8')
+          marker='const VERIFIED_LEGACY_CHECKLIST_PRODUCTS={\n'
+          if marker not in s: raise SystemExit('missing legacy product registry')
+          end=s.index('\n};',s.index(marker))
+          block=s[s.index(marker):end]
+          if 'base3-1' in block: raise SystemExit('base3 already present in production registry')
+          entries=[]
+          for cid,setid,local,name,finish,pid,source,exp,pair in rows:
+              entries.append(f'  "{cid}":{{setId:"{setid}",localId:"{local}",name:{json.dumps(name)},finish:"{finish}",productId:{pid},sourceProduct:{source},expansionId:{exp},pairId:"{pair}"}},')
+          insert='\n'+'\n'.join(entries)
+          s=s[:end]+insert+s[end:]
+
+          # Freeze standard price-guide fields for exact Cardmarket products.
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          p=Path(tempfile.gettempdir())/'price_guide_6.json'
+          req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',headers=headers)
+          with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
+              while chunk:=r.read(1024*1024): out.write(chunk)
+          root=json.load(open(p))
+          price_rows=root if isinstance(root,list) else (root.get('priceGuides') or root.get('priceGuide') or [])
+          wanted={r[5] for r in rows}
+          guides={}
+          for r in price_rows:
+              pid=int(r.get('idProduct') or 0)
+              if pid in wanted:
+                  guides[str(pid)]={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30') if r.get(k) is not None}
+          if set(map(int,guides))!=wanted:
+              raise SystemExit(f'missing price guides: {sorted(wanted-set(map(int,guides)))}')
+
+          pm='const VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES='
+          a=s.index(pm)+len(pm)
+          b=s.index(';\n\nfunction verifiedLegacyChecklistCardmarketPrice',a)
+          current=json.loads(s[a:b])
+          overlap=set(current).intersection(guides)
+          if overlap: raise SystemExit(f'price guide overlap: {sorted(overlap)}')
+          current.update(guides)
+          s=s[:a]+json.dumps(current,separators=(',',':'),ensure_ascii=False)+s[b:]
+          index.write_text(s,encoding='utf-8')
+
+          test=Path('scripts/test_card_identity_cardmarket_audit.py')
+          t=test.read_text(encoding='utf-8')
+          tm='LEGACY_CHECKLIST_PRODUCTS = {\n'
+          ta=t.index(tm)
+          tb=t.index('\n}\n\nBATCH2_SHARED_PRODUCT_OWNERS',ta)
+          if "'base3-1'" in t[ta:tb]: raise SystemExit('base3 already present in test registry')
+          pyentries=[]
+          for cid,setid,local,name,finish,pid,source,exp,pair in rows:
+              pyentries.append(f"    {cid!r}: ({setid!r}, {local!r}, {name!r}, {finish!r}, {pid}, {source}, {exp}, {pair!r}),")
+          t=t[:tb]+'\n'+'\n'.join(pyentries)+t[tb:]
+          test.write_text(t,encoding='utf-8')
+
+          print('FOSSIL_ROWS',len(rows))
+          print('PRICE_GUIDES',len(guides))
+          PY
+      - name: Syntax and runtime regression
+        run: |
+          node --check <(python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          a=s.index('<script>')+8
+          b=s.rindex('</script>')
+          print(s[a:b])
+          PY
+          )
+          python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+      - name: Verify expected delta and diff scope
+        run: |
+          python3 - <<'PY'
+          import json,subprocess
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          summary=d.get('summary') or {}
+          print('SUMMARY',json.dumps(summary,sort_keys=True))
+          p1=len(d.get('p1AmbiguousProductIds') or [])
+          if p1!=182: raise SystemExit(f'expected P1=182, got {p1}')
+          if int(summary.get('p0WrongProduct') or summary.get('P0_WRONG_PRODUCT') or 0)!=0:
+              raise SystemExit('P0 regression')
+          bad=[x for x in (d.get('p1AmbiguousProductIds') or []) if x.startswith('base3-')]
+          if bad: raise SystemExit(f'base3 residuals remain: {bad}')
+          changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
+          allowed={'index.html','scripts/test_card_identity_cardmarket_audit.py','.github/workflows/temp-apply-fossil-exact.yml'}
+          extra=[x for x in changed if x not in allowed]
+          if extra: raise SystemExit(f'unrelated changes: {extra}')
+          PY
+          git diff --check
+      - name: Commit verified production files and remove temporary workflow
+        run: |
+          rm .github/workflows/temp-apply-fossil-exact.yml
+          git config user.name "Cardoryx Audit Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html scripts/test_card_identity_cardmarket_audit.py .github/workflows/temp-apply-fossil-exact.yml
+          git commit -m "Resolve exact Fossil Cardmarket products"
+          git push
