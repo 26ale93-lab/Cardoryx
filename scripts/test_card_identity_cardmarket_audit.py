@@ -639,6 +639,37 @@ def runtime_cardmarket_regression():
                         "variant": "Poké Ball Reverse Holo", "stamp": "None"},
         "pikachu": {"id": "sv05-051", "tcgdexId": "sv05-051", "name": "Pikachu",
                     "localId": "051", "set": {"id": "sv05", "name": "Cronoforze"}},
+        "articuno51": {
+            "id":"sv10-051","tcgdexId":"sv10-051","name":"Articuno del Team Rocket","localId":"051",
+            "set":{"id":"sv10","name":"Rivali Predestinati"},"variant":"Holo","stamp":"None",
+            "variants":{"normal":True,"holo":True,"reverse":True},
+            "variants_detailed":[
+                {"type":"Reverse","size":"Standard","thirdParty":{"cardmarket":825925},
+                 "pricing":{"cardmarket":{"idProduct":825925,"trend":0.14,"trend-holo":0.34}}},
+                {"type":"Olografica","size":"Standard","thirdParty":{"cardmarket":825925},
+                 "pricing":{"cardmarket":{"idProduct":825925,"trend":0.14,"trend-holo":0.34}}},
+                {"type":"Normale","size":"Standard","thirdParty":{"cardmarket":871155},
+                 "pricing":{"cardmarket":{"idProduct":871155,"trend":22.30}}}
+            ],
+            "pricing":{"cardmarket":{"idProduct":825925,"trend":0.14,"low":0.02,"avg7":0.14,"avg30":0.16,
+                                     "trend-holo":0.34,"low-holo":0.02,"avg7-holo":0.31,"avg30-holo":0.35}}
+        },
+        "tyranitar96Ambiguous": {
+            "id":"sv10-096","tcgdexId":"sv10-096","name":"Tyranitar del Team Rocket","localId":"096",
+            "set":{"id":"sv10"},"variant":"Holo","stamp":"None",
+            "variants":{"normal":True,"holo":True,"reverse":True},
+            "variants_detailed":[
+                {"type":"holo","size":"standard","thirdParty":{"cardmarket":825969},
+                 "pricing":{"cardmarket":{"idProduct":825969,"trend":0.08}}},
+                {"type":"holo","size":"standard","thirdParty":{"cardmarket":828209},
+                 "pricing":{"cardmarket":{"idProduct":828209,"trend":1.0}}},
+                {"type":"normal","size":"standard","thirdParty":{"cardmarket":828102},
+                 "pricing":{"cardmarket":{"idProduct":828102,"trend":1.0}}},
+                {"type":"reverse","size":"standard","thirdParty":{"cardmarket":825969},
+                 "pricing":{"cardmarket":{"idProduct":825969,"trend":0.08,"trend-holo":0.29}}}
+            ],
+            "pricing":{"cardmarket":{"idProduct":825969,"trend":0.08,"trend-holo":0.29}}
+        },
     }
     fixtures["batch2_base"] = [
         {
@@ -919,10 +950,24 @@ globalThis.runtime={
   pricingWithResolvedCardmarket,knownCardmarketIdentityConflict,
   cardmarketValueForCardVariant,cardmarketStatsForCardVariant,
   verifiedVariantPrice,verifiedStampPrice,verifiedMcdonalds2019CardmarketVariant,
-  documentedVariantsForCard,renderScanValue,cardPriceInfo,
+  verifiedNormalFinishHoloPrice,documentedVariantsForCard,renderScanValue,cardPriceInfo,
   setSelected:c=>{selectedCard=c;scanPriceCard=null}
 };`,context);
 const r=context.runtime;
+const articuno=fixtures.articuno51;
+const articunoHolo=r.cardmarketValueForCardVariant(articuno,'Holo');
+assert.strictEqual(articunoHolo.value,0.14);
+assert.strictEqual(articunoHolo.productId,825925);
+assert.strictEqual(articunoHolo.kind,'verified-normal-registry-holo');
+assert.strictEqual(r.cardPriceInfo(articuno).value,0.14);
+assert.strictEqual(r.verifiedNormalFinishHoloPrice({...articuno,localId:'052'},'Holo'),null);
+assert.strictEqual(r.verifiedNormalFinishHoloPrice({...articuno,set:{id:'sv09'}},'Holo'),null);
+assert.strictEqual(r.verifiedNormalFinishHoloPrice({...articuno,tcgdexId:'sv10-052',id:'sv10-052'},'Holo'),null);
+const tyr96=fixtures.tyranitar96Ambiguous;
+assert.strictEqual(r.verifiedNormalFinishHoloPrice(tyr96,'Holo'),null);
+assert.strictEqual(r.cardmarketValueForCardVariant(tyr96,'Holo').value,0);
+assert.strictEqual(r.cardmarketValueForCardVariant(tyr96,'Holo').kind,'needs-exact-variant');
+
 const p=fixtures.piplup;
 const override=r.verifiedBaseCardmarketProductOverride(p);
 assert.strictEqual(override?.pricing?.idProduct,407919);

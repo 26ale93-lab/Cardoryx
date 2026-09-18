@@ -4335,6 +4335,33 @@ function verifiedNormalFinish(card){
          exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
 }
 
+// Exact Holo recovery for the verified-Normal exception set.
+// Only accepts one unstamped/unfoiled Holo row whose Cardmarket product and
+// row pricing both match the card's current top-level Cardmarket product.
+// Multiple Holo products (e.g. sv10-096) remain fail-closed.
+function verifiedNormalFinishHoloPrice(card,variant){
+  if(canonicalVariant(variant||'Normal')!=='Holo'||!verifiedNormalFinish(card))return null;
+  const cm=card?.pricing?.cardmarket;
+  const topProduct=Number(cm?.idProduct||0);
+  if(!(topProduct>0))return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>
+    canonicalFinishTypeLabel(row?.type)==='holo' &&
+    !canonicalFinishFoilLabel(row?.foil) &&
+    !(Array.isArray(row?.stamp)&&row.stamp.length) &&
+    String(row?.size||'standard').trim().toLowerCase()==='standard'
+  );
+  if(rows.length!==1)return null;
+  const row=rows[0],rowProduct=Number(row?.thirdParty?.cardmarket||0);
+  const rowPricing=row?.pricing?.cardmarket||{};
+  const rowPricingProduct=Number(rowPricing?.idProduct||rowPricing?.id_product||0);
+  if(rowProduct!==topProduct||rowPricingProduct!==topProduct)return null;
+  const value=['trend','avg7','avg30','avg','low'].map(k=>Number(cm?.[k]||0)).find(x=>Number.isFinite(x)&&x>0)||0;
+  if(!value)return null;
+  return {value,kind:'verified-normal-registry-holo',exact:true,productId:topProduct,
+    source:cm?._cardoryxSource||'Cardmarket · Holo base verificata da riga fisica esatta',
+    verified:cm?._cardoryxVerified||rowPricing?.updated||''};
+}
+
 // V2.1.41 — Reverse finishes independently verified for exact physical identities.
 // Finish evidence only: no marketplace id or price, and no set/era/name inference.
 const VERIFIED_REVERSE_FINISHES = {
@@ -7342,8 +7369,11 @@ function cardmarketValueForCardVariant(card,variant){
         source:cm._cardoryxSource||'Cardmarket · quotazione standard della carta Holo',
         verified:cm._cardoryxVerified||''}:{value:0,kind:'none'};
     }
-    // Se TCGdex documenta contemporaneamente Normal e Holo, non assumiamo che
-    // il prezzo standard appartenga alla Holo.
+    // Per le sole identità in VERIFIED_NORMAL_FINISHES possiamo recuperare la Holo
+    // quando una singola riga fisica Holo prova esattamente lo stesso productId
+    // del pricing top-level. Ambiguità con più prodotti Holo restano fail-closed.
+    const verifiedHolo=verifiedNormalFinishHoloPrice(card,v);
+    if(verifiedHolo)return verifiedHolo;
     return {value:0,kind:'needs-exact-variant'};
   }
 
