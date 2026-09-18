@@ -94,6 +94,6 @@ jobs:
           git config user.name "26ale93-lab"
           git config user.email "26ale93@gmail.com"
           git add index.html scripts/test_card_identity_cardmarket_audit.py
-          test "$(git diff --cached --name-only | sort)" = "$(printf 'index.html\nscripts/test_card_identity_cardmarket_audit.py')"
+          test "$(git diff --cached --name-only | sort)" = "$(printf '.github/workflows/temp-base2-production-patch.yml\nindex.html\nscripts/test_card_identity_cardmarket_audit.py' | sort)"
           git commit -m "Resolve exact Jungle Cardmarket checklist products"
           git push origin HEAD:fix/base2-jungle-cardmarket-products-20260918
