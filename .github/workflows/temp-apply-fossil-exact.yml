@@ -89,14 +89,14 @@ jobs:
           PY
       - name: Syntax and runtime regression
         run: |
-          node --check <(python3 - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text()
           a=s.index('<script>')+8
           b=s.rindex('</script>')
-          print(s[a:b])
+          Path('/tmp/cardoryx-production.js').write_text(s[a:b],encoding='utf-8')
           PY
-          )
+          node --check /tmp/cardoryx-production.js
           python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
       - name: Full Cardmarket audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
