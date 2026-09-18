@@ -1,4 +1,4 @@
-name: TEMP pl3 AR localId audit
+name: TEMP pl3 AR exact source audit
 on:
   push:
     branches: [diagnostic/residual-base1-after-pr66-20260918]
@@ -7,91 +7,63 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    env:
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Clone TCGdex database
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Locate AR1-AR9 by localId and inspect Cardmarket
+      - name: Inspect Platinum Arceus AR1-AR9 exact source
         run: |
           python3 - <<'PY'
-          import json, pathlib, urllib.request, tempfile, collections, os
-          root=pathlib.Path('../tcgdex-cards-database')
-          wanted={f'AR{i}' for i in range(1,10)}
-          found=[]
-          def walk(obj):
-              if isinstance(obj,dict):
-                  yield obj
-                  for v in obj.values(): yield from walk(v)
-              elif isinstance(obj,list):
-                  for v in obj: yield from walk(v)
-          for fn in root.rglob('*.json'):
-              try: data=json.load(open(fn,encoding='utf-8'))
-              except Exception: continue
-              for o in walk(data):
-                  lid=str(o.get('localId') or '')
-                  if lid in wanted:
-                      sid=(o.get('set') or {}).get('id') if isinstance(o.get('set'),dict) else None
-                      cid=str(o.get('id') or '')
-                      found.append((str(fn),sid,cid,lid,o))
-          print('FOUND_COUNT',len(found))
-          pids=set(); names=set()
-          for fn,sid,cid,lid,c in found:
-              name=c.get('name')
-              if isinstance(name,dict): name=name.get('en') or next(iter(name.values()),None)
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              if top.get('idProduct'): pids.add(int(top['idProduct']))
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid: pids.add(int(pid))
-                  rows.append({'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),'firstEdition':x.get('firstEdition'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product')})
-              names.add(str(name or ''))
-              print('AR_CARD',json.dumps({'file':fn,'set':sid,'id':cid,'localId':lid,'name':name,'rarity':c.get('rarity'),'top':top.get('idProduct'),'variants':c.get('variants'),'rows':rows},ensure_ascii=False,sort_keys=True))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          import pathlib,re,json,urllib.request,tempfile,collections
+          root=pathlib.Path('../tcgdex-cards-database/data/Platinum/Arceus')
+          cards=[]
+          for i in range(1,10):
+              fn=root/f'AR{i}.ts'
+              txt=fn.read_text(encoding='utf-8')
+              def grab(p):
+                  m=re.search(p,txt,re.M|re.S)
+                  return m.group(1).strip() if m else None
+              name=grab(r"name:\s*['\"]([^'\"]+)['\"]")
+              local=grab(r"localId:\s*['\"]([^'\"]+)['\"]")
+              rarity=grab(r"rarity:\s*['\"]([^'\"]+)['\"]")
+              pids=sorted({int(x) for x in re.findall(r'idProduct:\s*(\d+)',txt)} | {int(x) for x in re.findall(r'cardmarket:\s*(\d+)',txt)})
+              print('AR_SOURCE',json.dumps({'file':str(fn),'name':name,'localId':local,'rarity':rarity,'productIds':pids,'raw':txt},ensure_ascii=False))
+              cards.append((name,pids))
+          pids={p for _,ps in cards for p in ps}
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.1'}
           def dl(section,name):
               p=pathlib.Path(tempfile.gettempdir())/name
               req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
               with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
-                  while chunk:=r.read(1024*1024): out.write(chunk)
+                  while True:
+                      ch=r.read(1024*1024)
+                      if not ch: break
+                      out.write(ch)
               return json.load(open(p))
-          def rows(root,keys):
-              if isinstance(root,list): return root
-              for k in keys:
-                  v=root.get(k) if isinstance(root,dict) else None
-                  if isinstance(v,list): return v
-              return []
           prod=dl('productList','products_singles_6.json'); price=dl('priceGuide','price_guide_6.json')
-          products=rows(prod,('products',))
-          selected=[r for r in products if int(r.get('idProduct') or 0) in pids]
+          prows=prod if isinstance(prod,list) else prod.get('products',[])
+          selected=[r for r in prows if int(r.get('idProduct') or 0) in pids]
           expids=collections.Counter(int(r.get('idExpansion') or 0) for r in selected)
           print('EXPANSIONS',json.dumps(expids))
           for r in selected: print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
-          exps=set(expids)
-          exp_rows=[r for r in products if int(r.get('idExpansion') or 0) in exps]
-          norm=lambda s:' '.join(str(s or '').casefold().split())
-          nset={norm(x) for x in names if x}
-          for r in exp_rows:
-              base=str(r.get('name') or '').split(' [',1)[0]
-              if norm(base) in nset and int(r.get('idProduct') or 0) not in pids:
-                  print('CM_NAME_CANDIDATE',json.dumps(r,ensure_ascii=False,sort_keys=True))
-                  pids.add(int(r.get('idProduct') or 0))
+          names={n.casefold() for n,_ in cards if n}
+          for r in prows:
+              if int(r.get('idExpansion') or 0) in expids:
+                  base=str(r.get('name') or '').split(' [',1)[0].casefold()
+                  if base in names:
+                      print('CM_NAME_CANDIDATE',json.dumps(r,ensure_ascii=False,sort_keys=True))
           bymeta=collections.defaultdict(list)
-          for r in exp_rows:
-              mid=int(r.get('idMetacard') or 0)
-              if mid:bymeta[mid].append(r)
-          for mid,vals in sorted(bymeta.items()):
-              if len(vals)>1 and any(int(v.get('idProduct') or 0) in pids for v in vals):
-                  print('DUP_META',mid,json.dumps([{'idProduct':v.get('idProduct'),'idExpansion':v.get('idExpansion'),'name':v.get('name')} for v in vals],ensure_ascii=False,sort_keys=True))
-                  for v in vals:pids.add(int(v.get('idProduct') or 0))
-          for r in rows(price,('priceGuides','priceGuide')):
-              pid=int(r.get('idProduct') or 0)
-              if pid in pids:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
-                  print('CM_PRICE',json.dumps(keep,sort_keys=True))
+          for r in prows:
+              if int(r.get('idExpansion') or 0) in expids:
+                  mid=int(r.get('idMetacard') or 0)
+                  if mid: bymeta[mid].append(r)
+          touched=set(pids)
+          for mid,vals in bymeta.items():
+              if any(int(v.get('idProduct') or 0) in touched for v in vals):
+                  print('DUP_META',mid,json.dumps([{'idProduct':v.get('idProduct'),'name':v.get('name')} for v in vals],ensure_ascii=False))
+                  touched.update(int(v.get('idProduct') or 0) for v in vals)
+          price_rows=price if isinstance(price,list) else price.get('priceGuides',price.get('priceGuide',[]))
+          for r in price_rows:
+              if int(r.get('idProduct') or 0) in touched:
+                  print('CM_PRICE',json.dumps(r,sort_keys=True))
           PY
