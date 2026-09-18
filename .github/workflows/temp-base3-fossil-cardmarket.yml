@@ -133,8 +133,13 @@ jobs:
                   f"{r['productId']}, {r['sourceProduct']}, {r['expansionId']}, {r['pairId']!r}),"
               )
           a=a[:aend]+'\n'+'\n'.join(pyrows)+a[aend:]
+          old_base='base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")'
+          new_base='source_foil=str(row.get("foil") or "").strip().lower()\\n                foil_ok=(not source_foil) or (owner_set=="base3" and source_foil=="galaxy")\\n                base_ok=(str(row.get("type") or "").lower()==expected_type and foil_ok and str(row.get("size") or "standard").lower()=="standard")'
+          if old_base not in a:
+              raise SystemExit('Legacy source-row audit anchor not found')
+          a=a.replace(old_base,new_base,1)
           audit.write_text(a,encoding='utf-8')
-          print('PATCHED_RULES',len(rules),'PATCHED_GUIDES',len(guides))
+          print('PATCHED_RULES',len(rules),'PATCHED_GUIDES',len(guides),'FOSSIL_SOURCE_FOIL_GATE','galaxy')
           PY
       - name: Production JavaScript syntax
         run: |
@@ -158,7 +163,7 @@ jobs:
           python3 - <<'PY'
           import json
           d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          s=d.get('summary') or {}
+          s=d.get('classificationTotals') or {}
           print('SUMMARY',json.dumps(s,sort_keys=True))
           expected={'SAFE':1853,'EXACT_ALTERNATE_PRODUCT':162,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':182,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
           for k,v in expected.items():
