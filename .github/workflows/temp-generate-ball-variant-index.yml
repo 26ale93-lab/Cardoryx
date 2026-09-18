@@ -37,6 +37,19 @@ jobs:
           print("Ball registry anchors OK")
           PY
 
+      - name: Run production Cardmarket runtime regression
+        run: |
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          p=Path("scripts/test_card_identity_cardmarket_audit.py")
+          spec=importlib.util.spec_from_file_location("audit",p)
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          result=mod.runtime_cardmarket_regression()
+          print(result["generatedBalls"])
+          PY
+
       - name: Commit generated index
         run: |
           if git diff --quiet -- index.html; then
