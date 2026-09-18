@@ -5,47 +5,36 @@ on:
 permissions:
   contents: read
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Verify Fossil card numbers against exact public pages
+      - name: Verify Fossil card-number to Cardmarket product mapping
         run: |
           python3 - <<'PY'
-          import urllib.request,re
-          pairs=[
-            ('aerodactyl',1,273862,16,273877),('articuno',2,273863,17,273878),
-            ('ditto',3,273864,18,273879),('dragonite',4,273865,19,273880),
-            ('gengar',5,273866,20,273881),('haunter',6,273867,21,273882),
-            ('hitmonlee',7,273868,22,273883),('hypno',8,273869,23,273884),
-            ('kabutops',9,273870,24,273885),('lapras',10,273871,25,273886),
-            ('magneton',11,273872,26,273887),('moltres',12,273873,27,273888),
-            ('muk',13,273874,28,273889),('raichu',14,273875,29,273890),
-            ('zapdos',15,273876,30,273891)]
-          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Audit/1.0'}
+          import urllib.request
+          headers={'User-Agent':'Mozilla/5.0 Cardoryx-Identity-Audit/2.0'}
+          names=['aerodactyl','articuno','ditto','dragonite','gengar','haunter','hitmonlee','hypno','kabutops','lapras','magneton','moltres','muk','raichu','zapdos']
+          expected=[]
+          for i,slug in enumerate(names,1):
+              expected.append((slug,i,273861+i))
+              expected.append((slug,i+15,273876+i))
           bad=[]
-          for slug,hnum,hpid,nnum,npid in pairs:
-              for num,pid,finish in ((hnum,hpid,'Holo'),(nnum,npid,'Normal')):
-                  urls=[
-                    f'https://www.tcggo.com/pokemon/fossil/{slug}-{num}',
-                    f'https://www.tcggo.com/pokemon/fossil/{slug}-{num}-of-62'
-                  ]
-                  hits=[];used=None
-                  for u in urls:
-                      try:
-                          req=urllib.request.Request(u,headers=headers)
-                          with urllib.request.urlopen(req,timeout=30) as r:t=r.read().decode('utf-8','ignore')
-                          cand=sorted({int(x) for x in re.findall(r'(?<!\d)(273\d{3}|275573)(?!\d)',t)})
-                          if pid in cand:
-                              hits=cand;used=u;break
-                      except Exception:
-                          pass
-                  ok=pid in hits
-                  print('PAGE_MAP',slug,num,finish,'expected',pid,'hits',hits,'url',used,'OK' if ok else 'BAD')
-                  if not ok:bad.append((slug,num,finish,pid,hits))
+          for slug,num,pid in expected:
+              u=f'https://www.tcggo.com/pokemon/fossil/{slug}-{num}'
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(u,headers=headers),timeout=30) as r:
+                      t=r.read().decode('utf-8','ignore')
+                  # Search every product id from the paired metacard, not only expected.
+                  pair=(pid+15 if num<=15 else pid-15)
+                  cands={pid,pair}
+                  if slug=='aerodactyl': cands.add(275573)
+                  hits=sorted(p for p in cands if str(p) in t)
+                  ok=hits==[pid]
+                  print('PAGE_MAP',slug,num,'expected',pid,'hits',hits,'OK' if ok else 'BAD')
+                  if not ok: bad.append((u,pid,hits))
+              except Exception as e:
+                  print('PAGE_MAP_ERROR',u,repr(e));bad.append((u,pid,[]))
           print('PAGE_MAP_BAD_COUNT',len(bad))
-          if bad:print('PAGE_MAP_BAD',bad)
+          if bad: print('PAGE_MAP_BAD',bad)
           PY
