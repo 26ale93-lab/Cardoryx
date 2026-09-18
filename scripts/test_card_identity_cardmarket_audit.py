@@ -2172,7 +2172,7 @@ def main():
                 cm=((row.get("pricing") or {}).get("cardmarket") or {})
                 try: ppid=int(cm.get("idProduct") or cm.get("id_product"))
                 except (TypeError,ValueError): ppid=None
-                base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")
+                base_ok=(str(row.get("type") or "").lower()==expected_type and (not row.get("foil") or (owner_set=="base3" and str(row.get("foil") or "").lower()=="galaxy")) and str(row.get("size") or "standard").lower()=="standard")
                 if base_ok and cm_id(row)==source_product and ppid==source_product: source_rows.append(row)
                 if base_ok and cm_id(row)==owner_product and ppid==owner_product: exact_rows.append(row)
             pair=LEGACY_CHECKLIST_PRODUCTS.get(pair_id)
