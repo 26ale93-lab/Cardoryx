@@ -633,9 +633,9 @@ def runtime_cardmarket_regression():
             duplicate_ball_keys.setdefault(key, [ball_rules[key]]).append(value)
         ball_rules[key] = value
     assert not duplicate_ball_keys, duplicate_ball_keys
-    assert len(ball_rules) == 508, len(ball_rules)
-    assert len({int(v["productId"]) for v in ball_rules.values()}) == 508
-    assert sum(1 for v in ball_rules.values() if v["finish"] == "Poké Ball Reverse Holo") == 299
+    assert len(ball_rules) == 506, len(ball_rules)
+    assert len({int(v["productId"]) for v in ball_rules.values()}) == 506
+    assert sum(1 for v in ball_rules.values() if v["finish"] == "Poké Ball Reverse Holo") == 297
     assert sum(1 for v in ball_rules.values() if v["finish"] == "Master Ball Reverse Holo") == 209
     assert {v["setId"] for v in ball_rules.values()} == {"me02.5", "sv08.5", "sv10.5b", "sv10.5w", "sve"}
     fixtures = {
