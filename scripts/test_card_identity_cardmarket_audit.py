@@ -252,6 +252,14 @@ BATCH2_BASE_OVERRIDE_ROWS = {
     "pl2-1": ("pl2", "1", 278570, 278575), "pl2-2": ("pl2", "2", 278569, 278576),
     "pl2-3": ("pl2", "3", 278572, 278577), "pl2-4": ("pl2", "4", 278571, 278578),
     "pl2-6": ("pl2", "6", 278574, 278580),
+    "pl3-ar1": ("pl3", "AR1", 278861, 278865),
+    "pl3-ar2": ("pl3", "AR2", 278861, 278864),
+    "pl3-ar3": ("pl3", "AR3", 278861, 278863),
+    "pl3-ar5": ("pl3", "AR5", 278861, 278867),
+    "pl3-ar6": ("pl3", "AR6", 278861, 278862),
+    "pl3-ar7": ("pl3", "AR7", 278861, 278866),
+    "pl3-ar8": ("pl3", "AR8", 278861, 278868),
+    "pl3-ar9": ("pl3", "AR9", 278861, 278871),
     "swshp-swsh055": ("swshp", "SWSH055", 510175, 510180),
 }
 EXPECTED_BASE_OVERRIDES.update({
@@ -423,6 +431,7 @@ BATCH2_SHARED_PRODUCT_OWNERS = {
     "hgss1-4": ("hgss1", "4", "Gyarados", 278976), "pl2-RT1": ("pl2", "RT1", "Fan Rotom", 278570),
     "pl2-RT2": ("pl2", "RT2", "Frost Rotom", 278569), "pl2-RT3": ("pl2", "RT3", "Heat Rotom", 278572),
     "pl2-RT4": ("pl2", "RT4", "Mow Rotom", 278571), "pl2-RT6": ("pl2", "RT6", "Charon's Choice", 278574),
+    "pl3-AR4": ("pl3", "AR4", "Arceus", 278861),
 }
 
 
@@ -2103,24 +2112,24 @@ def main():
         classification, priority, confidence = "SAFE", None, "HIGH"
         reason = "Il prodotto corrente è associato a una riga base e le alternative restano identità fisiche esplicite."
         action = "Nessuna modifica."
-        inversion = CONFIRMED_BASE_PRODUCT_CONFLICTS.get(card_id)
+        inversion = CONFIRMED_BASE_PRODUCT_CONFLICTS.get(card_id.lower())
         applied_override = False
         resolved_pid = current_pid
         resolved_value = current_value = (prices.get(current_pid) or {}).get("trend") if current_pid else current_cm.get("trend")
         override_tests = None
         if inversion and current_pid == inversion["alternate"]:
-            rule = base_overrides.get(card_id)
-            applied_override = override_matches(rule, card_id, (card.get("set") or {}).get("id"), card.get("localId"), current_pid)
+            rule = base_overrides.get(card_id.lower())
+            applied_override = override_matches(rule, card_id.lower(), (card.get("set") or {}).get("id"), card.get("localId"), current_pid)
             exact_live_rows = [row for row in (live.get(card_id) or {}).get("variants_detailed") or []
                                if int((row.get("thirdParty") or {}).get("cardmarket") or 0) == inversion["base"] and
                                int((((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct") or 0)) == inversion["base"]]
             exact_cm = (((exact_live_rows[0].get("pricing") or {}).get("cardmarket") or {}) if exact_live_rows else {})
             override_tests = {
                 "exactIdentityAccepted": applied_override,
-                "wrongTcgdexIdRejected": not override_matches(rule, card_id + "-other", (card.get("set") or {}).get("id"), card.get("localId"), current_pid),
-                "wrongSetIdRejected": not override_matches(rule, card_id, f"{(card.get('set') or {}).get('id')}-other", card.get("localId"), current_pid),
-                "wrongLocalIdRejected": not override_matches(rule, card_id, (card.get("set") or {}).get("id"), str(card.get("localId")) + "9", current_pid),
-                "correctedFutureProductRejected": not override_matches(rule, card_id, (card.get("set") or {}).get("id"), card.get("localId"), inversion["base"]),
+                "wrongTcgdexIdRejected": not override_matches(rule, card_id.lower() + "-other", (card.get("set") or {}).get("id"), card.get("localId"), current_pid),
+                "wrongSetIdRejected": not override_matches(rule, card_id.lower(), f"{(card.get('set') or {}).get('id')}-other", card.get("localId"), current_pid),
+                "wrongLocalIdRejected": not override_matches(rule, card_id.lower(), (card.get("set") or {}).get("id"), str(card.get("localId")) + "9", current_pid),
+                "correctedFutureProductRejected": not override_matches(rule, card_id.lower(), (card.get("set") or {}).get("id"), card.get("localId"), inversion["base"]),
                 "exactLivePriceRowPresent": bool(exact_cm),
             }
             if applied_override:
