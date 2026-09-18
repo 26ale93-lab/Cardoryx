@@ -1,0 +1,137 @@
+name: TEMP sv10-051 value loss
+
+on:
+  push:
+    branches:
+      - diagnostic/sv10-051-value-loss-20260918
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Diagnose live TCGdex and production resolver
+        run: |
+          python - <<'PY'
+          import json, urllib.request, subprocess, re
+          from pathlib import Path
+
+          urls=[
+            "https://api.tcgdex.net/v2/it/cards/sv10-51",
+            "https://api.tcgdex.net/v2/en/cards/sv10-51",
+          ]
+          cards={}
+          for u in urls:
+            try:
+              with urllib.request.urlopen(u, timeout=20) as r:
+                cards[u]=json.load(r)
+            except Exception as e:
+              cards[u]={"error":repr(e)}
+
+          def slim(c):
+            if not isinstance(c,dict): return c
+            return {
+              "id":c.get("id"),"name":c.get("name"),"localId":c.get("localId"),
+              "set":c.get("set"),"rarity":c.get("rarity"),
+              "variants":c.get("variants"),"variants_detailed":c.get("variants_detailed"),
+              "pricing":c.get("pricing"),
+            }
+
+          print("LIVE_TCGDEX")
+          print(json.dumps({u:slim(c) for u,c in cards.items()},ensure_ascii=False,indent=2))
+
+          s=Path("index.html").read_text(encoding="utf-8")
+          for needle in ["sv10-051","function cardmarketValueForCardVariant","function documentedVariantsForCard"]:
+            print("HAS",needle,needle in s)
+
+          # Run the exact production audit helper so we can reuse its JS extraction logic.
+          import importlib.util
+          p=Path("scripts/test_card_identity_cardmarket_audit.py")
+          spec=importlib.util.spec_from_file_location("audit",p)
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+
+          # Focused JS extraction copied from production audit style.
+          def extract_fn(name):
+            marker=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",s)
+            assert marker, name
+            brace=s.find("{",marker.start())
+            depth=0; quote=None; esc=False
+            for i in range(brace,len(s)):
+              ch=s[i]
+              if quote:
+                if esc: esc=False
+                elif ch=="\\": esc=True
+                elif ch==quote: quote=None
+                continue
+              if ch in ("'",'"',"`"):
+                quote=ch; continue
+              if ch=="{": depth+=1
+              elif ch=="}":
+                depth-=1
+                if depth==0: return s[marker.start():i+1]
+            raise AssertionError("unclosed "+name)
+
+          def extract_obj(name):
+            marker=re.search(rf"\bconst\s+{re.escape(name)}\s*=\s*",s)
+            assert marker, name
+            start=s.find("{",marker.end())
+            depth=0; quote=None; esc=False
+            for i in range(start,len(s)):
+              ch=s[i]
+              if quote:
+                if esc: esc=False
+                elif ch=="\\": esc=True
+                elif ch==quote: quote=None
+                continue
+              if ch in ("'",'"',"`"):
+                quote=ch; continue
+              if ch=="{": depth+=1
+              elif ch=="}":
+                depth-=1
+                if depth==0: return s[start:i+1]
+            raise AssertionError("unclosed obj "+name)
+
+          it=cards[urls[0]]
+          en=cards[urls[1]]
+          fixture=it if isinstance(it,dict) and not it.get("error") else en
+          if not isinstance(fixture,dict) or fixture.get("error"):
+            raise SystemExit("No live fixture")
+
+          names=[
+            "normText","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel",
+            "canonicalStamp","exactLocalIdKey","cardSetId","isModernParallelEra",
+            "rarityForcesStandardHolo","tcgdexVariantDetails","verifiedNormalFinish",
+            "verifiedReverseFinish","documentedVariantsForCard","knownReverseCardmarketProductConflict",
+            "knownCardmarketIdentityConflict","verifiedBaseCardmarketProductOverride",
+            "verifiedExactPrimarySpecialCardmarketVariant","verifiedDualBaseCardmarketVariant",
+            "verifiedMcdonalds2019CardmarketVariant","verifiedFroakie056CosmosCardmarketVariant",
+            "verifiedGiratinaVstar201CardmarketVariant","verifiedMcdonalds2021CardmarketVariant",
+            "cardmarketValueForVariant","cardmarketValueForCardVariant"
+          ]
+          objs=["VERIFIED_NORMAL_FINISHES","VERIFIED_REVERSE_FINISHES"]
+          js="const document={};\n"
+          for o in objs: js+=f"const {o}="+extract_obj(o)+";\n"
+          for n in names:
+            try: js+=extract_fn(n)+"\n"
+            except Exception as e: print("SKIP_FN",n,e)
+
+          js+=r"""
+          const c=JSON.parse(process.argv[1]);
+          const allowed=[...documentedVariantsForCard(c,'None','')];
+          const out={allowed};
+          for(const v of ['Normal','Holo','Reverse Holo']){
+            try{out[v]=cardmarketValueForCardVariant(c,v)}catch(e){out[v]={error:String(e)}}
+          }
+          process.stdout.write(JSON.stringify(out));
+          """
+          try:
+            out=subprocess.check_output(["node","-e",js,json.dumps(fixture,ensure_ascii=False)],text=True,stderr=subprocess.STDOUT)
+            print("RUNTIME",out)
+          except subprocess.CalledProcessError as e:
+            print("RUNTIME_ERROR",e.output)
+
+          PY
