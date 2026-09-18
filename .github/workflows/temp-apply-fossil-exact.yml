@@ -71,10 +71,13 @@ jobs:
           current.update(guides)
           s=s[:a]+json.dumps(current,separators=(',',':'),ensure_ascii=False)+s[b:]
 
-          legacy_old="    return stamps.length===0&&canonicalFinishTypeLabel(row?.type)===expectedType&&!canonicalFinishFoilLabel(row?.foil)&&\\n      String(row?.size||'standard').trim().toLowerCase()==='standard'&&"
-          legacy_new="    const foilLabel=canonicalFinishFoilLabel(row?.foil);\\n    const foilOk=!foilLabel||(rule.setId==='base3'&&foilLabel==='galaxy');\\n    return stamps.length===0&&canonicalFinishTypeLabel(row?.type)===expectedType&&foilOk&&\\n      String(row?.size||'standard').trim().toLowerCase()==='standard'&&"
-          if legacy_old not in s: raise SystemExit('legacy runtime foil gate anchor missing')
-          s=s.replace(legacy_old,legacy_new,1)
+          fn_a=s.index('function verifiedLegacyChecklistCardmarketPrice(card,variant){')
+          fn_b=s.index('\n}\n\nconst VERIFIED_VARIANT_PRICES',fn_a)
+          fn=s[fn_a:fn_b]
+          foil_token='!canonicalFinishFoilLabel(row?.foil)'
+          if fn.count(foil_token)!=1: raise SystemExit(f'legacy runtime foil token count={fn.count(foil_token)}')
+          fn=fn.replace(foil_token,"(!canonicalFinishFoilLabel(row?.foil)||(rule.setId==='base3'&&normText(row?.foil)==='galaxy'))",1)
+          s=s[:fn_a]+fn+s[fn_b:]
           index.write_text(s,encoding='utf-8')
 
           test=Path('scripts/test_card_identity_cardmarket_audit.py')
@@ -88,10 +91,13 @@ jobs:
               pyentries.append(f"    {cid!r}: ({setid!r}, {local!r}, {name!r}, {finish!r}, {pid}, {source}, {exp}, {pair!r}),")
           t=t[:tb]+'\n'+'\n'.join(pyentries)+t[tb:]
 
-          audit_old='                base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")'
-          audit_new='                legacy_foil_ok=(not row.get("foil") or (owner_set=="base3" and str(row.get("foil") or "").lower()=="galaxy"))\\n                base_ok=(str(row.get("type") or "").lower()==expected_type and legacy_foil_ok and str(row.get("size") or "standard").lower()=="standard")'
-          if audit_old not in t: raise SystemExit('legacy audit foil gate anchor missing')
-          t=t.replace(audit_old,audit_new,1)
+          br_a=t.index('        elif card_id in LEGACY_CHECKLIST_PRODUCTS:')
+          br_b=t.index('        elif card_id in BATCH2_SHARED_PRODUCT_OWNERS:',br_a)
+          branch=t[br_a:br_b]
+          foil_token='and not row.get("foil") and'
+          if branch.count(foil_token)!=1: raise SystemExit(f'legacy audit foil token count={branch.count(foil_token)}')
+          branch=branch.replace(foil_token,'and (not row.get("foil") or (owner_set=="base3" and str(row.get("foil") or "").lower()=="galaxy")) and',1)
+          t=t[:br_a]+branch+t[br_b:]
           test.write_text(t,encoding='utf-8')
 
           print('FOSSIL_ROWS',len(rows))
