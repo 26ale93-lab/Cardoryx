@@ -107,8 +107,26 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
         if value:
             rows.append(value)
 
+rows.sort(key=lambda x:(x["setId"],x["tcgdexId"],x["finish"],x["productId"]))
+
+# A Ball finish is production-safe only when tcgdexId + finish resolves to one
+# Cardmarket product. Keep all products for duplicate physical keys fail-closed.
+from collections import defaultdict
+by_identity_finish=defaultdict(list)
+for row in rows:
+    by_identity_finish[(row["tcgdexId"],row["finish"])].append(row)
+ambiguous={key:values for key,values in by_identity_finish.items() if len(values)!=1}
+expected_ambiguous={("sv10.5b-085","Poké Ball Reverse Holo")}
+assert set(ambiguous)==expected_ambiguous, {
+    key:[v["productId"] for v in values] for key,values in ambiguous.items()
+}
+assert {v["productId"] for v in ambiguous[("sv10.5b-085","Poké Ball Reverse Holo")]}=={836476,878014}
+
+rows=[values[0] for key,values in by_identity_finish.items() if len(values)==1]
 rows.sort(key=lambda x:(x["setId"],x["tcgdexId"],x["finish"]))
-assert len(rows)==508, f"Expected 508 exact missing rows, got {len(rows)}"
+assert len(rows)==506, f"Expected 506 safe exact Ball mappings, got {len(rows)}"
+assert sum(r["finish"]=="Poké Ball Reverse Holo" for r in rows)==297
+assert sum(r["finish"]=="Master Ball Reverse Holo" for r in rows)==209
 seen={}
 for row in rows:
     assert row["productId"] not in seen, f"Duplicate productId {row['productId']}"
@@ -176,6 +194,10 @@ print(json.dumps({
     "generated":len(rows),
     "pokeball":sum(r["finish"].startswith("Poké") for r in rows),
     "masterball":sum(r["finish"].startswith("Master") for r in rows),
+    "excludedAmbiguous":{
+        f"{key[0]}|{key[1]}":[v["productId"] for v in values]
+        for key,values in ambiguous.items()
+    },
     "sets":sorted(set(r["setId"] for r in rows)),
     "upstreamSha":upstream_sha,
     "parseErrors":len(parse_errors)
