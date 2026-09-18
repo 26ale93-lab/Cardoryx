@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Diff check
-        run: git diff --check origin/main...HEAD
+        run: |
+          git fetch origin main --depth=1
+          git diff --check origin/main...HEAD
       - name: Exact Italian runtime regression
         run: |
           python - <<'PY'
