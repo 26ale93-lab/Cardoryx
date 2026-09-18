@@ -212,8 +212,9 @@ runtime = r'''def runtime_legacy_checklist_regression():
     names=("normText","canonicalVariant","canonicalFinishTypeLabel","canonicalFinishFoilLabel","cardSetId","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","tcgdexVariantDetails")
     js="\n".join(extract_fn(n) for n in names)+"\n"+registry
     harness=r"""
-const fixtures=JSON.parse(process.argv[1]);
-const rules=JSON.parse(process.argv[2]);
+const fs=require('fs');
+const fixtures=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
+const rules=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 function fail(m){throw new Error(m)}
 const out={};
 for(const [id,r] of Object.entries(rules)){
@@ -235,7 +236,7 @@ for(const [id,r] of Object.entries(rules)){
 }
 process.stdout.write(JSON.stringify(out));
 """
-    return json.loads(subprocess.check_output(["node","-e",js+"\n"+harness,json.dumps(fixtures,ensure_ascii=False),json.dumps(LEGACY_CHECKLIST_PRODUCTS)],text=True))
+    fixture_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_fixtures.json"\n    rules_path=Path(tempfile.gettempdir())/"cardoryx_legacy_checklist_rules.json"\n    fixture_path.write_text(json.dumps(fixtures,ensure_ascii=False),encoding="utf-8")\n    rules_path.write_text(json.dumps(LEGACY_CHECKLIST_PRODUCTS,ensure_ascii=False),encoding="utf-8")\n    return json.loads(subprocess.check_output(["node","-e",js+"\\n"+harness,str(fixture_path),str(rules_path)],text=True))
 
 
 '''
