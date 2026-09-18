@@ -111,7 +111,7 @@ function verifiedLegacyChecklistCardmarketPrice(card,variant){
   });
   const live=liveRow?.pricing?.cardmarket||null;
   const snapshot=VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES[String(rule.productId)]||null;
-  const cm=live||snapshot;
+  const cm=snapshot||live;
   if(!cm||Number(cm?.idProduct||cm?.id_product||0)!==rule.productId)return null;
   const pick=(base)=>{const v=Number(cm?.[base]||0);return Number.isFinite(v)&&v>0?v:null;};
   const out={idProduct:rule.productId,trend:pick('trend'),avg7:pick('avg7'),avg30:pick('avg30'),avg:pick('avg'),low:pick('low'),
@@ -152,10 +152,11 @@ for cid,set_id,local_id,name,finish,pid,source_pid,expansion_id,pair_id in ROWS:
     if not guide or not any(isinstance(guide.get(k),(int,float)) and guide.get(k) > 0 for k in ("trend","avg7","avg30","avg","low")):
         raise SystemExit("Missing standard Price Guide fields for " + cid)
 
-# Snapshot only the exact products not supplied by the current TCGdex row.
-alternate_ids = sorted({pid for _,_,_,_,_,pid,source_pid,_,_ in ROWS if pid != source_pid})
+# Snapshot every exact Cardmarket product. Runtime valuation is anchored to the
+# official product ID, never to the counterpart product or to *-holo fields.
+exact_product_ids = sorted({pid for _,_,_,_,_,pid,_,_,_ in ROWS})
 guides = {}
-for pid in alternate_ids:
+for pid in exact_product_ids:
     g = prices[pid]
     guides[str(pid)] = {k:g.get(k) for k in ("idProduct","avg","low","trend","avg1","avg7","avg30")}
 
@@ -268,7 +269,7 @@ classification = r'''        elif card_id in LEGACY_CHECKLIST_PRODUCTS:
                 cm=((row.get("pricing") or {}).get("cardmarket") or {})
                 try: ppid=int(cm.get("idProduct") or cm.get("id_product"))
                 except (TypeError,ValueError): ppid=None
-                base_ok=(not stamps and str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")
+                base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")
                 if base_ok and cm_id(row)==source_product and ppid==source_product: source_rows.append(row)
                 if base_ok and cm_id(row)==owner_product and ppid==owner_product: exact_rows.append(row)
             pair=LEGACY_CHECKLIST_PRODUCTS.get(pair_id)
@@ -294,4 +295,4 @@ end = aud.index("        elif card_id in BATCH2_SHARED_PRODUCT_OWNERS:", start)
 aud = aud[:start] + classification + aud[end:]
 AUDIT.write_text(aud, encoding="utf-8")
 
-print("PATCHED", len(ROWS), "identities", len(alternate_ids), "exact alternate products")
+print("PATCHED", len(ROWS), "identities", len(exact_product_ids), "exact Cardmarket products")
