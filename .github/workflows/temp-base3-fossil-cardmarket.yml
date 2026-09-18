@@ -140,13 +140,13 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           s=Path('index.html').read_text()
-          blocks=[m.group(1) for m in re.finditer(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>',s,re.I)]
-          matches=[b for b in blocks if 'VERIFIED_LEGACY_CHECKLIST_PRODUCTS' in b]
-          if len(matches)!=1:
-              raise SystemExit(f'Expected exactly one production JS block, found {len(matches)}')
-          Path('/tmp/cardoryx.js').write_text(matches[0])
+          marker=s.index('VERIFIED_LEGACY_CHECKLIST_PRODUCTS')
+          script_open=s.rfind('<script',0,marker)
+          if script_open<0: raise SystemExit('Production script opening tag not found')
+          body_start=s.index('>',script_open)+1
+          body_end=s.index('</script>',marker)
+          Path('/tmp/cardoryx.js').write_text(s[body_start:body_end])
           PY
           node --check /tmp/cardoryx.js
       - name: Runtime regression
