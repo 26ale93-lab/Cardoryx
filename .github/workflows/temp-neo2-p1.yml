@@ -184,3 +184,27 @@ jobs:
           print('PAGE_MAP_BAD_COUNT',len(bad))
           if bad: print('PAGE_MAP_BAD',bad)
           PY
+
+      - name: Inspect current Gym implementation anchors
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for fn in ('index.html','scripts/test_card_identity_cardmarket_audit.py'):
+              t=Path(fn).read_text()
+              print('FILE_BEGIN',fn)
+              needles=['Gym','gym1-15','274151','shared finish','SHARED_FINISH','verifiedVariantPrice']
+              seen=[]
+              for needle in needles:
+                  pos=0
+                  while True:
+                      i=t.find(needle,pos)
+                      if i<0: break
+                      a=max(0,i-1800); b=min(len(t),i+4200)
+                      key=(a,b)
+                      if key not in seen:
+                          print('CONTEXT',needle,i)
+                          print(t[a:b])
+                          seen.append(key)
+                      pos=i+len(needle)
+              print('FILE_END',fn)
+          PY
