@@ -5486,59 +5486,78 @@ function verifiedExactVariantPrice(card,variant){
   return rule;
 }
 
-const VERIFIED_GYM_SHARED_FINISH_PRODUCTS={
-  'gym1-15':{setId:'gym1',localId:'15',name:'Brock',finish:'Holo',productId:274151,expansionId:1529,pairId:'gym1-98'},
-  'gym1-98':{setId:'gym1',localId:'98',name:'Brock',finish:'Normal',productId:274151,expansionId:1529,pairId:'gym1-15'},
-  'gym1-16':{setId:'gym1',localId:'16',name:'Erika',finish:'Holo',productId:274152,expansionId:1529,pairId:'gym1-100'},
-  'gym1-100':{setId:'gym1',localId:'100',name:'Erika',finish:'Normal',productId:274152,expansionId:1529,pairId:'gym1-16'},
-  'gym1-17':{setId:'gym1',localId:'17',name:'Lt. Surge',finish:'Holo',productId:274153,expansionId:1529,pairId:'gym1-101'},
-  'gym1-101':{setId:'gym1',localId:'101',name:'Lt. Surge',finish:'Normal',productId:274153,expansionId:1529,pairId:'gym1-17'},
-  'gym1-18':{setId:'gym1',localId:'18',name:'Misty',finish:'Holo',productId:274154,expansionId:1529,pairId:'gym1-102'},
-  'gym1-102':{setId:'gym1',localId:'102',name:'Misty',finish:'Normal',productId:274154,expansionId:1529,pairId:'gym1-18'},
-  'gym2-17':{setId:'gym2',localId:'17',name:'Blaine',finish:'Holo',productId:274285,expansionId:1530,pairId:'gym2-100'},
-  'gym2-100':{setId:'gym2',localId:'100',name:'Blaine',finish:'Normal',productId:274285,expansionId:1530,pairId:'gym2-17'},
-  'gym2-18':{setId:'gym2',localId:'18',name:'Giovanni',finish:'Holo',productId:274286,expansionId:1530,pairId:'gym2-104'},
-  'gym2-104':{setId:'gym2',localId:'104',name:'Giovanni',finish:'Normal',productId:274286,expansionId:1530,pairId:'gym2-18'},
-  'gym2-19':{setId:'gym2',localId:'19',name:'Koga',finish:'Holo',productId:274287,expansionId:1530,pairId:'gym2-106'},
-  'gym2-106':{setId:'gym2',localId:'106',name:'Koga',finish:'Normal',productId:274287,expansionId:1530,pairId:'gym2-19'},
-  'gym2-20':{setId:'gym2',localId:'20',name:'Sabrina',finish:'Holo',productId:274288,expansionId:1530,pairId:'gym2-110'},
-  'gym2-110':{setId:'gym2',localId:'110',name:'Sabrina',finish:'Normal',productId:274288,expansionId:1530,pairId:'gym2-20'}
+const VERIFIED_LEGACY_CHECKLIST_PRODUCTS={
+  "gym1-15":{setId:"gym1",localId:"15",name:"Brock",finish:"Holo",productId:274151,sourceProduct:274151,expansionId:1529,pairId:"gym1-98"},
+  "gym1-98":{setId:"gym1",localId:"98",name:"Brock",finish:"Normal",productId:274234,sourceProduct:274151,expansionId:1529,pairId:"gym1-15"},
+  "gym1-16":{setId:"gym1",localId:"16",name:"Erika",finish:"Holo",productId:274152,sourceProduct:274152,expansionId:1529,pairId:"gym1-100"},
+  "gym1-100":{setId:"gym1",localId:"100",name:"Erika",finish:"Normal",productId:274236,sourceProduct:274152,expansionId:1529,pairId:"gym1-16"},
+  "gym1-17":{setId:"gym1",localId:"17",name:"Lt. Surge",finish:"Holo",productId:274153,sourceProduct:274153,expansionId:1529,pairId:"gym1-101"},
+  "gym1-101":{setId:"gym1",localId:"101",name:"Lt. Surge",finish:"Normal",productId:274237,sourceProduct:274153,expansionId:1529,pairId:"gym1-17"},
+  "gym1-18":{setId:"gym1",localId:"18",name:"Misty",finish:"Holo",productId:274154,sourceProduct:274154,expansionId:1529,pairId:"gym1-102"},
+  "gym1-102":{setId:"gym1",localId:"102",name:"Misty",finish:"Normal",productId:274238,sourceProduct:274154,expansionId:1529,pairId:"gym1-18"},
+  "gym2-17":{setId:"gym2",localId:"17",name:"Blaine",finish:"Holo",productId:274285,sourceProduct:274285,expansionId:1530,pairId:"gym2-100"},
+  "gym2-100":{setId:"gym2",localId:"100",name:"Blaine",finish:"Normal",productId:274368,sourceProduct:274285,expansionId:1530,pairId:"gym2-17"},
+  "gym2-18":{setId:"gym2",localId:"18",name:"Giovanni",finish:"Holo",productId:274286,sourceProduct:274286,expansionId:1530,pairId:"gym2-104"},
+  "gym2-104":{setId:"gym2",localId:"104",name:"Giovanni",finish:"Normal",productId:274372,sourceProduct:274286,expansionId:1530,pairId:"gym2-18"},
+  "gym2-19":{setId:"gym2",localId:"19",name:"Koga",finish:"Holo",productId:274287,sourceProduct:274287,expansionId:1530,pairId:"gym2-106"},
+  "gym2-106":{setId:"gym2",localId:"106",name:"Koga",finish:"Normal",productId:274374,sourceProduct:274287,expansionId:1530,pairId:"gym2-19"},
+  "gym2-20":{setId:"gym2",localId:"20",name:"Sabrina",finish:"Holo",productId:274288,sourceProduct:274288,expansionId:1530,pairId:"gym2-110"},
+  "gym2-110":{setId:"gym2",localId:"110",name:"Sabrina",finish:"Normal",productId:274378,sourceProduct:274288,expansionId:1530,pairId:"gym2-20"},
+  "neo2-2":{setId:"neo2",localId:"2",name:"Forretress",finish:"Holo",productId:274513,sourceProduct:274513,expansionId:1532,pairId:"neo2-21"},
+  "neo2-21":{setId:"neo2",localId:"21",name:"Forretress",finish:"Normal",productId:274532,sourceProduct:274513,expansionId:1532,pairId:"neo2-2"},
+  "neo2-3":{setId:"neo2",localId:"3",name:"Hitmontop",finish:"Holo",productId:274514,sourceProduct:274514,expansionId:1532,pairId:"neo2-22"},
+  "neo2-22":{setId:"neo2",localId:"22",name:"Hitmontop",finish:"Normal",productId:274533,sourceProduct:274514,expansionId:1532,pairId:"neo2-3"},
+  "neo2-4":{setId:"neo2",localId:"4",name:"Houndoom",finish:"Holo",productId:274515,sourceProduct:274515,expansionId:1532,pairId:"neo2-23"},
+  "neo2-23":{setId:"neo2",localId:"23",name:"Houndoom",finish:"Normal",productId:274534,sourceProduct:274515,expansionId:1532,pairId:"neo2-4"},
+  "neo2-5":{setId:"neo2",localId:"5",name:"Houndour",finish:"Holo",productId:274516,sourceProduct:274516,expansionId:1532,pairId:"neo2-24"},
+  "neo2-24":{setId:"neo2",localId:"24",name:"Houndour",finish:"Normal",productId:274535,sourceProduct:274516,expansionId:1532,pairId:"neo2-5"},
+  "neo2-6":{setId:"neo2",localId:"6",name:"Kabutops",finish:"Holo",productId:274517,sourceProduct:274517,expansionId:1532,pairId:"neo2-25"},
+  "neo2-25":{setId:"neo2",localId:"25",name:"Kabutops",finish:"Normal",productId:274536,sourceProduct:274517,expansionId:1532,pairId:"neo2-6"},
+  "neo2-7":{setId:"neo2",localId:"7",name:"Magnemite",finish:"Holo",productId:274518,sourceProduct:274518,expansionId:1532,pairId:"neo2-26"},
+  "neo2-26":{setId:"neo2",localId:"26",name:"Magnemite",finish:"Normal",productId:274537,sourceProduct:274518,expansionId:1532,pairId:"neo2-7"},
+  "neo2-8":{setId:"neo2",localId:"8",name:"Politoed",finish:"Holo",productId:274519,sourceProduct:274519,expansionId:1532,pairId:"neo2-27"},
+  "neo2-27":{setId:"neo2",localId:"27",name:"Politoed",finish:"Normal",productId:274538,sourceProduct:274519,expansionId:1532,pairId:"neo2-8"},
+  "neo2-9":{setId:"neo2",localId:"9",name:"Poliwrath",finish:"Holo",productId:274520,sourceProduct:274520,expansionId:1532,pairId:"neo2-28"},
+  "neo2-28":{setId:"neo2",localId:"28",name:"Poliwrath",finish:"Normal",productId:274539,sourceProduct:274520,expansionId:1532,pairId:"neo2-9"},
+  "neo2-10":{setId:"neo2",localId:"10",name:"Scizor",finish:"Holo",productId:274521,sourceProduct:274521,expansionId:1532,pairId:"neo2-29"},
+  "neo2-29":{setId:"neo2",localId:"29",name:"Scizor",finish:"Normal",productId:274540,sourceProduct:274521,expansionId:1532,pairId:"neo2-10"},
+  "neo2-11":{setId:"neo2",localId:"11",name:"Smeargle",finish:"Holo",productId:274522,sourceProduct:274522,expansionId:1532,pairId:"neo2-30"},
+  "neo2-30":{setId:"neo2",localId:"30",name:"Smeargle",finish:"Normal",productId:274541,sourceProduct:274522,expansionId:1532,pairId:"neo2-11"},
+  "neo2-12":{setId:"neo2",localId:"12",name:"Tyranitar",finish:"Holo",productId:274523,sourceProduct:274523,expansionId:1532,pairId:"neo2-31"},
+  "neo2-31":{setId:"neo2",localId:"31",name:"Tyranitar",finish:"Normal",productId:274542,sourceProduct:274523,expansionId:1532,pairId:"neo2-12"},
+  "neo2-14":{setId:"neo2",localId:"14",name:"Unown [A]",finish:"Holo",productId:274525,sourceProduct:274525,expansionId:1532,pairId:"neo2-33"},
+  "neo2-33":{setId:"neo2",localId:"33",name:"Unown [A]",finish:"Normal",productId:274544,sourceProduct:274525,expansionId:1532,pairId:"neo2-14"},
+  "neo2-15":{setId:"neo2",localId:"15",name:"Ursaring",finish:"Holo",productId:274526,sourceProduct:274526,expansionId:1532,pairId:"neo2-34"},
+  "neo2-34":{setId:"neo2",localId:"34",name:"Ursaring",finish:"Normal",productId:274545,sourceProduct:274526,expansionId:1532,pairId:"neo2-15"},
+  "neo2-16":{setId:"neo2",localId:"16",name:"Wobbuffet",finish:"Holo",productId:274527,sourceProduct:274527,expansionId:1532,pairId:"neo2-35"},
+  "neo2-35":{setId:"neo2",localId:"35",name:"Wobbuffet",finish:"Normal",productId:274546,sourceProduct:274527,expansionId:1532,pairId:"neo2-16"},
+  "neo2-17":{setId:"neo2",localId:"17",name:"Yanma",finish:"Holo",productId:274528,sourceProduct:274528,expansionId:1532,pairId:"neo2-36"},
+  "neo2-36":{setId:"neo2",localId:"36",name:"Yanma",finish:"Normal",productId:274547,sourceProduct:274528,expansionId:1532,pairId:"neo2-17"}
 };
-const VERIFIED_GYM_SHARED_PRICE_GUIDES={
-  274151:{idProduct:274151,trend:31.30,avg7:30.86,avg30:35.88,avg:35.39,low:10,'trend-holo':23.27,'avg7-holo':25.93,'avg30-holo':15.31},
-  274152:{idProduct:274152,trend:44.25,avg7:48.35,avg30:41.07,avg:44.56,low:18,'trend-holo':37.42,'avg7-holo':44.56,'avg30-holo':25.65},
-  274153:{idProduct:274153,trend:30.95,avg7:34.08,avg30:30.15,avg:31.46,low:6,'trend-holo':22.68,'avg7-holo':24.79,'avg30-holo':22.13},
-  274154:{idProduct:274154,trend:39.46,avg7:36.66,avg30:56.73,avg:35.62,low:22.89,'trend-holo':19.12,'avg7-holo':18.65,'avg30-holo':16.42},
-  274285:{idProduct:274285,trend:52.47,avg7:101.08,avg30:59.92,avg:76.97,low:12.9,'trend-holo':24.93,'avg7-holo':29.60,'avg30-holo':22.43},
-  274286:{idProduct:274286,trend:61.45,avg7:59.99,avg30:61.13,avg:58.74,low:24,'trend-holo':27.31,'avg7-holo':36.00,'avg30-holo':24.58},
-  274287:{idProduct:274287,trend:45.76,avg7:48.36,avg30:43.43,avg:47.92,low:10,'trend-holo':26.88,'avg7-holo':28.79,'avg30-holo':23.25},
-  274288:{idProduct:274288,trend:79.05,avg7:59.25,avg30:55.96,avg:53.79,low:22,'trend-holo':22.98,'avg7-holo':26.07,'avg30-holo':23.32}
-};
-function verifiedGymLeaderSharedFinishPrice(card,variant){
+const VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES={"274151":{"idProduct":274151,"avg":35.39,"low":10,"trend":34.43,"avg1":19.99,"avg7":30.86,"avg30":35.88},"274152":{"idProduct":274152,"avg":44.56,"low":15,"trend":44.25,"avg1":59.99,"avg7":48.35,"avg30":41.07},"274153":{"idProduct":274153,"avg":31.46,"low":6,"trend":30.34,"avg1":30,"avg7":34.08,"avg30":30.15},"274154":{"idProduct":274154,"avg":35.62,"low":22.69,"trend":39.46,"avg1":39.89,"avg7":36.66,"avg30":56.73},"274234":{"idProduct":274234,"avg":5.27,"low":1,"trend":3.99,"avg1":3.89,"avg7":5.06,"avg30":4.78},"274236":{"idProduct":274236,"avg":5.05,"low":0.69,"trend":6.53,"avg1":8.13,"avg7":5.81,"avg30":5.19},"274237":{"idProduct":274237,"avg":5.6,"low":2,"trend":5.62,"avg1":13,"avg7":5.83,"avg30":5.31},"274238":{"idProduct":274238,"avg":6.94,"low":1,"trend":7.01,"avg1":7.98,"avg7":5.69,"avg30":6.89},"274285":{"idProduct":274285,"avg":76.97,"low":12.9,"trend":51.49,"avg1":80,"avg7":101.08,"avg30":59.92},"274286":{"idProduct":274286,"avg":58.74,"low":24,"trend":59.07,"avg1":55,"avg7":59.99,"avg30":61.13},"274287":{"idProduct":274287,"avg":47.92,"low":10,"trend":45.76,"avg1":60,"avg7":48.36,"avg30":43.43},"274288":{"idProduct":274288,"avg":53.79,"low":22,"trend":75.03,"avg1":149,"avg7":59.25,"avg30":55.96},"274368":{"idProduct":274368,"avg":6.77,"low":2.5,"trend":5.87,"avg1":2.9,"avg7":4.92,"avg30":8.36},"274372":{"idProduct":274372,"avg":8.09,"low":1.75,"trend":7.66,"avg1":7.5,"avg7":8.4,"avg30":8.08},"274374":{"idProduct":274374,"avg":7.87,"low":1.99,"trend":7.02,"avg1":4.49,"avg7":6.09,"avg30":6.5},"274378":{"idProduct":274378,"avg":13.58,"low":2,"trend":14.66,"avg1":20,"avg7":9.78,"avg30":11.21},"274513":{"idProduct":274513,"avg":15.59,"low":4,"trend":16.31,"avg1":12.16,"avg7":13.49,"avg30":12.94},"274514":{"idProduct":274514,"avg":10.21,"low":1.4,"trend":7.32,"avg1":7,"avg7":7.38,"avg30":9.66},"274515":{"idProduct":274515,"avg":44.69,"low":6,"trend":126.15,"avg1":37,"avg7":121.36,"avg30":49.42},"274516":{"idProduct":274516,"avg":49.32,"low":8.9,"trend":52.08,"avg1":79.99,"avg7":61.1,"avg30":39.96},"274517":{"idProduct":274517,"avg":56.19,"low":5.99,"trend":60.68,"avg1":31,"avg7":81.13,"avg30":46.58},"274518":{"idProduct":274518,"avg":19.48,"low":1.99,"trend":20.86,"avg1":17,"avg7":19.84,"avg30":16.91},"274519":{"idProduct":274519,"avg":37.66,"low":5,"trend":41.56,"avg1":45,"avg7":34.78,"avg30":46.15},"274520":{"idProduct":274520,"avg":19.74,"low":3.5,"trend":23.73,"avg1":26.99,"avg7":15.45,"avg30":21.44},"274521":{"idProduct":274521,"avg":36.6,"low":5,"trend":42.86,"avg1":52.5,"avg7":30.24,"avg30":36.07},"274522":{"idProduct":274522,"avg":23.23,"low":3,"trend":17.77,"avg1":18.5,"avg7":16.67,"avg30":26.91},"274523":{"idProduct":274523,"avg":87.43,"low":10,"trend":63.29,"avg1":30,"avg7":61.54,"avg30":75.19},"274525":{"idProduct":274525,"avg":7.72,"low":1.5,"trend":6.78,"avg1":6,"avg7":6.19,"avg30":7.7},"274526":{"idProduct":274526,"avg":19.77,"low":4.99,"trend":32.4,"avg1":65,"avg7":23.08,"avg30":28.46},"274527":{"idProduct":274527,"avg":21.46,"low":5,"trend":33.47,"avg1":32,"avg7":30.93,"avg30":22.32},"274528":{"idProduct":274528,"avg":19.61,"low":4,"trend":19.18,"avg1":5,"avg7":11.96,"avg30":18.66},"274532":{"idProduct":274532,"avg":4.34,"low":0.5,"trend":5.25,"avg1":7,"avg7":5.35,"avg30":5.17},"274533":{"idProduct":274533,"avg":6.09,"low":0.9,"trend":4.92,"avg1":1.94,"avg7":5.95,"avg30":5.77},"274534":{"idProduct":274534,"avg":7.46,"low":0.9,"trend":5.67,"avg1":6,"avg7":7.32,"avg30":7},"274535":{"idProduct":274535,"avg":7.38,"low":1.5,"trend":5.69,"avg1":8,"avg7":7.37,"avg30":7.08},"274536":{"idProduct":274536,"avg":10.35,"low":1,"trend":11.97,"avg1":1,"avg7":10.37,"avg30":10.52},"274537":{"idProduct":274537,"avg":6.09,"low":0.94,"trend":6.61,"avg1":10.9,"avg7":5.98,"avg30":5.33},"274538":{"idProduct":274538,"avg":7.59,"low":2,"trend":9.44,"avg1":6.52,"avg7":7.75,"avg30":13.6},"274539":{"idProduct":274539,"avg":5.81,"low":0.25,"trend":7.76,"avg1":3,"avg7":6.94,"avg30":5.66},"274540":{"idProduct":274540,"avg":7.71,"low":0.5,"trend":8.56,"avg1":8.95,"avg7":9.57,"avg30":7.22},"274541":{"idProduct":274541,"avg":9.24,"low":1.5,"trend":8.13,"avg1":4.65,"avg7":11.3,"avg30":7.76},"274542":{"idProduct":274542,"avg":10.56,"low":0.7,"trend":7.49,"avg1":4,"avg7":14.64,"avg30":12.09},"274544":{"idProduct":274544,"avg":7.16,"low":0.99,"trend":6.91,"avg1":7,"avg7":6.33,"avg30":5.94},"274545":{"idProduct":274545,"avg":4.8,"low":0.5,"trend":5.05,"avg1":5,"avg7":6.08,"avg30":5.16},"274546":{"idProduct":274546,"avg":4.05,"low":1,"trend":4.38,"avg1":2.9,"avg7":3.65,"avg30":4.62},"274547":{"idProduct":274547,"avg":4.58,"low":0.99,"trend":2.56,"avg1":2.99,"avg7":4.81,"avg30":5.05}};
+
+function verifiedLegacyChecklistCardmarketPrice(card,variant){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
-  const rule=VERIFIED_GYM_SHARED_FINISH_PRODUCTS[id];
+  const rule=VERIFIED_LEGACY_CHECKLIST_PRODUCTS[id];
   if(!rule||cardSetId(card)!==rule.setId||exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||normText(card?.name||'')!==normText(rule.name))return null;
   const target=canonicalVariant(variant||'Normal');
   if(target!==rule.finish)return null;
   const expectedType=target==='Holo'?'holo':'normal';
-  const rows=tcgdexVariantDetails(card).filter(row=>{
+  const liveRow=tcgdexVariantDetails(card).find(row=>{
     const stamps=Array.isArray(row?.stamp)?row.stamp:[];
     const cm=row?.pricing?.cardmarket||{};
-    return stamps.length===1&&normText(stamps[0])===normText('1st-edition')&&
-      canonicalFinishTypeLabel(row?.type)===expectedType&&!canonicalFinishFoilLabel(row?.foil)&&
+    return stamps.length===0&&canonicalFinishTypeLabel(row?.type)===expectedType&&!canonicalFinishFoilLabel(row?.foil)&&
       String(row?.size||'standard').trim().toLowerCase()==='standard'&&
       Number(row?.thirdParty?.cardmarket||0)===rule.productId&&Number(cm?.idProduct||cm?.id_product||0)===rule.productId;
   });
-  const live=rows.length===1?(rows[0]?.pricing?.cardmarket||null):null;
-  const cm=live||VERIFIED_GYM_SHARED_PRICE_GUIDES[rule.productId]||null;
+  const live=liveRow?.pricing?.cardmarket||null;
+  const snapshot=VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES[String(rule.productId)]||null;
+  const cm=snapshot||live;
   if(!cm||Number(cm?.idProduct||cm?.id_product||0)!==rule.productId)return null;
-  const pick=(base)=>{
-    const key=target==='Holo'?`${base}-holo`:base;
-    const v=Number(cm?.[key]||0);return Number.isFinite(v)&&v>0?v:null;
-  };
+  const pick=(base)=>{const v=Number(cm?.[base]||0);return Number.isFinite(v)&&v>0?v:null;};
   const out={idProduct:rule.productId,trend:pick('trend'),avg7:pick('avg7'),avg30:pick('avg30'),avg:pick('avg'),low:pick('low'),
-    source:`Cardmarket · ${rule.setId==='gym1'?'Gym Heroes':'Gym Challenge'} · ${rule.name} ${rule.localId} · ${target} · product ${rule.productId}`,
-    verified:String(cm?.updated||'2026-09-17T20:17:05Z')};
+    source:'Cardmarket · checklist fisica esatta · '+rule.setId+' '+rule.localId+' · '+target+' · product '+rule.productId,
+    verified:String(cm?.updated||'2026-09-18')};
   if(![out.trend,out.avg7,out.avg30,out.avg,out.low].some(v=>Number(v)>0))return null;
   return out;
 }
@@ -5580,8 +5599,8 @@ function variantPriceKey(card,variant){
   return `${setName}|${num}|${canonicalVariant(variant||'Normal')}`;
 }
 function verifiedVariantPrice(card,variant){
-  const gymShared=verifiedGymLeaderSharedFinishPrice(card,variant);
-  if(gymShared)return gymShared;
+  const legacyChecklist=verifiedLegacyChecklistCardmarketPrice(card,variant);
+  if(legacyChecklist)return legacyChecklist;
   const exact=verifiedExactVariantPrice(card,variant);
   if(exact)return exact;
   const setName=normText(card?.set?.name||card?.set||'');
