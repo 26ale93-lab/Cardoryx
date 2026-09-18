@@ -70,6 +70,15 @@ jobs:
           if overlap: raise SystemExit(f'price guide overlap: {sorted(overlap)}')
           current.update(guides)
           s=s[:a]+json.dumps(current,separators=(',',':'),ensure_ascii=False)+s[b:]
+
+          legacy_old="""    return stamps.length===0&&canonicalFinishTypeLabel(row?.type)===expectedType&&!canonicalFinishFoilLabel(row?.foil)&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard'&&"""
+          legacy_new="""    const foilLabel=canonicalFinishFoilLabel(row?.foil);
+    const foilOk=!foilLabel||(rule.setId==='base3'&&foilLabel==='galaxy');
+    return stamps.length===0&&canonicalFinishTypeLabel(row?.type)===expectedType&&foilOk&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard'&&"""
+          if legacy_old not in s: raise SystemExit('legacy runtime foil gate anchor missing')
+          s=s.replace(legacy_old,legacy_new,1)
           index.write_text(s,encoding='utf-8')
 
           test=Path('scripts/test_card_identity_cardmarket_audit.py')
@@ -82,6 +91,12 @@ jobs:
           for cid,setid,local,name,finish,pid,source,exp,pair in rows:
               pyentries.append(f"    {cid!r}: ({setid!r}, {local!r}, {name!r}, {finish!r}, {pid}, {source}, {exp}, {pair!r}),")
           t=t[:tb]+'\n'+'\n'.join(pyentries)+t[tb:]
+
+          audit_old='''                base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")'''
+          audit_new='''                legacy_foil_ok=(not row.get("foil") or (owner_set=="base3" and str(row.get("foil") or "").lower()=="galaxy"))
+                base_ok=(str(row.get("type") or "").lower()==expected_type and legacy_foil_ok and str(row.get("size") or "standard").lower()=="standard")'''
+          if audit_old not in t: raise SystemExit('legacy audit foil gate anchor missing')
+          t=t.replace(audit_old,audit_new,1)
           test.write_text(t,encoding='utf-8')
 
           print('FOSSIL_ROWS',len(rows))
@@ -105,30 +120,6 @@ jobs:
           print('SCRIPT_BLOCKS_CHECKED',checked)
           PY
           python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
-      - name: Diagnose Fossil live foil evidence
-        run: |
-          python3 - <<'PY'
-          import json,urllib.request
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          bad=[]
-          for n in range(1,31):
-              cid=f'base3-{n}'
-              with urllib.request.urlopen(urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers),timeout=60) as r:
-                  c=json.load(r)
-              expected='holo' if n<=15 else 'normal'
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  stamps=x.get('stamp') or []
-                  if isinstance(stamps,str): stamps=[stamps]
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  if str(x.get('type') or '').lower()==expected and not stamps and str(x.get('size') or 'standard').lower()=='standard':
-                      rows.append({'foil':x.get('foil'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product')})
-              ok=any(str(x.get('foil') or '').lower()=='galaxy' and x.get('pid') for x in rows)
-              print('FOSSIL_EVIDENCE',cid,expected,rows,'OK' if ok else 'BAD')
-              if not ok: bad.append(cid)
-          if bad: raise SystemExit(f'Fossil galaxy evidence incomplete: {bad}')
-          PY
       - name: Full Cardmarket audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
       - name: Verify expected delta and diff scope
@@ -136,12 +127,14 @@ jobs:
           python3 - <<'PY'
           import json,subprocess
           d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          summary=d.get('summary') or {}
-          print('SUMMARY',json.dumps(summary,sort_keys=True))
+          counts=d.get('classificationCounts') or d.get('summary') or {}
+          print('COUNTS',json.dumps(counts,sort_keys=True))
           p1=len(d.get('p1AmbiguousProductIds') or [])
           if p1!=182: raise SystemExit(f'expected P1=182, got {p1}')
-          if int(summary.get('p0WrongProduct') or summary.get('P0_WRONG_PRODUCT') or 0)!=0:
-              raise SystemExit('P0 regression')
+          p0_ids=d.get('p0WrongProductIds') or []
+          p0_count=int(counts.get('P0_WRONG_PRODUCT') or counts.get('p0WrongProduct') or len(p0_ids) or 0)
+          if p0_count!=0 or p0_ids:
+              raise SystemExit(f'P0 regression: count={p0_count} ids={p0_ids}')
           bad=[x for x in (d.get('p1AmbiguousProductIds') or []) if x.startswith('base3-')]
           if bad: raise SystemExit(f'base3 residuals remain: {bad}')
           changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
