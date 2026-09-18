@@ -1,4 +1,4 @@
-name: TEMP residual special P1 audit after PR66
+name: TEMP snapshot audit residual legacy specials
 on:
   push:
     branches: [diagnostic/residual-p1-after-pr66-20260918]
@@ -7,111 +7,39 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    env:
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Clone TCGdex database
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
-      - name: Run current full audit
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
-      - name: Deep inspect 18 non-Base residual P1
-        run: |
-          python3 - <<'PY'
-          import json,urllib.request,tempfile,pathlib,collections
-          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
-          ids=[x for x in (d.get('p1AmbiguousProductIds') or []) if not x.startswith('base1-')]
-          print('SPECIAL_COUNT',len(ids))
-          print('SPECIAL_IDS',json.dumps(ids))
-          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
-          cards={};pids=set()
-          for cid in ids:
-              try:
-                  req=urllib.request.Request('https://api.tcgdex.net/v2/en/cards/'+cid,headers=headers)
-                  with urllib.request.urlopen(req,timeout=60) as r:c=json.load(r)
-              except Exception as e:
-                  print('API_ERROR',cid,repr(e));continue
-              cards[cid]=c
-              top=((c.get('pricing') or {}).get('cardmarket') or {})
-              if top.get('idProduct'):pids.add(int(top['idProduct']))
-              rows=[]
-              for x in c.get('variants_detailed') or []:
-                  cm=((x.get('pricing') or {}).get('cardmarket') or {})
-                  pid=((x.get('thirdParty') or {}).get('cardmarket'))
-                  if pid:pids.add(int(pid))
-                  rows.append({
-                    'type':x.get('type'),'foil':x.get('foil'),'stamp':x.get('stamp'),'size':x.get('size'),
-                    'firstEdition':x.get('firstEdition'),'language':x.get('language') or x.get('languages'),
-                    'variantId':x.get('variantId'),'pid':pid,'ppid':cm.get('idProduct') or cm.get('id_product'),
-                    'trend':cm.get('trend'),'trendHolo':cm.get('trend-holo'),'low':cm.get('low'),'lowHolo':cm.get('low-holo')
-                  })
-              print('CARD',json.dumps({
-                'id':cid,'name':c.get('name'),'localId':c.get('localId'),'set':(c.get('set') or {}).get('id'),
-                'setName':(c.get('set') or {}).get('name'),'rarity':c.get('rarity'),'top':top.get('idProduct'),
-                'variants':c.get('variants'),'rows':rows
-              },ensure_ascii=False,sort_keys=True))
-          def dl(section,name):
-              p=pathlib.Path(tempfile.gettempdir())/name
-              req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/'+section+'/'+name,headers=headers)
-              with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
-                  while chunk:=r.read(1024*1024): out.write(chunk)
-              return json.load(open(p))
-          prod=dl('productList','products_singles_6.json')
-          price=dl('priceGuide','price_guide_6.json')
-          def rows(root,keys):
-              if isinstance(root,list): return root
-              for k in keys:
-                  v=root.get(k) if isinstance(root,dict) else None
-                  if isinstance(v,list): return v
-              return []
-          products=rows(prod,('products',))
-          bymeta=collections.defaultdict(list)
-          for r in products:
-              mid=int(r.get('idMetacard') or 0)
-              if mid:bymeta[mid].append(r)
-          # Emit directly referenced products plus same-metacard siblings.
-          selected=[r for r in products if int(r.get('idProduct') or 0) in pids]
-          sibling_ids=set(pids)
-          for r in selected:
-              mid=int(r.get('idMetacard') or 0)
-              for x in bymeta.get(mid,[]): sibling_ids.add(int(x.get('idProduct') or 0))
-          for r in products:
-              pid=int(r.get('idProduct') or 0)
-              if pid in sibling_ids:
-                  print('CM_PRODUCT',json.dumps(r,ensure_ascii=False,sort_keys=True))
-          for r in rows(price,('priceGuides','priceGuide')):
-              pid=int(r.get('idProduct') or 0)
-              if pid in sibling_ids:
-                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
-                  print('CM_PRICE',json.dumps(keep,sort_keys=True))
-          # Preserve report explanations when available.
-          for row in (d.get('cases') or d.get('cards') or []):
-              cid=row.get('tcgdexId') or row.get('id')
-              if cid in ids:
-                  keep={k:row.get(k) for k in ('tcgdexId','setId','localId','name','classification','currentProductId','alternateProductIds','sharedWith','reason','action') if k in row}
-                  print('REPORT_CASE',json.dumps(keep,ensure_ascii=False,sort_keys=True))
-          PY
-      - name: Inspect existing exact guards for special residuals
+      - name: Inspect exact snapshot sources
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          for fn in ('index.html','scripts/test_card_identity_cardmarket_audit.py'):
-              t=Path(fn).read_text(encoding='utf-8')
-              print('FILE',fn)
-              seen=[]
-              for needle in ('sm12-29','sm12-237','398524','407794','cel25cc-CC020','576747','576755','25th-celebration','mfb-9','741988','741976'):
-                  pos=0
-                  while True:
-                      i=t.find(needle,pos)
-                      if i<0: break
-                      a=max(0,i-1800); b=min(len(t),i+4200)
-                      if not any(a>=x and b<=y for x,y in seen):
-                          print('ANCHOR',needle,i)
-                          print(t[a:b])
-                          seen.append((a,b))
-                      pos=i+len(needle)
+          import re,json
+          root=Path('../tcgdex-cards-database')
+          needles=['2018sm-fr','AR1','AR2','AR3','AR4','AR5','AR6','AR7','AR8','AR9']
+          hits=[]
+          for p in root.rglob('*'):
+              if not p.is_file() or p.suffix.lower() not in {'.ts','.json','.js'}: continue
+              sp=str(p)
+              if any(n.lower() in sp.lower() for n in needles):
+                  hits.append(p)
+          print('PATH_HITS',len(hits))
+          for p in hits[:300]:
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              if ('2018sm-fr' in t or re.search(r'\bAR[1-9]\b',t,re.I) or any(n.lower() in str(p).lower() for n in needles)):
+                  print('FILE_BEGIN',p)
+                  print(t[:16000])
+                  print('FILE_END',p)
+          # semantic fallback: exact IDs anywhere in database
+          ids=['2018sm-fr-38','2018sm-fr-39']+[f'pl3-AR{i}' for i in range(1,10)]
+          for cid in ids:
+              found=[]
+              for p in root.rglob('*'):
+                  if not p.is_file() or p.suffix.lower() not in {'.ts','.json','.js'}: continue
+                  try:t=p.read_text(encoding='utf-8',errors='ignore')
+                  except:continue
+                  if cid.lower() in t.lower():
+                      found.append(str(p))
+              print('ID_HITS',cid,json.dumps(found[:20]))
           PY
-
