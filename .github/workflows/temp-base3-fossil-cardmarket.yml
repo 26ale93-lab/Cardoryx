@@ -134,9 +134,9 @@ jobs:
               )
           a=a[:aend]+'\n'+'\n'.join(pyrows)+a[aend:]
           old_base='base_ok=(str(row.get("type") or "").lower()==expected_type and not row.get("foil") and str(row.get("size") or "standard").lower()=="standard")'
-          new_base='''source_foil=str(row.get("foil") or "").strip().lower()
-                foil_ok=(not source_foil) or (owner_set=="base3" and source_foil=="galaxy")
-                base_ok=(str(row.get("type") or "").lower()==expected_type and foil_ok and str(row.get("size") or "standard").lower()=="standard")'''
+          new_base=('source_foil=str(row.get("foil") or "").strip().lower()'
+                    +chr(10)+'                foil_ok=(not source_foil) or (owner_set=="base3" and source_foil=="galaxy")'
+                    +chr(10)+'                base_ok=(str(row.get("type") or "").lower()==expected_type and foil_ok and str(row.get("size") or "standard").lower()=="standard")')
           if old_base not in a:
               raise SystemExit('Legacy source-row audit anchor not found')
           a=a.replace(old_base,new_base,1)
