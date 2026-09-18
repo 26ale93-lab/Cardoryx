@@ -1,0 +1,127 @@
+name: TEMP apply Team Rocket exact checklist products
+on:
+  push:
+    branches: [fix/base5-team-rocket-cardmarket-20260918]
+permissions:
+  contents: write
+jobs:
+  apply-test:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/base5-team-rocket-cardmarket-20260918
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch exact Team Rocket mappings
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,urllib.request,tempfile
+          pairs=[
+            ('Dark Alakazam',1,18,274054,274071),
+            ('Dark Arbok',2,19,274055,274072),
+            ('Dark Blastoise',3,20,274056,274073),
+            ('Dark Charizard',4,21,274057,274074),
+            ('Dark Dragonite',5,22,274058,274075),
+            ('Dark Dugtrio',6,23,274059,274076),
+            ('Dark Golbat',7,24,274060,274077),
+            ('Dark Gyarados',8,25,274061,274078),
+            ('Dark Hypno',9,26,274062,274079),
+            ('Dark Machamp',10,27,274063,274080),
+            ('Dark Magneton',11,28,274064,274081),
+            ('Dark Slowbro',12,29,274065,274082),
+            ('Dark Vileplume',13,30,274066,274083),
+            ('Dark Weezing',14,31,274067,274084),
+            ('Here Comes Team Rocket!',15,71,274068,274124),
+            ("Rocket's Sneak Attack",16,72,274069,274125),
+            ('Rainbow Energy',17,80,274070,274133),
+          ]
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          p=Path(tempfile.gettempdir())/'team_rocket_price_guide_6.json'
+          req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',headers=headers)
+          with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as out:
+              while chunk:=r.read(1024*1024): out.write(chunk)
+          root=json.load(open(p))
+          rows=root if isinstance(root,list) else (root.get('priceGuides') or root.get('priceGuide') or [])
+          wanted={x for pair in pairs for x in (pair[3],pair[4])}
+          guides={}
+          for row in rows:
+              pid=int(row.get('idProduct') or 0)
+              if pid in wanted:
+                  guides[str(pid)]={k:row.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30') if k in row}
+          missing=sorted(set(map(str,wanted))-set(guides))
+          if missing: raise SystemExit('Missing Team Rocket Price Guide rows: '+repr(missing))
+
+          ip=Path('index.html'); s=ip.read_text()
+          if '"base5-1":' in s: raise SystemExit('Team Rocket mappings already present')
+          start=s.index('const VERIFIED_LEGACY_CHECKLIST_PRODUCTS={')
+          end=s.index('\n};',start)
+          entries=[]
+          for name,h,n,hpid,npid in pairs:
+              entries.append(f'  "base5-{h}":{{setId:"base5",localId:"{h}",name:{json.dumps(name)},finish:"Holo",productId:{hpid},sourceProduct:{hpid},expansionId:1528,pairId:"base5-{n}"}},')
+              entries.append(f'  "base5-{n}":{{setId:"base5",localId:"{n}",name:{json.dumps(name)},finish:"Normal",productId:{npid},sourceProduct:{hpid},expansionId:1528,pairId:"base5-{h}"}},')
+          s=s[:end].rstrip()+',\n'+'\n'.join(entries)[:-1]+s[end:]
+
+          pstart=s.index('const VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES=')
+          pend=s.index(';\n\nfunction verifiedLegacyChecklistCardmarketPrice',pstart)
+          prefix='const VERIFIED_LEGACY_CHECKLIST_PRICE_GUIDES='
+          existing=json.loads(s[pstart+len(prefix):pend])
+          for pid,row in guides.items():
+              if pid in existing: raise SystemExit('Unexpected existing Team Rocket guide '+pid)
+              existing[pid]=row
+          s=s[:pstart]+prefix+json.dumps(existing,separators=(',',':'))+s[pend:]
+          ip.write_text(s)
+
+          tp=Path('scripts/test_card_identity_cardmarket_audit.py'); t=tp.read_text()
+          if "'base5-1': ('base5'" in t: raise SystemExit('Team Rocket audit mappings already present')
+          tstart=t.index('LEGACY_CHECKLIST_PRODUCTS = {')
+          tend=t.index('\n}\n\nBATCH2_SHARED_PRODUCT_OWNERS',tstart)
+          pyentries=[]
+          for name,h,n,hpid,npid in pairs:
+              pyentries.append(f"    'base5-{h}': ('base5', '{h}', {name!r}, 'Holo', {hpid}, {hpid}, 1528, 'base5-{n}'),")
+              pyentries.append(f"    'base5-{n}': ('base5', '{n}', {name!r}, 'Normal', {npid}, {hpid}, 1528, 'base5-{h}'),")
+          t=t[:tend]+'\n'+'\n'.join(pyentries)+t[tend:]
+          tp.write_text(t)
+          print('PATCHED_TEAM_ROCKET',len(pairs)*2,'GUIDES',len(guides))
+          PY
+      - name: Clone TCGdex database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full audit and exact gates
+        run: |
+          python3 scripts/test_card_identity_cardmarket_audit.py --tcgdex-db ../tcgdex-cards-database
+          python3 - <<'PY'
+          import json
+          d=json.load(open('artifacts/card_identity_cardmarket_audit_report.json'))
+          p1=d.get('p1AmbiguousProductIds') or []
+          residual=[x for x in p1 if x.startswith('base5-')]
+          print('BASE5_RESIDUAL',residual)
+          if residual: raise SystemExit('Team Rocket P1 residuals remain')
+          expected={'SAFE':1919,'EXACT_ALTERNATE_PRODUCT':162,'P0_WRONG_PRODUCT':0,'P1_AMBIGUOUS_PRODUCT':116,'SOURCE_CONFLICT':7,'UNMAPPED_EXACT_PRODUCT':0}
+          counts=d.get('classificationTotals') or {}
+          print('CLASSIFICATION_TOTALS',counts)
+          if not all(k in counts for k in expected):
+              raise SystemExit('Classification counters not found in audit report')
+          for k,v in expected.items():
+              if counts.get(k)!=v: raise SystemExit(f'{k}: expected {v}, got {counts.get(k)}')
+          PY
+      - name: Diff safety
+        run: |
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git diff --check
+          git status --short
+          test -z "$(git status --short | grep -v -E '^( M|M ) (index.html|scripts/test_card_identity_cardmarket_audit.py)$' || true)"
+      - name: Commit verified production changes only
+        run: |
+          git rm .github/workflows/temp-team-rocket-prod.yml
+          git config user.name "26ale93-lab"
+          git config user.email "26ale93@gmail.com"
+          git add index.html scripts/test_card_identity_cardmarket_audit.py
+          git commit -m "Resolve exact Team Rocket Cardmarket checklist products"
+          git push origin HEAD:fix/base5-team-rocket-cardmarket-20260918
