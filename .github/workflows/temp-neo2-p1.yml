@@ -107,3 +107,23 @@ jobs:
                   if len(vals)>1:
                       print('DUP',label,name,json.dumps([{'idProduct':x.get('idProduct'),'idMetacard':x.get('idMetacard'),'name':x.get('name')} for x in vals],ensure_ascii=False,sort_keys=True))
           PY
+      - name: Extract exact alternate price guides
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,tempfile,pathlib
+          headers={'User-Agent':'Cardoryx-Cardmarket-Identity-Audit/2.0'}
+          p=pathlib.Path(tempfile.gettempdir())/'price_guide_6.json'
+          req=urllib.request.Request('https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',headers=headers)
+          with urllib.request.urlopen(req,timeout=300) as r,p.open('wb') as f:
+              while chunk:=r.read(1024*1024): f.write(chunk)
+          d=json.load(open(p))
+          rows=d if isinstance(d,list) else (d.get('priceGuides') or d.get('priceGuide') or [])
+          neo=list(range(274513,274524))+list(range(274525,274529))+list(range(274532,274543))+list(range(274544,274548))
+          gym=[274151,274234,274152,274236,274153,274237,274154,274238,274285,274368,274286,274372,274287,274374,274288,274378]
+          wanted=set(neo+gym)
+          for r in rows:
+              pid=int(r.get('idProduct') or 0)
+              if pid in wanted:
+                  keep={k:r.get(k) for k in ('idProduct','avg','low','trend','avg1','avg7','avg30','avg-holo','low-holo','trend-holo','avg1-holo','avg7-holo','avg30-holo')}
+                  print('EXACT_GUIDE',json.dumps(keep,sort_keys=True))
+          PY
