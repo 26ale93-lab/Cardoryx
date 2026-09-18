@@ -634,6 +634,9 @@ def runtime_cardmarket_regression():
         ],
         "frillish": {"id": "sv10.5w-044", "tcgdexId": "sv10.5w-044", "name": "Frillish",
                      "localId": "044", "set": {"id": "sv10.5w", "name": "Fuoco Bianco"}},
+        "exeggcute001": {"id": "sv08.5-001", "tcgdexId": "sv08.5-001", "name": "Exeggcute",
+                        "localId": "001", "set": {"id": "sv08.5", "name": "Evoluzioni Prismatiche"},
+                        "variant": "Poké Ball Reverse Holo", "stamp": "None"},
         "erikasGloom": {"id": "me02.5-002", "tcgdexId": "me02.5-002", "name": "Erika's Gloom",
                         "localId": "002", "set": {"id": "me02.5", "name": "Ascesa Eroica"},
                         "variant": "Poké Ball Reverse Holo", "stamp": "None"},
@@ -1274,6 +1277,16 @@ element('stamp').value='None';
   assert.strictEqual(frillish?.trend,3);
   assert.strictEqual(r.verifiedVariantPrice(fixtures.frillish,'Normal'),null);
   assert.strictEqual(r.verifiedVariantPrice(fixtures.frillish,'Poké Ball Reverse Holo'),null);
+  const exeggcute=r.verifiedVariantPrice(fixtures.exeggcute001,'Poké Ball Reverse Holo');
+  assert.strictEqual(exeggcute?.productId,806408);
+  assert.strictEqual(exeggcute?.trend,0.25);
+  assert.strictEqual(r.cardPriceInfo(fixtures.exeggcute001).value,0.25);
+  assert.strictEqual(r.verifiedVariantPrice(fixtures.exeggcute001,'Normal'),null);
+  assert.strictEqual(r.verifiedVariantPrice(fixtures.exeggcute001,'Reverse Holo'),null);
+  assert.strictEqual(r.verifiedVariantPrice(fixtures.exeggcute001,'Master Ball Reverse Holo'),null);
+  assert.strictEqual(r.verifiedVariantPrice({...fixtures.exeggcute001,localId:'002'},'Poké Ball Reverse Holo'),null);
+  assert.strictEqual(r.verifiedVariantPrice({...fixtures.exeggcute001,set:{id:'sv08.5-other'}},'Poké Ball Reverse Holo'),null);
+  assert.strictEqual(r.verifiedVariantPrice({...fixtures.exeggcute001,name:'Exeggutor'},'Poké Ball Reverse Holo'),null);
   const gloom=r.verifiedVariantPrice(fixtures.erikasGloom,'Poké Ball Reverse Holo');
   assert.strictEqual(gloom?.productId,870138);
   assert.strictEqual(gloom?.trend,0.13);
@@ -1296,6 +1309,7 @@ element('stamp').value='None';
     piplup:{normal,reverse,scanner:element('scanMarketValue').textContent,savedProductId:savedPricing.cardmarket.idProduct},
     surging:Object.fromEntries(fixtures.surging.map(c=>[c.id,r.resolvedCardmarketPricingForCard(c).idProduct])),
     frillish:{productId:frillish.productId,value:frillish.trend},
+    exeggcute001:{productId:exeggcute.productId,value:r.cardPriceInfo(fixtures.exeggcute001).value},
     erikasGloom:{productId:gloom.productId,value:r.cardPriceInfo(fixtures.erikasGloom).value},
     pikachu:{productId:pikachu.productId,value:pikachu.trend}
   }));
