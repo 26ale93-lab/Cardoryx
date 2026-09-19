@@ -1,0 +1,83 @@
+name: TEMP Variant Finish Refresh Audit
+
+on:
+  push:
+    branches:
+      - audit/variant-finish-refresh-20260920
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Git diff check
+        run: git diff --check origin/main...HEAD
+
+      - name: Run full variant finish audit
+        run: |
+          for attempt in 1 2 3; do
+            python3 scripts/test_variant_finish_audit.py --tcgdex-db ../tcgdex-cards-database --output temp_variant_finish_refresh_report.json --workers 24 && exit 0
+            if [ "$attempt" -lt 3 ]; then sleep 15; fi
+          done
+          exit 1
+
+      - name: Build compact summary
+        run: |
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          r=json.loads(Path("temp_variant_finish_refresh_report.json").read_text())
+          issues=r.get("issuesByPriority") or []
+          if isinstance(issues,dict):
+              flat=[]
+              for k,v in issues.items():
+                  if isinstance(v,list):
+                      for x in v:
+                          if isinstance(x,dict):
+                              flat.append({"priority":k,**x})
+              issues=flat
+          cards=r.get("cards") or []
+          summary={
+            "source":r.get("source"),
+            "summary":r.get("summary"),
+            "totalsByFinish":r.get("totalsByFinish"),
+            "registryAudit":r.get("registryAudit"),
+            "verifiedNormalResidualAudit":r.get("verifiedNormalResidualAudit"),
+            "verifiedReverseFinishAudit":r.get("verifiedReverseFinishAudit"),
+            "realWorldRegression":r.get("realWorldRegression"),
+            "dittoPeelableRuntimeAudit":r.get("dittoPeelableRuntimeAudit"),
+            "cardmarketPricingAudit":r.get("cardmarketPricingAudit"),
+            "energyAudit":r.get("energyAudit"),
+            "playPrizePackAudit":r.get("playPrizePackAudit"),
+            "issuesByPriority":issues,
+            "issueCount":len(issues),
+            "issueTypeCounts":dict(Counter((x.get("classification") or x.get("type") or x.get("issue") or "UNKNOWN") for x in issues if isinstance(x,dict))),
+          }
+          Path("temp_variant_finish_refresh_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print(json.dumps({
+            "summary":summary["summary"],
+            "totalsByFinish":summary["totalsByFinish"],
+            "issueCount":summary["issueCount"],
+            "issueTypeCounts":summary["issueTypeCounts"],
+            "pricingAudit":summary["cardmarketPricingAudit"],
+          },ensure_ascii=False))
+          PY
+
+      - name: Record successful summary
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_variant_finish_refresh_summary.json
+          git commit -m "TEMP record current variant finish audit"
+          git push
