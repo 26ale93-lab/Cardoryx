@@ -404,6 +404,7 @@ function isMeePrizePackEnergy(){return false;}
 function isModernParallelEra(){return false;}
 function verifiedSpecialStampFinishes(){return [];}
 function verifiedMcdonaldsStampFinishes(){return [];}
+function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
