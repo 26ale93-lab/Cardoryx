@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+import subprocess
+from pathlib import Path
+
+INDEX=Path(__file__).resolve().parents[1]/"index.html"
+source=INDEX.read_text(encoding="utf-8")
+
+def section(start,end):
+    a=source.find(start)
+    b=source.find(end,a+len(start))
+    assert a>=0 and b>a, (start,end)
+    return source[a:b]
+
+canonical_variant=section("function canonicalVariant(","function canonicalFinishTypeLabel(")
+canonical_stamp=section("function canonicalStamp(","function stampBadgeHTML(")
+alloc=section("const CARDORYX_ALLOCATION_STATUSES=","function allocationInputsHtml(")
+catalog=section("function syncCatalogAllocationFilterOptions(","function renderCatalog(")
+
+js=f"""
+const assert=require('assert');
+let decks=[];
+function esc(v){{return String(v??'')}}
+function deckTypeLabel(d){{return d?.type==='sale'?'Vendita':'Gioco'}}
+function deckRecordKey(c){{return [c.id||'',c.variant||'Normale',c.status||'Disponibile',c.condition||'NM'].join('|||')}}
+const fakeSelect={{value:'',innerHTML:''}};
+const document={{getElementById(id){{return id==='statusFilter'?fakeSelect:null}}}};
+function normText(v){{return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}}
+{canonical_variant}
+{canonical_stamp}
+{alloc}
+{catalog}
+
+assert.strictEqual(canonicalVariant('Normale'),'Normal');
+assert.strictEqual(canonicalVariant('Normal'),'Normal');
+assert.strictEqual(canonicalVariant('Poké Ball Reverse Holo'),'Poké Ball Reverse Holo');
+assert.strictEqual(canonicalVariant('Master Ball Reverse Holo'),'Master Ball Reverse Holo');
+assert.strictEqual(canonicalVariant('Ditto rimovibile'),'Ditto Peelable');
+assert.strictEqual(canonicalStamp('Pokémon Day'),'Pokémon Day');
+assert.strictEqual(canonicalStamp('Worlds 2024'),'Worlds 2024');
+
+const available={{id:'c1',variant:'Normal',status:'Disponibile',condition:'NM',qty:3}};
+const full={{id:'c2',variant:'Poké Ball Reverse Holo',status:'Disponibile',condition:'NM',qty:2}};
+const protectedCard={{id:'c3',variant:'Master Ball Reverse Holo',status:'Protetta',condition:'NM',qty:1}};
+const saleCard={{id:'c4',variant:'Ditto Peelable',status:'Vendita',condition:'EX',qty:1}};
+const legacy={{id:'c5',variant:'Normal',status:'Mazzo 1',condition:'NM',qty:1}};
+decks=[
+  {{id:'deckA',name:'Erba',type:'game',entries:[
+    {{cardKey:deckRecordKey(available),qty:2}},
+    {{cardKey:deckRecordKey(full),qty:2}}
+  ]}}
+];
+const gAvailable={{records:[available]}};
+const gFull={{records:[full]}};
+const gProtected={{records:[protectedCard]}};
+const gSale={{records:[saleCard]}};
+const gLegacy={{records:[legacy]}};
+
+assert.strictEqual(catalogAllocationMatches(gAvailable,'available'),true);
+assert.strictEqual(catalogAllocationMatches(gAvailable,'deck:any'),true);
+assert.strictEqual(catalogAllocationMatches(gAvailable,'deck:deckA'),true);
+assert.strictEqual(catalogAllocationMatches(gFull,'available'),false);
+assert.strictEqual(catalogAllocationMatches(gFull,'deck:any'),true);
+assert.strictEqual(catalogAllocationMatches(gProtected,'protected'),true);
+assert.strictEqual(catalogAllocationMatches(gSale,'sale'),true);
+assert.strictEqual(catalogAllocationMatches(gLegacy,'deck:any'),true);
+assert.strictEqual(catalogAllocationMatches(gLegacy,'available'),false);
+
+assert.strictEqual(gAvailable.records.some(r=>canonicalVariant(r.variant||'Normal')===canonicalVariant('Normale')),true);
+assert.strictEqual(gFull.records.some(r=>canonicalVariant(r.variant||'Normal')===canonicalVariant('Poké Ball Reverse Holo')),true);
+assert.strictEqual(gProtected.records.some(r=>canonicalVariant(r.variant||'Normal')===canonicalVariant('Master Ball Reverse Holo')),true);
+assert.strictEqual(gSale.records.some(r=>canonicalVariant(r.variant||'Normal')===canonicalVariant('Ditto Peelable')),true);
+
+syncCatalogAllocationFilterOptions();
+assert(fakeSelect.innerHTML.includes('Tutte le allocazioni'));
+assert(fakeSelect.innerHTML.includes('In un mazzo'));
+assert(fakeSelect.innerHTML.includes('deck:deckA'));
+assert(fakeSelect.innerHTML.includes('Gioco · Erba'));
+
+const required=[
+ 'id="stampFilter"',
+ 'value="Poké Ball Reverse Holo"',
+ 'value="Master Ball Reverse Holo"',
+ 'value="Ditto Peelable"',
+ 'Tutti gli stamp / edizioni'
+];
+for(const item of required)assert(source.includes(item),item);
+assert(!source.includes('<option>Pokémon Day Stamp</option>'));
+assert(!source.includes('<option>Play! Pokémon Stamp</option>'));
+
+console.log(JSON.stringify({{
+  normalCanonical:true,
+  ballFinishes:true,
+  stampSeparated:true,
+  partialDeckAvailable:true,
+  fullDeckUnavailable:true,
+  dynamicDeckFilter:true,
+  legacyDeckCompatible:true
+}}));
+"""
+out=subprocess.check_output(["node"],input=js,text=True)
+print(out.strip())
