@@ -504,6 +504,9 @@ def audit_mcdonalds_2012_2014_source(cards, source):
     if not all(token in source for token in required_source_tokens):
         raise AssertionError("McDonald's exact stamp production guards are incomplete")
 
+    runtime = run_mcdonalds_stamp_runtime(source, rows)
+    if runtime.get("tested") != 24 or not runtime.get("allExact"):
+        raise AssertionError("McDonald's production runtime regression failed")
     return {
         "expectedIdentities": 24,
         "verifiedIdentities": len(rows),
@@ -512,9 +515,60 @@ def audit_mcdonalds_2012_2014_source(cards, source):
         "stamp": "McDonald's",
         "oneExactPhysicalRowPerIdentity": True,
         "uniqueProductIds": len({x["productId"] for x in rows}),
+        "runtime": runtime,
         "identities": rows,
         "scope": "only 2012bw and 2014xy; no rule for other McDonald's releases",
     }
+
+
+def run_mcdonalds_stamp_runtime(source, audited_rows):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "cardSetId", "tcgdexVariantDetails",
+        "isVerifiedMcdonaldsStampedSet", "tcgdexExactMcdonaldsStampRow",
+        "verifiedMcdonaldsStampFinishes", "tcgdexExactMcdonaldsStampedPrice",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    fixtures = []
+    for row in audited_rows:
+        pid = int(row["productId"])
+        fixtures.append({
+            "id": row["tcgdexId"],
+            "tcgdexId": row["tcgdexId"],
+            "localId": row["localId"],
+            "name": "fixture",
+            "set": {"id": row["setId"]},
+            "variants_detailed": [{
+                "type": "holo",
+                "size": "standard",
+                "stamp": ["mcdonalds"],
+                "thirdParty": {"cardmarket": pid},
+                "pricing": {"cardmarket": {
+                    "idProduct": pid, "trend": 1.23, "low": 0.5,
+                    "updated": "runtime-fixture",
+                }},
+            }],
+        })
+    js = functions + "\n" + r'''
+const cards=__FIXTURES__;
+function fail(msg){throw new Error(msg);}
+for(const card of cards){
+  const row=tcgdexExactMcdonaldsStampRow(card);
+  if(!row)fail('exact row missing '+card.id);
+  const finishes=verifiedMcdonaldsStampFinishes(card,"McDonald's");
+  if(finishes.length!==1||finishes[0]!=='Holo')fail('finish mismatch '+card.id);
+  const price=tcgdexExactMcdonaldsStampedPrice(card,'Holo',"McDonald's");
+  const expected=Number(row.thirdParty.cardmarket);
+  if(!price||Number(price.idProduct)!==expected||Number(price.trend)!==1.23)fail('price mismatch '+card.id);
+  if(tcgdexExactMcdonaldsStampedPrice(card,'Normal',"McDonald's")!==null)fail('Normal leaked '+card.id);
+  if(tcgdexExactMcdonaldsStampedPrice(card,'Holo','Staff')!==null)fail('stamp leaked '+card.id);
+  const wrongSet={...card,set:{id:'wrong-set'}};
+  if(tcgdexExactMcdonaldsStampRow(wrongSet)!==null)fail('set guard leaked '+card.id);
+}
+process.stdout.write(JSON.stringify({tested:cards.length,allExact:true,wrongSetRejected:true,wrongStampRejected:true,wrongFinishRejected:true}));
+'''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
 
 def stratified(items, count):
