@@ -17,10 +17,16 @@ stable=section("function priceRefreshStableKey(","function priceRefreshSnapshot(
 
 # Production UI / integration guards.
 assert 'id="priceChangesBtn"' in source
+assert 'id="homePriceChangesBtn"' in source
+assert 'onclick="showPriceChangesFromHome()"' in source
+assert "function showPriceChangesFromHome(){" in source
+assert "showView('stats');" in source
+assert "showPriceChanges();" in source
 assert 'onclick="showPriceChanges()"' in source
 assert '📈 Variazioni prezzo' in source
 assert 'id="priceChangesPanel"' in source
 assert '📚 Vedi carte' not in source.split('<section id="statsView"',1)[1].split('<section id="decksView"',1)[0]
+assert '<button class="btn alt" type="button" onclick="showView(\'catalog\')">Vedi carte</button>' not in source.split('<section id="homeView"',1)[1].split('<section id="scanView"',1)[0]
 assert "const CARDORYX_PRICE_REFRESH_REPORT_KEY='price-refresh-report';" in source
 assert "await idbWritePriceRefreshReport(report)" in source
 assert "await idbReadPriceRefreshReport()" in source
