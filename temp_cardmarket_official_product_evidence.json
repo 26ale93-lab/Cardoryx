@@ -1,0 +1,68 @@
+{
+  "source": "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json",
+  "products": {
+    "398524": {
+      "idProduct": 398524,
+      "name": "Torkoal [Fire Fling | Kindle]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 2644,
+      "idMetacard": 284174,
+      "dateAdded": "2019-09-03 17:36:11"
+    },
+    "576747": {
+      "idProduct": 576747,
+      "name": "Reshiram [Scorching Wind | Black Flame]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 4347,
+      "idMetacard": 345908,
+      "dateAdded": "2021-10-01 11:52:18"
+    },
+    "576755": {
+      "idProduct": 576755,
+      "name": "Zekrom [Field Crush | White Thunder]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 4347,
+      "idMetacard": 345915,
+      "dateAdded": "2021-10-01 12:00:43"
+    },
+    "726923": {
+      "idProduct": 726923,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2023-08-09 12:54:53"
+    },
+    "740411": {
+      "idProduct": 740411,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2023-10-20 10:47:58"
+    },
+    "741976": {
+      "idProduct": 741976,
+      "name": "Bulbasaur [Tackle | Vine Whip]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 426778,
+      "dateAdded": "2023-10-27 14:42:29"
+    },
+    "741988": {
+      "idProduct": 741988,
+      "name": "Charmander [Scratch | Ember | MFB]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 426785,
+      "dateAdded": "2023-10-27 14:50:02"
+    }
+  }
+}
