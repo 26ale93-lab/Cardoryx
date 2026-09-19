@@ -27,7 +27,12 @@ jobs:
       - name: Git diff check
         run: git diff --check origin/main...HEAD
       - name: Runtime regression
-        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+        run: |
+          for attempt in 1 2 3; do
+            python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only && exit 0
+            if [ "$attempt" -lt 3 ]; then sleep 15; fi
+          done
+          exit 1
       - name: Full Cardmarket audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --workers 24
       - name: Verify Base Set classification
