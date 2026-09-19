@@ -42,6 +42,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv08-050": {"base": 794316, "alternate": 794947, "stamp": "horizons", "cardmarketCode": "SSP050"},
     "sv08-161": {"base": 794534, "alternate": 794948, "stamp": "horizons", "cardmarketCode": "SSP161"},
     "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
+    "2018sm-fr-38": {"base": 362809, "alternate": 362810, "stamp": "wrong-shared-product", "cardmarketCode": "MCD18F38"},
     "cel25cc-CC020": {"base": 576790, "alternate": 576747, "stamp": "wrong-main-set-product", "cardmarketCode": "CEL-BLW113"},
     "cel25cc-CC021": {"base": 576791, "alternate": 576755, "stamp": "wrong-main-set-product", "cardmarketCode": "CEL-BLW114"},
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
@@ -273,6 +274,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
     "cel25cc-cc020": {"setId": "cel25cc", "localId": "CC020", "conflictingProduct": 576747, "baseProduct": 576790},
     "cel25cc-cc021": {"setId": "cel25cc", "localId": "CC021", "conflictingProduct": 576755, "baseProduct": 576791},
+    "2018sm-fr-38": {"setId": "2018sm-fr", "localId": "38", "conflictingProduct": 362810, "baseProduct": 362809},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
     "pl3-70": {"setId": "pl3", "localId": "070", "conflictingProduct": 882910, "baseProduct": 278761},
@@ -530,6 +532,7 @@ BATCH2_SHARED_PRODUCT_OWNERS = {
     "hgss1-4": ("hgss1", "4", "Gyarados", 278976), "pl2-RT1": ("pl2", "RT1", "Fan Rotom", 278570),
     "pl2-RT2": ("pl2", "RT2", "Frost Rotom", 278569), "pl2-RT3": ("pl2", "RT3", "Heat Rotom", 278572),
     "pl2-RT4": ("pl2", "RT4", "Mow Rotom", 278571), "pl2-RT6": ("pl2", "RT6", "Charon's Choice", 278574),
+    "2018sm-fr-39": ("2018sm-fr", "39", "Fletchling", 362810),
 }
 
 
