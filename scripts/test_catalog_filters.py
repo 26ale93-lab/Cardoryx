@@ -16,6 +16,17 @@ canonical_stamp=section("function canonicalStamp(","function stampBadgeHTML(")
 alloc=section("const CARDORYX_ALLOCATION_STATUSES=","function allocationInputsHtml(")
 catalog=section("function syncCatalogAllocationFilterOptions(","function renderCatalog(")
 
+for item in [
+    'id="stampFilter"',
+    'value="Poké Ball Reverse Holo"',
+    'value="Master Ball Reverse Holo"',
+    'value="Ditto Peelable"',
+    'Tutti gli stamp / edizioni',
+]:
+    assert item in source, item
+assert '<option>Pokémon Day Stamp</option>' not in source
+assert '<option>Play! Pokémon Stamp</option>' not in source
+
 js=f"""
 const assert=require('assert');
 let decks=[];
@@ -75,17 +86,6 @@ assert(fakeSelect.innerHTML.includes('Tutte le allocazioni'));
 assert(fakeSelect.innerHTML.includes('In un mazzo'));
 assert(fakeSelect.innerHTML.includes('deck:deckA'));
 assert(fakeSelect.innerHTML.includes('Gioco · Erba'));
-
-const required=[
- 'id="stampFilter"',
- 'value="Poké Ball Reverse Holo"',
- 'value="Master Ball Reverse Holo"',
- 'value="Ditto Peelable"',
- 'Tutti gli stamp / edizioni'
-];
-for(const item of required)assert(source.includes(item),item);
-assert(!source.includes('<option>Pokémon Day Stamp</option>'));
-assert(!source.includes('<option>Play! Pokémon Stamp</option>'));
 
 console.log(JSON.stringify({{
   normalCanonical:true,
