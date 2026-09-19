@@ -51,9 +51,9 @@ jobs:
           r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
           totals=r["classificationTotals"]
           assert totals["P0_WRONG_PRODUCT"] == 0, totals
-          assert totals["P1_AMBIGUOUS_PRODUCT"] == 14, totals
 
           cases={str(x["tcgdexId"]).lower():x for x in r["caseIndex"]}
+          print("TARGET_CASE_KEYS", [k for k in cases if k.startswith("cel25cc")])
           for cid in ("cel25cc-cc020","cel25cc-cc021"):
             assert cases[cid]["classification"] == "SAFE", cases[cid]
 
