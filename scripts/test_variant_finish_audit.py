@@ -409,6 +409,12 @@ function verifiedVariantPrice(){return null;}
 function verifiedStampPrice(){return null;}
 function verifiedPlaySeriesPrice(){return null;}
 function prizePackFinishPlan(){return {authoritative:false,finishes:[]};}
+function verifiedExactPrimarySpecialCardmarketVariant(){return null;}
+function verifiedDualBaseCardmarketVariant(){return null;}
+function verifiedMcdonalds2019CardmarketVariant(){return null;}
+function verifiedFroakie056CosmosCardmarketVariant(){return null;}
+function verifiedGiratinaVstar201CardmarketVariant(){return null;}
+function verifiedMcdonalds2021CardmarketVariant(){return null;}
 function verifiedBaseCardmarketProductOverride(){return null;}
 function knownCardmarketIdentityConflict(){return null;}
 function knownReverseCardmarketProductConflict(){return null;}
