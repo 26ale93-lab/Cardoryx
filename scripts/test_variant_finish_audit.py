@@ -571,6 +571,160 @@ process.stdout.write(JSON.stringify({tested:cards.length,allExact:true,wrongSetR
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
 
+def audit_mcdonalds_2021_25th_source(cards, source):
+    family = sorted(
+        [c for c in cards if ((c.get("set") or {}).get("id") == "2021swsh")],
+        key=lambda x: int(str(x.get("localId") or "0")),
+    )
+    if len(family) != 25:
+        raise AssertionError(f"McDonald's 2021 expected 25 cards, found {len(family)}")
+
+    registry = extract_js_object(source, "VERIFIED_MCDONALDS_2021_CARDMARKET_PRODUCTS")
+    if len(registry) != 25:
+        raise AssertionError(f"McDonald's 2021 registry expected 25 cards, found {len(registry)}")
+
+    rows = []
+    source_conflicts = []
+    registry_products = []
+    for card in family:
+        cid = card["id"]
+        rule = registry.get(cid)
+        if not rule:
+            raise AssertionError(f"McDonald's 2021 missing registry identity: {cid}")
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if str(rule.get("name")) != str(source_name):
+            raise AssertionError(f"McDonald's 2021 name mismatch: {cid}")
+        if str(rule.get("localId")) != str(card.get("localId")):
+            raise AssertionError(f"McDonald's 2021 localId mismatch: {cid}")
+
+        exact = []
+        for row in card.get("variants_detailed") or []:
+            stamps = [norm(x) for x in (row.get("stamp") or [])]
+            typ = canonical_finish_type_label(row.get("type"))
+            if stamps == ["25thcelebration"] and typ in {"normal", "holo"} and not row.get("foil"):
+                exact.append((typ, int(((row.get("thirdParty") or {}).get("cardmarket")) or 0), row))
+        if len(exact) != 2:
+            raise AssertionError(f"McDonald's 2021 needs exactly two 25th rows: {cid}")
+        by_type = {typ: (pid, row) for typ, pid, row in exact}
+        if set(by_type) != {"normal", "holo"}:
+            raise AssertionError(f"McDonald's 2021 Normal/Holo pair incomplete: {cid}")
+
+        normal_pid = int(rule["normal"]["idProduct"])
+        holo_pid = int(rule["holo"]["idProduct"])
+        if normal_pid == holo_pid:
+            raise AssertionError(f"McDonald's 2021 reused one product across finishes: {cid}")
+        registry_products.extend([normal_pid, holo_pid])
+
+        source_normal = by_type["normal"][0]
+        source_holo = by_type["holo"][0]
+        if source_normal != normal_pid:
+            source_conflicts.append({
+                "tcgdexId": cid, "finish": "Normal",
+                "sourceProductId": source_normal, "registryProductId": normal_pid,
+            })
+        if source_holo != holo_pid:
+            source_conflicts.append({
+                "tcgdexId": cid, "finish": "Holo",
+                "sourceProductId": source_holo, "registryProductId": holo_pid,
+            })
+
+        rows.append({
+            "tcgdexId": cid, "setId": "2021swsh", "localId": card.get("localId"),
+            "name": source_name, "normalProductId": normal_pid, "holoProductId": holo_pid,
+        })
+
+    expected_conflicts = {
+        ("2021swsh-5", "Normal", 538808, 538818),
+        ("2021swsh-16", "Normal", 538918, 538928),
+        ("2021swsh-21", "Normal", 538968, 538978),
+        ("2021swsh-21", "Holo", 538978, 538983),
+    }
+    actual_conflicts = {
+        (x["tcgdexId"], x["finish"], x["sourceProductId"], x["registryProductId"])
+        for x in source_conflicts
+    }
+    if actual_conflicts != expected_conflicts:
+        raise AssertionError(
+            f"McDonald's 2021 source conflict set changed: {sorted(actual_conflicts)}"
+        )
+    if len(set(registry_products)) != 50:
+        raise AssertionError("McDonald's 2021 registry must contain 50 distinct products")
+
+    runtime = run_mcdonalds_2021_25th_runtime(source, family, registry)
+    if runtime.get("testedCards") != 25 or runtime.get("testedPrices") != 50:
+        raise AssertionError("McDonald's 2021 production runtime regression failed")
+
+    return {
+        "expectedCards": 25,
+        "verifiedCards": len(rows),
+        "physicalRows": 50,
+        "registryProducts": 50,
+        "finishPair": ["Normal", "Holo"],
+        "stamp": "25° Anniversario",
+        "sourceProductConflicts": source_conflicts,
+        "runtime": runtime,
+        "identities": rows,
+        "scope": "only setId 2021swsh; TCGdex proves physical stamp/finish, Cardmarket registry proves product/price",
+    }
+
+
+def run_mcdonalds_2021_25th_runtime(source, family, registry):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
+        "isVerifiedMcdonalds2021AnniversarySet",
+        "tcgdexMcdonalds2021AnniversaryRows",
+        "verifiedMcdonalds2021AnniversaryFinishes",
+        "verifiedMcdonalds2021CardmarketVariant",
+        "tcgdexExactMcdonalds2021AnniversaryPrice",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    fixtures = []
+    for card in family:
+        fixtures.append({
+            "id": card["id"], "tcgdexId": card["id"], "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "2021swsh"},
+            "variants_detailed": card.get("variants_detailed") or [],
+        })
+    js = (
+        "const VERIFIED_MCDONALDS_2021_CARDMARKET_PRODUCTS="
+        + json.dumps(registry, ensure_ascii=False)
+        + ";\n"
+        + functions
+        + "\n"
+        + r'''
+const cards=__FIXTURES__;
+function fail(msg){throw new Error(msg);}
+let prices=0;
+if(canonicalStamp('25th celebration')!=='25° Anniversario')fail('25th canonicalization missing');
+for(const card of cards){
+  const rows=tcgdexMcdonalds2021AnniversaryRows(card);
+  if(!rows||!rows.normal||!rows.holo)fail('physical rows missing '+card.id);
+  const finishes=verifiedMcdonalds2021AnniversaryFinishes(card,'25° Anniversario');
+  if(finishes.length!==2||!finishes.includes('Normal')||!finishes.includes('Holo'))fail('finish pair '+card.id);
+  const rule=VERIFIED_MCDONALDS_2021_CARDMARKET_PRODUCTS[card.id];
+  for(const finish of ['Normal','Holo']){
+    const base=verifiedMcdonalds2021CardmarketVariant(card,finish);
+    const stamped=tcgdexExactMcdonalds2021AnniversaryPrice(card,finish,'25° Anniversario');
+    if(!base?.matched||!stamped)fail('price missing '+card.id+' '+finish);
+    const expected=Number((finish==='Normal'?rule.normal:rule.holo).idProduct);
+    if(Number(base.productId)!==expected||Number(stamped.idProduct)!==expected)fail('product mismatch '+card.id+' '+finish);
+    if(Number(stamped.trend||0)!==Number(base.pricing.trend||0))fail('trend changed '+card.id+' '+finish);
+    prices++;
+  }
+  if(tcgdexExactMcdonalds2021AnniversaryPrice(card,'Reverse Holo','25° Anniversario')!==null)fail('reverse leaked '+card.id);
+  if(tcgdexExactMcdonalds2021AnniversaryPrice(card,'Holo','30° Anniversario')!==null)fail('wrong stamp leaked '+card.id);
+  const wrong={...card,set:{id:'wrong-set'}};
+  if(tcgdexMcdonalds2021AnniversaryRows(wrong)!==null)fail('wrong set leaked '+card.id);
+}
+process.stdout.write(JSON.stringify({testedCards:cards.length,testedPrices:prices,wrongSetRejected:true,wrongStampRejected:true,reverseRejected:true,priceParity:true}));
+'''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
+    )
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
 def stratified(items, count):
     if len(items) <= count:
         return items
@@ -1114,9 +1268,14 @@ def main():
         "status": "not-run",
         "reason": "full cards-database snapshot required",
     }
+    mcdonalds_2021_25th_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     if args.tcgdex_db:
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
         mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
+        mcdonalds_2021_25th_audit = audit_mcdonalds_2021_25th_source(all_cards, source)
         grouped = defaultdict(list)
         for c in all_cards: grouped[(c.get("set") or {}).get("id")].append(c)
         sample, era_by_id = [], {}
@@ -1520,6 +1679,7 @@ def main():
         },
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
+        "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
             "recoveredIdentities": len(normal_registry_applied_ids),
