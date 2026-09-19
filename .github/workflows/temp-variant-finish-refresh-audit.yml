@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - audit/variant-finish-refresh-20260920
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -75,6 +78,7 @@ jobs:
           PY
 
       - name: Record successful summary
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
