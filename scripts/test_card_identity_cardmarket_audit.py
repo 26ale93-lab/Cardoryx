@@ -532,7 +532,6 @@ BATCH2_SHARED_PRODUCT_OWNERS = {
     "hgss1-4": ("hgss1", "4", "Gyarados", 278976), "pl2-RT1": ("pl2", "RT1", "Fan Rotom", 278570),
     "pl2-RT2": ("pl2", "RT2", "Frost Rotom", 278569), "pl2-RT3": ("pl2", "RT3", "Heat Rotom", 278572),
     "pl2-RT4": ("pl2", "RT4", "Mow Rotom", 278571), "pl2-RT6": ("pl2", "RT6", "Charon's Choice", 278574),
-    "2018sm-fr-39": ("2018sm-fr", "39", "Fletchling", 362810),
 }
 
 
@@ -2387,6 +2386,29 @@ def main():
         elif card_id == "sm12-29" and current_pid == 398524:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "TCGdex assegna il prodotto 398524 a un'altra identità fisica; Cardoryx lo blocca già con guardia esatta.", "Mantenere il fail-closed esistente."
+        elif card_id == "2018sm-fr-39":
+            catalogue = products.get(362810) or {}
+            guide = prices.get(362810) or {}
+            exact_owner = bool(
+                (card.get("set") or {}).get("id") == "2018sm-fr" and
+                norm_local(card.get("localId")) == "39" and
+                current_pid == 362810 and
+                catalogue.get("idExpansion") == 2361 and
+                catalogue.get("name") == "Fletchling [Growl | Flap]" and
+                isinstance(guide.get("trend"), (int, float)) and guide.get("trend") > 0
+            )
+            if exact_owner:
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid, resolved_value = 362810, guide.get("trend")
+                reason = (
+                    "Cardmarket identifica il prodotto condiviso 362810 come Fletchling 39/40; "
+                    "la distinta identità 38/40 Lillipup viene corretta separatamente a 362809."
+                )
+                action = "Mantenere 362810 su Fletchling 39/40; nessun riuso su Lillipup 38/40."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La proprietà esatta di 362810 per Fletchling 39/40 non supera più i gate Cardmarket."
+                action = "Fail-closed e nuova verifica delle fonti ufficiali."
         elif card_id in BASE1_VERIFIED_SHADOWLESS_PRODUCTS:
             expected_local, expected_name, base_pid, shadowless_pid = BASE1_VERIFIED_SHADOWLESS_PRODUCTS[card_id]
             base_product = products.get(base_pid) or {}
