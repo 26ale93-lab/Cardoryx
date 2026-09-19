@@ -1,0 +1,122 @@
+name: TEMP Platinum Arceus Cardmarket Regression
+
+on:
+  push:
+    branches:
+      - fix/arceus-ar-cardmarket-20260919
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Git diff check
+        run: git diff --check origin/main...HEAD
+
+      - name: Runtime regression
+        run: |
+          for attempt in 1 2 3; do
+            python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only && exit 0
+            if [ "$attempt" -lt 3 ]; then sleep 15; fi
+          done
+          exit 1
+
+      - name: Full Cardmarket audit
+        run: |
+          for attempt in 1 2 3; do
+            python3 scripts/test_card_identity_cardmarket_audit.py --workers 24 && exit 0
+            if [ "$attempt" -lt 3 ]; then sleep 15; fi
+          done
+          exit 1
+
+      - name: Verify exact Arceus corrections and alias protections
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json
+          from pathlib import Path
+
+          report=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          totals=report["classificationTotals"]
+          assert totals["P0_WRONG_PRODUCT"] == 0, totals
+
+          cases={str(x["tcgdexId"]).lower():x for x in report["caseIndex"]}
+          invalid=[f"pl3-ar{i}" for i in range(1,10)]
+          for cid in invalid:
+              assert cid in cases, cid
+              assert cases[cid]["classification"] == "SOURCE_CONFLICT", cases[cid]
+
+          real=[f"pl4-ar{i}" for i in range(1,10)]
+          present_real=[cid for cid in real if cid in cases]
+          for cid in present_real:
+              assert cases[cid]["classification"] == "SAFE", cases[cid]
+
+          spec=importlib.util.spec_from_file_location("auditmod","scripts/test_card_identity_cardmarket_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          source=Path("index.html").read_text()
+          overrides=mod.extract_js_object(source,"VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
+          guides=mod.extract_js_object(source,"VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES")
+          owners=mod.extract_js_object(source,"VERIFIED_SHARED_CARDMARKET_PRODUCT_OWNERS")
+
+          expected={
+              "pl4-ar1":278865,
+              "pl4-ar2":278864,
+              "pl4-ar3":278863,
+              "pl4-ar5":278867,
+              "pl4-ar6":278862,
+              "pl4-ar7":278866,
+              "pl4-ar8":278868,
+              "pl4-ar9":278871,
+          }
+          for cid,correct in expected.items():
+              rule=overrides[cid]
+              guide=guides[cid]
+              assert int(rule["conflictingProduct"]) == 278861, rule
+              assert int(rule["baseProduct"]) == correct, rule
+              assert int(guide["productId"]) == correct, guide
+              assert float(guide["pricing"]["trend"]) > 0, guide
+          assert int(owners["pl4-ar4"]["productId"]) == 278861
+
+          registry=report["p0Regression"]["registry"]
+          for cid in expected:
+              assert cid in registry, cid
+
+          print(json.dumps({
+              "classificationTotals":totals,
+              "protectedAliases":invalid,
+              "realArceusCasesPresent":present_real,
+              "exactOverrides":expected,
+              "ar4Owner":278861
+          }))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          Path("temp_arceus_cardmarket_validation.txt").write_text(
+              "PASS\nclassificationTotals="+json.dumps(r["classificationTotals"],sort_keys=True)+"\n"
+          )
+          PY
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_arceus_cardmarket_validation.txt
+          git commit -m "TEMP record Arceus Cardmarket validation"
+          git push
