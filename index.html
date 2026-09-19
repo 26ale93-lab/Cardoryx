@@ -6407,6 +6407,9 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // These rules are exact to tcgdexId + set + localId + current wrong product.
   'cel25cc-cc020':{setId:'cel25cc',localId:'CC020',conflictingProduct:576747,baseProduct:576790},
   'cel25cc-cc021':{setId:'cel25cc',localId:'CC021',conflictingProduct:576755,baseProduct:576791},
+  // McDonald's Collection 2018 FR — TCGdex reuses Fletchling 39/40 product
+  // 362810 on Lillipup 38/40. Cardmarket catalogue proves Lillipup is 362809.
+  '2018sm-fr-38':{setId:'2018sm-fr',localId:'38',conflictingProduct:362810,baseProduct:362809},
   // Expedition Base Set — TCGdex currently exposes Tyranitar 029/165 Holo
   // product 274904 for the exact 066/165 Rare base identity. Cardmarket V2
   // is the 066/165 base product; keep this exact and fail closed elsewhere.
@@ -6580,7 +6583,8 @@ const VERIFIED_SHARED_CARDMARKET_PRODUCT_OWNERS = {
   'pl2-rt2':{setId:'pl2',localId:'RT2',name:'Frost Rotom',productId:278569},
   'pl2-rt3':{setId:'pl2',localId:'RT3',name:'Heat Rotom',productId:278572},
   'pl2-rt4':{setId:'pl2',localId:'RT4',name:'Mow Rotom',productId:278571},
-  'pl2-rt6':{setId:'pl2',localId:'RT6',name:"Charon's Choice",productId:278574}
+  'pl2-rt6':{setId:'pl2',localId:'RT6',name:"Charon's Choice",productId:278574},
+  '2018sm-fr-39':{setId:'2018sm-fr',localId:'39',name:'Fletchling',productId:362810}
 };
 const VERIFIED_BATCH2_BASE_OVERRIDE_IDS = new Set([
   'gym1-27','gym1-62','gym1-46','gym1-49','gym1-57','gym1-66','gym1-68','gym1-69','gym1-70',
@@ -6589,7 +6593,7 @@ const VERIFIED_BATCH2_BASE_OVERRIDE_IDS = new Set([
   'neo1-11','neo1-18','neo1-29','neo1-32','neo1-5','neo1-47','neo1-54','neo1-57','neo1-81',
   'neo2-20','neo2-32','neo2-39','neo3-16','neo3-17','neo3-18','neo3-22','neo3-27',
   'hgss1-108','hgss1-110','hgss1-123','pl2-1','pl2-2','pl2-3','pl2-4','pl2-6',
-  'cel25cc-cc020','cel25cc-cc021','swshp-swsh055'
+  'cel25cc-cc020','cel25cc-cc021','swshp-swsh055','2018sm-fr-38'
 ]);
 // Exact Cardmarket Price Guide row for CEC54. This is intentionally scoped to
 // one physical identity and one product id; it is not a V1/V2 or number rule.
@@ -6603,6 +6607,14 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
     sha256:'ec7e165008203cb0eeaa89b3c6daacd833d63e3f7b0a6beed7599ce994aaef30',
     pricing:{idProduct:407919,trend:0.17,avg7:0.18,avg30:0.12,avg:0.10,low:0.02,
       'trend-holo':0.76,'avg7-holo':0.94,'avg30-holo':0.76,'avg-holo':1.12,'low-holo':0.14}
+  },
+  '2018sm-fr-38':{
+    setId:'2018sm-fr',localId:'38',name:'Lillipup',productId:362809,
+    verified:'2026-09-19T20:55:00Z',
+    source:"Cardmarket Product Catalogue + Price Guide · McDonald's Collection 2018 FR · Lillipup 38/40 · product 362809",
+    sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
+    pricing:{idProduct:362809,trend:0.46,avg7:0.26,avg30:0.49,avg:0.27,low:0.10,
+      'trend-holo':3.46,'avg7-holo':3.95,'avg30-holo':2.27,'avg-holo':3.00,'low-holo':2.99}
   },
   'ecard1-66':{
     setId:'ecard1',localId:'066',name:'Tyranitar',productId:274941,
