@@ -45,30 +45,47 @@ jobs:
       - name: Verify Celebrations Classic corrections
         run: |
           python3 - <<'PY'
-          import json
+          import importlib.util, json
           from pathlib import Path
+
           r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
           totals=r["classificationTotals"]
           assert totals["P0_WRONG_PRODUCT"] == 0, totals
           assert totals["P1_AMBIGUOUS_PRODUCT"] == 14, totals
-          cases={x["tcgdexId"]:x for x in r["caseIndex"]}
-          assert cases["cel25cc-CC020"]["classification"] == "SAFE", cases["cel25cc-CC020"]
-          assert cases["cel25cc-CC021"]["classification"] == "SAFE", cases["cel25cc-CC021"]
-          cards={x["tcgdexId"]:x for x in r.get("cards",[]) if x.get("tcgdexId") in {"cel25cc-CC020","cel25cc-CC021"}}
-          for cid,pid in {"cel25cc-CC020":576790,"cel25cc-CC021":576791}.items():
-            row=cards[cid]
-            assert row["resolvedProductId"] == pid, row
-            assert row["resolvedCardoryxValue"] and row["resolvedCardoryxValue"] > 20, row
-            guards=row["baseOverrideGuardTests"]
-            assert guards["exactIdentityAccepted"] is True, guards
-            assert guards["wrongTcgdexIdRejected"] is True, guards
-            assert guards["wrongSetIdRejected"] is True, guards
-            assert guards["wrongLocalIdRejected"] is True, guards
-            assert guards["correctedFutureProductRejected"] is True, guards
+
+          cases={str(x["tcgdexId"]).lower():x for x in r["caseIndex"]}
+          for cid in ("cel25cc-cc020","cel25cc-cc021"):
+            assert cases[cid]["classification"] == "SAFE", cases[cid]
+
+          spec=importlib.util.spec_from_file_location("auditmod","scripts/test_card_identity_cardmarket_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          source=Path("index.html").read_text()
+          overrides=mod.extract_js_object(source,"VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
+          guides=mod.extract_js_object(source,"VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES")
+
+          expected={
+            "cel25cc-cc020":(576747,576790),
+            "cel25cc-cc021":(576755,576791),
+          }
+          values={}
+          for cid,(wrong,correct) in expected.items():
+            rule=overrides[cid]
+            guide=guides[cid]
+            assert int(rule["conflictingProduct"]) == wrong, rule
+            assert int(rule["baseProduct"]) == correct, rule
+            assert int(guide["productId"]) == correct, guide
+            assert float(guide["pricing"]["trend"]) > 20, guide
+            values[cid]=guide["pricing"]["trend"]
+
+          registry=r["p0Regression"]["registry"]
+          for cid in expected:
+            assert cid in registry, cid
+
           print(json.dumps({
             "classificationTotals":totals,
-            "Reshiram":cards["cel25cc-CC020"]["resolvedCardoryxValue"],
-            "Zekrom":cards["cel25cc-CC021"]["resolvedCardoryxValue"]
+            "resolvedGuides":values,
+            "exactOverridesApplied":r["p0Regression"]["exactOverridesApplied"]
           }))
           PY
 
