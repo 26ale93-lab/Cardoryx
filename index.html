@@ -9391,11 +9391,8 @@ function priceRefreshSnapshot(){
   }
   return out;
 }
-function buildPriceRefreshReport(before,after){
+function buildPriceRefreshReport(before,after,checked=0){
   const changes=[];
-  let totalBefore=0,totalAfter=0;
-  for(const row of before.values())if(row.value!=null)totalBefore+=row.value*row.qty;
-  for(const row of after.values())if(row.value!=null)totalAfter+=row.value*row.qty;
   for(const [key,newRow] of after){
     const oldRow=before.get(key);if(!oldRow)continue;
     const beforeValue=oldRow.value,afterValue=newRow.value,qty=newRow.qty;
@@ -9407,9 +9404,9 @@ function buildPriceRefreshReport(before,after){
       percent=beforeValue>0?(delta/beforeValue)*100:null;
       totalDelta=delta*qty;
     }else if(beforeValue==null&&afterValue!=null){
-      kind='new';totalDelta=afterValue*qty;
+      kind='new';
     }else if(beforeValue!=null&&afterValue==null){
-      kind='lost';totalDelta=null;
+      kind='lost';
     }else continue;
     changes.push({...newRow,beforeValue,afterValue,kind,delta,percent,totalDelta});
   }
@@ -9418,9 +9415,11 @@ function buildPriceRefreshReport(before,after){
     if(bv!==av)return bv-av;
     return String(a.name).localeCompare(String(b.name),'it');
   });
-  const net=changes.reduce((sum,x)=>sum+(Number.isFinite(Number(x.totalDelta))?Number(x.totalDelta):0),0);
+  const increaseTotal=changes.filter(x=>x.kind==='up').reduce((sum,x)=>sum+Number(x.totalDelta||0),0);
+  const decreaseTotal=Math.abs(changes.filter(x=>x.kind==='down').reduce((sum,x)=>sum+Number(x.totalDelta||0),0));
+  const net=increaseTotal-decreaseTotal;
   return {
-    at:new Date().toISOString(),changes,totalBefore,totalAfter,net,
+    at:new Date().toISOString(),checked:Number(checked)||0,changes,increaseTotal,decreaseTotal,net,
     up:changes.filter(x=>x.kind==='up').length,down:changes.filter(x=>x.kind==='down').length,
     newCount:changes.filter(x=>x.kind==='new').length,lost:changes.filter(x=>x.kind==='lost').length
   };
@@ -9438,10 +9437,11 @@ function renderPriceChanges(){
   const when=new Date(report.at);
   meta.textContent=`Ultimo aggiornamento: ${when.toLocaleString('it-IT')} · confronto sul valore unitario Cardmarket.`;
   summary.innerHTML=`<div class="price-change-summary">
-    <div class="price-change-stat"><strong>↑ ${report.up}</strong><span>AUMENTI</span></div>
-    <div class="price-change-stat"><strong>↓ ${report.down}</strong><span>DIMINUZIONI</span></div>
-    <div class="price-change-stat"><strong>${report.newCount+report.lost}</strong><span>NUOVI / PERSI</span></div>
-  </div><div class="small">Impatto netto quantificabile: <b>${report.net>=0?'+':''}${euro(report.net)}</b>.${report.lost?' Le quotazioni non più disponibili non vengono conteggiate come perdita.':''}</div>`;
+    <div class="price-change-stat"><strong>↑ ${euro(report.increaseTotal||0)}</strong><span>AUMENTI</span></div>
+    <div class="price-change-stat"><strong>↓ ${euro(report.decreaseTotal||0)}</strong><span>DIMINUZIONI</span></div>
+    <div class="price-change-stat"><strong>${report.net>=0?"+":""}${euro(report.net)}</strong><span>VARIAZIONE NETTA</span></div>
+    <div class="price-change-stat"><strong>${report.changes.length}</strong><span>CARTE CAMBIATE</span></div>
+  </div><div class="small">${report.checked?`Record controllati: <b>${report.checked}</b> · `:""}Nuovi valori: <b>${report.newCount}</b> · valori non disponibili: <b>${report.lost}</b>. Le variazioni con un valore mancante non entrano nei totali monetari.</div>`;
   if(!report.changes.length){
     list.innerHTML='<div class="catalog-empty"><b>Nessuna variazione di prezzo</b><div class="small" style="margin-top:5px">I valori Cardmarket sono rimasti invariati rispetto a prima dell’aggiornamento.</div></div>';return;
   }
@@ -9453,12 +9453,12 @@ function renderPriceChanges(){
       :`${euro(x.beforeValue)} → ${euro(x.afterValue)}`;
     const delta=x.kind==='new'?`Nuovo valore Cardmarket`
       :x.kind==='lost'?`Quotazione affidabile non disponibile`
-      :`${x.delta>0?'↑ +':'↓ '}${euro(x.delta)} / copia${x.percent!=null?` · ${x.percent>0?'+':''}${x.percent.toFixed(1)}%`:''}${x.qty>1?` · impatto ${x.totalDelta>=0?'+':''}${euro(x.totalDelta)}`:''}`;
+      :`${x.delta>0?'↑ +':'↓ '}${euro(x.delta)} / copia${x.percent!=null?` · ${x.percent>0?'+':''}${x.percent.toFixed(1)}%`:''} · impatto ${x.totalDelta>=0?'+':''}${euro(x.totalDelta)}`;
     const cls=x.kind==='up'?'price-change-up':x.kind==='down'?'price-change-down':x.kind==='new'?'price-change-new':'price-change-lost';
     const safe=current?encodeURIComponent(recordKey(current)):'';
     return `<div class="price-change-row ${cls}" ${safe?`onclick="openCardDetail('${safe}')"`:''}>
       <div>${img?`<img src="${esc(img)}" onerror="this.style.visibility='hidden'">`:'<div style="width:56px;height:78px"></div>'}</div>
-      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} · ${esc(x.variant)} · ${esc(x.language||'—')} · ${esc(x.condition)}${x.qty>1?` · ×${x.qty}`:''}</div>
+      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} · ${esc(x.variant)} · ${esc(x.language||'—')} · ${esc(x.condition)} · ×${x.qty}</div>
       <div class="price-change-values">${values}</div><div class="price-change-delta">${delta}</div></div>
     </div>`;
   }).join('');
@@ -9475,7 +9475,7 @@ async function refreshAllPrices(){
   if(st)st.textContent='Associo le carte a TCGdex e aggiorno Cardmarket…';
   for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} · prezzi trovati ${ok}…`}
   const after=priceRefreshSnapshot();
-  const report=buildPriceRefreshReport(before,after);
+  const report=buildPriceRefreshReport(before,after,db.length);
   if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}
   lastPriceRefreshReport=report;
   if(storageBackend==='indexeddb'){
