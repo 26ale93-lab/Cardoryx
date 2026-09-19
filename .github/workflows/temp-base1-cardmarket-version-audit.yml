@@ -1,0 +1,82 @@
+name: TEMP Base Set Cardmarket Version Audit
+
+on:
+  push:
+    branches:
+      - audit/base1-cardmarket-versions-20260919
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Expose P1 detail in runner only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("scripts/test_card_identity_cardmarket_audit.py")
+          s=p.read_text()
+          old='"p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],'
+          new='"p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n        "p1AmbiguousProducts": p1,'
+          assert old in s
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Run full current audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --workers 24
+      - name: Analyze all Base Set P1 pairs
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          rows=[x for x in r["p1AmbiguousProducts"] if x.get("setId")=="base1"]
+          checks=[]
+          for x in rows:
+            ids=x.get("allProductIds") or []
+            cat=x.get("cardmarketProductCatalog") or {}
+            current=x.get("currentProductId")
+            alts=x.get("alternateProductIds") or []
+            cp=cat.get(str(current)) or {}
+            ap=cat.get(str(alts[0])) if len(alts)==1 else {}
+            checks.append({
+              "tcgdexId":x["tcgdexId"],"localId":x.get("localId"),"name":x.get("name"),
+              "current":current,"alternate":alts[0] if len(alts)==1 else None,
+              "currentCatalog":cp,"alternateCatalog":ap,
+              "exactTwo":len(ids)==2 and len(alts)==1,
+              "sameName":bool(cp and ap and cp.get("name")==ap.get("name")),
+              "sameExpansion":bool(cp and ap and cp.get("idExpansion")==ap.get("idExpansion")),
+              "sameMetacard":bool(cp and ap and cp.get("idMetacard")==ap.get("idMetacard") and cp.get("idMetacard") is not None),
+              "current273Range":isinstance(current,int) and 273696 <= current <= 273797,
+              "alternate660Range":len(alts)==1 and isinstance(alts[0],int) and 660096 <= alts[0] <= 660227,
+            })
+          invariant=lambda k: all(x[k] for x in checks)
+          out={
+            "mainSha":r.get("mainSha"),
+            "classificationTotals":r.get("classificationTotals"),
+            "base1P1Count":len(rows),
+            "invariants":{
+              k:invariant(k) for k in ["exactTwo","sameName","sameExpansion","sameMetacard","current273Range","alternate660Range"]
+            },
+            "currentIdsUnique":len({x["current"] for x in checks})==len(checks),
+            "alternateIdsUnique":len({x["alternate"] for x in checks})==len(checks),
+            "pairs":checks
+          }
+          Path("temp_base1_cardmarket_version_audit.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({k:v for k,v in out.items() if k!="pairs"},ensure_ascii=False))
+          PY
+      - name: Record audit
+        run: |
+          git checkout -- scripts/test_card_identity_cardmarket_audit.py artifacts/card_identity_cardmarket_audit_report.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_base1_cardmarket_version_audit.json
+          git commit -m "TEMP record Base Set Cardmarket version audit"
+          git push
