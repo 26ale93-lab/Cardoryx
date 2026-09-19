@@ -1,0 +1,54 @@
+name: TEMP Cardmarket Two-P1 Regression
+
+on:
+  push:
+    branches:
+      - audit/fix-two-cardmarket-p1-false-positives-20260919
+    paths:
+      - scripts/test_card_identity_cardmarket_audit.py
+      - .github/workflows/temp-cardmarket-two-p1-regression.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+      - name: Git diff check
+        run: git diff --check origin/main...HEAD
+      - name: Runtime regression
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --runtime-only
+      - name: Full Cardmarket audit
+        run: python3 scripts/test_card_identity_cardmarket_audit.py --workers 24
+      - name: Verify expected classifications
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          totals=r["classificationTotals"]
+          assert totals["P0_WRONG_PRODUCT"] == 0, totals
+          assert totals["P1_AMBIGUOUS_PRODUCT"] == 114, totals
+          assert totals["SAFE"] == 1921, totals
+          idx={x["tcgdexId"]:x["classification"] for x in r["caseIndex"]}
+          assert idx["mfb-9"] == "SAFE", idx.get("mfb-9")
+          assert idx["sm12-237"] == "SAFE", idx.get("sm12-237")
+          assert idx["sm12-29"] == "SOURCE_CONFLICT", idx.get("sm12-29")
+          print(json.dumps({"classificationTotals":totals,"mfb-9":idx["mfb-9"],"sm12-237":idx["sm12-237"],"sm12-29":idx["sm12-29"]}))
+          PY
+      - name: Record successful validation
+        run: |
+          printf 'PASS\ncommit=%s\n' "$GITHUB_SHA" > temp_cardmarket_two_p1_validation.txt
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_cardmarket_two_p1_validation.txt
+          git commit -m "TEMP record two-P1 validation"
+          git push
