@@ -1063,6 +1063,26 @@ async function idbWriteDecks(decksValue){
   tx.objectStore(CARDORYX_IDB_STATE_STORE).put(indexedStateRow('decks',decksValue));
   await done;
 }
+const CARDORYX_PRICE_REFRESH_REPORT_KEY='price-refresh-report';
+async function idbWritePriceRefreshReport(report){
+  if(!storageDb)return;
+  const tx=storageDb.transaction(CARDORYX_IDB_STATE_STORE,'readwrite');
+  const done=idbTransactionDone(tx);
+  tx.objectStore(CARDORYX_IDB_STATE_STORE).put({
+    key:CARDORYX_PRICE_REFRESH_REPORT_KEY,
+    value:report,
+    fingerprint:storageFingerprint(report),
+    updatedAt:new Date().toISOString()
+  });
+  await done;
+}
+async function idbReadPriceRefreshReport(){
+  if(!storageDb)return null;
+  const row=await idbGet(CARDORYX_IDB_STATE_STORE,CARDORYX_PRICE_REFRESH_REPORT_KEY);
+  if(!row||row.key!==CARDORYX_PRICE_REFRESH_REPORT_KEY||!row.value)return null;
+  if(row.fingerprint!==storageFingerprint(row.value))return null;
+  return row.value;
+}
 async function idbWriteMigrationMarker(marker){
   const tx=storageDb.transaction(CARDORYX_IDB_META_STORE,'readwrite');
   const done=idbTransactionDone(tx);
@@ -1270,8 +1290,13 @@ async function initializeCardoryxStorage(){
     persistedCollectionJson=JSON.stringify(db);
     persistedDecksJson=JSON.stringify(decks);
     storageBackend='indexeddb';
+    try{
+      const savedPriceReport=await idbReadPriceRefreshReport();
+      if(savedPriceReport&&Array.isArray(savedPriceReport.changes))lastPriceRefreshReport=savedPriceReport;
+    }catch(e){console.warn('Cardoryx price refresh report load:',e)}
     await requestPersistentStorage();
     renderAfterCollectionPersistence();
+    try{renderPriceChanges()}catch(e){console.warn('Cardoryx price refresh report render:',e)}
   }catch(error){
     storageBackend='localStorage-fallback';
     storageMigrationState=`Fallback attivo: ${error?.message||'IndexedDB non disponibile'}`;
@@ -9345,7 +9370,8 @@ function priceRefreshStableKey(c){
   return [
     normText(c?.name||''),normText(c?.set?.name||c?.set||''),String(c?.localId||'').trim().toLowerCase(),
     canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),
-    normalizedPlaySeries(c?.playSeries||''),String(c?.condition||'NM').trim().toUpperCase()
+    normalizedPlaySeries(c?.playSeries||''),normText(c?.language||c?.lang||'Italiano'),
+    String(c?.condition||'NM').trim().toUpperCase()
   ].join('|||');
 }
 function priceRefreshSnapshot(){
@@ -9356,7 +9382,8 @@ function priceRefreshSnapshot(){
     if(!row){
       row={key,name:c?.name||'Carta',set:c?.set?.name||c?.set||'',localId:c?.localId||'',
         variant:canonicalVariant(c?.variant||'Normal'),stamp:canonicalStamp(c?.stamp||'None'),
-        condition:c?.condition||'NM',qty:0,value:value==null?null:Number(value),recordKey:recordKey(c)};
+        language:c?.language||c?.lang||'Italiano',condition:c?.condition||'NM',
+        qty:0,value:value==null?null:Number(value),recordKey:recordKey(c)};
       out.set(key,row);
     }
     row.qty+=qty;
@@ -9391,8 +9418,9 @@ function buildPriceRefreshReport(before,after){
     if(bv!==av)return bv-av;
     return String(a.name).localeCompare(String(b.name),'it');
   });
+  const net=changes.reduce((sum,x)=>sum+(Number.isFinite(Number(x.totalDelta))?Number(x.totalDelta):0),0);
   return {
-    at:new Date().toISOString(),changes,totalBefore,totalAfter,net:totalAfter-totalBefore,
+    at:new Date().toISOString(),changes,totalBefore,totalAfter,net,
     up:changes.filter(x=>x.kind==='up').length,down:changes.filter(x=>x.kind==='down').length,
     newCount:changes.filter(x=>x.kind==='new').length,lost:changes.filter(x=>x.kind==='lost').length
   };
@@ -9413,7 +9441,7 @@ function renderPriceChanges(){
     <div class="price-change-stat"><strong>↑ ${report.up}</strong><span>AUMENTI</span></div>
     <div class="price-change-stat"><strong>↓ ${report.down}</strong><span>DIMINUZIONI</span></div>
     <div class="price-change-stat"><strong>${report.newCount+report.lost}</strong><span>NUOVI / PERSI</span></div>
-  </div><div class="small">Impatto netto sull'ultimo aggiornamento: <b>${report.net>=0?'+':''}${euro(report.net)}</b>.</div>`;
+  </div><div class="small">Impatto netto quantificabile: <b>${report.net>=0?'+':''}${euro(report.net)}</b>.${report.lost?' Le quotazioni non più disponibili non vengono conteggiate come perdita.':''}</div>`;
   if(!report.changes.length){
     list.innerHTML='<div class="catalog-empty"><b>Nessuna variazione di prezzo</b><div class="small" style="margin-top:5px">I valori Cardmarket sono rimasti invariati rispetto a prima dell’aggiornamento.</div></div>';return;
   }
@@ -9430,7 +9458,7 @@ function renderPriceChanges(){
     const safe=current?encodeURIComponent(recordKey(current)):'';
     return `<div class="price-change-row ${cls}" ${safe?`onclick="openCardDetail('${safe}')"`:''}>
       <div>${img?`<img src="${esc(img)}" onerror="this.style.visibility='hidden'">`:'<div style="width:56px;height:78px"></div>'}</div>
-      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} · ${esc(x.variant)} · ${esc(x.condition)}${x.qty>1?` · ×${x.qty}`:''}</div>
+      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} · ${esc(x.variant)} · ${esc(x.language||'—')} · ${esc(x.condition)}${x.qty>1?` · ×${x.qty}`:''}</div>
       <div class="price-change-values">${values}</div><div class="price-change-delta">${delta}</div></div>
     </div>`;
   }).join('');
@@ -9450,6 +9478,10 @@ async function refreshAllPrices(){
   const report=buildPriceRefreshReport(before,after);
   if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}
   lastPriceRefreshReport=report;
+  if(storageBackend==='indexeddb'){
+    try{await idbWritePriceRefreshReport(report)}
+    catch(e){console.warn('Cardoryx price refresh report save:',e)}
+  }
   renderCatalog();renderStats();renderPriceChanges();
   if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length} · ${report.changes.length} variazioni.`;
 }
