@@ -26,6 +26,11 @@ assert "await idbWritePriceRefreshReport(report)" in source
 assert "await idbReadPriceRefreshReport()" in source
 assert "buildPriceRefreshReport(before,after,db.length)" in source
 assert "Le variazioni con un valore mancante non entrano nei totali monetari." in source
+assert ".price-change-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:9px;text-align:center;color:#111827}" in source
+assert ".price-change-stat strong{display:block;font-size:16px;color:#111827}" in source
+assert "background:#fff;color:#111827;cursor:pointer" in source
+assert ".price-change-name{font-weight:900;font-size:14px;line-height:1.15;color:#111827}" in source
+assert ".price-change-values{font-size:12px;font-weight:800;margin-top:5px;color:#111827}" in source
 
 js=f"""
 const assert=require('assert');
