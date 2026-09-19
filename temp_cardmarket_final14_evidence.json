@@ -1,0 +1,2450 @@
+{
+  "seedProducts": {
+    "362810": {
+      "idProduct": 362810,
+      "name": "Fletchling [Growl | Flap]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 2361,
+      "idMetacard": 225649,
+      "dateAdded": "2018-08-15 14:07:12"
+    },
+    "278861": {
+      "idProduct": 278861,
+      "name": "Arceus Lv.100 [Water | Fastwave]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 1565,
+      "idMetacard": 216721,
+      "dateAdded": "0000-00-00 00:00:00"
+    },
+    "726923": {
+      "idProduct": 726923,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2023-08-09 12:54:53"
+    },
+    "740411": {
+      "idProduct": 740411,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2023-10-20 10:47:58"
+    },
+    "524029": null,
+    "741983": {
+      "idProduct": 741983,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 14:47:32"
+    },
+    "741995": {
+      "idProduct": 741995,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 14:53:54"
+    },
+    "742007": {
+      "idProduct": 742007,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 14:59:55"
+    },
+    "741984": {
+      "idProduct": 741984,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 14:47:59"
+    },
+    "741996": {
+      "idProduct": 741996,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 14:54:07"
+    },
+    "742008": {
+      "idProduct": 742008,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 15:00:09"
+    },
+    "742020": {
+      "idProduct": 742020,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 15:06:17"
+    }
+  },
+  "focusedProducts": [
+    {
+      "idProduct": 362788,
+      "name": "Pikachu [Tail Whap | Thundershock]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 2361,
+      "idMetacard": 226314,
+      "dateAdded": "2018-08-15 13:58:18"
+    },
+    {
+      "idProduct": 362809,
+      "name": "Lillipup [Work Up | Bite]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 2361,
+      "idMetacard": 224757,
+      "dateAdded": "2018-08-15 14:06:46"
+    },
+    {
+      "idProduct": 362810,
+      "name": "Fletchling [Growl | Flap]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 2361,
+      "idMetacard": 225649,
+      "dateAdded": "2018-08-15 14:07:12"
+    },
+    {
+      "idProduct": 703195,
+      "name": "Pikachu [Adventuring Together]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 414877,
+      "dateAdded": "2023-03-26 18:18:49"
+    },
+    {
+      "idProduct": 703196,
+      "name": "Pikachu [Adventuring Together]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 414877,
+      "dateAdded": "2023-03-26 18:19:20"
+    },
+    {
+      "idProduct": 726923,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2023-08-09 12:54:53"
+    },
+    {
+      "idProduct": 740411,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2023-10-20 10:47:58"
+    },
+    {
+      "idProduct": 741983,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 14:47:32"
+    },
+    {
+      "idProduct": 741984,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 14:47:59"
+    },
+    {
+      "idProduct": 741995,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 14:53:54"
+    },
+    {
+      "idProduct": 741996,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 14:54:07"
+    },
+    {
+      "idProduct": 741999,
+      "name": "Pikachu [Quick Attack | Electro Ball | MFB]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 426792,
+      "dateAdded": "2023-10-27 14:55:15"
+    },
+    {
+      "idProduct": 742000,
+      "name": "Pikachu [Quick Attack | Electro Ball | MFB]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 426792,
+      "dateAdded": "2023-10-27 14:55:27"
+    },
+    {
+      "idProduct": 742007,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 14:59:55"
+    },
+    {
+      "idProduct": 742008,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 15:00:09"
+    },
+    {
+      "idProduct": 742019,
+      "name": "Potion",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 225654,
+      "dateAdded": "2023-10-27 15:05:58"
+    },
+    {
+      "idProduct": 742020,
+      "name": "Switch",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5526,
+      "idMetacard": 224028,
+      "dateAdded": "2023-10-27 15:06:17"
+    },
+    {
+      "idProduct": 751813,
+      "name": "Pikachu [Growl | Pika Bolt]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 418697,
+      "dateAdded": "2024-01-19 15:38:53"
+    },
+    {
+      "idProduct": 780209,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2024-07-25 14:35:19"
+    },
+    {
+      "idProduct": 784938,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2024-08-23 14:24:38"
+    },
+    {
+      "idProduct": 810398,
+      "name": "Pikachu [Unwind]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 445717,
+      "dateAdded": "2025-02-06 15:17:15"
+    },
+    {
+      "idProduct": 832224,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2025-07-01 13:42:38"
+    },
+    {
+      "idProduct": 838393,
+      "name": "Pikachu [Scrappy Spark]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 5241,
+      "idMetacard": 422758,
+      "dateAdded": "2025-07-25 15:59:45"
+    }
+  ],
+  "prices": {
+    "278861": {
+      "idProduct": 278861,
+      "idCategory": 51,
+      "avg": 22.66,
+      "low": 1.99,
+      "trend": 12.06,
+      "avg1": 3,
+      "avg7": 13.85,
+      "avg30": 13.15,
+      "avg-holo": 6.5,
+      "low-holo": 3.9,
+      "trend-holo": 8.51,
+      "avg1-holo": 3.99,
+      "avg7-holo": 7.28,
+      "avg30-holo": 6
+    },
+    "362788": {
+      "idProduct": 362788,
+      "idCategory": 51,
+      "avg": 8.26,
+      "low": 3,
+      "trend": 7.93,
+      "avg1": 8.7,
+      "avg7": 7.84,
+      "avg30": 6.76,
+      "avg-holo": 14.9,
+      "low-holo": 3,
+      "trend-holo": 20.96,
+      "avg1-holo": 18,
+      "avg7-holo": 19.49,
+      "avg30-holo": 16.79
+    },
+    "362809": {
+      "idProduct": 362809,
+      "idCategory": 51,
+      "avg": 0.27,
+      "low": 0.1,
+      "trend": 0.46,
+      "avg1": 0.25,
+      "avg7": 0.26,
+      "avg30": 0.49,
+      "avg-holo": 3,
+      "low-holo": 2.99,
+      "trend-holo": 3.46,
+      "avg1-holo": 3.25,
+      "avg7-holo": 3.95,
+      "avg30-holo": 2.27
+    },
+    "362810": {
+      "idProduct": 362810,
+      "idCategory": 51,
+      "avg": 1.75,
+      "low": 0.15,
+      "trend": 0.65,
+      "avg1": 1,
+      "avg7": 0.98,
+      "avg30": 1.01,
+      "avg-holo": 2.83,
+      "low-holo": 0.15,
+      "trend-holo": 3.21,
+      "avg1-holo": 2.35,
+      "avg7-holo": 2.89,
+      "avg30-holo": 2.82
+    },
+    "524029": null,
+    "703195": {
+      "idProduct": 703195,
+      "idCategory": 51,
+      "avg": 25.78,
+      "low": 12.99,
+      "trend": 25.87,
+      "avg1": 26.36,
+      "avg7": 24.47,
+      "avg30": 26.22,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "703196": {
+      "idProduct": 703196,
+      "idCategory": 51,
+      "avg": null,
+      "low": 149,
+      "trend": 166.62,
+      "avg1": 118,
+      "avg7": 162.84,
+      "avg30": 152.05,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "726923": {
+      "idProduct": 726923,
+      "idCategory": 51,
+      "avg": 299.95,
+      "low": null,
+      "trend": 295.69,
+      "avg1": 299.95,
+      "avg7": 150.95,
+      "avg30": 48.02,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "740411": {
+      "idProduct": 740411,
+      "idCategory": 51,
+      "avg": 31.49,
+      "low": 14,
+      "trend": 32.31,
+      "avg1": 39.99,
+      "avg7": 34.36,
+      "avg30": 33.49,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "741983": {
+      "idProduct": 741983,
+      "idCategory": 51,
+      "avg": 0.06,
+      "low": 0.02,
+      "trend": 0.22,
+      "avg1": 0.04,
+      "avg7": 0.14,
+      "avg30": 0.14,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "741984": {
+      "idProduct": 741984,
+      "idCategory": 51,
+      "avg": 0.05,
+      "low": 0.02,
+      "trend": 0.18,
+      "avg1": 0.04,
+      "avg7": 0.05,
+      "avg30": 0.08,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "741995": {
+      "idProduct": 741995,
+      "idCategory": 51,
+      "avg": 0.05,
+      "low": 0.02,
+      "trend": 0.17,
+      "avg1": 0.05,
+      "avg7": 0.12,
+      "avg30": 0.14,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "741996": {
+      "idProduct": 741996,
+      "idCategory": 51,
+      "avg": 0.06,
+      "low": 0.03,
+      "trend": 0.09,
+      "avg1": 0.05,
+      "avg7": 0.09,
+      "avg30": 0.08,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "741999": {
+      "idProduct": 741999,
+      "idCategory": 51,
+      "avg": 15.21,
+      "low": 2.9,
+      "trend": 14.21,
+      "avg1": 13.99,
+      "avg7": 12.8,
+      "avg30": 12.92,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "742000": {
+      "idProduct": 742000,
+      "idCategory": 51,
+      "avg": 7.91,
+      "low": 3.5,
+      "trend": 7.89,
+      "avg1": 4.5,
+      "avg7": 8.35,
+      "avg30": 8.84,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "742007": {
+      "idProduct": 742007,
+      "idCategory": 51,
+      "avg": 0.08,
+      "low": 0.02,
+      "trend": 0.17,
+      "avg1": 0.3,
+      "avg7": 0.1,
+      "avg30": 0.11,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "742008": {
+      "idProduct": 742008,
+      "idCategory": 51,
+      "avg": 0.07,
+      "low": 0.02,
+      "trend": 0.13,
+      "avg1": 0.02,
+      "avg7": 0.07,
+      "avg30": 0.1,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "742019": {
+      "idProduct": 742019,
+      "idCategory": 51,
+      "avg": 0.05,
+      "low": 0.03,
+      "trend": 0.15,
+      "avg1": 0.05,
+      "avg7": 0.05,
+      "avg30": 0.08,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "742020": {
+      "idProduct": 742020,
+      "idCategory": 51,
+      "avg": 0.07,
+      "low": 0.02,
+      "trend": 0.09,
+      "avg1": 0.05,
+      "avg7": 0.07,
+      "avg30": 0.15,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "751813": {
+      "idProduct": 751813,
+      "idCategory": 51,
+      "avg": 28.53,
+      "low": 13.99,
+      "trend": 24.57,
+      "avg1": 22.73,
+      "avg7": 22.73,
+      "avg30": 28.32,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "780209": {
+      "idProduct": 780209,
+      "idCategory": 51,
+      "avg": 14.71,
+      "low": 4,
+      "trend": 8.95,
+      "avg1": 18.99,
+      "avg7": 12.44,
+      "avg30": 15.85,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "784938": {
+      "idProduct": 784938,
+      "idCategory": 51,
+      "avg": 64.95,
+      "low": 64.95,
+      "trend": 85.38,
+      "avg1": 64.95,
+      "avg7": 102.81,
+      "avg30": 71.27,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "810398": {
+      "idProduct": 810398,
+      "idCategory": 51,
+      "avg": 35.07,
+      "low": 20.99,
+      "trend": 8.14,
+      "avg1": 22,
+      "avg7": 24.1,
+      "avg30": 31.04,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "832224": {
+      "idProduct": 832224,
+      "idCategory": 51,
+      "avg": 8.64,
+      "low": 3,
+      "trend": 10.38,
+      "avg1": 12,
+      "avg7": 7.99,
+      "avg30": 9.12,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "838393": {
+      "idProduct": 838393,
+      "idCategory": 51,
+      "avg": 79.57,
+      "low": 48,
+      "trend": 107.43,
+      "avg1": 114.99,
+      "avg7": 100.63,
+      "avg30": 74.94,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    }
+  },
+  "tcgdexApi": {
+    "2018sm-fr-38": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "2018sm-fr-39": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR1": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR2": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR3": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR4": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR5": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR6": {
+      "_error": "<HTTPError 503: 'Service Unavailable'>"
+    },
+    "pl3-AR7": {
+      "_error": "<HTTPError 404: 'Not Found'>"
+    },
+    "pl3-AR8": {
+      "_error": "<HTTPError 404: 'Not Found'>"
+    },
+    "pl3-AR9": {
+      "_error": "<HTTPError 404: 'Not Found'>"
+    },
+    "pl4-AR1": {
+      "category": "Pokemon",
+      "id": "pl4-AR1",
+      "illustrator": "kawayoo",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR1",
+      "localId": "AR1",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83592
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.937Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83592,
+                "lowPrice": 36.99,
+                "midPrice": 56,
+                "highPrice": 495.38,
+                "marketPrice": 63.55,
+                "directLowPrice": 98.69
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 70,
+      "types": [
+        "Darkness"
+      ],
+      "description": "It is told in mythology that this Pokémon was born before the universe even existed.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Darkness",
+            "Colorless"
+          ],
+          "name": "Prize Count",
+          "effect": "If you have more Prize cards left than your opponent, this attack does 20 damage plus 60 more damage.",
+          "damage": "20+"
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fighting",
+          "value": "×2"
+        }
+      ],
+      "resistances": [
+        {
+          "type": "Psychic",
+          "value": "-20"
+        }
+      ],
+      "retreat": 1,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.937Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83592,
+            "lowPrice": 36.99,
+            "midPrice": 56,
+            "highPrice": 495.38,
+            "marketPrice": 63.55,
+            "directLowPrice": 98.69
+          }
+        }
+      }
+    },
+    "pl4-AR2": {
+      "category": "Pokemon",
+      "id": "pl4-AR2",
+      "illustrator": "Shin Nagasawa",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR2",
+      "localId": "AR2",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83593
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.937Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83593,
+                "lowPrice": 27.01,
+                "midPrice": 34.99,
+                "highPrice": 294.81,
+                "marketPrice": 40.07,
+                "directLowPrice": 83.05
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 90,
+      "types": [
+        "Grass"
+      ],
+      "description": "It is said to have emerged from an egg in a place where there was nothing, then shaped the world.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Grass",
+            "Colorless"
+          ],
+          "name": "Leaf Refresh",
+          "effect": "Remove 3 damage counters from each of your Benched Pokémon.",
+          "damage": 30
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fire",
+          "value": "×2"
+        }
+      ],
+      "resistances": [
+        {
+          "type": "Water",
+          "value": "-20"
+        }
+      ],
+      "retreat": 2,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.937Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83593,
+            "lowPrice": 27.01,
+            "midPrice": 34.99,
+            "highPrice": 294.81,
+            "marketPrice": 40.07,
+            "directLowPrice": 83.05
+          }
+        }
+      }
+    },
+    "pl4-AR3": {
+      "category": "Pokemon",
+      "id": "pl4-AR3",
+      "illustrator": "Wataru Kawahara",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR3",
+      "localId": "AR3",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83594
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.937Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83594,
+                "lowPrice": 16.34,
+                "midPrice": 31.92,
+                "highPrice": 1000,
+                "marketPrice": 36.66,
+                "directLowPrice": null
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 80,
+      "types": [
+        "Fire"
+      ],
+      "description": "It is described in mythology as the Pokémon that shaped the universe with its 1,000 arms.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Fire",
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Bright Flame",
+          "effect": "Flip a coin. If tails, discard 2 Energy attached to Arceus.",
+          "damage": 80
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Water",
+          "value": "×2"
+        }
+      ],
+      "retreat": 1,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.937Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83594,
+            "lowPrice": 16.34,
+            "midPrice": 31.92,
+            "highPrice": 1000,
+            "marketPrice": 36.66,
+            "directLowPrice": null
+          }
+        }
+      }
+    },
+    "pl4-AR4": {
+      "category": "Pokemon",
+      "id": "pl4-AR4",
+      "illustrator": "Kouki Saitou",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR4",
+      "localId": "AR4",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83595
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83595,
+                "lowPrice": 34,
+                "midPrice": 43.09,
+                "highPrice": 499.38,
+                "marketPrice": 53.42,
+                "directLowPrice": null
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 90,
+      "types": [
+        "Water"
+      ],
+      "description": "It is told in mythology that this Pokémon was born before the universe even existed.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Water",
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Fastwave",
+          "effect": "This attack's damage isn't affected by Resistance, Poké-Powers, Poké-Bodies, or any other effects on the Defending Pokémon.",
+          "damage": 50
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Lightning",
+          "value": "×2"
+        }
+      ],
+      "retreat": 2,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.955Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83595,
+            "lowPrice": 34,
+            "midPrice": 43.09,
+            "highPrice": 499.38,
+            "marketPrice": 53.42,
+            "directLowPrice": null
+          }
+        }
+      }
+    },
+    "pl4-AR5": {
+      "category": "Pokemon",
+      "id": "pl4-AR5",
+      "illustrator": "Mitsuhiro Arita",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR5",
+      "localId": "AR5",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83596
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.958Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83596,
+                "lowPrice": 31,
+                "midPrice": 40,
+                "highPrice": 399.78,
+                "marketPrice": 53.14,
+                "directLowPrice": null
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 80,
+      "types": [
+        "Colorless"
+      ],
+      "description": "It is said to have emerged from an egg in a place where there was nothing, then shaped the world.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "name": "Ripple Swell",
+          "effect": "If you have 6 Arceus in play and each of them is a different type, search your deck for up to 6 basic Energy cards. Attach each of those Energy cards to a different Pokémon you have in play. Shuffle your deck afterward."
+        },
+        {
+          "cost": [
+            "Colorless",
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Sky Spear",
+          "effect": "Choose 1 of your opponent's Pokémon. This attack does 80 damage to that Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.) Remove all Energy cards attached to Arceus and put them in the Lost Zone."
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fighting",
+          "value": "×2"
+        }
+      ],
+      "retreat": 1,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.958Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83596,
+            "lowPrice": 31,
+            "midPrice": 40,
+            "highPrice": 399.78,
+            "marketPrice": 53.14,
+            "directLowPrice": null
+          }
+        }
+      }
+    },
+    "pl4-AR6": {
+      "category": "Pokemon",
+      "id": "pl4-AR6",
+      "illustrator": "Wataru Kawahara",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR6",
+      "localId": "AR6",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83597
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.958Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83597,
+                "lowPrice": 12,
+                "midPrice": 27.54,
+                "highPrice": 226,
+                "marketPrice": 33.61,
+                "directLowPrice": 225
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 70,
+      "types": [
+        "Lightning"
+      ],
+      "description": "It is described in mythology as the Pokémon that shaped the universe with its 1,000 arms.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Lightning",
+            "Colorless"
+          ],
+          "name": "Lightning Turn",
+          "effect": "Switch Arceus with 1 of your Benched Pokémon.",
+          "damage": 30
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fighting",
+          "value": "×2"
+        }
+      ],
+      "resistances": [
+        {
+          "type": "Metal",
+          "value": "-20"
+        }
+      ],
+      "retreat": 1,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.958Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83597,
+            "lowPrice": 12,
+            "midPrice": 27.54,
+            "highPrice": 226,
+            "marketPrice": 33.61,
+            "directLowPrice": 225
+          }
+        }
+      }
+    },
+    "pl4-AR7": {
+      "category": "Pokemon",
+      "id": "pl4-AR7",
+      "illustrator": "Kagemaru Himeno",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR7",
+      "localId": "AR7",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83598
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.958Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83598,
+                "lowPrice": 31.93,
+                "midPrice": 33.07,
+                "highPrice": 339.88,
+                "marketPrice": 47.43,
+                "directLowPrice": null
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 80,
+      "types": [
+        "Psychic"
+      ],
+      "description": "It is told in mythology that this Pokémon was born before the universe even existed.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Psychic",
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Mind Bend",
+          "effect": "The Defending Pokémon is now Confused.",
+          "damage": 40
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Psychic",
+          "value": "×2"
+        }
+      ],
+      "retreat": 1,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.958Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83598,
+            "lowPrice": 31.93,
+            "midPrice": 33.07,
+            "highPrice": 339.88,
+            "marketPrice": 47.43,
+            "directLowPrice": null
+          }
+        }
+      }
+    },
+    "pl4-AR8": {
+      "category": "Pokemon",
+      "id": "pl4-AR8",
+      "illustrator": "Hajime Kusajima",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR8",
+      "localId": "AR8",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83599
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.937Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83599,
+                "lowPrice": 27.99,
+                "midPrice": 37.16,
+                "highPrice": 887.14,
+                "marketPrice": 36.17,
+                "directLowPrice": null
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 80,
+      "types": [
+        "Fighting"
+      ],
+      "description": "It is said to have emerged from an egg in a place where there was nothing, then shaped the world.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Fighting",
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Break Ground",
+          "effect": "Does 10 damage to each of your Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)",
+          "damage": 60
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Water",
+          "value": "×2"
+        }
+      ],
+      "resistances": [
+        {
+          "type": "Lightning",
+          "value": "-20"
+        }
+      ],
+      "retreat": 2,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.937Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83599,
+            "lowPrice": 27.99,
+            "midPrice": 37.16,
+            "highPrice": 887.14,
+            "marketPrice": 36.17,
+            "directLowPrice": null
+          }
+        }
+      }
+    },
+    "pl4-AR9": {
+      "category": "Pokemon",
+      "id": "pl4-AR9",
+      "illustrator": "TOKIYA",
+      "image": "https://assets.tcgdex.net/en/pl/pl4/AR9",
+      "localId": "AR9",
+      "name": "Arceus",
+      "rarity": "Rare",
+      "set": {
+        "cardCount": {
+          "official": 99,
+          "total": 111
+        },
+        "id": "pl4",
+        "logo": "https://assets.tcgdex.net/en/pl/pl4/logo",
+        "name": "Arceus",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl4/symbol"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "thirdParty": {
+            "cardmarket": 278861,
+            "tcgplayer": 83600
+          },
+          "variantId": "jr7oetx1mqug9",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.937Z",
+              "unit": "EUR",
+              "idProduct": 278861,
+              "avg": 22.66,
+              "low": 1.99,
+              "trend": 12.06,
+              "avg1": 3,
+              "avg7": 13.85,
+              "avg30": 13.15,
+              "avg-holo": 6.5,
+              "low-holo": 3.9,
+              "trend-holo": 8.51,
+              "avg1-holo": 3.99,
+              "avg7-holo": 7.28,
+              "avg30-holo": 6
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-18T22:54:41.666Z",
+              "holofoil": {
+                "productId": 83600,
+                "lowPrice": 28.42,
+                "midPrice": 42.12,
+                "highPrice": 446.57,
+                "marketPrice": 44.8,
+                "directLowPrice": 57.97
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        493
+      ],
+      "hp": 90,
+      "types": [
+        "Metal"
+      ],
+      "description": "It is described in mythology as the Pokémon that shaped the universe with its 1,000 arms.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Metal",
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Metal Barrier",
+          "effect": "Prevent all effects of attacks, including damage, done to Arceus by Pokémon LV.X during your opponent's next turn.",
+          "damage": 40
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fire",
+          "value": "×2"
+        }
+      ],
+      "resistances": [
+        {
+          "type": "Psychic",
+          "value": "-20"
+        }
+      ],
+      "retreat": 2,
+      "legal": {
+        "standard": false,
+        "expanded": false
+      },
+      "updated": "2026-09-05T10:29:02+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.937Z",
+          "unit": "EUR",
+          "idProduct": 278861,
+          "avg": 22.66,
+          "low": 1.99,
+          "trend": 12.06,
+          "avg1": 3,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "avg-holo": 6.5,
+          "low-holo": 3.9,
+          "trend-holo": 8.51,
+          "avg1-holo": 3.99,
+          "avg7-holo": 7.28,
+          "avg30-holo": 6
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-18T22:54:41.666Z",
+          "holofoil": {
+            "productId": 83600,
+            "lowPrice": 28.42,
+            "midPrice": 42.12,
+            "highPrice": 446.57,
+            "marketPrice": 44.8,
+            "directLowPrice": 57.97
+          }
+        }
+      }
+    },
+    "mfb-33": {
+      "category": "Trainer",
+      "id": "mfb-33",
+      "illustrator": "Ayaka Yoshida",
+      "localId": "33",
+      "name": "Potion",
+      "rarity": "None",
+      "set": {
+        "cardCount": {
+          "official": 48,
+          "total": 48
+        },
+        "id": "mfb",
+        "name": "My First Battle"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": false,
+        "normal": true,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "pikachu"
+          ],
+          "thirdParty": {
+            "cardmarket": 742007,
+            "tcgplayer": 524028
+          },
+          "variantId": "4ffrmhcfi9nxk87y2jfj869",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.976Z",
+              "unit": "EUR",
+              "idProduct": 742007,
+              "avg": 0.08,
+              "low": 0.02,
+              "trend": 0.17,
+              "avg1": 0.3,
+              "avg7": 0.1,
+              "avg30": 0.11,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "squirtle"
+          ],
+          "thirdParty": {
+            "tcgplayer": 742019,
+            "cardmarket": 524029
+          },
+          "variantId": "3takscxpcqq42pzkuav61j2v",
+          "pricing": {
+            "cardmarket": null,
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "bulbasaur"
+          ],
+          "thirdParty": {
+            "cardmarket": 741983,
+            "tcgplayer": 524026
+          },
+          "variantId": "3a83wf50tx7zeu6ndbdxusvi7",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.976Z",
+              "unit": "EUR",
+              "idProduct": 741983,
+              "avg": 0.06,
+              "low": 0.02,
+              "trend": 0.22,
+              "avg1": 0.04,
+              "avg7": 0.14,
+              "avg30": 0.14,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "charmander"
+          ],
+          "thirdParty": {
+            "cardmarket": 741995,
+            "tcgplayer": 524027
+          },
+          "variantId": "2tszcx1bprnqze5gvzp7lp2zg7",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.976Z",
+              "unit": "EUR",
+              "idProduct": 741995,
+              "avg": 0.05,
+              "low": 0.02,
+              "trend": 0.17,
+              "avg1": 0.05,
+              "avg7": 0.12,
+              "avg30": 0.14,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        }
+      ],
+      "effect": "Heal 30 damage from 1 of your Pokémon.",
+      "trainerType": "Item",
+      "regulationMark": "None",
+      "legal": {
+        "standard": false,
+        "expanded": true
+      },
+      "updated": "2026-04-14T22:39:39+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.976Z",
+          "unit": "EUR",
+          "idProduct": 742007,
+          "avg": 0.08,
+          "low": 0.02,
+          "trend": 0.17,
+          "avg1": 0.3,
+          "avg7": 0.1,
+          "avg30": 0.11,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "tcgplayer": null
+      }
+    },
+    "mfb-34": {
+      "category": "Trainer",
+      "id": "mfb-34",
+      "illustrator": "Studio Bora Inc.",
+      "localId": "34",
+      "name": "Switch",
+      "rarity": "None",
+      "set": {
+        "cardCount": {
+          "official": 48,
+          "total": 48
+        },
+        "id": "mfb",
+        "name": "My First Battle"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": false,
+        "normal": true,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "pikachu"
+          ],
+          "thirdParty": {
+            "cardmarket": 742008,
+            "tcgplayer": 524028
+          },
+          "variantId": "4ffrmhcfi9nxk87y2jfj869",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 742008,
+              "avg": 0.07,
+              "low": 0.02,
+              "trend": 0.13,
+              "avg1": 0.02,
+              "avg7": 0.07,
+              "avg30": 0.1,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "squirtle"
+          ],
+          "thirdParty": {
+            "cardmarket": 742020,
+            "tcgplayer": 524034
+          },
+          "variantId": "3takscxpcqq42pzkuav61j2v",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 742020,
+              "avg": 0.07,
+              "low": 0.02,
+              "trend": 0.09,
+              "avg1": 0.05,
+              "avg7": 0.07,
+              "avg30": 0.15,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "bulbasaur"
+          ],
+          "thirdParty": {
+            "cardmarket": 741984,
+            "tcgplayer": 524026
+          },
+          "variantId": "3a83wf50tx7zeu6ndbdxusvi7",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 741984,
+              "avg": 0.05,
+              "low": 0.02,
+              "trend": 0.18,
+              "avg1": 0.04,
+              "avg7": 0.05,
+              "avg30": 0.08,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "charmander"
+          ],
+          "thirdParty": {
+            "cardmarket": 741996,
+            "tcgplayer": 524036
+          },
+          "variantId": "2tszcx1bprnqze5gvzp7lp2zg7",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 741996,
+              "avg": 0.06,
+              "low": 0.03,
+              "trend": 0.09,
+              "avg1": 0.05,
+              "avg7": 0.09,
+              "avg30": 0.08,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        }
+      ],
+      "effect": "Switch your Active Pokémon with 1 of your Benched Pokémon.",
+      "trainerType": "Item",
+      "regulationMark": "None",
+      "legal": {
+        "standard": false,
+        "expanded": true
+      },
+      "updated": "2026-04-14T22:39:39+01:00",
+      "thirdParty": {
+        "cardmarket": 741984,
+        "tcgplayer": 524026
+      },
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.955Z",
+          "unit": "EUR",
+          "idProduct": 741984,
+          "avg": 0.05,
+          "low": 0.02,
+          "trend": 0.18,
+          "avg1": 0.04,
+          "avg7": 0.05,
+          "avg30": 0.08,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "tcgplayer": null
+      }
+    },
+    "svp-101": {
+      "category": "Pokemon",
+      "id": "svp-101",
+      "illustrator": "Jiro Sasumo",
+      "image": "https://assets.tcgdex.net/en/sv/svp/101",
+      "localId": "101",
+      "name": "Pikachu",
+      "rarity": "Promo",
+      "set": {
+        "cardCount": {
+          "official": 225,
+          "total": 226
+        },
+        "id": "svp",
+        "name": "SVP Black Star Promos"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": false,
+        "normal": true,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "player-rewards-program"
+          ],
+          "thirdParty": {
+            "cardmarket": 740411,
+            "tcgplayer": 528365
+          },
+          "variantId": "gx8bq2hegum3q6irsxlvqxm955ikw9gd1h311",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 740411,
+              "avg": 31.49,
+              "low": 15,
+              "trend": 32.31,
+              "avg1": 39.99,
+              "avg7": 34.36,
+              "avg30": 33.49,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        },
+        {
+          "type": "normal",
+          "size": "standard",
+          "stamp": [
+            "asia-2023-24"
+          ],
+          "thirdParty": {
+            "cardmarket": 726923,
+            "tcgplayer": 681225
+          },
+          "variantId": "23hmnvtwdqrd5globizi5o9apws7",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-18T22:54:32.955Z",
+              "unit": "EUR",
+              "idProduct": 726923,
+              "avg": 299.95,
+              "low": null,
+              "trend": 295.69,
+              "avg1": 299.95,
+              "avg7": 150.95,
+              "avg30": 48.02,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": null
+          }
+        }
+      ],
+      "dexId": [
+        25
+      ],
+      "cameoDexIds": [
+        6
+      ],
+      "hp": 70,
+      "types": [
+        "Lightning"
+      ],
+      "description": "When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Lightning",
+            "Lightning",
+            "Colorless"
+          ],
+          "name": "Scrappy Spark",
+          "effect": "Flip a coin until you get tails. This attack does 30 more damage for each heads.",
+          "damage": "30+"
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fighting",
+          "value": "×2"
+        }
+      ],
+      "retreat": 1,
+      "regulationMark": "G",
+      "legal": {
+        "standard": false,
+        "expanded": true
+      },
+      "updated": "2026-09-06T11:00:03+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-18T22:54:32.955Z",
+          "unit": "EUR",
+          "idProduct": 740411,
+          "avg": 31.49,
+          "low": 15,
+          "trend": 32.31,
+          "avg1": 39.99,
+          "avg7": 34.36,
+          "avg30": 33.49,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "tcgplayer": null
+      }
+    }
+  }
+}
