@@ -1,0 +1,5 @@
+PASS
+verifiedPairs=25
+distinctProductIds=50
+liveRows=50
+sourceUsablePriceRows=50
