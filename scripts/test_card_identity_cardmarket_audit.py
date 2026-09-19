@@ -42,6 +42,7 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv08-050": {"base": 794316, "alternate": 794947, "stamp": "horizons", "cardmarketCode": "SSP050"},
     "sv08-161": {"base": 794534, "alternate": 794948, "stamp": "horizons", "cardmarketCode": "SSP161"},
     "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
+    "2018sm-fr-38": {"base": 362809, "alternate": 362810, "stamp": "wrong-shared-product", "cardmarketCode": "MCD18F38"},
     "cel25cc-CC020": {"base": 576790, "alternate": 576747, "stamp": "wrong-main-set-product", "cardmarketCode": "CEL-BLW113"},
     "cel25cc-CC021": {"base": 576791, "alternate": 576755, "stamp": "wrong-main-set-product", "cardmarketCode": "CEL-BLW114"},
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
@@ -273,6 +274,7 @@ EXPECTED_BASE_OVERRIDES = {
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
     "cel25cc-cc020": {"setId": "cel25cc", "localId": "CC020", "conflictingProduct": 576747, "baseProduct": 576790},
     "cel25cc-cc021": {"setId": "cel25cc", "localId": "CC021", "conflictingProduct": 576755, "baseProduct": 576791},
+    "2018sm-fr-38": {"setId": "2018sm-fr", "localId": "38", "conflictingProduct": 362810, "baseProduct": 362809},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
     "pl3-70": {"setId": "pl3", "localId": "070", "conflictingProduct": 882910, "baseProduct": 278761},
@@ -2384,6 +2386,29 @@ def main():
         elif card_id == "sm12-29" and current_pid == 398524:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "TCGdex assegna il prodotto 398524 a un'altra identità fisica; Cardoryx lo blocca già con guardia esatta.", "Mantenere il fail-closed esistente."
+        elif card_id == "2018sm-fr-39":
+            catalogue = products.get(362810) or {}
+            guide = prices.get(362810) or {}
+            exact_owner = bool(
+                (card.get("set") or {}).get("id") == "2018sm-fr" and
+                norm_local(card.get("localId")) == "39" and
+                current_pid == 362810 and
+                catalogue.get("idExpansion") == 2361 and
+                catalogue.get("name") == "Fletchling [Growl | Flap]" and
+                isinstance(guide.get("trend"), (int, float)) and guide.get("trend") > 0
+            )
+            if exact_owner:
+                classification, priority, confidence = "SAFE", None, "HIGH"
+                resolved_pid, resolved_value = 362810, guide.get("trend")
+                reason = (
+                    "Cardmarket identifica il prodotto condiviso 362810 come Fletchling 39/40; "
+                    "la distinta identità 38/40 Lillipup viene corretta separatamente a 362809."
+                )
+                action = "Mantenere 362810 su Fletchling 39/40; nessun riuso su Lillipup 38/40."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La proprietà esatta di 362810 per Fletchling 39/40 non supera più i gate Cardmarket."
+                action = "Fail-closed e nuova verifica delle fonti ufficiali."
         elif card_id in BASE1_VERIFIED_SHADOWLESS_PRODUCTS:
             expected_local, expected_name, base_pid, shadowless_pid = BASE1_VERIFIED_SHADOWLESS_PRODUCTS[card_id]
             base_product = products.get(base_pid) or {}
