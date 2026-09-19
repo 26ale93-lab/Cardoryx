@@ -4,20 +4,35 @@ on:
   push:
     branches:
       - fix/price-refresh-null-deltas-20260919
+    paths:
+      - index.html
+      - scripts/test_price_refresh_changes.py
+      - .github/workflows/temp-price-refresh-null-regression.yml
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   price-refresh-null-regression:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Git diff check
         run: git diff --check origin/main...HEAD
       - name: Price refresh change regression
         run: python3 scripts/test_price_refresh_changes.py
+      - name: Record successful push validation
+        if: github.event_name == 'push'
+        run: |
+          printf 'PASS\ncommit=%s\n' "$GITHUB_SHA" > temp_price_refresh_validation.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_price_refresh_validation.txt
+          git commit -m "TEMP record price refresh validation"
+          git push
