@@ -77,6 +77,108 @@ jobs:
           },ensure_ascii=False))
           PY
 
+      - name: Build ambiguous source evidence
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json
+          from collections import Counter, defaultdict
+          from pathlib import Path
+
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards, errors, sha = mod.load_official_database(Path("../tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+          summary=json.loads(Path("temp_variant_finish_refresh_summary.json").read_text())
+          ambiguous=[x for x in summary.get("issuesByPriority",[]) if x.get("classification")=="AMBIGUA"]
+
+          rows=[]
+          for issue in ambiguous:
+              cid=issue["tcgdexId"]
+              card=by_id.get(cid) or {}
+              variants=card.get("variants") or {}
+              detailed=card.get("variants_detailed") or []
+              pids=sorted({
+                  int(((r.get("thirdParty") or {}).get("cardmarket")))
+                  for r in detailed
+                  if str(((r.get("thirdParty") or {}).get("cardmarket") or "")).isdigit()
+              })
+              coarse_true=sorted(k for k,v in variants.items() if v is True)
+              detailed_types=Counter(str(r.get("type") or "") for r in detailed)
+              stamps=Counter(
+                  str(s)
+                  for r in detailed
+                  for s in ((r.get("stamp") or []) if isinstance(r.get("stamp"),list) else ([r.get("stamp")] if r.get("stamp") else []))
+              )
+              foils=Counter(str(r.get("foil") or "") for r in detailed if r.get("foil"))
+              rows.append({
+                  "tcgdexId":cid,
+                  "name":issue.get("name"),
+                  "set":issue.get("set"),
+                  "setId":(card.get("set") or {}).get("id"),
+                  "localId":issue.get("localId"),
+                  "rarity":card.get("rarity"),
+                  "category":card.get("category"),
+                  "coarseVariants":variants,
+                  "coarseTrue":coarse_true,
+                  "detailedCount":len(detailed),
+                  "detailedTypes":dict(detailed_types),
+                  "cardmarketProductIds":pids,
+                  "stamps":dict(stamps),
+                  "foils":dict(foils),
+                  "reason":issue.get("reason"),
+              })
+
+          def sig(x):
+              if x["detailedCount"]:
+                  return "HAS_DETAILED"
+              if len(x["coarseTrue"])==1:
+                  return "ONE_COARSE_TRUE"
+              if len(x["coarseTrue"])>1:
+                  return "MULTI_COARSE_TRUE"
+              return "NO_FINISH_METADATA"
+
+          signature=Counter(sig(x) for x in rows)
+          set_counts=Counter(x["set"] for x in rows)
+          set_signature=defaultdict(Counter)
+          for x in rows:
+              set_signature[x["set"]][sig(x)]+=1
+
+          # Candidate groups worth external evidence audit first:
+          # complete sets/families with no detailed rows but uniform source structure.
+          family=[]
+          for set_name,count in set_counts.most_common():
+              family.append({
+                  "set":set_name,
+                  "count":count,
+                  "signatures":dict(set_signature[set_name]),
+                  "coarsePatterns":dict(Counter(tuple(x["coarseTrue"]) for x in rows if x["set"]==set_name)),
+              })
+
+          out={
+              "tcgdexDatabaseSha":sha,
+              "ambiguousCount":len(rows),
+              "signatureCounts":dict(signature),
+              "families":family,
+              "rows":rows,
+          }
+          Path("temp_variant_finish_ambiguous_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              "ambiguousCount":len(rows),
+              "signatureCounts":dict(signature),
+              "topFamilies":family[:25],
+          },ensure_ascii=False))
+          PY
+
+      - name: Record ambiguous evidence
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_variant_finish_ambiguous_evidence.json
+          git commit -m "TEMP record ambiguous finish evidence"
+          git push
+
       - name: Record successful summary
         if: github.event_name == 'push'
         run: |
