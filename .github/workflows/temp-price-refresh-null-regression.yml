@@ -1,0 +1,20 @@
+name: TEMP Price Refresh Null Regression
+
+on:
+  push:
+    branches:
+      - fix/price-refresh-null-deltas-20260919
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  price-refresh-null-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Git diff check
+        run: git diff --check HEAD^ HEAD
+      - name: Price refresh change regression
+        run: python3 scripts/test_price_refresh_changes.py
