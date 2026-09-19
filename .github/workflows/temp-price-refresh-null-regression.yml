@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/price-refresh-null-deltas-20260919
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -15,6 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Git diff check
-        run: git diff --check HEAD^ HEAD
+        run: git diff --check origin/main...HEAD
       - name: Price refresh change regression
         run: python3 scripts/test_price_refresh_changes.py
