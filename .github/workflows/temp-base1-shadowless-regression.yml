@@ -43,14 +43,14 @@ jobs:
           r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
           totals=r["classificationTotals"]
           assert totals["P0_WRONG_PRODUCT"] == 0, totals
-          assert totals["P1_AMBIGUOUS_PRODUCT"] == 18, totals
+          assert totals["P1_AMBIGUOUS_PRODUCT"] == 16, totals
           assert totals["SAFE"] == 1921, totals
-          assert totals["EXACT_ALTERNATE_PRODUCT"] == 258, totals
+          assert totals["EXACT_ALTERNATE_PRODUCT"] == 260, totals
           base=[x for x in r["caseIndex"] if x["tcgdexId"].startswith("base1-")]
           exact=[x for x in base if x["classification"]=="EXACT_ALTERNATE_PRODUCT"]
           remain=[x["tcgdexId"] for x in base if x["classification"]=="P1_AMBIGUOUS_PRODUCT"]
-          assert len(exact) == 96, len(exact)
-          assert len(remain) == 2, remain
+          assert len(exact) == 98, len(exact)
+          assert len(remain) == 0, remain
           print(json.dumps({"classificationTotals":totals,"base1ExactAlternate":len(exact),"base1RemainingP1":remain}))
           PY
       - name: Record successful validation
