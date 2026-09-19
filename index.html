@@ -404,7 +404,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
   <header class="top"><div class="brand-lockup"><img class="brand-logo" src="cardoryx-logo.png" alt="Cardoryx"><div class="brand-copy"><h1>Cardoryx</h1><p>SCAN · COLLECT · BUILD · VALUE</p></div></div><img class="brand-dragon" src="cardoryx-dragon.png" alt="Drago Cardoryx" aria-hidden="true"></header>
 
   <section id="homeView"><div class="home-dashboard">
-<div class="home-value-card"><div class="home-value-label">VALORE COLLEZIONE · CARDMARKET</div><div id="homeCollectionValue" class="home-value-number">€ 0,00</div><div id="homeCollectionValueMeta" class="home-value-meta">Valore indicativo Cardmarket</div><div class="home-value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">Aggiorna valori</button><button class="btn alt" type="button" onclick="showView('catalog')">Vedi carte</button></div></div>
+<div class="home-value-card"><div class="home-value-label">VALORE COLLEZIONE · CARDMARKET</div><div id="homeCollectionValue" class="home-value-number">€ 0,00</div><div id="homeCollectionValueMeta" class="home-value-meta">Valore indicativo Cardmarket</div><div class="home-value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">Aggiorna valori</button><button id="homePriceChangesBtn" class="btn alt" type="button" onclick="showPriceChangesFromHome()">📈 Variazioni prezzo</button></div></div>
 <div class="home-stat-grid"><div class="home-stat"><strong id="homeTotalCards">0</strong><span>🃏 CARTE</span></div><div class="home-stat"><strong id="homeTotalSets">0</strong><span>📚 SET</span></div><div class="home-stat"><strong id="homeHoloCards">0</strong><span>✨ HOLO/REV.</span></div><div class="home-stat"><strong id="homeProtectedCards">0</strong><span>🔒 PROTETTE</span></div></div>
 <div class="home-actions"><button class="btn home-primary" onclick="showView('scan')"><svg class="icon"><use href="#cx-scan"></use></svg>Scansiona carta</button><button class="btn alt" onclick="showView('catalog')"><svg class="icon"><use href="#cx-cards"></use></svg>Catalogo</button><button class="btn alt" onclick="showView('decks')"><svg class="icon"><use href="#cx-deck"></use></svg>Mazzi</button></div>
 <div class="home-highlights"><div class="home-highlight-panel home-most-panel"><div class="home-section-title"><div class="section-title">Carta più preziosa</div><span class="small">Cardmarket</span></div><div id="homeMostValuable" class="home-rich-card"></div></div><div class="home-highlight-panel"><div class="home-section-title"><div class="section-title">Ultime aggiunte</div><span class="small">Ultime 10</span></div><div id="homeRecentCards" class="home-recent"></div></div></div>
@@ -9428,7 +9428,10 @@ function renderPriceChanges(){
   const report=lastPriceRefreshReport,meta=document.getElementById('priceChangesMeta'),
     summary=document.getElementById('priceChangesSummary'),list=document.getElementById('priceChangesList'),
     btn=document.getElementById('priceChangesBtn');
-  if(btn)btn.textContent=report?`📈 Variazioni (${report.changes.length})`:'📈 Variazioni prezzo';
+  const homeBtn=document.getElementById('homePriceChangesBtn');
+  const label=report?`📈 Variazioni (${report.changes.length})`:'📈 Variazioni prezzo';
+  if(btn)btn.textContent=label;
+  if(homeBtn)homeBtn.textContent=label;
   if(!meta||!summary||!list)return;
   if(!report){
     meta.textContent='Aggiorna i valori per confrontare i prezzi Cardmarket.';
@@ -9467,6 +9470,10 @@ function showPriceChanges(){
   const panel=document.getElementById('priceChangesPanel');if(!panel)return;
   renderPriceChanges();panel.classList.remove('hidden');
   setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),20);
+}
+function showPriceChangesFromHome(){
+  showView('stats');
+  showPriceChanges();
 }
 function hidePriceChanges(){document.getElementById('priceChangesPanel')?.classList.add('hidden')}
 async function refreshAllPrices(){
