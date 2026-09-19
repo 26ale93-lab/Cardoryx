@@ -5,9 +5,6 @@ on:
     branches:
       - feature/price-refresh-changes-20260919
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,18 +12,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Apply deterministic patch
-        run: python scripts/temp_patch_price_changes.py
       - name: Diff check
-        run: git diff --check
-      - name: Commit generated index
-        run: |
-          if git diff --quiet -- index.html; then
-            echo "No changes"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Add price change report after Cardmarket refresh"
-          git push
+        run: git diff --check origin/main...HEAD
+      - name: Price refresh changes regression
+        run: python scripts/test_price_refresh_changes.py
