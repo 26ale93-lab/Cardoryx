@@ -678,6 +678,7 @@ def run_mcdonalds_2021_25th_runtime(source, family, registry):
         "verifiedMcdonalds2021AnniversaryFinishes",
         "verifiedMcdonalds2021CardmarketVariant",
         "tcgdexExactMcdonalds2021AnniversaryPrice",
+        "is30thCelebrationSet", "isMee30CelebrationEnergy", "migrateFinishStamp",
     )
     functions = "\n".join(extract_js_function(source, name) for name in names)
     fixtures = []
@@ -718,8 +719,12 @@ for(const card of cards){
   if(tcgdexExactMcdonalds2021AnniversaryPrice(card,'Holo','30° Anniversario')!==null)fail('wrong stamp leaked '+card.id);
   const wrong={...card,set:{id:'wrong-set'}};
   if(tcgdexMcdonalds2021AnniversaryRows(wrong)!==null)fail('wrong set leaked '+card.id);
+  for(const finish of ['Normal','Holo']){
+    const migrated=migrateFinishStamp({...card,variant:finish,stamp:'None'});
+    if(migrated.stamp!=='25° Anniversario'||migrated.variant!==finish)fail('migration changed finish '+card.id+' '+finish);
+  }
 }
-process.stdout.write(JSON.stringify({testedCards:cards.length,testedPrices:prices,wrongSetRejected:true,wrongStampRejected:true,reverseRejected:true,priceParity:true}));
+process.stdout.write(JSON.stringify({testedCards:cards.length,testedPrices:prices,wrongSetRejected:true,wrongStampRejected:true,reverseRejected:true,priceParity:true,migrationPreservesFinish:true}));
 '''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
     )
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
