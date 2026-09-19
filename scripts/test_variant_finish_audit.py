@@ -375,8 +375,19 @@ def run_ditto_production_runtime(source):
         "cardmarketValueForCardVariant",
     )
     functions = "\n".join(extract_js_function(source, name) for name in names)
-    if source.count('<option value="Ditto Peelable">Ditto rimovibile</option>') != 2:
-        raise AssertionError("Ditto must be present exactly in Confirm and Edit variant selectors")
+    ditto_option = '<option value="Ditto Peelable">Ditto rimovibile</option>'
+    for selector_id in ("variant", "editVariant"):
+        match = re.search(
+            rf'<select\\s+id="{re.escape(selector_id)}"[^>]*>(.*?)</select>',
+            source,
+            flags=re.S,
+        )
+        if not match:
+            raise AssertionError(f"Missing {selector_id} finish selector")
+        if match.group(1).count(ditto_option) != 1:
+            raise AssertionError(
+                f"Ditto must be present exactly once in {selector_id} finish selector"
+            )
     fixture = {
         "variants_detailed": [
             {"type": "Normale", "thirdParty": {"cardmarket": 665657}},
