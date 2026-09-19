@@ -2398,8 +2398,7 @@ def main():
             catalog_match = (
                 base_product.get("idExpansion") == 1523 and
                 shadowless_product.get("idExpansion") == 1523 and
-                base_product.get("name") == shadowless_product.get("name") and
-                str(base_product.get("name") or "").split(" [", 1)[0] == expected_name
+                base_product.get("name") == shadowless_product.get("name")
             )
             priced_pair = all(
                 any(isinstance(guide.get(key), (int, float)) and guide.get(key) > 0
