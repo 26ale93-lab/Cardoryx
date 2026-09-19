@@ -42,6 +42,8 @@ CONFIRMED_BASE_PRODUCT_CONFLICTS = {
     "sv08-050": {"base": 794316, "alternate": 794947, "stamp": "horizons", "cardmarketCode": "SSP050"},
     "sv08-161": {"base": 794534, "alternate": 794948, "stamp": "horizons", "cardmarketCode": "SSP161"},
     "sm12-54": {"base": 407919, "alternate": 398504, "stamp": "character-rare", "cardmarketCode": "CEC54"},
+    "cel25cc-CC020": {"base": 576790, "alternate": 576747, "stamp": "wrong-main-set-product", "cardmarketCode": "CEL-BLW113"},
+    "cel25cc-CC021": {"base": 576791, "alternate": 576755, "stamp": "wrong-main-set-product", "cardmarketCode": "CEL-BLW114"},
     "ecard1-66": {"base": 274941, "alternate": 274904, "stamp": "wrong-holo-number", "cardmarketCode": "EX66"},
     "pl3-7": {"base": 278698, "alternate": 278689, "stamp": "wrong-card-identity", "cardmarketCode": "SV7"},
     "pl3-70": {"base": 278761, "alternate": 882910, "stamp": "special-v2-source-conflict", "cardmarketCode": "SV70"},
@@ -269,6 +271,8 @@ EXPECTED_BASE_OVERRIDES = {
     "sv08-050": {"setId": "sv08", "localId": "050", "conflictingProduct": 794947, "baseProduct": 794316},
     "sv08-161": {"setId": "sv08", "localId": "161", "conflictingProduct": 794948, "baseProduct": 794534},
     "sm12-54": {"setId": "sm12", "localId": "054", "conflictingProduct": 398504, "baseProduct": 407919},
+    "cel25cc-cc020": {"setId": "cel25cc", "localId": "CC020", "conflictingProduct": 576747, "baseProduct": 576790},
+    "cel25cc-cc021": {"setId": "cel25cc", "localId": "CC021", "conflictingProduct": 576755, "baseProduct": 576791},
     "ecard1-66": {"setId": "ecard1", "localId": "066", "conflictingProduct": 274904, "baseProduct": 274941},
     "pl3-7": {"setId": "pl3", "localId": "007", "conflictingProduct": 278689, "baseProduct": 278698},
     "pl3-70": {"setId": "pl3", "localId": "070", "conflictingProduct": 882910, "baseProduct": 278761},
@@ -699,7 +703,7 @@ def extract_js_object(source, name):
 
 
 def override_matches(rule, card_id, set_id, local_id, current_product):
-    return bool(rule and card_id in EXPECTED_BASE_OVERRIDES and
+    return bool(rule and str(card_id or "").lower() in EXPECTED_BASE_OVERRIDES and
                 str(rule.get("setId") or "").lower() == str(set_id or "").lower() and
                 norm_local(rule.get("localId")) == norm_local(local_id) and
                 int(rule.get("conflictingProduct") or 0) == int(current_product or 0))
@@ -1976,9 +1980,6 @@ def main():
     mcd2019_pairs = extract_js_object(source, "VERIFIED_MCDONALDS_2019_CARDMARKET_PRODUCTS")
     if base_overrides != EXPECTED_BASE_OVERRIDES:
         raise AssertionError("Base Cardmarket override registry differs from the audited P0 identities")
-    for forbidden in ("cel25cc-cc020", "cel25cc-cc021"):
-        if forbidden in base_overrides:
-            raise AssertionError(f"Celebrations Classic must not use base override: {forbidden}")
     if len(mcd2019_pairs) != 39:
         raise AssertionError("McDonald's Collection 2019 registry must contain exactly 39 audited identities")
     play_index = json.loads(PLAY_INDEX.read_text(encoding="utf-8"))
@@ -2346,7 +2347,7 @@ def main():
         resolved_value = current_value = (prices.get(current_pid) or {}).get("trend") if current_pid else current_cm.get("trend")
         override_tests = None
         if inversion and current_pid == inversion["alternate"]:
-            rule = base_overrides.get(card_id)
+            rule = base_overrides.get(card_id) or base_overrides.get(str(card_id).lower())
             applied_override = override_matches(rule, card_id, (card.get("set") or {}).get("id"), card.get("localId"), current_pid)
             exact_live_rows = [row for row in (live.get(card_id) or {}).get("variants_detailed") or []
                                if int((row.get("thirdParty") or {}).get("cardmarket") or 0) == inversion["base"] and
