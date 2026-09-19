@@ -1,3 +1,0 @@
-PASS
-verifiedIdentities=24
-uniqueProductIds=24
