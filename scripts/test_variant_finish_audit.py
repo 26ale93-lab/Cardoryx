@@ -674,6 +674,7 @@ def run_mcdonalds_2021_25th_runtime(source, family, registry):
     names = (
         "normText", "canonicalStamp", "canonicalVariant",
         "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "canonicalPrintedLocalId", "printedLocalIdParts",
         "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
         "isVerifiedMcdonalds2021AnniversarySet",
         "tcgdexMcdonalds2021AnniversaryRows",
