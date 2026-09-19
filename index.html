@@ -557,6 +557,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="None">Nessuno</option>
           <option value="Play! Pokémon">Play! Pokémon</option>
           <option value="Pokémon Day">Pokémon Day</option>
+          <option value="25° Anniversario">25° Anniversario</option>
           <option value="30° Anniversario">30° Anniversario</option>
           <option value="Worlds 2022">Worlds 2022</option>
           <option value="Worlds 2023">Worlds 2023</option>
@@ -629,6 +630,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="None">Nessuno</option>
           <option value="Play! Pokémon">Play! Pokémon</option>
           <option value="Pokémon Day">Pokémon Day</option>
+          <option value="25° Anniversario">25° Anniversario</option>
           <option value="30° Anniversario">30° Anniversario</option>
           <option value="Worlds 2022">Worlds 2022</option>
           <option value="Worlds 2023">Worlds 2023</option>
@@ -854,7 +856,8 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
               <option value="None">Nessuno</option>
               <option value="Play! Pokémon">Play! Pokémon</option>
               <option value="Pokémon Day">Pokémon Day</option>
-              <option value="30° Anniversario">30° Anniversario</option>
+              <option value="25° Anniversario">25° Anniversario</option>
+          <option value="30° Anniversario">30° Anniversario</option>
           <option value="Worlds 2022">Worlds 2022</option>
           <option value="Worlds 2023">Worlds 2023</option>
           <option value="Worlds 2024">Worlds 2024</option>
@@ -3951,6 +3954,7 @@ function canonicalStamp(v){
   if(!n||n==='none'||n==='nessuno')return 'None';
   if(n.includes('play')||n.includes('player reward')||n.includes('prize pack'))return 'Play! Pokémon';
   if(n.includes('pokemon day'))return 'Pokémon Day';
+  if(n.includes('25anniversario')||n.includes('25thcelebration')||n.includes('25celebration'))return '25° Anniversario';
   if(n.includes('30 anniversario')||n.includes('30th celebration')||n.includes('30 celebration'))return '30° Anniversario';
   if(n.includes('worlds2022'))return 'Worlds 2022';
   if(n.includes('worlds2023'))return 'Worlds 2023';
@@ -3990,6 +3994,7 @@ function stampEvidenceFromTCGdex(card,stamp){
   const tokens={
     'Play! Pokémon':['playerrewards','playpokemon','prizepack','league'],
     'Pokémon Day':['pokemonday'],
+    '25° Anniversario':['25thcelebration','25anniversario','25thanniversary'],
     '30° Anniversario':['30thcelebration','30anniversario','30thanniversary'],
     'Worlds 2022':['worlds2022'],
     'Worlds 2023':['worlds2023'],
@@ -4031,6 +4036,29 @@ function tcgdexExactMcdonaldsStampRow(card){
 function verifiedMcdonaldsStampFinishes(card,stamp){
   if(canonicalStamp(stamp)!=="McDonald's")return [];
   return tcgdexExactMcdonaldsStampRow(card)?['Holo']:[];
+}
+
+function isVerifiedMcdonalds2021AnniversarySet(card){
+  return cardSetId(card)==='2021swsh';
+}
+function tcgdexMcdonalds2021AnniversaryRows(card){
+  if(!isVerifiedMcdonalds2021AnniversarySet(card))return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    const type=canonicalFinishTypeLabel(row?.type);
+    return stamps.length===1 && stamps[0]==='25thcelebration' &&
+      (type==='normal'||type==='holo') &&
+      !canonicalFinishFoilLabel(row?.foil) &&
+      String(row?.size||'standard').trim().toLowerCase()==='standard';
+  });
+  if(rows.length!==2)return null;
+  const normal=rows.filter(row=>canonicalFinishTypeLabel(row?.type)==='normal');
+  const holo=rows.filter(row=>canonicalFinishTypeLabel(row?.type)==='holo');
+  return normal.length===1&&holo.length===1?{normal:normal[0],holo:holo[0]}:null;
+}
+function verifiedMcdonalds2021AnniversaryFinishes(card,stamp){
+  if(canonicalStamp(stamp)!=='25° Anniversario')return [];
+  return tcgdexMcdonalds2021AnniversaryRows(card)?['Normal','Holo']:[];
 }
 
 const VERIFIED_MFB_POKEBALL_ROWS={
@@ -4136,6 +4164,7 @@ function stampExistsForCard(card,stamp){
   }
   if(st==='MFB Poké Ball')return !!tcgdexExactMfbPokeballRow(card);
   if(st==="McDonald's")return !!tcgdexExactMcdonaldsStampRow(card);
+  if(st==='25° Anniversario')return !!tcgdexMcdonalds2021AnniversaryRows(card);
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
 }
@@ -4150,6 +4179,11 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
   }
   if(is30thCelebrationSet(card)||isMee30CelebrationEnergy(card)){
     sel.value='30° Anniversario';
+    const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
+    if(ps)ps.value='';
+  }
+  if(tcgdexMcdonalds2021AnniversaryRows(card)){
+    sel.value='25° Anniversario';
     const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
     if(ps)ps.value='';
   }
@@ -4188,6 +4222,11 @@ function migrateFinishStamp(c){
   if(is30thCelebrationSet(c)){
     c.stamp='30° Anniversario';
     c.variant='Holo';
+    return c;
+  }
+  if(isVerifiedMcdonalds2021AnniversarySet(c)){
+    c.stamp='25° Anniversario';
+    c.variant=canonicalVariant(c.variant||'Normal');
     return c;
   }
   const old=String(c.variant||'');
@@ -4824,6 +4863,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   // inherit any finish from the unstamped/base printing.
   for(const finish of verifiedSpecialStampFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMcdonaldsStampFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedMcdonalds2021AnniversaryFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
@@ -5588,6 +5628,23 @@ function tcgdexExactMcdonaldsStampedPrice(card,variant,stamp){
     verified:String(cm?.updated||'')};
 }
 
+function tcgdexExactMcdonalds2021AnniversaryPrice(card,variant,stamp){
+  if(!isVerifiedMcdonalds2021AnniversarySet(card) ||
+     canonicalStamp(stamp)!=='25° Anniversario')return null;
+  const target=canonicalVariant(variant||'Normal');
+  if(target!=='Normal'&&target!=='Holo')return null;
+  const physical=tcgdexMcdonalds2021AnniversaryRows(card);
+  if(!physical || !physical[target==='Normal'?'normal':'holo'])return null;
+  const exact=verifiedMcdonalds2021CardmarketVariant(card,target);
+  if(!exact?.handled || !exact?.matched || !exact?.pricing)return null;
+  const productId=Number(exact.productId||exact.pricing?.idProduct||0);
+  if(!(productId>0) || Number(exact.pricing?.idProduct||0)!==productId)return null;
+  const hasRealPrice=['trend','avg7','avg30','avg','low'].some(k=>Number(exact.pricing?.[k]||0)>0);
+  if(!hasRealPrice)return null;
+  return {...exact.pricing,idProduct:productId,
+    source:`Cardmarket · McDonald's Collection 2021 · 25° Anniversario · ${target} · prodotto esatto ${productId}`};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
@@ -5603,6 +5660,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(tcgdexExact)return tcgdexExact;
   const mcdExact=tcgdexExactMcdonaldsStampedPrice(card,variant,stamp);
   if(mcdExact)return mcdExact;
+  const mcd2021Exact=tcgdexExactMcdonalds2021AnniversaryPrice(card,variant,stamp);
+  if(mcd2021Exact)return mcd2021Exact;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
