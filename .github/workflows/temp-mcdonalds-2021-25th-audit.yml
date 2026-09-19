@@ -1,0 +1,201 @@
+name: TEMP McDonalds 2021 25th Audit
+
+on:
+  push:
+    branches:
+      - audit/mcdonalds-2021-25th-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Audit all 50 physical identities
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, re, subprocess
+          from pathlib import Path
+
+          root=Path(".")
+          index=(root/"index.html").read_text()
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards,errors,sha=mod.load_official_database(Path("../tcgdex-cards-database"))
+          family=sorted(
+              [c for c in cards if ((c.get("set") or {}).get("id")=="2021swsh")],
+              key=lambda c:int(str(c.get("localId") or "0"))
+          )
+          assert len(family)==25, len(family)
+
+          # Evaluate the exact production registry from the current index.html.
+          marker="const VERIFIED_MCDONALDS_2021_CARDMARKET_PRODUCTS="
+          at=index.find(marker)
+          assert at>=0
+          start=index.find("{",at+len(marker))
+          depth=0; quote=None; esc=False; end=None
+          i=start
+          while i<len(index):
+              ch=index[i]
+              if quote:
+                  if esc: esc=False
+                  elif ch=="\\": esc=True
+                  elif ch==quote: quote=None
+              else:
+                  if ch in "'\"": quote=ch
+                  elif ch=="{": depth+=1
+                  elif ch=="}":
+                      depth-=1
+                      if depth==0:
+                          end=i+1
+                          break
+              i+=1
+          assert end
+          literal=index[start:end]
+          node="const v=("+literal+");process.stdout.write(JSON.stringify(v));"
+          registry=json.loads(subprocess.check_output(["node","-e",node],text=True))
+          assert len(registry)==25, len(registry)
+
+          rows=[]
+          all_pids=[]
+          mismatches=[]
+          for card in family:
+              cid=card["id"]
+              rule=registry.get(cid)
+              if not rule:
+                  mismatches.append({"id":cid,"reason":"missing_registry"})
+                  continue
+              if str(rule.get("localId"))!=str(card.get("localId")):
+                  mismatches.append({"id":cid,"reason":"localId_mismatch"})
+              if str(rule.get("name"))!=str(card.get("name")):
+                  mismatches.append({"id":cid,"reason":"name_mismatch","registry":rule.get("name"),"source":card.get("name")})
+
+              detailed=card.get("variants_detailed") or []
+              exact=[]
+              for r in detailed:
+                  stamps=[str(x).lower().replace("-","").replace("_","") for x in (r.get("stamp") or [])]
+                  typ=str(r.get("type") or "").lower()
+                  pid=int(((r.get("thirdParty") or {}).get("cardmarket")) or 0)
+                  if stamps==["25thcelebration"] and typ in {"normal","holo"}:
+                      exact.append((typ,pid,r))
+              if len(exact)!=2:
+                  mismatches.append({"id":cid,"reason":"expected_two_25th_rows","rows":[(x[0],x[1]) for x in exact]})
+                  continue
+              by_type={x[0]:x for x in exact}
+              if set(by_type)!={"normal","holo"}:
+                  mismatches.append({"id":cid,"reason":"normal_holo_pair_missing"})
+                  continue
+              npid=int(rule["normal"]["idProduct"])
+              hpid=int(rule["holo"]["idProduct"])
+              source_n=by_type["normal"][1]
+              source_h=by_type["holo"][1]
+              if source_n!=npid:
+                  mismatches.append({"id":cid,"reason":"normal_product_mismatch","source":source_n,"registry":npid})
+              if source_h!=hpid:
+                  mismatches.append({"id":cid,"reason":"holo_product_mismatch","source":source_h,"registry":hpid})
+              if npid==hpid:
+                  mismatches.append({"id":cid,"reason":"same_product_for_both_finishes","productId":npid})
+              all_pids.extend([npid,hpid])
+              rows.append({
+                  "tcgdexId":cid,"name":card.get("name"),"localId":card.get("localId"),
+                  "normalProductId":npid,"holoProductId":hpid,
+                  "stamps":["25th-celebration","25th-celebration"]
+              })
+
+          # Registry must own 50 distinct physical products.
+          duplicates=sorted({p for p in all_pids if all_pids.count(p)>1})
+          if duplicates:
+              mismatches.append({"reason":"duplicate_product_ids","productIds":duplicates})
+
+          summary={
+              "tcgdexSha":sha,
+              "cards":len(family),
+              "physicalRowsExpected":50,
+              "verifiedPairs":len(rows),
+              "distinctProductIds":len(set(all_pids)),
+              "mismatches":mismatches,
+              "rows":rows
+          }
+          Path("temp_mcdonalds_2021_25th_audit.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print(json.dumps({k:summary[k] for k in ("cards","physicalRowsExpected","verifiedPairs","distinctProductIds","mismatches")},ensure_ascii=False))
+          assert not mismatches, mismatches
+          assert len(rows)==25
+          assert len(set(all_pids))==50
+          PY
+
+      - name: Live verify all source price rows
+        run: |
+          python3 - <<'PY'
+          import json,time,urllib.request
+          from pathlib import Path
+          r=json.loads(Path("temp_mcdonalds_2021_25th_audit.json").read_text())
+          checked=0; usable=0; failures=[]
+          for item in r["rows"]:
+              cid=item["tcgdexId"]
+              data=None
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(f"https://api.tcgdex.net/v2/en/cards/{cid}",headers={"User-Agent":"Cardoryx-McDonalds-2021-Audit/1.0"})
+                      with urllib.request.urlopen(req,timeout=60) as resp:
+                          data=json.load(resp)
+                      break
+                  except Exception:
+                      time.sleep(1+attempt)
+              if not data:
+                  failures.append({"id":cid,"reason":"live_unavailable"}); continue
+              for typ,expected in (("normal",item["normalProductId"]),("holo",item["holoProductId"])):
+                  matches=[]
+                  for row in data.get("variants_detailed") or []:
+                      stamps=[str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or [])]
+                      if stamps!=["25thcelebration"] or str(row.get("type") or "").lower()!=typ:
+                          continue
+                      pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+                      cm=(row.get("pricing") or {}).get("cardmarket") or {}
+                      ppid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+                      matches.append((pid,ppid,cm))
+                  if len(matches)!=1:
+                      failures.append({"id":cid,"finish":typ,"reason":"live_row_count","count":len(matches)}); continue
+                  pid,ppid,cm=matches[0]
+                  if pid!=expected or ppid!=expected:
+                      failures.append({"id":cid,"finish":typ,"reason":"live_product_mismatch","row":pid,"pricing":ppid,"expected":expected}); continue
+                  checked+=1
+                  if any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low")):
+                      usable+=1
+                  else:
+                      failures.append({"id":cid,"finish":typ,"reason":"no_usable_price"})
+          out={"checked":checked,"usablePriceRows":usable,"failures":failures}
+          print(json.dumps(out))
+          Path("temp_mcdonalds_2021_25th_live.json").write_text(json.dumps(out,indent=2))
+          assert checked==50 and usable==50 and not failures, out
+          PY
+
+      - name: Record successful audit
+        if: github.event_name == 'push'
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path("temp_mcdonalds_2021_25th_audit.json").read_text())
+          l=json.loads(Path("temp_mcdonalds_2021_25th_live.json").read_text())
+          Path("temp_mcdonalds_2021_25th_validation.txt").write_text(
+            f"PASS\nverifiedPairs={a['verifiedPairs']}\ndistinctProductIds={a['distinctProductIds']}\nliveRows={l['checked']}\nusablePriceRows={l['usablePriceRows']}\n"
+          )
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_mcdonalds_2021_25th_validation.txt
+          git commit -m "TEMP record McDonalds 2021 25th audit"
+          git push
