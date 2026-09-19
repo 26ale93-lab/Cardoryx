@@ -154,7 +154,7 @@ jobs:
           from pathlib import Path
           r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
           rows=[
-              x for x in (r.get("records") or r.get("cards") or [])
+              x for x in (r.get("caseIndex") or [])
               if str(x.get("tcgdexId") or "").startswith("2021swsh-")
           ]
           if len(rows)!=25:
