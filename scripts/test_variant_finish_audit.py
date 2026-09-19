@@ -400,6 +400,7 @@ def run_ditto_production_runtime(source):
     js = functions + "\n" + r'''
 function normalizedPlaySeries(v){const s=String(v??'').trim();return /^[1-9]$/.test(s)?s:'';}
 function isMee30CelebrationEnergy(){return false;}
+function isVerifiedMcdonalds2021AnniversarySet(){return false;}
 function isMeePrizePackEnergy(){return false;}
 function isModernParallelEra(){return false;}
 function verifiedSpecialStampFinishes(){return [];}
