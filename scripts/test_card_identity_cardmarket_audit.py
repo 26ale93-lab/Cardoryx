@@ -2280,6 +2280,53 @@ def main():
         elif card_id == "sm12-29" and current_pid == 398524:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "TCGdex assegna il prodotto 398524 a un'altra identità fisica; Cardoryx lo blocca già con guardia esatta.", "Mantenere il fail-closed esistente."
+        elif (
+            card_id == "sm12-237" and current_pid == 398524 and torkoal_guard and
+            (card.get("set") or {}).get("id") == "sm12" and norm_local(card.get("localId")) == "237" and
+            (card.get("name") or {}).get("en") == "Torkoal" and
+            products.get(398524, {}).get("name") == "Torkoal [Fire Fling | Kindle]" and
+            products.get(398524, {}).get("idExpansion") == 2644 and
+            products.get(398524, {}).get("idMetacard") == 284174 and
+            any(isinstance(current_cm.get(key), (int, float)) and current_cm.get(key) > 0
+                for key in ("trend", "avg7", "avg30", "avg", "low"))
+        ):
+            classification, priority, confidence = "SAFE", None, "HIGH"
+            resolved_pid = 398524
+            resolved_value = next(
+                (current_cm.get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
+                 if isinstance(current_cm.get(key), (int, float)) and current_cm.get(key) > 0),
+                None,
+            )
+            reason = (
+                "Cardmarket identifica esattamente il prodotto 398524 come Torkoal CEC237; "
+                "Cardoryx blocca già lo stesso productId sulla distinta identità sm12-29."
+            )
+            action = "Nessuna modifica di produzione: mantenere la guardia sm12-29 e il prodotto corrente esatto su sm12-237."
+        elif (
+            card_id == "mfb-9" and current_pid == 741988 and set(ids) == {741976, 741988} and
+            (card.get("set") or {}).get("id") == "mfb" and norm_local(card.get("localId")) == "9" and
+            (card.get("name") or {}).get("en") == "Charmander" and
+            products.get(741988, {}).get("name") == "Charmander [Scratch | Ember | MFB]" and
+            products.get(741988, {}).get("idExpansion") == 5526 and
+            products.get(741976, {}).get("name") == "Bulbasaur [Tackle | Vine Whip]" and
+            products.get(741976, {}).get("idExpansion") == 5526 and
+            products.get(741988, {}).get("idMetacard") != products.get(741976, {}).get("idMetacard") and
+            prices.get(741988) and
+            any(isinstance(prices[741988].get(key), (int, float)) and prices[741988].get(key) > 0
+                for key in ("trend", "avg7", "avg30", "avg", "low"))
+        ):
+            classification, priority, confidence = "SAFE", None, "HIGH"
+            resolved_pid = 741988
+            resolved_value = next(
+                (prices[741988].get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
+                 if isinstance(prices[741988].get(key), (int, float)) and prices[741988].get(key) > 0),
+                None,
+            )
+            reason = (
+                "Il prodotto top-level 741988 è Charmander My First Battle; l'alternativo 741976 "
+                "è ufficialmente Bulbasaur con metacard distinta e quindi è un'associazione sorgente errata."
+            )
+            action = "Nessuna modifica di produzione: mantenere 741988 per Charmander e non trasferire il prodotto Bulbasaur."
         elif card_id in PROTECTED_REVERSE:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "Conflitto Reverse Cardmarket noto e già protetto con identità/prodotto esatti.", "Mantenere il fail-closed esistente."
