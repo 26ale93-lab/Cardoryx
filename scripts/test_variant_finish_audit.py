@@ -377,14 +377,14 @@ def run_ditto_production_runtime(source):
     functions = "\n".join(extract_js_function(source, name) for name in names)
     ditto_option = '<option value="Ditto Peelable">Ditto rimovibile</option>'
     for selector_id in ("variant", "editVariant"):
-        match = re.search(
-            rf'<select\\s+id="{re.escape(selector_id)}"[^>]*>(.*?)</select>',
-            source,
-            flags=re.S,
-        )
-        if not match:
+        start = source.find(f'<select id="{selector_id}"')
+        if start < 0:
             raise AssertionError(f"Missing {selector_id} finish selector")
-        if match.group(1).count(ditto_option) != 1:
+        end = source.find("</select>", start)
+        if end < 0:
+            raise AssertionError(f"Unclosed {selector_id} finish selector")
+        selector_html = source[start:end]
+        if selector_html.count(ditto_option) != 1:
             raise AssertionError(
                 f"Ditto must be present exactly once in {selector_id} finish selector"
             )
