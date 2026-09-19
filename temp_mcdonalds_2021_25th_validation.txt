@@ -1,6 +1,0 @@
-PASS
-cards=25
-physicalRows=50
-registryProducts=50
-sourceProductConflicts=4
-pricingP0=0
