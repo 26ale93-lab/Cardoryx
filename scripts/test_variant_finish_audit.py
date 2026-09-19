@@ -370,13 +370,25 @@ def run_ditto_production_runtime(source):
     names = (
         "normText", "canonicalStamp", "canonicalVariant", "canonicalFinishTypeLabel",
         "canonicalFinishFoilLabel", "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow",
+        "is30thCelebrationSet",
         "tcgdexVariantDetails", "tcgdexMarketplaceVariant", "addDetailedFinishes",
         "documentedVariantsForCard", "migrateFinishStamp", "cardmarketValueForVariant",
         "cardmarketValueForCardVariant",
     )
     functions = "\n".join(extract_js_function(source, name) for name in names)
-    if source.count('<option value="Ditto Peelable">Ditto rimovibile</option>') != 2:
-        raise AssertionError("Ditto must be present exactly in Confirm and Edit variant selectors")
+    ditto_option = '<option value="Ditto Peelable">Ditto rimovibile</option>'
+    for selector_id in ("variant", "editVariant"):
+        start = source.find(f'<select id="{selector_id}"')
+        if start < 0:
+            raise AssertionError(f"Missing {selector_id} finish selector")
+        end = source.find("</select>", start)
+        if end < 0:
+            raise AssertionError(f"Unclosed {selector_id} finish selector")
+        selector_html = source[start:end]
+        if selector_html.count(ditto_option) != 1:
+            raise AssertionError(
+                f"Ditto must be present exactly once in {selector_id} finish selector"
+            )
     fixture = {
         "variants_detailed": [
             {"type": "Normale", "thirdParty": {"cardmarket": 665657}},
@@ -391,12 +403,19 @@ function isMee30CelebrationEnergy(){return false;}
 function isMeePrizePackEnergy(){return false;}
 function isModernParallelEra(){return false;}
 function verifiedSpecialStampFinishes(){return [];}
+function verifiedMcdonaldsStampFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
 function verifiedStampPrice(){return null;}
 function verifiedPlaySeriesPrice(){return null;}
 function prizePackFinishPlan(){return {authoritative:false,finishes:[]};}
+function verifiedExactPrimarySpecialCardmarketVariant(){return null;}
+function verifiedDualBaseCardmarketVariant(){return null;}
+function verifiedMcdonalds2019CardmarketVariant(){return null;}
+function verifiedFroakie056CosmosCardmarketVariant(){return null;}
+function verifiedGiratinaVstar201CardmarketVariant(){return null;}
+function verifiedMcdonalds2021CardmarketVariant(){return null;}
 function verifiedBaseCardmarketProductOverride(){return null;}
 function knownCardmarketIdentityConflict(){return null;}
 function knownReverseCardmarketProductConflict(){return null;}
@@ -431,6 +450,71 @@ if(canonicalStamp('Play! Pokémon')!=='Play! Pokémon'||canonicalStamp('Pokémon
 process.stdout.write(JSON.stringify({documented,standardReverseProduct:665657,dittoMarketplace:null,dittoPrice:exactPrice.kind,persistedVariant:reopened.variant,specials:[...specials]}));
 '''.replace('__FIXTURE__', json.dumps(fixture, ensure_ascii=False))
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
+def audit_mcdonalds_2012_2014_source(cards, source):
+    expected_sets = {"2012bw": 12, "2014xy": 12}
+    rows = []
+    for set_id, expected_count in expected_sets.items():
+        family = sorted(
+            [c for c in cards if ((c.get("set") or {}).get("id") == set_id)],
+            key=lambda x: str(x.get("localId") or ""),
+        )
+        if len(family) != expected_count:
+            raise AssertionError(
+                f"McDonald's {set_id} expected {expected_count} cards, found {len(family)}"
+            )
+        for card in family:
+            detailed = card.get("variants_detailed") or []
+            exact = []
+            for row in detailed:
+                stamps = [norm(x) for x in (row.get("stamp") or [])]
+                pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+                if (
+                    canonical_finish_type_label(row.get("type")) == "holo"
+                    and stamps == ["mcdonalds"]
+                    and not row.get("foil")
+                    and str(row.get("size") or "standard").lower() == "standard"
+                    and pid > 0
+                ):
+                    exact.append((row, pid))
+            if len(detailed) != 1 or len(exact) != 1:
+                raise AssertionError(
+                    f"McDonald's exact physical row mismatch: {card.get('id')}"
+                )
+            rows.append({
+                "tcgdexId": card.get("id"),
+                "setId": set_id,
+                "localId": card.get("localId"),
+                "productId": exact[0][1],
+                "finish": "Holo",
+                "stamp": "McDonald's",
+            })
+
+    if len(rows) != 24:
+        raise AssertionError("McDonald's 2012/2014 audit must contain exactly 24 identities")
+    if source.count('<option value="McDonald\'s">McDonald\'s</option>') != 3:
+        raise AssertionError("McDonald's stamp must exist in Confirm, Catalog filter and Edit selectors")
+    required_source_tokens = (
+        "tcgdexExactMcdonaldsStampRow",
+        "verifiedMcdonaldsStampFinishes",
+        "tcgdexExactMcdonaldsStampedPrice",
+        '"McDonald\'s":[\'mcdonalds\']',
+    )
+    if not all(token in source for token in required_source_tokens):
+        raise AssertionError("McDonald's exact stamp production guards are incomplete")
+
+    return {
+        "expectedIdentities": 24,
+        "verifiedIdentities": len(rows),
+        "sets": expected_sets,
+        "finish": "Holo",
+        "stamp": "McDonald's",
+        "oneExactPhysicalRowPerIdentity": True,
+        "uniqueProductIds": len({x["productId"] for x in rows}),
+        "identities": rows,
+        "scope": "only 2012bw and 2014xy; no rule for other McDonald's releases",
+    }
 
 
 def stratified(items, count):
@@ -972,8 +1056,13 @@ def main():
     set_specs = dict(SAMPLED_SETS); set_specs.update(FULL_SETS)
     upstream_sha = None
     upstream_parse_errors = []
+    mcdonalds_stamp_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     if args.tcgdex_db:
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
+        mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
         grouped = defaultdict(list)
         for c in all_cards: grouped[(c.get("set") or {}).get("id")].append(c)
         sample, era_by_id = [], {}
@@ -1376,6 +1465,7 @@ def main():
             "assessment": "MEE001-008 is a deliberate source conflict: TCGdex exposes Reverse while Cardoryx exact edition policy allows Normal; Prize Pack S8/S9 is separately modelled as Normal + Cosmos. MEE009-016 cannot be API-verified in the current TCGdex catalogue.",
         },
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
+        "mcdonaldsStampAudit": mcdonalds_stamp_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
             "recoveredIdentities": len(normal_registry_applied_ids),
