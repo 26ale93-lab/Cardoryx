@@ -16,6 +16,7 @@ canonical_stamp=section("function canonicalStamp(","function stampBadgeHTML(")
 alloc=section("const CARDORYX_ALLOCATION_STATUSES=","function allocationInputsHtml(")
 catalog=section("function syncCatalogAllocationFilterOptions(","function renderCatalog(")
 
+catalog_html=source.split('<section id="catalogView"',1)[1].split('<section id="statsView"',1)[0]
 for item in [
     'id="stampFilter"',
     'value="Poké Ball Reverse Holo"',
@@ -23,9 +24,9 @@ for item in [
     'value="Ditto Peelable"',
     'Tutti gli stamp / edizioni',
 ]:
-    assert item in source, item
-assert '<option>Pokémon Day Stamp</option>' not in source
-assert '<option>Play! Pokémon Stamp</option>' not in source
+    assert item in catalog_html, item
+assert '<option>Pokémon Day Stamp</option>' not in catalog_html
+assert '<option>Play! Pokémon Stamp</option>' not in catalog_html
 
 js=f"""
 const assert=require('assert');
