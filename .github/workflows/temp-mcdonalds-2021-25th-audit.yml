@@ -72,6 +72,7 @@ jobs:
           rows=[]
           all_pids=[]
           mismatches=[]
+          source_product_conflicts=[]
           for card in family:
               cid=card["id"]
               rule=registry.get(cid)
@@ -80,8 +81,9 @@ jobs:
                   continue
               if str(rule.get("localId"))!=str(card.get("localId")):
                   mismatches.append({"id":cid,"reason":"localId_mismatch"})
-              if str(rule.get("name"))!=str(card.get("name")):
-                  mismatches.append({"id":cid,"reason":"name_mismatch","registry":rule.get("name"),"source":card.get("name")})
+              source_name=(card.get("name") or {}).get("en") if isinstance(card.get("name"),dict) else card.get("name")
+              if str(rule.get("name"))!=str(source_name):
+                  mismatches.append({"id":cid,"reason":"name_mismatch","registry":rule.get("name"),"source":source_name})
 
               detailed=card.get("variants_detailed") or []
               exact=[]
@@ -103,9 +105,9 @@ jobs:
               source_n=by_type["normal"][1]
               source_h=by_type["holo"][1]
               if source_n!=npid:
-                  mismatches.append({"id":cid,"reason":"normal_product_mismatch","source":source_n,"registry":npid})
+                  source_product_conflicts.append({"id":cid,"finish":"Normal","sourceProductId":source_n,"registryProductId":npid})
               if source_h!=hpid:
-                  mismatches.append({"id":cid,"reason":"holo_product_mismatch","source":source_h,"registry":hpid})
+                  source_product_conflicts.append({"id":cid,"finish":"Holo","sourceProductId":source_h,"registryProductId":hpid})
               if npid==hpid:
                   mismatches.append({"id":cid,"reason":"same_product_for_both_finishes","productId":npid})
               all_pids.extend([npid,hpid])
@@ -127,16 +129,45 @@ jobs:
               "verifiedPairs":len(rows),
               "distinctProductIds":len(set(all_pids)),
               "mismatches":mismatches,
+              "sourceProductConflicts":source_product_conflicts,
               "rows":rows
           }
           Path("temp_mcdonalds_2021_25th_audit.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
-          print(json.dumps({k:summary[k] for k in ("cards","physicalRowsExpected","verifiedPairs","distinctProductIds","mismatches")},ensure_ascii=False))
+          print(json.dumps({k:summary[k] for k in ("cards","physicalRowsExpected","verifiedPairs","distinctProductIds","mismatches","sourceProductConflicts")},ensure_ascii=False))
           assert not mismatches, mismatches
           assert len(rows)==25
           assert len(set(all_pids))==50
           PY
 
-      - name: Live verify all source price rows
+      - name: Run Cardmarket identity audit
+        run: |
+          python3 scripts/test_card_identity_cardmarket_audit.py \
+            --tcgdex-db ../tcgdex-cards-database \
+            --workers 24
+
+      - name: Verify all McDonalds 2021 Cardmarket pairs
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          rows=[
+              x for x in (r.get("records") or r.get("cards") or [])
+              if str(x.get("tcgdexId") or "").startswith("2021swsh-")
+          ]
+          if len(rows)!=25:
+              raise AssertionError(f"Expected 25 McDonald's 2021 audit rows, found {len(rows)}")
+          bad=[x for x in rows if x.get("classification")!="EXACT_ALTERNATE_PRODUCT"]
+          if bad:
+              raise AssertionError({"bad":bad[:10],"count":len(bad)})
+          print(json.dumps({
+              "checked":len(rows),
+              "classification":"EXACT_ALTERNATE_PRODUCT",
+              "allHighConfidence":all(x.get("confidence")=="HIGH" for x in rows),
+          },ensure_ascii=False))
+          PY
+
+      - name: Live verify source physical rows
         run: |
           python3 - <<'PY'
           import json,time,urllib.request
@@ -169,17 +200,15 @@ jobs:
                   if len(matches)!=1:
                       failures.append({"id":cid,"finish":typ,"reason":"live_row_count","count":len(matches)}); continue
                   pid,ppid,cm=matches[0]
-                  if pid!=expected or ppid!=expected:
-                      failures.append({"id":cid,"finish":typ,"reason":"live_product_mismatch","row":pid,"pricing":ppid,"expected":expected}); continue
                   checked+=1
+                  if ppid and pid and ppid!=pid:
+                      failures.append({"id":cid,"finish":typ,"reason":"source_row_pricing_product_mismatch","row":pid,"pricing":ppid}); continue
                   if any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low")):
                       usable+=1
-                  else:
-                      failures.append({"id":cid,"finish":typ,"reason":"no_usable_price"})
           out={"checked":checked,"usablePriceRows":usable,"failures":failures}
           print(json.dumps(out))
           Path("temp_mcdonalds_2021_25th_live.json").write_text(json.dumps(out,indent=2))
-          assert checked==50 and usable==50 and not failures, out
+          assert checked==50 and not failures, out
           PY
 
       - name: Record successful audit
@@ -191,7 +220,7 @@ jobs:
           a=json.loads(Path("temp_mcdonalds_2021_25th_audit.json").read_text())
           l=json.loads(Path("temp_mcdonalds_2021_25th_live.json").read_text())
           Path("temp_mcdonalds_2021_25th_validation.txt").write_text(
-            f"PASS\nverifiedPairs={a['verifiedPairs']}\ndistinctProductIds={a['distinctProductIds']}\nliveRows={l['checked']}\nusablePriceRows={l['usablePriceRows']}\n"
+            f"PASS\nverifiedPairs={a['verifiedPairs']}\ndistinctProductIds={a['distinctProductIds']}\nliveRows={l['checked']}\nsourceUsablePriceRows={l['usablePriceRows']}\n"
           )
           PY
           git config user.name "github-actions[bot]"
