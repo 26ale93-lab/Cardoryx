@@ -1,0 +1,90 @@
+name: TEMP Cardmarket Final 14 Evidence
+
+on:
+  push:
+    branches:
+      - audit/cardmarket-final14-evidence-20260919
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build targeted evidence pack
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+
+          def load(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-Final14-Audit/1.0"})
+              with urllib.request.urlopen(req,timeout=300) as r:
+                  return json.load(r)
+
+          products_raw=load("https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json")
+          prices_raw=load("https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json")
+          products=products_raw if isinstance(products_raw,list) else products_raw.get("products",[])
+          prices=prices_raw if isinstance(prices_raw,list) else (prices_raw.get("priceGuides") or prices_raw.get("priceGuide") or [])
+          byid={int(x["idProduct"]):x for x in products if x.get("idProduct")}
+          priceby={int(x["idProduct"]):x for x in prices if x.get("idProduct")}
+
+          seed=[362810,278861,726923,740411,524029,741983,741995,742007,741984,741996,742008,742020]
+          seed_rows={str(pid):byid.get(pid) for pid in seed}
+
+          exp_ids={row.get("idExpansion") for row in seed_rows.values() if row}
+          related={}
+          for exp in exp_ids:
+              rows=[x for x in products if x.get("idExpansion")==exp]
+              related[str(exp)]=rows
+
+          # Focus on names relevant to unresolved identities.
+          wanted_names={"Lillipup","Fletchling","Arceus","Potion","Switch","Pikachu"}
+          focused=[]
+          for x in products:
+              base=str(x.get("name") or "").split(" [",1)[0]
+              if base in wanted_names and x.get("idExpansion") in exp_ids:
+                  focused.append(x)
+
+          api_ids=[
+            "2018sm-fr-38","2018sm-fr-39",
+            "pl3-AR1","pl3-AR2","pl3-AR3","pl3-AR4","pl3-AR5","pl3-AR6","pl3-AR7","pl3-AR8","pl3-AR9",
+            "pl4-AR1","pl4-AR2","pl4-AR3","pl4-AR4","pl4-AR5","pl4-AR6","pl4-AR7","pl4-AR8","pl4-AR9",
+            "mfb-33","mfb-34","svp-101"
+          ]
+          api={}
+          for cid in api_ids:
+              url=f"https://api.tcgdex.net/v2/en/cards/{cid}"
+              try:
+                  api[cid]=load(url)
+              except Exception as e:
+                  api[cid]={"_error":repr(e)}
+
+          relevant_ids=set(seed)
+          # Add focused exact products and prices.
+          relevant_ids.update(int(x["idProduct"]) for x in focused if x.get("idProduct"))
+          out={
+            "seedProducts":seed_rows,
+            "focusedProducts":focused,
+            "prices":{str(pid):priceby.get(pid) for pid in sorted(relevant_ids)},
+            "tcgdexApi":api,
+          }
+          Path("temp_cardmarket_final14_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+            "seedProducts":seed_rows,
+            "focusedCount":len(focused),
+            "apiErrors":{k:v for k,v in api.items() if isinstance(v,dict) and "_error" in v}
+          },ensure_ascii=False))
+          PY
+
+      - name: Record evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_cardmarket_final14_evidence.json
+          git commit -m "TEMP record final 14 Cardmarket evidence"
+          git push
