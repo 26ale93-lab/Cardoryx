@@ -106,6 +106,109 @@ VERIFIED_PRIMARY_SPECIAL_CARDMARKET_ROWS = {
     "ex5-98": {"setId":"ex5","localId":"98","name":"Regirock ex","primary":276172,"primaryType":"holo","primaryFoil":"cracked-ice","primaryStamp":[],"alternate":869536,"alternateType":"normal","alternateFoil":"","alternateStamp":["jason-klaczynski"]},
     "swshp-SWSH039": {"setId":"swshp","localId":"SWSH039","name":"Pikachu","primary":491189,"primaryType":"holo","primaryFoil":"cosmos","primaryStamp":[],"alternate":549406,"alternateType":"holo","alternateFoil":"","alternateStamp":["25th-celebration"]},
 }
+# Exact Base Set Cardmarket V1/V2 pairs verified as ordinary printing versus
+# Shadowless printing. Keep this registry explicit: do not infer Shadowless
+# from product-id ranges or from generic V1/V2 numbering in other sets.
+BASE1_VERIFIED_SHADOWLESS_PRODUCTS = {
+    "base1-1": ("1", "Alakazam", 273696, 660227),
+    "base1-2": ("2", "Blastoise", 273697, 660226),
+    "base1-3": ("3", "Chansey", 273698, 660225),
+    "base1-4": ("4", "Charizard", 273699, 660224),
+    "base1-5": ("5", "Clefairy", 273700, 660223),
+    "base1-6": ("6", "Gyarados", 273701, 660222),
+    "base1-7": ("7", "Hitmonchan", 273702, 660221),
+    "base1-8": ("8", "Machamp", 273703, 660220),
+    "base1-9": ("9", "Magneton", 273704, 660219),
+    "base1-10": ("10", "Mewtwo", 273705, 660218),
+    "base1-11": ("11", "Nidoking", 273706, 660217),
+    "base1-12": ("12", "Ninetales", 273707, 660216),
+    "base1-13": ("13", "Poliwrath", 273708, 660215),
+    "base1-14": ("14", "Raichu", 273709, 660214),
+    "base1-15": ("15", "Venusaur", 273710, 660213),
+    "base1-16": ("16", "Zapdos", 273711, 660212),
+    "base1-17": ("17", "Beedrill", 273712, 660211),
+    "base1-18": ("18", "Dragonair", 273713, 660210),
+    "base1-19": ("19", "Dugtrio", 273714, 660209),
+    "base1-20": ("20", "Electabuzz", 273715, 660208),
+    "base1-21": ("21", "Electrode", 273716, 660207),
+    "base1-22": ("22", "Pidgeotto", 273717, 660206),
+    "base1-23": ("23", "Arcanine", 273718, 660205),
+    "base1-24": ("24", "Charmeleon", 273719, 660204),
+    "base1-25": ("25", "Dewgong", 273720, 660203),
+    "base1-26": ("26", "Dratini", 273721, 660202),
+    "base1-27": ("27", "Farfetch'd", 273722, 660201),
+    "base1-28": ("28", "Growlithe", 273723, 660200),
+    "base1-29": ("29", "Haunter", 273724, 660199),
+    "base1-30": ("30", "Ivysaur", 273725, 660198),
+    "base1-31": ("31", "Jynx", 273726, 660197),
+    "base1-32": ("32", "Kadabra", 273727, 660196),
+    "base1-33": ("33", "Kakuna", 273728, 660195),
+    "base1-34": ("34", "Machoke", 273729, 660194),
+    "base1-35": ("35", "Magikarp", 273730, 660193),
+    "base1-36": ("36", "Magmar", 273731, 660192),
+    "base1-37": ("37", "Nidorino", 273732, 660191),
+    "base1-38": ("38", "Poliwhirl", 273733, 660190),
+    "base1-39": ("39", "Porygon", 273734, 660189),
+    "base1-40": ("40", "Raticate", 273735, 660188),
+    "base1-41": ("41", "Seel", 273736, 660187),
+    "base1-42": ("42", "Wartortle", 273737, 660186),
+    "base1-43": ("43", "Abra", 273738, 660185),
+    "base1-45": ("45", "Caterpie", 273740, 660183),
+    "base1-47": ("47", "Diglett", 273742, 660181),
+    "base1-48": ("48", "Doduo", 273743, 660180),
+    "base1-49": ("49", "Drowzee", 273744, 660179),
+    "base1-50": ("50", "Gastly", 273745, 660178),
+    "base1-51": ("51", "Koffing", 273746, 660177),
+    "base1-52": ("52", "Machop", 273747, 660176),
+    "base1-53": ("53", "Magnemite", 273748, 660175),
+    "base1-54": ("54", "Metapod", 273749, 660174),
+    "base1-55": ("55", "Nidoran♂", 273750, 660173),
+    "base1-56": ("56", "Onix", 273751, 660172),
+    "base1-57": ("57", "Pidgey", 273752, 660171),
+    "base1-59": ("59", "Poliwag", 273754, 660168),
+    "base1-60": ("60", "Ponyta", 273755, 660167),
+    "base1-61": ("61", "Rattata", 273756, 660166),
+    "base1-62": ("62", "Sandshrew", 273757, 660165),
+    "base1-64": ("64", "Starmie", 273759, 660163),
+    "base1-65": ("65", "Staryu", 273760, 660162),
+    "base1-66": ("66", "Tangela", 273761, 660161),
+    "base1-67": ("67", "Voltorb", 273762, 660160),
+    "base1-68": ("68", "Vulpix", 273763, 660159),
+    "base1-69": ("69", "Weedle", 273764, 660158),
+    "base1-70": ("70", "Clefairy Doll", 273765, 660150),
+    "base1-71": ("71", "Computer Search", 273766, 660149),
+    "base1-72": ("72", "Devolution Spray", 273767, 660147),
+    "base1-73": ("73", "Impostor Professor Oak", 273768, 660146),
+    "base1-74": ("74", "Item Finder", 273769, 660144),
+    "base1-75": ("75", "Lass", 273770, 660143),
+    "base1-76": ("76", "Pokémon Breeder", 273771, 660142),
+    "base1-77": ("77", "Pokémon Trader", 273772, 660140),
+    "base1-78": ("78", "Scoop Up", 273773, 660138),
+    "base1-79": ("79", "Super Energy Removal", 273774, 660137),
+    "base1-80": ("80", "Defender", 273775, 660135),
+    "base1-81": ("81", "Energy Retrieval", 273776, 660134),
+    "base1-82": ("82", "Full Heal", 273777, 660132),
+    "base1-83": ("83", "Maintenance", 273778, 660123),
+    "base1-84": ("84", "PlusPower", 273779, 660122),
+    "base1-85": ("85", "Pokémon Center", 273780, 660121),
+    "base1-86": ("86", "Pokémon Flute", 273781, 660120),
+    "base1-87": ("87", "Pokédex", 273782, 660119),
+    "base1-88": ("88", "Professor Oak", 273783, 660118),
+    "base1-89": ("89", "Revive", 273784, 660116),
+    "base1-90": ("90", "Super Potion", 273785, 660115),
+    "base1-91": ("91", "Bill", 273786, 660113),
+    "base1-92": ("92", "Energy Removal", 273787, 660112),
+    "base1-93": ("93", "Gust of Wind", 273788, 660110),
+    "base1-94": ("94", "Potion", 273789, 660109),
+    "base1-95": ("95", "Switch", 273790, 660107),
+    "base1-96": ("96", "Double Colorless Energy", 273791, 660106),
+    "base1-97": ("97", "Fighting Energy", 273792, 660105),
+    "base1-98": ("98", "Fire Energy", 273793, 660103),
+    "base1-99": ("99", "Grass Energy", 273794, 660102),
+    "base1-100": ("100", "Lightning Energy", 273795, 660101),
+    "base1-101": ("101", "Psychic Energy", 273796, 660098),
+    "base1-102": ("102", "Water Energy", 273797, 660096),
+}
 MFB_POKEBALL_EXACT_ROWS = {
     "mfb-1": {"setId":"mfb","localId":"1","name":"Bulbasaur","deckToken":"bulbasaur","base":741976,"pokeball":741975},
     "mfb-8": {"setId":"mfb","localId":"8","name":"Grass Energy","deckToken":"bulbasaur","base":741986,"pokeball":741985},
@@ -2280,6 +2383,49 @@ def main():
         elif card_id == "sm12-29" and current_pid == 398524:
             classification, priority = "SOURCE_CONFLICT", "P0_PROTECTED"
             reason, action = "TCGdex assegna il prodotto 398524 a un'altra identità fisica; Cardoryx lo blocca già con guardia esatta.", "Mantenere il fail-closed esistente."
+        elif card_id in BASE1_VERIFIED_SHADOWLESS_PRODUCTS:
+            expected_local, expected_name, base_pid, shadowless_pid = BASE1_VERIFIED_SHADOWLESS_PRODUCTS[card_id]
+            base_product = products.get(base_pid) or {}
+            shadowless_product = products.get(shadowless_pid) or {}
+            base_guide = prices.get(base_pid) or {}
+            shadowless_guide = prices.get(shadowless_pid) or {}
+            exact_identity = (
+                (card.get("set") or {}).get("id") == "base1" and
+                norm_local(card.get("localId")) == norm_local(expected_local) and
+                (card.get("name") or {}).get("en") == expected_name
+            )
+            exact_pair = current_pid == base_pid and set(ids) == {base_pid, shadowless_pid}
+            catalog_match = (
+                base_product.get("idExpansion") == 1523 and
+                shadowless_product.get("idExpansion") == 1523 and
+                base_product.get("name") == shadowless_product.get("name") and
+                str(base_product.get("name") or "").split(" [", 1)[0] == expected_name
+            )
+            priced_pair = all(
+                any(isinstance(guide.get(key), (int, float)) and guide.get(key) > 0
+                    for key in ("trend", "avg7", "avg30", "avg", "low"))
+                for guide in (base_guide, shadowless_guide)
+            )
+            if exact_identity and exact_pair and catalog_match and priced_pair:
+                classification, priority, confidence = "EXACT_ALTERNATE_PRODUCT", "P2", "HIGH"
+                resolved_pid = base_pid
+                resolved_value = next(
+                    (base_guide.get(key) for key in ("trend", "avg7", "avg30", "avg", "low")
+                     if isinstance(base_guide.get(key), (int, float)) and base_guide.get(key) > 0),
+                    None,
+                )
+                reason = (
+                    "Base Set ha una coppia Cardmarket esatta verificata: prodotto ordinario e stampa Shadowless "
+                    "fisicamente distinta. Cardoryx mantiene il prodotto ordinario come valore base."
+                )
+                action = (
+                    "Mantenere la coppia esatta nell'audit; non introdurre una regola productId e non rendere "
+                    "Shadowless selezionabile finché la tassonomia UI/runtime non viene verificata separatamente."
+                )
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "La coppia Base Set/Shadowless non supera più i controlli esatti di identità, catalogo e prezzo."
+                action = "Fail-closed e nuova verifica Cardmarket prima di qualsiasi modifica."
         elif (
             card_id == "sm12-237" and current_pid == 398524 and torkoal_guard and
             (card.get("set") or {}).get("id") == "sm12" and norm_local(card.get("localId")) == "237" and
