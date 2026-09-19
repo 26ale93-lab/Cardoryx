@@ -1,0 +1,4464 @@
+{
+  "mainSha": "8094f1469170381117377eabaa6ee293a6d62475",
+  "generatedAt": "2026-09-19T18:50:25.467597+00:00",
+  "classificationTotals": {
+    "SAFE": 1919,
+    "EXACT_ALTERNATE_PRODUCT": 162,
+    "P0_WRONG_PRODUCT": 0,
+    "P1_AMBIGUOUS_PRODUCT": 116,
+    "SOURCE_CONFLICT": 7,
+    "UNMAPPED_EXACT_PRODUCT": 0
+  },
+  "p1Count": 116,
+  "confidenceCounts": {
+    "MEDIUM": 113,
+    "LOW": 3
+  },
+  "reasonCounts": {
+    "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.": 13,
+    "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.": 98,
+    "La sorgente espone più prodotti ma non un product ID top-level corrente verificabile.": 3,
+    "Il prodotto top-level corrente non compare tra le righe fisiche base unstamped/unfoiled.": 2
+  },
+  "sourceConflictIds": [
+    "pl2-102",
+    "pl3-26",
+    "pl3-5",
+    "pl3-59",
+    "pl3-83",
+    "sm12-29",
+    "sv10.5b-013"
+  ],
+  "p1Details": [
+    {
+      "tcgdexId": "2018sm-fr-38",
+      "setId": "2018sm-fr",
+      "localId": "38",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 362810,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        362810
+      ],
+      "sharedProductWithTcgdexIds": [
+        "2018sm-fr-39"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.65,
+      "realPriceGuideValues": {
+        "362810": {
+          "idProduct": 362810,
+          "trend": 0.65,
+          "avg7": 0.98,
+          "avg30": 1.01,
+          "low": 0.15,
+          "avg": 1.75
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "2018sm-fr-39",
+      "setId": "2018sm-fr",
+      "localId": "39",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 362810,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        362810
+      ],
+      "sharedProductWithTcgdexIds": [
+        "2018sm-fr-38"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.65,
+      "realPriceGuideValues": {
+        "362810": {
+          "idProduct": 362810,
+          "trend": 0.65,
+          "avg7": 0.98,
+          "avg30": 1.01,
+          "low": 0.15,
+          "avg": 1.75
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "base1-1",
+      "setId": "base1",
+      "localId": "1",
+      "name": "Alakazam",
+      "confidence": "MEDIUM",
+      "currentProductId": 273696,
+      "alternateProductIds": [
+        660227
+      ],
+      "baseRowProductIds": [
+        273696,
+        660227
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 69.27,
+      "realPriceGuideValues": {
+        "273696": {
+          "idProduct": 273696,
+          "trend": 69.27,
+          "avg7": 50.62,
+          "avg30": 73.08,
+          "low": 7,
+          "avg": 68.73
+        },
+        "660227": {
+          "idProduct": 660227,
+          "trend": 245.15,
+          "avg7": 163.28,
+          "avg30": 186,
+          "low": 65,
+          "avg": 163.25
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-10",
+      "setId": "base1",
+      "localId": "10",
+      "name": "Mewtwo",
+      "confidence": "MEDIUM",
+      "currentProductId": 273705,
+      "alternateProductIds": [
+        660218
+      ],
+      "baseRowProductIds": [
+        273705,
+        660218
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 37.15,
+      "realPriceGuideValues": {
+        "273705": {
+          "idProduct": 273705,
+          "trend": 37.15,
+          "avg7": 59.05,
+          "avg30": 35.17,
+          "low": 2.5,
+          "avg": 36.6
+        },
+        "660218": {
+          "idProduct": 660218,
+          "trend": 516.32,
+          "avg7": 226.3,
+          "avg30": 404.86,
+          "low": 49.99,
+          "avg": 120.16
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-100",
+      "setId": "base1",
+      "localId": "100",
+      "name": "Lightning Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273795,
+      "alternateProductIds": [
+        660101
+      ],
+      "baseRowProductIds": [
+        273795,
+        660101
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.6,
+      "realPriceGuideValues": {
+        "273795": {
+          "idProduct": 273795,
+          "trend": 0.6,
+          "avg7": 0.34,
+          "avg30": 0.45,
+          "low": 0.02,
+          "avg": 0.45
+        },
+        "660101": {
+          "idProduct": 660101,
+          "trend": 5.9,
+          "avg7": 4.88,
+          "avg30": 6.93,
+          "low": 0.25,
+          "avg": 6.01
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-101",
+      "setId": "base1",
+      "localId": "101",
+      "name": "Psychic Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273796,
+      "alternateProductIds": [
+        660098
+      ],
+      "baseRowProductIds": [
+        273796,
+        660098
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.39,
+      "realPriceGuideValues": {
+        "273796": {
+          "idProduct": 273796,
+          "trend": 0.39,
+          "avg7": 0.27,
+          "avg30": 0.37,
+          "low": 0.02,
+          "avg": 0.36
+        },
+        "660098": {
+          "idProduct": 660098,
+          "trend": 4.41,
+          "avg7": 3.97,
+          "avg30": 1.52,
+          "low": 0.25,
+          "avg": 4.06
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-102",
+      "setId": "base1",
+      "localId": "102",
+      "name": "Water Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273797,
+      "alternateProductIds": [
+        660096
+      ],
+      "baseRowProductIds": [
+        273797,
+        660096
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.54,
+      "realPriceGuideValues": {
+        "273797": {
+          "idProduct": 273797,
+          "trend": 0.54,
+          "avg7": 0.29,
+          "avg30": 0.24,
+          "low": 0.02,
+          "avg": 0.24
+        },
+        "660096": {
+          "idProduct": 660096,
+          "trend": 5.71,
+          "avg7": 4.35,
+          "avg30": 3.77,
+          "low": 0.1,
+          "avg": 4.25
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-11",
+      "setId": "base1",
+      "localId": "11",
+      "name": "Nidoking",
+      "confidence": "MEDIUM",
+      "currentProductId": 273706,
+      "alternateProductIds": [
+        660217
+      ],
+      "baseRowProductIds": [
+        273706,
+        660217
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 29.35,
+      "realPriceGuideValues": {
+        "273706": {
+          "idProduct": 273706,
+          "trend": 29.35,
+          "avg7": 31.5,
+          "avg30": 35.36,
+          "low": 4.9,
+          "avg": 38.07
+        },
+        "660217": {
+          "idProduct": 660217,
+          "trend": 200.59,
+          "avg7": 269.98,
+          "avg30": 139.06,
+          "low": 50,
+          "avg": 104.97
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-12",
+      "setId": "base1",
+      "localId": "12",
+      "name": "Ninetales",
+      "confidence": "MEDIUM",
+      "currentProductId": 273707,
+      "alternateProductIds": [
+        660216
+      ],
+      "baseRowProductIds": [
+        273707,
+        660216
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 10.21,
+      "realPriceGuideValues": {
+        "273707": {
+          "idProduct": 273707,
+          "trend": 10.21,
+          "avg7": 10.3,
+          "avg30": 18.99,
+          "low": 1,
+          "avg": 20.23
+        },
+        "660216": {
+          "idProduct": 660216,
+          "trend": 116.32,
+          "avg7": 71.56,
+          "avg30": 85.5,
+          "low": 34.98,
+          "avg": 78
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-13",
+      "setId": "base1",
+      "localId": "13",
+      "name": "Poliwrath",
+      "confidence": "MEDIUM",
+      "currentProductId": 273708,
+      "alternateProductIds": [
+        660215
+      ],
+      "baseRowProductIds": [
+        273708,
+        660215
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 18.58,
+      "realPriceGuideValues": {
+        "273708": {
+          "idProduct": 273708,
+          "trend": 18.58,
+          "avg7": 22.97,
+          "avg30": 31.94,
+          "low": 2,
+          "avg": 33.67
+        },
+        "660215": {
+          "idProduct": 660215,
+          "trend": 159.34,
+          "avg7": 57.79,
+          "avg30": 127.49,
+          "low": 30,
+          "avg": 65.89
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-14",
+      "setId": "base1",
+      "localId": "14",
+      "name": "Raichu",
+      "confidence": "MEDIUM",
+      "currentProductId": 273709,
+      "alternateProductIds": [
+        660214
+      ],
+      "baseRowProductIds": [
+        273709,
+        660214
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 49.85,
+      "realPriceGuideValues": {
+        "273709": {
+          "idProduct": 273709,
+          "trend": 49.85,
+          "avg7": 54.24,
+          "avg30": 45.32,
+          "low": 4,
+          "avg": 50.23
+        },
+        "660214": {
+          "idProduct": 660214,
+          "trend": 211.31,
+          "avg7": 133.97,
+          "avg30": 166.54,
+          "low": 29.99,
+          "avg": 63.65
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-15",
+      "setId": "base1",
+      "localId": "15",
+      "name": "Venusaur",
+      "confidence": "MEDIUM",
+      "currentProductId": 273710,
+      "alternateProductIds": [
+        660213
+      ],
+      "baseRowProductIds": [
+        273710,
+        660213
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 119.01,
+      "realPriceGuideValues": {
+        "273710": {
+          "idProduct": 273710,
+          "trend": 119.01,
+          "avg7": 136.21,
+          "avg30": 93.35,
+          "low": 19.8,
+          "avg": 85.58
+        },
+        "660213": {
+          "idProduct": 660213,
+          "trend": 739.91,
+          "avg7": 341.41,
+          "avg30": 536.06,
+          "low": 160.34,
+          "avg": 233.3
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-16",
+      "setId": "base1",
+      "localId": "16",
+      "name": "Zapdos",
+      "confidence": "MEDIUM",
+      "currentProductId": 273711,
+      "alternateProductIds": [
+        660212
+      ],
+      "baseRowProductIds": [
+        273711,
+        660212
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 46.08,
+      "realPriceGuideValues": {
+        "273711": {
+          "idProduct": 273711,
+          "trend": 46.08,
+          "avg7": 53.39,
+          "avg30": 45.27,
+          "low": 1.5,
+          "avg": 48.09
+        },
+        "660212": {
+          "idProduct": 660212,
+          "trend": 113.08,
+          "avg7": 128.78,
+          "avg30": 148.41,
+          "low": 65,
+          "avg": 83.25
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-17",
+      "setId": "base1",
+      "localId": "17",
+      "name": "Beedrill",
+      "confidence": "MEDIUM",
+      "currentProductId": 273712,
+      "alternateProductIds": [
+        660211
+      ],
+      "baseRowProductIds": [
+        273712,
+        660211
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.72,
+      "realPriceGuideValues": {
+        "273712": {
+          "idProduct": 273712,
+          "trend": 4.72,
+          "avg7": 4.32,
+          "avg30": 5.54,
+          "low": 0.1,
+          "avg": 5.94
+        },
+        "660211": {
+          "idProduct": 660211,
+          "trend": 22.38,
+          "avg7": 39.46,
+          "avg30": 27.29,
+          "low": 9,
+          "avg": 48.21
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-18",
+      "setId": "base1",
+      "localId": "18",
+      "name": "Dragonair",
+      "confidence": "MEDIUM",
+      "currentProductId": 273713,
+      "alternateProductIds": [
+        660210
+      ],
+      "baseRowProductIds": [
+        273713,
+        660210
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 18.99,
+      "realPriceGuideValues": {
+        "273713": {
+          "idProduct": 273713,
+          "trend": 18.99,
+          "avg7": 17.77,
+          "avg30": 15.2,
+          "low": 1.46,
+          "avg": 14.79
+        },
+        "660210": {
+          "idProduct": 660210,
+          "trend": 102.31,
+          "avg7": 127.35,
+          "avg30": 82.52,
+          "low": 19.95,
+          "avg": 340
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-19",
+      "setId": "base1",
+      "localId": "19",
+      "name": "Dugtrio",
+      "confidence": "MEDIUM",
+      "currentProductId": 273714,
+      "alternateProductIds": [
+        660209
+      ],
+      "baseRowProductIds": [
+        273714,
+        660209
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 7.83,
+      "realPriceGuideValues": {
+        "273714": {
+          "idProduct": 273714,
+          "trend": 7.83,
+          "avg7": 7.19,
+          "avg30": 8.72,
+          "low": 0.19,
+          "avg": 9.75
+        },
+        "660209": {
+          "idProduct": 660209,
+          "trend": 45.98,
+          "avg7": 52.78,
+          "avg30": 35.4,
+          "low": 20.9,
+          "avg": 58.33
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-2",
+      "setId": "base1",
+      "localId": "2",
+      "name": "Blastoise",
+      "confidence": "MEDIUM",
+      "currentProductId": 273697,
+      "alternateProductIds": [
+        660226
+      ],
+      "baseRowProductIds": [
+        273697,
+        660226
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 221.78,
+      "realPriceGuideValues": {
+        "273697": {
+          "idProduct": 273697,
+          "trend": 221.78,
+          "avg7": 88.66,
+          "avg30": 224.32,
+          "low": 20.9,
+          "avg": 230.74
+        },
+        "660226": {
+          "idProduct": 660226,
+          "trend": 854.61,
+          "avg7": 910.85,
+          "avg30": 635.22,
+          "low": 159.94,
+          "avg": 300
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-20",
+      "setId": "base1",
+      "localId": "20",
+      "name": "Electabuzz",
+      "confidence": "MEDIUM",
+      "currentProductId": 273715,
+      "alternateProductIds": [
+        660208
+      ],
+      "baseRowProductIds": [
+        273715,
+        660208
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 9.21,
+      "realPriceGuideValues": {
+        "273715": {
+          "idProduct": 273715,
+          "trend": 9.21,
+          "avg7": 8.23,
+          "avg30": 9.07,
+          "low": 0.02,
+          "avg": 8.95
+        },
+        "660208": {
+          "idProduct": 660208,
+          "trend": 41.22,
+          "avg7": 56.97,
+          "avg30": 43.69,
+          "low": 10.9,
+          "avg": 28.95
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-21",
+      "setId": "base1",
+      "localId": "21",
+      "name": "Electrode",
+      "confidence": "MEDIUM",
+      "currentProductId": 273716,
+      "alternateProductIds": [
+        660207
+      ],
+      "baseRowProductIds": [
+        273716,
+        660207
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 8.09,
+      "realPriceGuideValues": {
+        "273716": {
+          "idProduct": 273716,
+          "trend": 8.09,
+          "avg7": 10.11,
+          "avg30": 9.21,
+          "low": 0.3,
+          "avg": 8.55
+        },
+        "660207": {
+          "idProduct": 660207,
+          "trend": 30.12,
+          "avg7": 32.06,
+          "avg30": 29.2,
+          "low": 12.49,
+          "avg": 40
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-22",
+      "setId": "base1",
+      "localId": "22",
+      "name": "Pidgeotto",
+      "confidence": "MEDIUM",
+      "currentProductId": 273717,
+      "alternateProductIds": [
+        660206
+      ],
+      "baseRowProductIds": [
+        273717,
+        660206
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 13.01,
+      "realPriceGuideValues": {
+        "273717": {
+          "idProduct": 273717,
+          "trend": 13.01,
+          "avg7": 11.94,
+          "avg30": 13.55,
+          "low": 0.5,
+          "avg": 14.02
+        },
+        "660206": {
+          "idProduct": 660206,
+          "trend": 40.05,
+          "avg7": 35.69,
+          "avg30": 38.87,
+          "low": 5,
+          "avg": 34.96
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-23",
+      "setId": "base1",
+      "localId": "23",
+      "name": "Arcanine",
+      "confidence": "MEDIUM",
+      "currentProductId": 273718,
+      "alternateProductIds": [
+        660205
+      ],
+      "baseRowProductIds": [
+        273718,
+        660205
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 6.23,
+      "realPriceGuideValues": {
+        "273718": {
+          "idProduct": 273718,
+          "trend": 6.23,
+          "avg7": 6.04,
+          "avg30": 5.44,
+          "low": 0.05,
+          "avg": 5.54
+        },
+        "660205": {
+          "idProduct": 660205,
+          "trend": 41.09,
+          "avg7": 40.17,
+          "avg30": 37.73,
+          "low": 5.3,
+          "avg": 38.91
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-24",
+      "setId": "base1",
+      "localId": "24",
+      "name": "Charmeleon",
+      "confidence": "MEDIUM",
+      "currentProductId": 273719,
+      "alternateProductIds": [
+        660204
+      ],
+      "baseRowProductIds": [
+        273719,
+        660204
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.42,
+      "realPriceGuideValues": {
+        "273719": {
+          "idProduct": 273719,
+          "trend": 3.42,
+          "avg7": 2.9,
+          "avg30": 3,
+          "low": 0.02,
+          "avg": 2.7
+        },
+        "660204": {
+          "idProduct": 660204,
+          "trend": 4.57,
+          "avg7": 11.34,
+          "avg30": 39.09,
+          "low": 2.99,
+          "avg": 10.32
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-25",
+      "setId": "base1",
+      "localId": "25",
+      "name": "Dewgong",
+      "confidence": "MEDIUM",
+      "currentProductId": 273720,
+      "alternateProductIds": [
+        660203
+      ],
+      "baseRowProductIds": [
+        273720,
+        660203
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.95,
+      "realPriceGuideValues": {
+        "273720": {
+          "idProduct": 273720,
+          "trend": 4.95,
+          "avg7": 4.18,
+          "avg30": 3.67,
+          "low": 0.1,
+          "avg": 4.01
+        },
+        "660203": {
+          "idProduct": 660203,
+          "trend": 9.76,
+          "avg7": 10,
+          "avg30": 10.79,
+          "low": 3.65,
+          "avg": 15.31
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-26",
+      "setId": "base1",
+      "localId": "26",
+      "name": "Dratini",
+      "confidence": "MEDIUM",
+      "currentProductId": 273721,
+      "alternateProductIds": [
+        660202
+      ],
+      "baseRowProductIds": [
+        273721,
+        660202
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.57,
+      "realPriceGuideValues": {
+        "273721": {
+          "idProduct": 273721,
+          "trend": 2.57,
+          "avg7": 3.5,
+          "avg30": 3.37,
+          "low": 0.02,
+          "avg": 3.31
+        },
+        "660202": {
+          "idProduct": 660202,
+          "trend": 29.12,
+          "avg7": 16.45,
+          "avg30": 23.82,
+          "low": 4.9,
+          "avg": 6.29
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-27",
+      "setId": "base1",
+      "localId": "27",
+      "name": "Farfetch'd",
+      "confidence": "MEDIUM",
+      "currentProductId": 273722,
+      "alternateProductIds": [
+        660201
+      ],
+      "baseRowProductIds": [
+        273722,
+        660201
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.01,
+      "realPriceGuideValues": {
+        "273722": {
+          "idProduct": 273722,
+          "trend": 2.01,
+          "avg7": 1.44,
+          "avg30": 1.61,
+          "low": 0.02,
+          "avg": 1.55
+        },
+        "660201": {
+          "idProduct": 660201,
+          "trend": 42.45,
+          "avg7": 5.79,
+          "avg30": 11.56,
+          "low": 3,
+          "avg": 5.98
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-28",
+      "setId": "base1",
+      "localId": "28",
+      "name": "Growlithe",
+      "confidence": "MEDIUM",
+      "currentProductId": 273723,
+      "alternateProductIds": [
+        660200
+      ],
+      "baseRowProductIds": [
+        273723,
+        660200
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.82,
+      "realPriceGuideValues": {
+        "273723": {
+          "idProduct": 273723,
+          "trend": 2.82,
+          "avg7": 3.71,
+          "avg30": 2.39,
+          "low": 0.02,
+          "avg": 2.41
+        },
+        "660200": {
+          "idProduct": 660200,
+          "trend": 10.34,
+          "avg7": 15.39,
+          "avg30": 12.64,
+          "low": 2.9,
+          "avg": 10.2
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-29",
+      "setId": "base1",
+      "localId": "29",
+      "name": "Haunter",
+      "confidence": "MEDIUM",
+      "currentProductId": 273724,
+      "alternateProductIds": [
+        660199
+      ],
+      "baseRowProductIds": [
+        273724,
+        660199
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.2,
+      "realPriceGuideValues": {
+        "273724": {
+          "idProduct": 273724,
+          "trend": 1.2,
+          "avg7": 2.19,
+          "avg30": 2.84,
+          "low": 0.05,
+          "avg": 3.02
+        },
+        "660199": {
+          "idProduct": 660199,
+          "trend": 22.8,
+          "avg7": 21.8,
+          "avg30": 25.3,
+          "low": 6.3,
+          "avg": 15.4
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-3",
+      "setId": "base1",
+      "localId": "3",
+      "name": "Chansey",
+      "confidence": "MEDIUM",
+      "currentProductId": 273698,
+      "alternateProductIds": [
+        660225
+      ],
+      "baseRowProductIds": [
+        273698,
+        660225
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 20.26,
+      "realPriceGuideValues": {
+        "273698": {
+          "idProduct": 273698,
+          "trend": 20.26,
+          "avg7": 36.12,
+          "avg30": 45.33,
+          "low": 5,
+          "avg": 44.66
+        },
+        "660225": {
+          "idProduct": 660225,
+          "trend": 113.71,
+          "avg7": 93.27,
+          "avg30": 111.82,
+          "low": 24.99,
+          "avg": 85
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-30",
+      "setId": "base1",
+      "localId": "30",
+      "name": "Ivysaur",
+      "confidence": "MEDIUM",
+      "currentProductId": 273725,
+      "alternateProductIds": [
+        660198
+      ],
+      "baseRowProductIds": [
+        273725,
+        660198
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.52,
+      "realPriceGuideValues": {
+        "273725": {
+          "idProduct": 273725,
+          "trend": 4.52,
+          "avg7": 4.37,
+          "avg30": 3.97,
+          "low": 0.02,
+          "avg": 4.25
+        },
+        "660198": {
+          "idProduct": 660198,
+          "trend": 46.43,
+          "avg7": 30.1,
+          "avg30": 56.46,
+          "low": 6.75,
+          "avg": 18.96
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-31",
+      "setId": "base1",
+      "localId": "31",
+      "name": "Jynx",
+      "confidence": "MEDIUM",
+      "currentProductId": 273726,
+      "alternateProductIds": [
+        660197
+      ],
+      "baseRowProductIds": [
+        273726,
+        660197
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.18,
+      "realPriceGuideValues": {
+        "273726": {
+          "idProduct": 273726,
+          "trend": 2.18,
+          "avg7": 1.19,
+          "avg30": 1.8,
+          "low": 0.02,
+          "avg": 1.89
+        },
+        "660197": {
+          "idProduct": 660197,
+          "trend": 9.73,
+          "avg7": 12.28,
+          "avg30": 6.12,
+          "low": 2,
+          "avg": 4.98
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-32",
+      "setId": "base1",
+      "localId": "32",
+      "name": "Kadabra",
+      "confidence": "MEDIUM",
+      "currentProductId": 273727,
+      "alternateProductIds": [
+        660196
+      ],
+      "baseRowProductIds": [
+        273727,
+        660196
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.22,
+      "realPriceGuideValues": {
+        "273727": {
+          "idProduct": 273727,
+          "trend": 4.22,
+          "avg7": 4.11,
+          "avg30": 3.97,
+          "low": 0.03,
+          "avg": 3.57
+        },
+        "660196": {
+          "idProduct": 660196,
+          "trend": 22.88,
+          "avg7": 16.36,
+          "avg30": 17.59,
+          "low": 3.95,
+          "avg": 19.42
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-33",
+      "setId": "base1",
+      "localId": "33",
+      "name": "Kakuna",
+      "confidence": "MEDIUM",
+      "currentProductId": 273728,
+      "alternateProductIds": [
+        660195
+      ],
+      "baseRowProductIds": [
+        273728,
+        660195
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.52,
+      "realPriceGuideValues": {
+        "273728": {
+          "idProduct": 273728,
+          "trend": 1.52,
+          "avg7": 1.52,
+          "avg30": 2.11,
+          "low": 0.02,
+          "avg": 1.97
+        },
+        "660195": {
+          "idProduct": 660195,
+          "trend": 27.69,
+          "avg7": 13.14,
+          "avg30": 8.91,
+          "low": 1,
+          "avg": 13.27
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-34",
+      "setId": "base1",
+      "localId": "34",
+      "name": "Machoke",
+      "confidence": "MEDIUM",
+      "currentProductId": 273729,
+      "alternateProductIds": [
+        660194
+      ],
+      "baseRowProductIds": [
+        273729,
+        660194
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.32,
+      "realPriceGuideValues": {
+        "273729": {
+          "idProduct": 273729,
+          "trend": 1.32,
+          "avg7": 0.97,
+          "avg30": 1.12,
+          "low": 0.02,
+          "avg": 1.08
+        },
+        "660194": {
+          "idProduct": 660194,
+          "trend": 17.03,
+          "avg7": 21.73,
+          "avg30": 10.93,
+          "low": 1.49,
+          "avg": 16.09
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-35",
+      "setId": "base1",
+      "localId": "35",
+      "name": "Magikarp",
+      "confidence": "MEDIUM",
+      "currentProductId": 273730,
+      "alternateProductIds": [
+        660193
+      ],
+      "baseRowProductIds": [
+        273730,
+        660193
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.08,
+      "realPriceGuideValues": {
+        "273730": {
+          "idProduct": 273730,
+          "trend": 3.08,
+          "avg7": 2.46,
+          "avg30": 3.02,
+          "low": 0.02,
+          "avg": 3.32
+        },
+        "660193": {
+          "idProduct": 660193,
+          "trend": 43.39,
+          "avg7": 27.62,
+          "avg30": 37.82,
+          "low": 14,
+          "avg": 24.95
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-36",
+      "setId": "base1",
+      "localId": "36",
+      "name": "Magmar",
+      "confidence": "MEDIUM",
+      "currentProductId": 273731,
+      "alternateProductIds": [
+        660192
+      ],
+      "baseRowProductIds": [
+        273731,
+        660192
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.92,
+      "realPriceGuideValues": {
+        "273731": {
+          "idProduct": 273731,
+          "trend": 4.92,
+          "avg7": 4.89,
+          "avg30": 4.22,
+          "low": 0.02,
+          "avg": 4.2
+        },
+        "660192": {
+          "idProduct": 660192,
+          "trend": 18.26,
+          "avg7": 20.07,
+          "avg30": 21.99,
+          "low": 4.95,
+          "avg": 12.87
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-37",
+      "setId": "base1",
+      "localId": "37",
+      "name": "Nidorino",
+      "confidence": "MEDIUM",
+      "currentProductId": 273732,
+      "alternateProductIds": [
+        660191
+      ],
+      "baseRowProductIds": [
+        273732,
+        660191
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 5.21,
+      "realPriceGuideValues": {
+        "273732": {
+          "idProduct": 273732,
+          "trend": 5.21,
+          "avg7": 4.47,
+          "avg30": 4.3,
+          "low": 0.02,
+          "avg": 4.29
+        },
+        "660191": {
+          "idProduct": 660191,
+          "trend": 26.68,
+          "avg7": 21.64,
+          "avg30": 22.01,
+          "low": 5.84,
+          "avg": 14.78
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-38",
+      "setId": "base1",
+      "localId": "38",
+      "name": "Poliwhirl",
+      "confidence": "MEDIUM",
+      "currentProductId": 273733,
+      "alternateProductIds": [
+        660190
+      ],
+      "baseRowProductIds": [
+        273733,
+        660190
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.14,
+      "realPriceGuideValues": {
+        "273733": {
+          "idProduct": 273733,
+          "trend": 2.14,
+          "avg7": 1.7,
+          "avg30": 1.74,
+          "low": 0.02,
+          "avg": 1.88
+        },
+        "660190": {
+          "idProduct": 660190,
+          "trend": 11.53,
+          "avg7": 11.84,
+          "avg30": 12.48,
+          "low": 1.52,
+          "avg": 5.96
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-39",
+      "setId": "base1",
+      "localId": "39",
+      "name": "Porygon",
+      "confidence": "MEDIUM",
+      "currentProductId": 273734,
+      "alternateProductIds": [
+        660189
+      ],
+      "baseRowProductIds": [
+        273734,
+        660189
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.65,
+      "realPriceGuideValues": {
+        "273734": {
+          "idProduct": 273734,
+          "trend": 3.65,
+          "avg7": 4,
+          "avg30": 3.54,
+          "low": 0.02,
+          "avg": 3.46
+        },
+        "660189": {
+          "idProduct": 660189,
+          "trend": 18.47,
+          "avg7": 14.24,
+          "avg30": 14.25,
+          "low": 4,
+          "avg": 18.11
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-4",
+      "setId": "base1",
+      "localId": "4",
+      "name": "Charizard",
+      "confidence": "MEDIUM",
+      "currentProductId": 273699,
+      "alternateProductIds": [
+        660224
+      ],
+      "baseRowProductIds": [
+        273699,
+        660224
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1017.77,
+      "realPriceGuideValues": {
+        "273699": {
+          "idProduct": 273699,
+          "trend": 1017.77,
+          "avg7": 739.03,
+          "avg30": 552.59,
+          "low": 100,
+          "avg": 523.53
+        },
+        "660224": {
+          "idProduct": 660224,
+          "trend": 3330.71,
+          "avg7": 3376.86,
+          "avg30": 2475.96,
+          "low": 950,
+          "avg": 3458.24
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-40",
+      "setId": "base1",
+      "localId": "40",
+      "name": "Raticate",
+      "confidence": "MEDIUM",
+      "currentProductId": 273735,
+      "alternateProductIds": [
+        660188
+      ],
+      "baseRowProductIds": [
+        273735,
+        660188
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.53,
+      "realPriceGuideValues": {
+        "273735": {
+          "idProduct": 273735,
+          "trend": 3.53,
+          "avg7": 3.19,
+          "avg30": 3.06,
+          "low": 0.05,
+          "avg": 2.97
+        },
+        "660188": {
+          "idProduct": 660188,
+          "trend": 18.55,
+          "avg7": 18.87,
+          "avg30": 19.15,
+          "low": 1.39,
+          "avg": 21.25
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-41",
+      "setId": "base1",
+      "localId": "41",
+      "name": "Seel",
+      "confidence": "MEDIUM",
+      "currentProductId": 273736,
+      "alternateProductIds": [
+        660187
+      ],
+      "baseRowProductIds": [
+        273736,
+        660187
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3,
+      "realPriceGuideValues": {
+        "273736": {
+          "idProduct": 273736,
+          "trend": 3,
+          "avg7": 2.64,
+          "avg30": 2.82,
+          "low": 0.02,
+          "avg": 2.9
+        },
+        "660187": {
+          "idProduct": 660187,
+          "trend": 21.27,
+          "avg7": 21.4,
+          "avg30": 14.3,
+          "low": 3,
+          "avg": 29.32
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-42",
+      "setId": "base1",
+      "localId": "42",
+      "name": "Wartortle",
+      "confidence": "MEDIUM",
+      "currentProductId": 273737,
+      "alternateProductIds": [
+        660186
+      ],
+      "baseRowProductIds": [
+        273737,
+        660186
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 8.42,
+      "realPriceGuideValues": {
+        "273737": {
+          "idProduct": 273737,
+          "trend": 8.42,
+          "avg7": 8.97,
+          "avg30": 6.14,
+          "low": 0.05,
+          "avg": 6.52
+        },
+        "660186": {
+          "idProduct": 660186,
+          "trend": 58.38,
+          "avg7": 41.47,
+          "avg30": 26.24,
+          "low": 4.95,
+          "avg": 15.21
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-43",
+      "setId": "base1",
+      "localId": "43",
+      "name": "Abra",
+      "confidence": "MEDIUM",
+      "currentProductId": 273738,
+      "alternateProductIds": [
+        660185
+      ],
+      "baseRowProductIds": [
+        273738,
+        660185
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.56,
+      "realPriceGuideValues": {
+        "273738": {
+          "idProduct": 273738,
+          "trend": 1.56,
+          "avg7": 1.05,
+          "avg30": 1.55,
+          "low": 0.02,
+          "avg": 1.65
+        },
+        "660185": {
+          "idProduct": 660185,
+          "trend": 72.19,
+          "avg7": 103.56,
+          "avg30": 29.13,
+          "low": 2.95,
+          "avg": 21.79
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-45",
+      "setId": "base1",
+      "localId": "45",
+      "name": "Caterpie",
+      "confidence": "MEDIUM",
+      "currentProductId": 273740,
+      "alternateProductIds": [
+        660183
+      ],
+      "baseRowProductIds": [
+        273740,
+        660183
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.89,
+      "realPriceGuideValues": {
+        "273740": {
+          "idProduct": 273740,
+          "trend": 1.89,
+          "avg7": 1.52,
+          "avg30": 1.83,
+          "low": 0.02,
+          "avg": 1.8
+        },
+        "660183": {
+          "idProduct": 660183,
+          "trend": 26.57,
+          "avg7": 15.58,
+          "avg30": 10.24,
+          "low": 4.94,
+          "avg": 13.14
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-47",
+      "setId": "base1",
+      "localId": "47",
+      "name": "Diglett",
+      "confidence": "MEDIUM",
+      "currentProductId": 273742,
+      "alternateProductIds": [
+        660181
+      ],
+      "baseRowProductIds": [
+        273742,
+        660181
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.24,
+      "realPriceGuideValues": {
+        "273742": {
+          "idProduct": 273742,
+          "trend": 1.24,
+          "avg7": 0.69,
+          "avg30": 1.12,
+          "low": 0.02,
+          "avg": 1.15
+        },
+        "660181": {
+          "idProduct": 660181,
+          "trend": 40.68,
+          "avg7": 26.94,
+          "avg30": 12.79,
+          "low": 0.65,
+          "avg": 6.16
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-48",
+      "setId": "base1",
+      "localId": "48",
+      "name": "Doduo",
+      "confidence": "MEDIUM",
+      "currentProductId": 273743,
+      "alternateProductIds": [
+        660180
+      ],
+      "baseRowProductIds": [
+        273743,
+        660180
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.52,
+      "realPriceGuideValues": {
+        "273743": {
+          "idProduct": 273743,
+          "trend": 2.52,
+          "avg7": 1.45,
+          "avg30": 3.25,
+          "low": 0.02,
+          "avg": 3.2
+        },
+        "660180": {
+          "idProduct": 660180,
+          "trend": 10.23,
+          "avg7": 16.66,
+          "avg30": 7.26,
+          "low": 1,
+          "avg": 18.05
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-49",
+      "setId": "base1",
+      "localId": "49",
+      "name": "Drowzee",
+      "confidence": "MEDIUM",
+      "currentProductId": 273744,
+      "alternateProductIds": [
+        660179
+      ],
+      "baseRowProductIds": [
+        273744,
+        660179
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.32,
+      "realPriceGuideValues": {
+        "273744": {
+          "idProduct": 273744,
+          "trend": 1.32,
+          "avg7": 1.07,
+          "avg30": 1.03,
+          "low": 0.02,
+          "avg": 1.03
+        },
+        "660179": {
+          "idProduct": 660179,
+          "trend": 0.02,
+          "avg7": 2.96,
+          "avg30": 5.8,
+          "low": 1,
+          "avg": 3.05
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-5",
+      "setId": "base1",
+      "localId": "5",
+      "name": "Clefairy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273700,
+      "alternateProductIds": [
+        660223
+      ],
+      "baseRowProductIds": [
+        273700,
+        660223
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 30.28,
+      "realPriceGuideValues": {
+        "273700": {
+          "idProduct": 273700,
+          "trend": 30.28,
+          "avg7": 33.72,
+          "avg30": 30.42,
+          "low": 5,
+          "avg": 30.17
+        },
+        "660223": {
+          "idProduct": 660223,
+          "trend": 121.54,
+          "avg7": 43.49,
+          "avg30": 134.74,
+          "low": 25,
+          "avg": 37.49
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-50",
+      "setId": "base1",
+      "localId": "50",
+      "name": "Gastly",
+      "confidence": "MEDIUM",
+      "currentProductId": 273745,
+      "alternateProductIds": [
+        660178
+      ],
+      "baseRowProductIds": [
+        273745,
+        660178
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.88,
+      "realPriceGuideValues": {
+        "273745": {
+          "idProduct": 273745,
+          "trend": 1.88,
+          "avg7": 1.29,
+          "avg30": 1.6,
+          "low": 0.02,
+          "avg": 1.58
+        },
+        "660178": {
+          "idProduct": 660178,
+          "trend": 19.47,
+          "avg7": 10.73,
+          "avg30": 16.47,
+          "low": 1.6,
+          "avg": 10.73
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-51",
+      "setId": "base1",
+      "localId": "51",
+      "name": "Koffing",
+      "confidence": "MEDIUM",
+      "currentProductId": 273746,
+      "alternateProductIds": [
+        660177
+      ],
+      "baseRowProductIds": [
+        273746,
+        660177
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.94,
+      "realPriceGuideValues": {
+        "273746": {
+          "idProduct": 273746,
+          "trend": 0.94,
+          "avg7": 0.99,
+          "avg30": 1.16,
+          "low": 0.02,
+          "avg": 1.19
+        },
+        "660177": {
+          "idProduct": 660177,
+          "trend": 6.08,
+          "avg7": 9.63,
+          "avg30": 13.93,
+          "low": 0.95,
+          "avg": 9.99
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-52",
+      "setId": "base1",
+      "localId": "52",
+      "name": "Machop",
+      "confidence": "MEDIUM",
+      "currentProductId": 273747,
+      "alternateProductIds": [
+        660176
+      ],
+      "baseRowProductIds": [
+        273747,
+        660176
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.76,
+      "realPriceGuideValues": {
+        "273747": {
+          "idProduct": 273747,
+          "trend": 0.76,
+          "avg7": 1.09,
+          "avg30": 0.74,
+          "low": 0.02,
+          "avg": 0.72
+        },
+        "660176": {
+          "idProduct": 660176,
+          "trend": 11.58,
+          "avg7": 6.95,
+          "avg30": 8.31,
+          "low": 0.05,
+          "avg": 6.61
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-53",
+      "setId": "base1",
+      "localId": "53",
+      "name": "Magnemite",
+      "confidence": "MEDIUM",
+      "currentProductId": 273748,
+      "alternateProductIds": [
+        660175
+      ],
+      "baseRowProductIds": [
+        273748,
+        660175
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.35,
+      "realPriceGuideValues": {
+        "273748": {
+          "idProduct": 273748,
+          "trend": 1.35,
+          "avg7": 0.79,
+          "avg30": 1.46,
+          "low": 0.02,
+          "avg": 1.45
+        },
+        "660175": {
+          "idProduct": 660175,
+          "trend": 6.71,
+          "avg7": 11.12,
+          "avg30": 8.87,
+          "low": 1.25,
+          "avg": 12.47
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-54",
+      "setId": "base1",
+      "localId": "54",
+      "name": "Metapod",
+      "confidence": "MEDIUM",
+      "currentProductId": 273749,
+      "alternateProductIds": [
+        660174
+      ],
+      "baseRowProductIds": [
+        273749,
+        660174
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.51,
+      "realPriceGuideValues": {
+        "273749": {
+          "idProduct": 273749,
+          "trend": 1.51,
+          "avg7": 1.86,
+          "avg30": 1.92,
+          "low": 0.02,
+          "avg": 1.86
+        },
+        "660174": {
+          "idProduct": 660174,
+          "trend": 3.93,
+          "avg7": 7.99,
+          "avg30": 9.27,
+          "low": 2,
+          "avg": 8.22
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-55",
+      "setId": "base1",
+      "localId": "55",
+      "name": "Nidoran♂",
+      "confidence": "MEDIUM",
+      "currentProductId": 273750,
+      "alternateProductIds": [
+        660173
+      ],
+      "baseRowProductIds": [
+        273750,
+        660173
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.16,
+      "realPriceGuideValues": {
+        "273750": {
+          "idProduct": 273750,
+          "trend": 2.16,
+          "avg7": 0.93,
+          "avg30": 1.06,
+          "low": 0.02,
+          "avg": 1.02
+        },
+        "660173": {
+          "idProduct": 660173,
+          "trend": 51.94,
+          "avg7": 39.91,
+          "avg30": 17.24,
+          "low": 0.75,
+          "avg": 7.72
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-56",
+      "setId": "base1",
+      "localId": "56",
+      "name": "Onix",
+      "confidence": "MEDIUM",
+      "currentProductId": 273751,
+      "alternateProductIds": [
+        660172
+      ],
+      "baseRowProductIds": [
+        273751,
+        660172
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.07,
+      "realPriceGuideValues": {
+        "273751": {
+          "idProduct": 273751,
+          "trend": 1.07,
+          "avg7": 1.2,
+          "avg30": 2.12,
+          "low": 0.02,
+          "avg": 1.6
+        },
+        "660172": {
+          "idProduct": 660172,
+          "trend": 22.13,
+          "avg7": 15.18,
+          "avg30": 9.7,
+          "low": 2.5,
+          "avg": 17.17
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-57",
+      "setId": "base1",
+      "localId": "57",
+      "name": "Pidgey",
+      "confidence": "MEDIUM",
+      "currentProductId": 273752,
+      "alternateProductIds": [
+        660171
+      ],
+      "baseRowProductIds": [
+        273752,
+        660171
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 10.49,
+      "realPriceGuideValues": {
+        "273752": {
+          "idProduct": 273752,
+          "trend": 10.49,
+          "avg7": 1.65,
+          "avg30": 1.62,
+          "low": 0.02,
+          "avg": 3.6
+        },
+        "660171": {
+          "idProduct": 660171,
+          "trend": 17.99,
+          "avg7": 18.73,
+          "avg30": 9.8,
+          "low": 4.45,
+          "avg": 13.67
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-59",
+      "setId": "base1",
+      "localId": "59",
+      "name": "Poliwag",
+      "confidence": "MEDIUM",
+      "currentProductId": 273754,
+      "alternateProductIds": [
+        660168
+      ],
+      "baseRowProductIds": [
+        273754,
+        660168
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.12,
+      "realPriceGuideValues": {
+        "273754": {
+          "idProduct": 273754,
+          "trend": 1.12,
+          "avg7": 0.69,
+          "avg30": 1.16,
+          "low": 0.02,
+          "avg": 1.14
+        },
+        "660168": {
+          "idProduct": 660168,
+          "trend": 11.16,
+          "avg7": 9.44,
+          "avg30": 8.74,
+          "low": 2.49,
+          "avg": 9.76
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-6",
+      "setId": "base1",
+      "localId": "6",
+      "name": "Gyarados",
+      "confidence": "MEDIUM",
+      "currentProductId": 273701,
+      "alternateProductIds": [
+        660222
+      ],
+      "baseRowProductIds": [
+        273701,
+        660222
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 21.49,
+      "realPriceGuideValues": {
+        "273701": {
+          "idProduct": 273701,
+          "trend": 21.49,
+          "avg7": 23.72,
+          "avg30": 24.35,
+          "low": 1.8,
+          "avg": 24.46
+        },
+        "660222": {
+          "idProduct": 660222,
+          "trend": 373.07,
+          "avg7": 394.11,
+          "avg30": 231.59,
+          "low": 9.9,
+          "avg": 145.5
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-60",
+      "setId": "base1",
+      "localId": "60",
+      "name": "Ponyta",
+      "confidence": "MEDIUM",
+      "currentProductId": 273755,
+      "alternateProductIds": [
+        660167
+      ],
+      "baseRowProductIds": [
+        273755,
+        660167
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.36,
+      "realPriceGuideValues": {
+        "273755": {
+          "idProduct": 273755,
+          "trend": 1.36,
+          "avg7": 0.75,
+          "avg30": 0.62,
+          "low": 0.02,
+          "avg": 0.61
+        },
+        "660167": {
+          "idProduct": 660167,
+          "trend": 11.46,
+          "avg7": 13.1,
+          "avg30": 6.75,
+          "low": 0.95,
+          "avg": 12.48
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-61",
+      "setId": "base1",
+      "localId": "61",
+      "name": "Rattata",
+      "confidence": "MEDIUM",
+      "currentProductId": 273756,
+      "alternateProductIds": [
+        660166
+      ],
+      "baseRowProductIds": [
+        273756,
+        660166
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.45,
+      "realPriceGuideValues": {
+        "273756": {
+          "idProduct": 273756,
+          "trend": 2.45,
+          "avg7": 0.79,
+          "avg30": 0.86,
+          "low": 0.02,
+          "avg": 0.89
+        },
+        "660166": {
+          "idProduct": 660166,
+          "trend": 7.36,
+          "avg7": 11.05,
+          "avg30": 6.77,
+          "low": 1.49,
+          "avg": 6.65
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-62",
+      "setId": "base1",
+      "localId": "62",
+      "name": "Sandshrew",
+      "confidence": "MEDIUM",
+      "currentProductId": 273757,
+      "alternateProductIds": [
+        660165
+      ],
+      "baseRowProductIds": [
+        273757,
+        660165
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.3,
+      "realPriceGuideValues": {
+        "273757": {
+          "idProduct": 273757,
+          "trend": 1.3,
+          "avg7": 1.05,
+          "avg30": 1.46,
+          "low": 0.02,
+          "avg": 1.45
+        },
+        "660165": {
+          "idProduct": 660165,
+          "trend": 15.28,
+          "avg7": 10.95,
+          "avg30": 11.32,
+          "low": 0.95,
+          "avg": 12.06
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-64",
+      "setId": "base1",
+      "localId": "64",
+      "name": "Starmie",
+      "confidence": "MEDIUM",
+      "currentProductId": 273759,
+      "alternateProductIds": [
+        660163
+      ],
+      "baseRowProductIds": [
+        273759,
+        660163
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.97,
+      "realPriceGuideValues": {
+        "273759": {
+          "idProduct": 273759,
+          "trend": 2.97,
+          "avg7": 2.56,
+          "avg30": 1.5,
+          "low": 0.02,
+          "avg": 1.43
+        },
+        "660163": {
+          "idProduct": 660163,
+          "trend": 2.82,
+          "avg7": 3.96,
+          "avg30": 9.75,
+          "low": 0.95,
+          "avg": 4.13
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-65",
+      "setId": "base1",
+      "localId": "65",
+      "name": "Staryu",
+      "confidence": "MEDIUM",
+      "currentProductId": 273760,
+      "alternateProductIds": [
+        660162
+      ],
+      "baseRowProductIds": [
+        273760,
+        660162
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.12,
+      "realPriceGuideValues": {
+        "273760": {
+          "idProduct": 273760,
+          "trend": 1.12,
+          "avg7": 1.42,
+          "avg30": 1.04,
+          "low": 0.02,
+          "avg": 1.04
+        },
+        "660162": {
+          "idProduct": 660162,
+          "trend": 22.3,
+          "avg7": 9.74,
+          "avg30": 6.19,
+          "low": 1,
+          "avg": 9.37
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-66",
+      "setId": "base1",
+      "localId": "66",
+      "name": "Tangela",
+      "confidence": "MEDIUM",
+      "currentProductId": 273761,
+      "alternateProductIds": [
+        660161
+      ],
+      "baseRowProductIds": [
+        273761,
+        660161
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.96,
+      "realPriceGuideValues": {
+        "273761": {
+          "idProduct": 273761,
+          "trend": 0.96,
+          "avg7": 0.89,
+          "avg30": 1.21,
+          "low": 0.02,
+          "avg": 1.19
+        },
+        "660161": {
+          "idProduct": 660161,
+          "trend": 23.77,
+          "avg7": 5.43,
+          "avg30": 16.86,
+          "low": 1,
+          "avg": 8.36
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-67",
+      "setId": "base1",
+      "localId": "67",
+      "name": "Voltorb",
+      "confidence": "MEDIUM",
+      "currentProductId": 273762,
+      "alternateProductIds": [
+        660160
+      ],
+      "baseRowProductIds": [
+        273762,
+        660160
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.97,
+      "realPriceGuideValues": {
+        "273762": {
+          "idProduct": 273762,
+          "trend": 2.97,
+          "avg7": 2.35,
+          "avg30": 2.32,
+          "low": 0.02,
+          "avg": 2.4
+        },
+        "660160": {
+          "idProduct": 660160,
+          "trend": 43.85,
+          "avg7": 55.61,
+          "avg30": 18.01,
+          "low": 2.07,
+          "avg": 136.97
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-68",
+      "setId": "base1",
+      "localId": "68",
+      "name": "Vulpix",
+      "confidence": "MEDIUM",
+      "currentProductId": 273763,
+      "alternateProductIds": [
+        660159
+      ],
+      "baseRowProductIds": [
+        273763,
+        660159
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.11,
+      "realPriceGuideValues": {
+        "273763": {
+          "idProduct": 273763,
+          "trend": 1.11,
+          "avg7": 0.96,
+          "avg30": 1.24,
+          "low": 0.02,
+          "avg": 1.33
+        },
+        "660159": {
+          "idProduct": 660159,
+          "trend": 7.63,
+          "avg7": 11.58,
+          "avg30": 14.88,
+          "low": 2.9,
+          "avg": 8.48
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-69",
+      "setId": "base1",
+      "localId": "69",
+      "name": "Weedle",
+      "confidence": "MEDIUM",
+      "currentProductId": 273764,
+      "alternateProductIds": [
+        660158
+      ],
+      "baseRowProductIds": [
+        273764,
+        660158
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.08,
+      "realPriceGuideValues": {
+        "273764": {
+          "idProduct": 273764,
+          "trend": 1.08,
+          "avg7": 0.52,
+          "avg30": 0.8,
+          "low": 0.02,
+          "avg": 0.79
+        },
+        "660158": {
+          "idProduct": 660158,
+          "trend": 10.97,
+          "avg7": 22.05,
+          "avg30": 8.19,
+          "low": 1.14,
+          "avg": 26.63
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-7",
+      "setId": "base1",
+      "localId": "7",
+      "name": "Hitmonchan",
+      "confidence": "MEDIUM",
+      "currentProductId": 273702,
+      "alternateProductIds": [
+        660221
+      ],
+      "baseRowProductIds": [
+        273702,
+        660221
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 8.17,
+      "realPriceGuideValues": {
+        "273702": {
+          "idProduct": 273702,
+          "trend": 8.17,
+          "avg7": 8.93,
+          "avg30": 11.45,
+          "low": 0.78,
+          "avg": 12.28
+        },
+        "660221": {
+          "idProduct": 660221,
+          "trend": 42.17,
+          "avg7": 30.31,
+          "avg30": 55.46,
+          "low": 29.99,
+          "avg": 32.5
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-70",
+      "setId": "base1",
+      "localId": "70",
+      "name": "Clefairy Doll",
+      "confidence": "MEDIUM",
+      "currentProductId": 273765,
+      "alternateProductIds": [
+        660150
+      ],
+      "baseRowProductIds": [
+        273765,
+        660150
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 5.93,
+      "realPriceGuideValues": {
+        "273765": {
+          "idProduct": 273765,
+          "trend": 5.93,
+          "avg7": 9.39,
+          "avg30": 10.18,
+          "low": 0.65,
+          "avg": 9.69
+        },
+        "660150": {
+          "idProduct": 660150,
+          "trend": 21.68,
+          "avg7": 31.54,
+          "avg30": 22.78,
+          "low": 6.95,
+          "avg": 35.65
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-71",
+      "setId": "base1",
+      "localId": "71",
+      "name": "Computer Search",
+      "confidence": "MEDIUM",
+      "currentProductId": 273766,
+      "alternateProductIds": [
+        660149
+      ],
+      "baseRowProductIds": [
+        273766,
+        660149
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.4,
+      "realPriceGuideValues": {
+        "273766": {
+          "idProduct": 273766,
+          "trend": 3.4,
+          "avg7": 2.59,
+          "avg30": 3.37,
+          "low": 0.15,
+          "avg": 3.62
+        },
+        "660149": {
+          "idProduct": 660149,
+          "trend": 20.06,
+          "avg7": 38.55,
+          "avg30": 22.46,
+          "low": 3.85,
+          "avg": 33.37
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-72",
+      "setId": "base1",
+      "localId": "72",
+      "name": "Devolution Spray",
+      "confidence": "MEDIUM",
+      "currentProductId": 273767,
+      "alternateProductIds": [
+        660147
+      ],
+      "baseRowProductIds": [
+        273767,
+        660147
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 7.11,
+      "realPriceGuideValues": {
+        "273767": {
+          "idProduct": 273767,
+          "trend": 7.11,
+          "avg7": 8.34,
+          "avg30": 8.36,
+          "low": 0.85,
+          "avg": 8.96
+        },
+        "660147": {
+          "idProduct": 660147,
+          "trend": 36.41,
+          "avg7": 42.32,
+          "avg30": 28.83,
+          "low": 15,
+          "avg": 19.5
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-73",
+      "setId": "base1",
+      "localId": "73",
+      "name": "Impostor Professor Oak",
+      "confidence": "MEDIUM",
+      "currentProductId": 273768,
+      "alternateProductIds": [
+        660146
+      ],
+      "baseRowProductIds": [
+        273768,
+        660146
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 8.64,
+      "realPriceGuideValues": {
+        "273768": {
+          "idProduct": 273768,
+          "trend": 8.64,
+          "avg7": 9.91,
+          "avg30": 11.13,
+          "low": 1,
+          "avg": 11.28
+        },
+        "660146": {
+          "idProduct": 660146,
+          "trend": 38.21,
+          "avg7": 37.83,
+          "avg30": 31.46,
+          "low": 14.5,
+          "avg": 27.46
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-74",
+      "setId": "base1",
+      "localId": "74",
+      "name": "Item Finder",
+      "confidence": "MEDIUM",
+      "currentProductId": 273769,
+      "alternateProductIds": [
+        660144
+      ],
+      "baseRowProductIds": [
+        273769,
+        660144
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 9,
+      "realPriceGuideValues": {
+        "273769": {
+          "idProduct": 273769,
+          "trend": 9,
+          "avg7": 9.96,
+          "avg30": 9.28,
+          "low": 2.8,
+          "avg": 9.37
+        },
+        "660144": {
+          "idProduct": 660144,
+          "trend": 31.6,
+          "avg7": 28.97,
+          "avg30": 23.17,
+          "low": 15,
+          "avg": 35.65
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-75",
+      "setId": "base1",
+      "localId": "75",
+      "name": "Lass",
+      "confidence": "MEDIUM",
+      "currentProductId": 273770,
+      "alternateProductIds": [
+        660143
+      ],
+      "baseRowProductIds": [
+        273770,
+        660143
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.01,
+      "realPriceGuideValues": {
+        "273770": {
+          "idProduct": 273770,
+          "trend": 3.01,
+          "avg7": 3.5,
+          "avg30": 3.41,
+          "low": 0.12,
+          "avg": 3.26
+        },
+        "660143": {
+          "idProduct": 660143,
+          "trend": 14.75,
+          "avg7": 13.52,
+          "avg30": 12.09,
+          "low": 5.49,
+          "avg": 16.35
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-76",
+      "setId": "base1",
+      "localId": "76",
+      "name": "Pokémon Breeder",
+      "confidence": "MEDIUM",
+      "currentProductId": 273771,
+      "alternateProductIds": [
+        660142
+      ],
+      "baseRowProductIds": [
+        273771,
+        660142
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 7.7,
+      "realPriceGuideValues": {
+        "273771": {
+          "idProduct": 273771,
+          "trend": 7.7,
+          "avg7": 9.97,
+          "avg30": 8.83,
+          "low": 0.9,
+          "avg": 8.78
+        },
+        "660142": {
+          "idProduct": 660142,
+          "trend": 21.86,
+          "avg7": 26.13,
+          "avg30": 29.71,
+          "low": 22.48,
+          "avg": 29.36
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-77",
+      "setId": "base1",
+      "localId": "77",
+      "name": "Pokémon Trader",
+      "confidence": "MEDIUM",
+      "currentProductId": 273772,
+      "alternateProductIds": [
+        660140
+      ],
+      "baseRowProductIds": [
+        273772,
+        660140
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 7.29,
+      "realPriceGuideValues": {
+        "273772": {
+          "idProduct": 273772,
+          "trend": 7.29,
+          "avg7": 8.25,
+          "avg30": 8.82,
+          "low": 1,
+          "avg": 8.72
+        },
+        "660140": {
+          "idProduct": 660140,
+          "trend": 26.43,
+          "avg7": 14.23,
+          "avg30": 22.37,
+          "low": 12.25,
+          "avg": 13.33
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-78",
+      "setId": "base1",
+      "localId": "78",
+      "name": "Scoop Up",
+      "confidence": "MEDIUM",
+      "currentProductId": 273773,
+      "alternateProductIds": [
+        660138
+      ],
+      "baseRowProductIds": [
+        273773,
+        660138
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 8.5,
+      "realPriceGuideValues": {
+        "273773": {
+          "idProduct": 273773,
+          "trend": 8.5,
+          "avg7": 11.9,
+          "avg30": 13.77,
+          "low": 3,
+          "avg": 14.13
+        },
+        "660138": {
+          "idProduct": 660138,
+          "trend": 39.32,
+          "avg7": 43.12,
+          "avg30": 26.75,
+          "low": 17.49,
+          "avg": 62.49
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-79",
+      "setId": "base1",
+      "localId": "79",
+      "name": "Super Energy Removal",
+      "confidence": "MEDIUM",
+      "currentProductId": 273774,
+      "alternateProductIds": [
+        660137
+      ],
+      "baseRowProductIds": [
+        273774,
+        660137
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.69,
+      "realPriceGuideValues": {
+        "273774": {
+          "idProduct": 273774,
+          "trend": 2.69,
+          "avg7": 3.34,
+          "avg30": 3.76,
+          "low": 0.05,
+          "avg": 4
+        },
+        "660137": {
+          "idProduct": 660137,
+          "trend": 12.61,
+          "avg7": 13.07,
+          "avg30": 11.12,
+          "low": 4.99,
+          "avg": 15.63
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-8",
+      "setId": "base1",
+      "localId": "8",
+      "name": "Machamp",
+      "confidence": "MEDIUM",
+      "currentProductId": 273703,
+      "alternateProductIds": [
+        660220
+      ],
+      "baseRowProductIds": [
+        273703,
+        660220
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.04,
+      "realPriceGuideValues": {
+        "273703": {
+          "idProduct": 273703,
+          "trend": 12.04,
+          "avg7": 12.31,
+          "avg30": 14.82,
+          "low": 0.9,
+          "avg": 16.32
+        },
+        "660220": {
+          "idProduct": 660220,
+          "trend": 128.65,
+          "avg7": 179.79,
+          "avg30": 104.54,
+          "low": 20,
+          "avg": 246.46
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-80",
+      "setId": "base1",
+      "localId": "80",
+      "name": "Defender",
+      "confidence": "MEDIUM",
+      "currentProductId": 273775,
+      "alternateProductIds": [
+        660135
+      ],
+      "baseRowProductIds": [
+        273775,
+        660135
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.11,
+      "realPriceGuideValues": {
+        "273775": {
+          "idProduct": 273775,
+          "trend": 1.11,
+          "avg7": 1.9,
+          "avg30": 2.23,
+          "low": 0.02,
+          "avg": 2.35
+        },
+        "660135": {
+          "idProduct": 660135,
+          "trend": 43.47,
+          "avg7": 9.34,
+          "avg30": 9.69,
+          "low": 3.8,
+          "avg": 65.67
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-81",
+      "setId": "base1",
+      "localId": "81",
+      "name": "Energy Retrieval",
+      "confidence": "MEDIUM",
+      "currentProductId": 273776,
+      "alternateProductIds": [
+        660134
+      ],
+      "baseRowProductIds": [
+        273776,
+        660134
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.4,
+      "realPriceGuideValues": {
+        "273776": {
+          "idProduct": 273776,
+          "trend": 0.4,
+          "avg7": 0.44,
+          "avg30": 0.75,
+          "low": 0.02,
+          "avg": 0.67
+        },
+        "660134": {
+          "idProduct": 660134,
+          "trend": 22.25,
+          "avg7": 5.14,
+          "avg30": 3.1,
+          "low": 0.45,
+          "avg": 33.28
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-82",
+      "setId": "base1",
+      "localId": "82",
+      "name": "Full Heal",
+      "confidence": "MEDIUM",
+      "currentProductId": 273777,
+      "alternateProductIds": [
+        660132
+      ],
+      "baseRowProductIds": [
+        273777,
+        660132
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.2,
+      "realPriceGuideValues": {
+        "273777": {
+          "idProduct": 273777,
+          "trend": 3.2,
+          "avg7": 2.68,
+          "avg30": 2.4,
+          "low": 0.05,
+          "avg": 2.24
+        },
+        "660132": {
+          "idProduct": 660132,
+          "trend": 7.42,
+          "avg7": 10.42,
+          "avg30": 8.39,
+          "low": 2.65,
+          "avg": 8.32
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-83",
+      "setId": "base1",
+      "localId": "83",
+      "name": "Maintenance",
+      "confidence": "MEDIUM",
+      "currentProductId": 273778,
+      "alternateProductIds": [
+        660123
+      ],
+      "baseRowProductIds": [
+        273778,
+        660123
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.82,
+      "realPriceGuideValues": {
+        "273778": {
+          "idProduct": 273778,
+          "trend": 4.82,
+          "avg7": 4.23,
+          "avg30": 3.99,
+          "low": 0.05,
+          "avg": 3.82
+        },
+        "660123": {
+          "idProduct": 660123,
+          "trend": 9.71,
+          "avg7": 6.72,
+          "avg30": 6.68,
+          "low": 2.73,
+          "avg": 13.73
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-84",
+      "setId": "base1",
+      "localId": "84",
+      "name": "PlusPower",
+      "confidence": "MEDIUM",
+      "currentProductId": 273779,
+      "alternateProductIds": [
+        660122
+      ],
+      "baseRowProductIds": [
+        273779,
+        660122
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.48,
+      "realPriceGuideValues": {
+        "273779": {
+          "idProduct": 273779,
+          "trend": 1.48,
+          "avg7": 0.91,
+          "avg30": 1.03,
+          "low": 0.02,
+          "avg": 1.05
+        },
+        "660122": {
+          "idProduct": 660122,
+          "trend": 7.85,
+          "avg7": 8.76,
+          "avg30": 6.03,
+          "low": 0.95,
+          "avg": 7.86
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-85",
+      "setId": "base1",
+      "localId": "85",
+      "name": "Pokémon Center",
+      "confidence": "MEDIUM",
+      "currentProductId": 273780,
+      "alternateProductIds": [
+        660121
+      ],
+      "baseRowProductIds": [
+        273780,
+        660121
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.39,
+      "realPriceGuideValues": {
+        "273780": {
+          "idProduct": 273780,
+          "trend": 2.39,
+          "avg7": 2.65,
+          "avg30": 2.62,
+          "low": 0.02,
+          "avg": 2.66
+        },
+        "660121": {
+          "idProduct": 660121,
+          "trend": 12.32,
+          "avg7": 9.79,
+          "avg30": 8.77,
+          "low": 2,
+          "avg": 7.98
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-86",
+      "setId": "base1",
+      "localId": "86",
+      "name": "Pokémon Flute",
+      "confidence": "MEDIUM",
+      "currentProductId": 273781,
+      "alternateProductIds": [
+        660120
+      ],
+      "baseRowProductIds": [
+        273781,
+        660120
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.89,
+      "realPriceGuideValues": {
+        "273781": {
+          "idProduct": 273781,
+          "trend": 3.89,
+          "avg7": 3.68,
+          "avg30": 3.25,
+          "low": 0.08,
+          "avg": 3.27
+        },
+        "660120": {
+          "idProduct": 660120,
+          "trend": 15.58,
+          "avg7": 14.36,
+          "avg30": 9.93,
+          "low": 4.95,
+          "avg": 20.47
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-87",
+      "setId": "base1",
+      "localId": "87",
+      "name": "Pokédex",
+      "confidence": "MEDIUM",
+      "currentProductId": 273782,
+      "alternateProductIds": [
+        660119
+      ],
+      "baseRowProductIds": [
+        273782,
+        660119
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 1.39,
+      "realPriceGuideValues": {
+        "273782": {
+          "idProduct": 273782,
+          "trend": 1.39,
+          "avg7": 0.6,
+          "avg30": 0.94,
+          "low": 0.02,
+          "avg": 0.98
+        },
+        "660119": {
+          "idProduct": 660119,
+          "trend": 7.2,
+          "avg7": 4.06,
+          "avg30": 4.65,
+          "low": 1,
+          "avg": 5.16
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-88",
+      "setId": "base1",
+      "localId": "88",
+      "name": "Professor Oak",
+      "confidence": "MEDIUM",
+      "currentProductId": 273783,
+      "alternateProductIds": [
+        660118
+      ],
+      "baseRowProductIds": [
+        273783,
+        660118
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.94,
+      "realPriceGuideValues": {
+        "273783": {
+          "idProduct": 273783,
+          "trend": 0.94,
+          "avg7": 1.15,
+          "avg30": 1.19,
+          "low": 0.02,
+          "avg": 1.22
+        },
+        "660118": {
+          "idProduct": 660118,
+          "trend": 15.58,
+          "avg7": 20.08,
+          "avg30": 12.09,
+          "low": 1.99,
+          "avg": 6.58
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-89",
+      "setId": "base1",
+      "localId": "89",
+      "name": "Revive",
+      "confidence": "MEDIUM",
+      "currentProductId": 273784,
+      "alternateProductIds": [
+        660116
+      ],
+      "baseRowProductIds": [
+        273784,
+        660116
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 3.24,
+      "realPriceGuideValues": {
+        "273784": {
+          "idProduct": 273784,
+          "trend": 3.24,
+          "avg7": 3.76,
+          "avg30": 3.58,
+          "low": 0.04,
+          "avg": 3.61
+        },
+        "660116": {
+          "idProduct": 660116,
+          "trend": 16.65,
+          "avg7": 15.08,
+          "avg30": 14.74,
+          "low": 1.75,
+          "avg": 18
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-9",
+      "setId": "base1",
+      "localId": "9",
+      "name": "Magneton",
+      "confidence": "MEDIUM",
+      "currentProductId": 273704,
+      "alternateProductIds": [
+        660219
+      ],
+      "baseRowProductIds": [
+        273704,
+        660219
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 26.61,
+      "realPriceGuideValues": {
+        "273704": {
+          "idProduct": 273704,
+          "trend": 26.61,
+          "avg7": 32.04,
+          "avg30": 24.65,
+          "low": 4,
+          "avg": 25.5
+        },
+        "660219": {
+          "idProduct": 660219,
+          "trend": 89.99,
+          "avg7": 82.2,
+          "avg30": 71.08,
+          "low": 34.99,
+          "avg": 79.95
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-90",
+      "setId": "base1",
+      "localId": "90",
+      "name": "Super Potion",
+      "confidence": "MEDIUM",
+      "currentProductId": 273785,
+      "alternateProductIds": [
+        660115
+      ],
+      "baseRowProductIds": [
+        273785,
+        660115
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.37,
+      "realPriceGuideValues": {
+        "273785": {
+          "idProduct": 273785,
+          "trend": 0.37,
+          "avg7": 0.37,
+          "avg30": 0.4,
+          "low": 0.02,
+          "avg": 0.43
+        },
+        "660115": {
+          "idProduct": 660115,
+          "trend": 16.8,
+          "avg7": 11.96,
+          "avg30": 9.75,
+          "low": 1.24,
+          "avg": 13.8
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-91",
+      "setId": "base1",
+      "localId": "91",
+      "name": "Bill",
+      "confidence": "MEDIUM",
+      "currentProductId": 273786,
+      "alternateProductIds": [
+        660113
+      ],
+      "baseRowProductIds": [
+        273786,
+        660113
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.44,
+      "realPriceGuideValues": {
+        "273786": {
+          "idProduct": 273786,
+          "trend": 0.44,
+          "avg7": 0.34,
+          "avg30": 0.42,
+          "low": 0.02,
+          "avg": 0.42
+        },
+        "660113": {
+          "idProduct": 660113,
+          "trend": 7.32,
+          "avg7": 7,
+          "avg30": 3.09,
+          "low": 0.45,
+          "avg": 8.87
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-92",
+      "setId": "base1",
+      "localId": "92",
+      "name": "Energy Removal",
+      "confidence": "MEDIUM",
+      "currentProductId": 273787,
+      "alternateProductIds": [
+        660112
+      ],
+      "baseRowProductIds": [
+        273787,
+        660112
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.74,
+      "realPriceGuideValues": {
+        "273787": {
+          "idProduct": 273787,
+          "trend": 0.74,
+          "avg7": 0.43,
+          "avg30": 0.75,
+          "low": 0.02,
+          "avg": 0.68
+        },
+        "660112": {
+          "idProduct": 660112,
+          "trend": 9.8,
+          "avg7": 12.86,
+          "avg30": 5.08,
+          "low": 0.49,
+          "avg": 8.35
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-93",
+      "setId": "base1",
+      "localId": "93",
+      "name": "Gust of Wind",
+      "confidence": "MEDIUM",
+      "currentProductId": 273788,
+      "alternateProductIds": [
+        660110
+      ],
+      "baseRowProductIds": [
+        273788,
+        660110
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.52,
+      "realPriceGuideValues": {
+        "273788": {
+          "idProduct": 273788,
+          "trend": 0.52,
+          "avg7": 0.2,
+          "avg30": 0.56,
+          "low": 0.02,
+          "avg": 0.56
+        },
+        "660110": {
+          "idProduct": 660110,
+          "trend": 5.7,
+          "avg7": 3.82,
+          "avg30": 2.62,
+          "low": 0.5,
+          "avg": 3.04
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-94",
+      "setId": "base1",
+      "localId": "94",
+      "name": "Potion",
+      "confidence": "MEDIUM",
+      "currentProductId": 273789,
+      "alternateProductIds": [
+        660109
+      ],
+      "baseRowProductIds": [
+        273789,
+        660109
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.39,
+      "realPriceGuideValues": {
+        "273789": {
+          "idProduct": 273789,
+          "trend": 0.39,
+          "avg7": 0.21,
+          "avg30": 0.38,
+          "low": 0.02,
+          "avg": 0.39
+        },
+        "660109": {
+          "idProduct": 660109,
+          "trend": 11.23,
+          "avg7": 1.36,
+          "avg30": 2.44,
+          "low": 0.02,
+          "avg": 13.57
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-95",
+      "setId": "base1",
+      "localId": "95",
+      "name": "Switch",
+      "confidence": "MEDIUM",
+      "currentProductId": 273790,
+      "alternateProductIds": [
+        660107
+      ],
+      "baseRowProductIds": [
+        273790,
+        660107
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.52,
+      "realPriceGuideValues": {
+        "273790": {
+          "idProduct": 273790,
+          "trend": 0.52,
+          "avg7": 0.25,
+          "avg30": 0.42,
+          "low": 0.02,
+          "avg": 0.46
+        },
+        "660107": {
+          "idProduct": 660107,
+          "trend": 6.24,
+          "avg7": 6.89,
+          "avg30": 3.27,
+          "low": 0.6,
+          "avg": 7.57
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-96",
+      "setId": "base1",
+      "localId": "96",
+      "name": "Double Colorless Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273791,
+      "alternateProductIds": [
+        660106
+      ],
+      "baseRowProductIds": [
+        273791,
+        660106
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 4.31,
+      "realPriceGuideValues": {
+        "273791": {
+          "idProduct": 273791,
+          "trend": 4.31,
+          "avg7": 4.45,
+          "avg30": 4.4,
+          "low": 0.05,
+          "avg": 4.69
+        },
+        "660106": {
+          "idProduct": 660106,
+          "trend": 20.54,
+          "avg7": 24.72,
+          "avg30": 18.59,
+          "low": 10,
+          "avg": 18.73
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-97",
+      "setId": "base1",
+      "localId": "97",
+      "name": "Fighting Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273792,
+      "alternateProductIds": [
+        660105
+      ],
+      "baseRowProductIds": [
+        273792,
+        660105
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.45,
+      "realPriceGuideValues": {
+        "273792": {
+          "idProduct": 273792,
+          "trend": 0.45,
+          "avg7": 0.55,
+          "avg30": 0.46,
+          "low": 0.02,
+          "avg": 0.45
+        },
+        "660105": {
+          "idProduct": 660105,
+          "trend": 11.37,
+          "avg7": 26.34,
+          "avg30": 3.85,
+          "low": 0.05,
+          "avg": 40.63
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-98",
+      "setId": "base1",
+      "localId": "98",
+      "name": "Fire Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273793,
+      "alternateProductIds": [
+        660103
+      ],
+      "baseRowProductIds": [
+        273793,
+        660103
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.17,
+      "realPriceGuideValues": {
+        "273793": {
+          "idProduct": 273793,
+          "trend": 2.17,
+          "avg7": 0.8,
+          "avg30": 0.48,
+          "low": 0.02,
+          "avg": 0.46
+        },
+        "660103": {
+          "idProduct": 660103,
+          "trend": 2.13,
+          "avg7": 2.26,
+          "avg30": 2.09,
+          "low": 0.05,
+          "avg": 2.57
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "base1-99",
+      "setId": "base1",
+      "localId": "99",
+      "name": "Grass Energy",
+      "confidence": "MEDIUM",
+      "currentProductId": 273794,
+      "alternateProductIds": [
+        660102
+      ],
+      "baseRowProductIds": [
+        273794,
+        660102
+      ],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.31,
+      "realPriceGuideValues": {
+        "273794": {
+          "idProduct": 273794,
+          "trend": 0.31,
+          "avg7": 0.21,
+          "avg30": 0.24,
+          "low": 0.02,
+          "avg": 0.26
+        },
+        "660102": {
+          "idProduct": 660102,
+          "trend": 5.65,
+          "avg7": 6.89,
+          "avg30": 2.4,
+          "low": 0.05,
+          "avg": 3.46
+        }
+      },
+      "reason": "Più prodotti Cardmarket sono associati a finiture base senza metadati sufficienti a scegliere automaticamente.",
+      "recommendedAction": "Verifica esatta V1/V2/V3; non generalizzare."
+    },
+    {
+      "tcgdexId": "cel25cc-CC020",
+      "setId": "cel25cc",
+      "localId": "CC020",
+      "name": "Reshiram",
+      "confidence": "MEDIUM",
+      "currentProductId": 576747,
+      "alternateProductIds": [],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [
+        "cel25-2"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.21,
+      "realPriceGuideValues": {
+        "576747": {
+          "idProduct": 576747,
+          "trend": 0.21,
+          "avg7": 0.24,
+          "avg30": 0.18,
+          "low": 0.02,
+          "avg": 0.15
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "cel25cc-CC021",
+      "setId": "cel25cc",
+      "localId": "CC021",
+      "name": "Zekrom",
+      "confidence": "MEDIUM",
+      "currentProductId": 576755,
+      "alternateProductIds": [],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [
+        "cel25-10"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 0.18,
+      "realPriceGuideValues": {
+        "576755": {
+          "idProduct": 576755,
+          "trend": 0.18,
+          "avg7": 0.24,
+          "avg30": 0.18,
+          "low": 0.02,
+          "avg": 0.16
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "mfb-33",
+      "setId": "mfb",
+      "localId": "33",
+      "name": "Potion",
+      "confidence": "LOW",
+      "currentProductId": null,
+      "alternateProductIds": [
+        524029,
+        741983,
+        741995,
+        742007
+      ],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": null,
+      "realPriceGuideValues": {
+        "741983": {
+          "idProduct": 741983,
+          "trend": 0.22,
+          "avg7": 0.14,
+          "avg30": 0.14,
+          "low": 0.02,
+          "avg": 0.06
+        },
+        "741995": {
+          "idProduct": 741995,
+          "trend": 0.17,
+          "avg7": 0.12,
+          "avg30": 0.14,
+          "low": 0.02,
+          "avg": 0.05
+        },
+        "742007": {
+          "idProduct": 742007,
+          "trend": 0.17,
+          "avg7": 0.1,
+          "avg30": 0.11,
+          "low": 0.02,
+          "avg": 0.08
+        }
+      },
+      "reason": "La sorgente espone più prodotti ma non un product ID top-level corrente verificabile.",
+      "recommendedAction": "Restare fail-closed finché il prodotto principale non è dimostrato."
+    },
+    {
+      "tcgdexId": "mfb-34",
+      "setId": "mfb",
+      "localId": "34",
+      "name": "Switch",
+      "confidence": "LOW",
+      "currentProductId": null,
+      "alternateProductIds": [
+        741984,
+        741996,
+        742008,
+        742020
+      ],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": null,
+      "realPriceGuideValues": {
+        "741984": {
+          "idProduct": 741984,
+          "trend": 0.18,
+          "avg7": 0.05,
+          "avg30": 0.08,
+          "low": 0.02,
+          "avg": 0.05
+        },
+        "741996": {
+          "idProduct": 741996,
+          "trend": 0.09,
+          "avg7": 0.09,
+          "avg30": 0.08,
+          "low": 0.03,
+          "avg": 0.06
+        },
+        "742008": {
+          "idProduct": 742008,
+          "trend": 0.13,
+          "avg7": 0.07,
+          "avg30": 0.1,
+          "low": 0.02,
+          "avg": 0.07
+        },
+        "742020": {
+          "idProduct": 742020,
+          "trend": 0.09,
+          "avg7": 0.07,
+          "avg30": 0.15,
+          "low": 0.02,
+          "avg": 0.07
+        }
+      },
+      "reason": "La sorgente espone più prodotti ma non un product ID top-level corrente verificabile.",
+      "recommendedAction": "Restare fail-closed finché il prodotto principale non è dimostrato."
+    },
+    {
+      "tcgdexId": "mfb-9",
+      "setId": "mfb",
+      "localId": "9",
+      "name": "Charmander",
+      "confidence": "MEDIUM",
+      "currentProductId": 741988,
+      "alternateProductIds": [
+        741976
+      ],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [
+        "mfb-1"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 2.65,
+      "realPriceGuideValues": {
+        "741976": {
+          "idProduct": 741976,
+          "trend": 5.97,
+          "avg7": 5.29,
+          "avg30": 4.11,
+          "low": 1.8,
+          "avg": 4.79
+        },
+        "741988": {
+          "idProduct": 741988,
+          "trend": 2.65,
+          "avg7": 3.16,
+          "avg30": 2.6,
+          "low": 1.1,
+          "avg": 3.4
+        }
+      },
+      "reason": "Il prodotto top-level corrente non compare tra le righe fisiche base unstamped/unfoiled.",
+      "recommendedAction": "Verifica esatta V1/V2/V3 prima di qualsiasi mapping."
+    },
+    {
+      "tcgdexId": "pl3-AR1",
+      "setId": "pl3",
+      "localId": "AR1",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR2",
+      "setId": "pl3",
+      "localId": "AR2",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR3",
+      "setId": "pl3",
+      "localId": "AR3",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR4",
+      "setId": "pl3",
+      "localId": "AR4",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR5",
+      "setId": "pl3",
+      "localId": "AR5",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR6",
+      "setId": "pl3",
+      "localId": "AR6",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR7",
+      "setId": "pl3",
+      "localId": "AR7",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR8",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR8",
+      "setId": "pl3",
+      "localId": "AR8",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR9",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "pl3-AR9",
+      "setId": "pl3",
+      "localId": "AR9",
+      "name": null,
+      "confidence": "MEDIUM",
+      "currentProductId": 278861,
+      "alternateProductIds": [],
+      "baseRowProductIds": [
+        278861
+      ],
+      "sharedProductWithTcgdexIds": [
+        "pl3-AR1",
+        "pl3-AR2",
+        "pl3-AR3",
+        "pl3-AR4",
+        "pl3-AR5",
+        "pl3-AR6",
+        "pl3-AR7",
+        "pl3-AR8",
+        "pl4-AR1",
+        "pl4-AR2",
+        "pl4-AR3",
+        "pl4-AR4",
+        "pl4-AR5",
+        "pl4-AR6",
+        "pl4-AR7",
+        "pl4-AR8",
+        "pl4-AR9"
+      ],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 12.06,
+      "realPriceGuideValues": {
+        "278861": {
+          "idProduct": 278861,
+          "trend": 12.06,
+          "avg7": 13.85,
+          "avg30": 13.15,
+          "low": 1.99,
+          "avg": 22.66
+        }
+      },
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    {
+      "tcgdexId": "sm12-237",
+      "setId": "sm12",
+      "localId": "237",
+      "name": "Torkoal",
+      "confidence": "MEDIUM",
+      "currentProductId": 398524,
+      "alternateProductIds": [],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": 8.43,
+      "realPriceGuideValues": {},
+      "reason": "Il prodotto top-level corrente non compare tra le righe fisiche base unstamped/unfoiled.",
+      "recommendedAction": "Verifica esatta V1/V2/V3 prima di qualsiasi mapping."
+    },
+    {
+      "tcgdexId": "svp-101",
+      "setId": "svp",
+      "localId": "101",
+      "name": "Pikachu",
+      "confidence": "LOW",
+      "currentProductId": null,
+      "alternateProductIds": [
+        726923,
+        740411
+      ],
+      "baseRowProductIds": [],
+      "sharedProductWithTcgdexIds": [],
+      "liveExactBaseEvidence": false,
+      "currentCardoryxValue": null,
+      "realPriceGuideValues": {
+        "726923": {
+          "idProduct": 726923,
+          "trend": 295.69,
+          "avg7": 150.95,
+          "avg30": 48.02,
+          "low": null,
+          "avg": 299.95
+        },
+        "740411": {
+          "idProduct": 740411,
+          "trend": 32.31,
+          "avg7": 34.36,
+          "avg30": 33.49,
+          "low": 14,
+          "avg": 31.49
+        }
+      },
+      "reason": "La sorgente espone più prodotti ma non un product ID top-level corrente verificabile.",
+      "recommendedAction": "Restare fail-closed finché il prodotto principale non è dimostrato."
+    }
+  ]
+}
