@@ -6402,6 +6402,11 @@ const VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES = {
   // Cosmic Eclipse / Eclissi Cosmica — TCGdex currently exposes the CEC239
   // Character Rare product for the exact CEC54 base identity.
   'sm12-54':{setId:'sm12',localId:'054',conflictingProduct:398504,baseProduct:407919},
+  // Celebrations Classic Collection — TCGdex currently reuses the main-set
+  // Reshiram/Zekrom products for the physically distinct BLW 113/114 reprints.
+  // These rules are exact to tcgdexId + set + localId + current wrong product.
+  'cel25cc-cc020':{setId:'cel25cc',localId:'CC020',conflictingProduct:576747,baseProduct:576790},
+  'cel25cc-cc021':{setId:'cel25cc',localId:'CC021',conflictingProduct:576755,baseProduct:576791},
   // Expedition Base Set — TCGdex currently exposes Tyranitar 029/165 Holo
   // product 274904 for the exact 066/165 Rare base identity. Cardmarket V2
   // is the 066/165 base product; keep this exact and fail closed elsewhere.
@@ -7330,17 +7335,17 @@ const VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES = {
   },
   'cel25cc-cc020':{
     setId:"cel25cc",localId:"CC020",name:"Reshiram",productId:576790,
-    verified:'2026-09-17T08:15:00Z',
+    verified:'2026-09-19T20:19:35Z',
     source:"Cardmarket Product Catalogue + Price Guide · Reshiram [Outrage | Blue Flare] · product 576790",
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
-    pricing:{"idProduct":576790,"trend":25.53,"avg7":29.35,"avg30":22.33,"avg":20.94,"low":12.99,"avg1":20,"trend-holo":0,"avg7-holo":null,"avg30-holo":null,"avg-holo":null,"low-holo":null}
+    pricing:{"idProduct":576790,"trend":25.05,"avg7":29.35,"avg30":22.33,"avg":20.94,"low":13,"avg1":20,"trend-holo":0,"avg7-holo":null,"avg30-holo":null,"avg-holo":null,"low-holo":null}
   },
   'cel25cc-cc021':{
     setId:"cel25cc",localId:"CC021",name:"Zekrom",productId:576791,
-    verified:'2026-09-17T08:15:00Z',
+    verified:'2026-09-19T20:19:35Z',
     source:"Cardmarket Product Catalogue + Price Guide · Zekrom [Outrage | Bolt Strike] · product 576791",
     sourceUrl:'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json',
-    pricing:{"idProduct":576791,"trend":27.75,"avg7":27.37,"avg30":25.8,"avg":23.19,"low":11.99,"avg1":18,"trend-holo":0,"avg7-holo":null,"avg30-holo":null,"avg-holo":null,"low-holo":null}
+    pricing:{"idProduct":576791,"trend":25.64,"avg7":27.37,"avg30":25.8,"avg":23.19,"low":9.99,"avg1":18,"trend-holo":0,"avg7-holo":null,"avg30-holo":null,"avg-holo":null,"low-holo":null}
   },
   'swshp-swsh055':{
     setId:"swshp",localId:"SWSH055",name:"Hatterene V",productId:510180,
