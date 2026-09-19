@@ -132,7 +132,7 @@ jobs:
               "sourceProductConflicts":source_product_conflicts,
               "rows":rows
           }
-          Path("temp_mcdonalds_2021_25th_audit.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          Path("/tmp/temp_mcdonalds_2021_25th_audit.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
           print(json.dumps({k:summary[k] for k in ("cards","physicalRowsExpected","verifiedPairs","distinctProductIds","mismatches","sourceProductConflicts")},ensure_ascii=False))
           assert not mismatches, mismatches
           assert len(rows)==25
@@ -141,6 +141,8 @@ jobs:
 
       - name: Run Cardmarket identity audit
         run: |
+          rm -rf scripts/__pycache__
+          git status --porcelain
           python3 scripts/test_card_identity_cardmarket_audit.py \
             --tcgdex-db ../tcgdex-cards-database \
             --workers 24
@@ -172,7 +174,7 @@ jobs:
           python3 - <<'PY'
           import json,time,urllib.request
           from pathlib import Path
-          r=json.loads(Path("temp_mcdonalds_2021_25th_audit.json").read_text())
+          r=json.loads(Path("/tmp/temp_mcdonalds_2021_25th_audit.json").read_text())
           checked=0; usable=0; failures=[]
           for item in r["rows"]:
               cid=item["tcgdexId"]
@@ -207,7 +209,7 @@ jobs:
                       usable+=1
           out={"checked":checked,"usablePriceRows":usable,"failures":failures}
           print(json.dumps(out))
-          Path("temp_mcdonalds_2021_25th_live.json").write_text(json.dumps(out,indent=2))
+          Path("/tmp/temp_mcdonalds_2021_25th_live.json").write_text(json.dumps(out,indent=2))
           assert checked==50 and not failures, out
           PY
 
@@ -217,8 +219,8 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-          a=json.loads(Path("temp_mcdonalds_2021_25th_audit.json").read_text())
-          l=json.loads(Path("temp_mcdonalds_2021_25th_live.json").read_text())
+          a=json.loads(Path("/tmp/temp_mcdonalds_2021_25th_audit.json").read_text())
+          l=json.loads(Path("/tmp/temp_mcdonalds_2021_25th_live.json").read_text())
           Path("temp_mcdonalds_2021_25th_validation.txt").write_text(
             f"PASS\nverifiedPairs={a['verifiedPairs']}\ndistinctProductIds={a['distinctProductIds']}\nliveRows={l['checked']}\nsourceUsablePriceRows={l['usablePriceRows']}\n"
           )
