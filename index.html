@@ -593,21 +593,40 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
     <div class="card">
       <div class="section-title">Catalogo</div>
       <input id="catalogSearch" placeholder="Cerca nome, set, numero…" oninput="renderCatalog()">
-      <div class="filters" style="margin-top:8px"><select id="typeFilter" onchange="clearHomeCategoryFilter();renderCatalog()"><option value="">Tutti i tipi</option></select><select id="statusFilter" onchange="renderCatalog()"><option value="">Tutti gli stati</option><option>Disponibile</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Protetta</option><option>Vendita</option></select>
+      <div class="filters" style="margin-top:8px"><select id="typeFilter" onchange="clearHomeCategoryFilter();renderCatalog()"><option value="">Tutti i tipi</option></select><select id="statusFilter" onchange="renderCatalog()"><option value="">Tutte le allocazioni</option><option value="available">Disponibile</option><option value="deck:any">In un mazzo</option><option value="protected">Protetta</option><option value="sale">Vendita</option></select>
       <div class="catalog-advanced">
-        <select id="variantFilter">
-          <option value="">Tutte le varianti</option>
-          <option>Normale</option>
-          <option>Holo</option>
-          <option>Reverse Holo</option>
-          <option>Cosmos Holo</option>
-          <option>Pokémon Day Stamp</option>
-          <option>Play! Pokémon Stamp</option>
-          <option>Play! Pokémon Prize Pack</option>
-          <option>Speciale / Altro</option>
-          <option>Non so</option>
+        <select id="variantFilter" onchange="renderCatalog()">
+          <option value="">Tutte le finiture</option>
+          <option value="Normal">Normale</option>
+          <option value="Holo">Holo</option>
+          <option value="Reverse Holo">Reverse Holo</option>
+          <option value="Ditto Peelable">Ditto rimovibile</option>
+          <option value="Cosmos Holo">Cosmos Holo</option>
+          <option value="Poké Ball Reverse Holo">Poké Ball Reverse Holo</option>
+          <option value="Master Ball Reverse Holo">Master Ball Reverse Holo</option>
+          <option value="Speciale / Altro">Speciale / Altro</option>
+          <option value="Non so">Non so</option>
         </select>
-        <select id="conditionFilter">
+        <select id="stampFilter" onchange="renderCatalog()">
+          <option value="">Tutti gli stamp / edizioni</option>
+          <option value="None">Nessuno</option>
+          <option value="Play! Pokémon">Play! Pokémon</option>
+          <option value="Pokémon Day">Pokémon Day</option>
+          <option value="30° Anniversario">30° Anniversario</option>
+          <option value="Worlds 2022">Worlds 2022</option>
+          <option value="Worlds 2023">Worlds 2023</option>
+          <option value="Worlds 2024">Worlds 2024</option>
+          <option value="MFB Poké Ball">MFB Poké Ball</option>
+          <option value="Pokémon Center">Pokémon Center</option>
+          <option value="Pre-release">Pre-release</option>
+          <option value="Staff">Staff</option>
+          <option value="Set Stamp">Set Stamp</option>
+          <option value="GameStop">GameStop</option>
+          <option value="Altro">Altro</option>
+        </select>
+      </div>
+      <div class="catalog-advanced">
+        <select id="conditionFilter" onchange="renderCatalog()">
           <option value="">Tutte le condizioni</option>
           <option value="NM">NM</option>
           <option value="EX">EX</option>
@@ -8972,7 +8991,7 @@ function deleteFromDetailElement(el){
 
 function clearCatalogFilters(){
   clearHomeCategoryFilter();
-  ['catalogSearch','typeFilter','statusFilter','variantFilter','conditionFilter'].forEach(id=>{
+  ['catalogSearch','typeFilter','statusFilter','variantFilter','stampFilter','conditionFilter'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.value='';
   });
@@ -9357,13 +9376,46 @@ function catalogCopyCount(){return db.reduce((a,c)=>a+(Number(c.qty)||1),0)}
 function catalogHoloCount(){return db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Speciale / Altro'].includes(c.variant||'')).reduce((a,c)=>a+(Number(c.qty)||1),0)}
 function catalogNMCount(){return db.filter(c=>(c.condition||'NM')==='NM').reduce((a,c)=>a+(Number(c.qty)||1),0)}
 
+function syncCatalogAllocationFilterOptions(){
+  const el=document.getElementById('statusFilter');if(!el)return;
+  const selected=el.value||'';
+  const fixed=[
+    ['', 'Tutte le allocazioni'],
+    ['available','Disponibile'],
+    ['deck:any','In un mazzo'],
+    ['protected','Protetta'],
+    ['sale','Vendita']
+  ];
+  const dynamic=(decks||[]).map(d=>[`deck:${d.id}`,`${deckTypeLabel(d)} · ${d.name}`]);
+  const options=[...fixed,...dynamic];
+  el.innerHTML=options.map(([value,label])=>`<option value="${esc(value)}">${esc(label)}</option>`).join('');
+  if(options.some(([value])=>value===selected))el.value=selected;
+}
+function catalogAllocationMatches(g,filter){
+  if(!filter)return true;
+  const data=groupEditableAllocations(g);
+  if(filter==='available')return Number(data.statuses?.Disponibile||0)>0;
+  if(filter==='protected')return Number(data.statuses?.Protetta||0)>0;
+  if(filter==='sale')return Number(data.statuses?.Vendita||0)>0;
+  if(filter==='deck:any'){
+    if(Object.values(data.decks||{}).some(q=>Number(q||0)>0))return true;
+    return (g.records||[]).some(r=>/^Mazzo\s+[12]$/i.test(String(r?.status||'').trim()));
+  }
+  if(filter.startsWith('deck:')){
+    const id=filter.slice(5);
+    return Number(data.decks?.[id]||0)>0;
+  }
+  return false;
+}
 function renderCatalog(){
   const el=document.getElementById('catalogList');if(!el)return;
+  syncCatalogAllocationFilterOptions();
   const q=(document.getElementById('catalogSearch')?.value||'').toLowerCase().trim();
   const tf=document.getElementById('typeFilter')?.value||'';
   const homeTf=activeHomeCategoryFilter||'';
   const sf=document.getElementById('statusFilter')?.value||'';
   const vf=document.getElementById('variantFilter')?.value||'';
+  const stf=document.getElementById('stampFilter')?.value||'';
   const cf=document.getElementById('conditionFilter')?.value||'';
   const sort=document.getElementById('sortFilter')?.value||'name';
 
@@ -9379,8 +9431,10 @@ function renderCatalog(){
           ? categoryFilterKey(category)===requestedKey
           : (!tf || categoryFilterKey(category)===requestedKey));
     return (!q||blob.includes(q)) && categoryOk &&
-      (!sf||g.records.some(r=>(r.status||'Disponibile')===sf)) &&
-      (!vf||(c.variant||'Normale')===vf) && (!cf||(c.condition||'NM')===cf);
+      catalogAllocationMatches(g,sf) &&
+      (!vf||g.records.some(r=>canonicalVariant(r?.variant||'Normal')===canonicalVariant(vf))) &&
+      (!stf||g.records.some(r=>canonicalStamp(r?.stamp||'None')===canonicalStamp(stf))) &&
+      (!cf||g.records.some(r=>(r.condition||'NM')===cf));
   });
   if(sort==='recent')groups.sort((a,b)=>String(b.representative.addedAt||'').localeCompare(String(a.representative.addedAt||'')));
   else if(sort==='qty')groups.sort((a,b)=>b.qty-a.qty);
