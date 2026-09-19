@@ -25,40 +25,69 @@ jobs:
       - name: Checkout latest TCGdex cards database
         run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
 
+      - name: Extend diagnostic report in runner only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("scripts/test_card_identity_cardmarket_audit.py")
+          s=p.read_text()
+          old='"p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],'
+          new='"p1AmbiguousProductIds": [c["tcgdexId"] for c in p1],\n        "p1AmbiguousProducts": p1,'
+          assert old in s
+          p.write_text(s.replace(old,new,1))
+          PY
+
       - name: Run current Cardmarket identity audit
         run: python3 scripts/test_card_identity_cardmarket_audit.py --workers 24
 
-      - name: Build compact P1 summary
+      - name: Build compact P1 detail summary
         run: |
           python3 - <<'PY'
           import json
+          from collections import Counter
           from pathlib import Path
-          p=Path("artifacts/card_identity_cardmarket_audit_report.json")
-          r=json.loads(p.read_text())
-          cases={x["tcgdexId"]:x for x in r.get("caseIndex",[])}
-          p1=r.get("p1AmbiguousProductIds",[])
-          src=r.get("sourceConflicts",[])
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          p1=r.get("p1AmbiguousProducts",[])
+          reason_counts=Counter(x.get("reason") for x in p1)
+          confidence_counts=Counter(x.get("confidence") for x in p1)
+          details=[]
+          for x in p1:
+            details.append({
+              "tcgdexId":x.get("tcgdexId"),
+              "setId":x.get("setId"),
+              "localId":x.get("localId"),
+              "name":x.get("name"),
+              "confidence":x.get("confidence"),
+              "currentProductId":x.get("currentProductId"),
+              "alternateProductIds":x.get("alternateProductIds"),
+              "baseRowProductIds":x.get("baseRowProductIdsAccordingToTcgdex"),
+              "sharedProductWithTcgdexIds":x.get("sharedProductWithTcgdexIds"),
+              "liveExactBaseEvidence":x.get("liveExactBaseEvidence"),
+              "currentCardoryxValue":x.get("currentCardoryxValue"),
+              "realPriceGuideValues":x.get("realPriceGuideValues"),
+              "reason":x.get("reason"),
+              "recommendedAction":x.get("recommendedAction"),
+            })
           out={
             "mainSha":r.get("mainSha"),
             "generatedAt":r.get("generatedAt"),
-            "snapshot":r.get("snapshot",{}),
-            "coverage":r.get("coverage",{}),
             "classificationTotals":r.get("classificationTotals",{}),
             "p1Count":len(p1),
-            "p1Ids":p1,
-            "sourceConflictIds":[x.get("tcgdexId") for x in src],
-            "unmappedExactProduct":[x.get("tcgdexId") for x in r.get("unmappedExactProduct",[])],
-            "liveExactBaseEvidence":r.get("liveExactBaseEvidence",{}),
-            "riskExtremes":r.get("riskExtremes",{}),
+            "confidenceCounts":dict(confidence_counts),
+            "reasonCounts":dict(reason_counts),
+            "sourceConflictIds":[x.get("tcgdexId") for x in r.get("sourceConflicts",[])],
+            "p1Details":details,
           }
-          Path("temp_cardmarket_p1_audit_summary.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          Path("temp_cardmarket_p1_detail_summary.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False))
           PY
 
-      - name: Record successful audit summary
+      - name: Record successful detailed audit
         if: github.event_name == 'push'
         run: |
+          git checkout -- scripts/test_card_identity_cardmarket_audit.py artifacts/card_identity_cardmarket_audit_report.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add temp_cardmarket_p1_audit_summary.json
-          git commit -m "TEMP record current Cardmarket P1 audit"
+          git add temp_cardmarket_p1_detail_summary.json
+          git commit -m "TEMP record detailed Cardmarket P1 audit"
           git push
