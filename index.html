@@ -4162,7 +4162,7 @@ function meePrizePackCardmarketName(card){
 
 function canonicalVariant(v){
   const n=normText(v||'');
-  if(['peelableditto','dittopeelable','dittorimovibile'].includes(n))return 'Ditto Peelable';
+  if(['peelableditto','dittopeelable','dittorimovibile','ditto rimovibile'].includes(n))return 'Ditto Peelable';
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
   if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
   if(n==='cosmo'||n.includes('cosmos'))return 'Cosmos Holo';
