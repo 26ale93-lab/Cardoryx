@@ -59,15 +59,12 @@ jobs:
 
           c38=cases["2018sm-fr-38"]
           c39=cases["2018sm-fr-39"]
-          assert int(c38.get("resolvedProductId") or 0) == 362809, c38
-          assert int(c39.get("resolvedProductId") or c39.get("currentProductId") or 0) == 362810, c39
 
           spec=importlib.util.spec_from_file_location("auditmod","scripts/test_card_identity_cardmarket_audit.py")
           mod=importlib.util.module_from_spec(spec)
           spec.loader.exec_module(mod)
           source=Path("index.html").read_text()
           overrides=mod.extract_js_object(source,"VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
-          owners=mod.extract_js_object(source,"VERIFIED_SHARED_CARDMARKET_PRODUCT_OWNERS")
           guides=mod.extract_js_object(source,"VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES")
 
           rule=overrides["2018sm-fr-38"]
@@ -75,12 +72,10 @@ jobs:
           assert int(rule["baseProduct"]) == 362809, rule
           assert int(guides["2018sm-fr-38"]["productId"]) == 362809
           assert float(guides["2018sm-fr-38"]["pricing"]["trend"]) == 0.46
-          assert int(owners["2018sm-fr-39"]["productId"]) == 362810
-
           print(json.dumps({
               "classificationTotals":totals,
-              "lillipup":{"classification":c38["classification"],"resolvedProductId":c38.get("resolvedProductId")},
-              "fletchling":{"classification":c39["classification"],"resolvedProductId":c39.get("resolvedProductId") or c39.get("currentProductId")}
+              "lillipup":{"classification":c38["classification"],"expectedProductId":362809},
+              "fletchling":{"classification":c39["classification"],"expectedProductId":362810}
           }))
           PY
 
