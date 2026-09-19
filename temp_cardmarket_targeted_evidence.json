@@ -1,0 +1,597 @@
+{
+  "mainSha": "d21c8bde09fc3e79b16a08b38d4540d1510eb659",
+  "classificationTotals": {
+    "SAFE": 1919,
+    "EXACT_ALTERNATE_PRODUCT": 162,
+    "P0_WRONG_PRODUCT": 0,
+    "P1_AMBIGUOUS_PRODUCT": 116,
+    "SOURCE_CONFLICT": 7,
+    "UNMAPPED_EXACT_PRODUCT": 0
+  },
+  "targets": {
+    "cel25cc-CC020": {
+      "tcgdexId": "cel25cc-CC020",
+      "setId": "cel25cc",
+      "setNameEN": "Celebrations Classic Collection",
+      "setNameIT": "Gran Festa Collezione Classica",
+      "localId": "CC020",
+      "normalizedLocalId": "cc020",
+      "name": "Reshiram",
+      "nameIT": null,
+      "rarity": "Classic Collection",
+      "regulationMark": null,
+      "inHistorical4252": true,
+      "currentProductId": 576747,
+      "alternateProductIds": [],
+      "allProductIds": [
+        576747
+      ],
+      "baseRowProductIdsAccordingToTcgdex": [],
+      "physicalVariantsByProductId": {
+        "576747": [
+          {
+            "finish": "holo",
+            "foil": [],
+            "stamp": [
+              "25th-celebration"
+            ],
+            "size": null,
+            "subtype": null,
+            "language": null,
+            "variantId": null,
+            "firstEdition": null
+          }
+        ]
+      },
+      "cardmarketProductCatalog": {
+        "576747": {
+          "idProduct": 576747,
+          "name": "Reshiram [Scorching Wind | Black Flame]",
+          "idCategory": 51,
+          "categoryName": "Pokémon Single",
+          "idExpansion": 4347,
+          "idMetacard": 345908,
+          "dateAdded": "2021-10-01 11:52:18"
+        }
+      },
+      "sharedProductWithTcgdexIds": [
+        "cel25-2"
+      ],
+      "currentCardoryxValue": 0.21,
+      "baseOverrideApplied": false,
+      "resolvedProductId": 576747,
+      "resolvedCardoryxValue": 0.21,
+      "baseOverrideGuardTests": null,
+      "liveExactBaseEvidence": false,
+      "liveExactBaseProductId": null,
+      "liveExactBasePriceAvailable": true,
+      "liveExplicitVariantUsesSameProduct": true,
+      "liveExactSvpSetLogoStaffPair": false,
+      "liveExactSvpStampProducts": {},
+      "liveExactEx5BeldumGymChallenge": false,
+      "liveExactEx5BeldumProducts": null,
+      "liveExactSwsh028GameStop": false,
+      "liveExactSwsh028GameStopProductId": null,
+      "verifiedPrimaryWorldsPair": false,
+      "verifiedPrimaryWorldsProducts": null,
+      "verifiedPrimarySpecialPair": false,
+      "verifiedPrimarySpecialProducts": null,
+      "verifiedStandardJumboPair": false,
+      "verifiedStandardJumboProducts": null,
+      "snapshotExactAlternateProductProtected": false,
+      "realPriceGuideValues": {
+        "576747": {
+          "idProduct": 576747,
+          "trend": 0.21,
+          "avg7": 0.24,
+          "avg30": 0.18,
+          "low": 0.02,
+          "avg": 0.15
+        }
+      },
+      "trendDeltaVersusCurrent": {},
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "confidence": "MEDIUM",
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    "cel25cc-CC021": {
+      "tcgdexId": "cel25cc-CC021",
+      "setId": "cel25cc",
+      "setNameEN": "Celebrations Classic Collection",
+      "setNameIT": "Gran Festa Collezione Classica",
+      "localId": "CC021",
+      "normalizedLocalId": "cc021",
+      "name": "Zekrom",
+      "nameIT": null,
+      "rarity": "Classic Collection",
+      "regulationMark": null,
+      "inHistorical4252": true,
+      "currentProductId": 576755,
+      "alternateProductIds": [],
+      "allProductIds": [
+        576755
+      ],
+      "baseRowProductIdsAccordingToTcgdex": [],
+      "physicalVariantsByProductId": {
+        "576755": [
+          {
+            "finish": "holo",
+            "foil": [],
+            "stamp": [
+              "25th-celebration"
+            ],
+            "size": null,
+            "subtype": null,
+            "language": null,
+            "variantId": null,
+            "firstEdition": null
+          }
+        ]
+      },
+      "cardmarketProductCatalog": {
+        "576755": {
+          "idProduct": 576755,
+          "name": "Zekrom [Field Crush | White Thunder]",
+          "idCategory": 51,
+          "categoryName": "Pokémon Single",
+          "idExpansion": 4347,
+          "idMetacard": 345915,
+          "dateAdded": "2021-10-01 12:00:43"
+        }
+      },
+      "sharedProductWithTcgdexIds": [
+        "cel25-10"
+      ],
+      "currentCardoryxValue": 0.18,
+      "baseOverrideApplied": false,
+      "resolvedProductId": 576755,
+      "resolvedCardoryxValue": 0.18,
+      "baseOverrideGuardTests": null,
+      "liveExactBaseEvidence": false,
+      "liveExactBaseProductId": null,
+      "liveExactBasePriceAvailable": true,
+      "liveExplicitVariantUsesSameProduct": true,
+      "liveExactSvpSetLogoStaffPair": false,
+      "liveExactSvpStampProducts": {},
+      "liveExactEx5BeldumGymChallenge": false,
+      "liveExactEx5BeldumProducts": null,
+      "liveExactSwsh028GameStop": false,
+      "liveExactSwsh028GameStopProductId": null,
+      "verifiedPrimaryWorldsPair": false,
+      "verifiedPrimaryWorldsProducts": null,
+      "verifiedPrimarySpecialPair": false,
+      "verifiedPrimarySpecialProducts": null,
+      "verifiedStandardJumboPair": false,
+      "verifiedStandardJumboProducts": null,
+      "snapshotExactAlternateProductProtected": false,
+      "realPriceGuideValues": {
+        "576755": {
+          "idProduct": 576755,
+          "trend": 0.18,
+          "avg7": 0.24,
+          "avg30": 0.18,
+          "low": 0.02,
+          "avg": 0.16
+        }
+      },
+      "trendDeltaVersusCurrent": {},
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "confidence": "MEDIUM",
+      "reason": "Lo stesso prodotto corrente è associato da TCGdex a più tcgdexId fisicamente distinti e non esiste una protezione esatta nota.",
+      "recommendedAction": "Verificare il prodotto sul catalogo Cardmarket; nel frattempo preferire fail-closed."
+    },
+    "mfb-9": {
+      "tcgdexId": "mfb-9",
+      "setId": "mfb",
+      "setNameEN": "My First Battle",
+      "setNameIT": null,
+      "localId": "9",
+      "normalizedLocalId": "9",
+      "name": "Charmander",
+      "nameIT": null,
+      "rarity": "None",
+      "regulationMark": null,
+      "inHistorical4252": true,
+      "currentProductId": 741988,
+      "alternateProductIds": [
+        741976
+      ],
+      "allProductIds": [
+        741976,
+        741988
+      ],
+      "baseRowProductIdsAccordingToTcgdex": [],
+      "physicalVariantsByProductId": {
+        "741976": [
+          {
+            "finish": "normal",
+            "foil": [],
+            "stamp": [
+              "charmander",
+              "pokeball"
+            ],
+            "size": null,
+            "subtype": "blue-border",
+            "language": null,
+            "variantId": null,
+            "firstEdition": null
+          }
+        ],
+        "741988": [
+          {
+            "finish": "normal",
+            "foil": [],
+            "stamp": [
+              "charmander"
+            ],
+            "size": null,
+            "subtype": null,
+            "language": null,
+            "variantId": null,
+            "firstEdition": null
+          }
+        ]
+      },
+      "cardmarketProductCatalog": {
+        "741976": {
+          "idProduct": 741976,
+          "name": "Bulbasaur [Tackle | Vine Whip]",
+          "idCategory": 51,
+          "categoryName": "Pokémon Single",
+          "idExpansion": 5526,
+          "idMetacard": 426778,
+          "dateAdded": "2023-10-27 14:42:29"
+        },
+        "741988": {
+          "idProduct": 741988,
+          "name": "Charmander [Scratch | Ember | MFB]",
+          "idCategory": 51,
+          "categoryName": "Pokémon Single",
+          "idExpansion": 5526,
+          "idMetacard": 426785,
+          "dateAdded": "2023-10-27 14:50:02"
+        }
+      },
+      "sharedProductWithTcgdexIds": [
+        "mfb-1"
+      ],
+      "currentCardoryxValue": 2.65,
+      "baseOverrideApplied": false,
+      "resolvedProductId": 741988,
+      "resolvedCardoryxValue": 2.65,
+      "baseOverrideGuardTests": null,
+      "liveExactBaseEvidence": false,
+      "liveExactBaseProductId": null,
+      "liveExactBasePriceAvailable": true,
+      "liveExplicitVariantUsesSameProduct": true,
+      "liveExactSvpSetLogoStaffPair": false,
+      "liveExactSvpStampProducts": {},
+      "liveExactEx5BeldumGymChallenge": false,
+      "liveExactEx5BeldumProducts": null,
+      "liveExactSwsh028GameStop": false,
+      "liveExactSwsh028GameStopProductId": null,
+      "verifiedPrimaryWorldsPair": false,
+      "verifiedPrimaryWorldsProducts": null,
+      "verifiedPrimarySpecialPair": false,
+      "verifiedPrimarySpecialProducts": null,
+      "verifiedStandardJumboPair": false,
+      "verifiedStandardJumboProducts": null,
+      "snapshotExactAlternateProductProtected": false,
+      "realPriceGuideValues": {
+        "741976": {
+          "idProduct": 741976,
+          "trend": 5.97,
+          "avg7": 5.29,
+          "avg30": 4.11,
+          "low": 1.8,
+          "avg": 4.79
+        },
+        "741988": {
+          "idProduct": 741988,
+          "trend": 2.65,
+          "avg7": 3.16,
+          "avg30": 2.6,
+          "low": 1.1,
+          "avg": 3.4
+        }
+      },
+      "trendDeltaVersusCurrent": {
+        "741976": 3.32
+      },
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "confidence": "MEDIUM",
+      "reason": "Il prodotto top-level corrente non compare tra le righe fisiche base unstamped/unfoiled.",
+      "recommendedAction": "Verifica esatta V1/V2/V3 prima di qualsiasi mapping."
+    },
+    "sm12-237": {
+      "tcgdexId": "sm12-237",
+      "setId": "sm12",
+      "setNameEN": "Cosmic Eclipse",
+      "setNameIT": "Eclissi Cosmica",
+      "localId": "237",
+      "normalizedLocalId": "237",
+      "name": "Torkoal",
+      "nameIT": "Torkoal",
+      "rarity": "Secret Rare",
+      "regulationMark": null,
+      "inHistorical4252": false,
+      "currentProductId": 398524,
+      "alternateProductIds": [],
+      "allProductIds": [],
+      "baseRowProductIdsAccordingToTcgdex": [],
+      "physicalVariantsByProductId": {},
+      "cardmarketProductCatalog": {},
+      "sharedProductWithTcgdexIds": [],
+      "currentCardoryxValue": 8.43,
+      "baseOverrideApplied": false,
+      "resolvedProductId": 398524,
+      "resolvedCardoryxValue": 8.43,
+      "baseOverrideGuardTests": null,
+      "liveExactBaseEvidence": false,
+      "liveExactBaseProductId": null,
+      "liveExactBasePriceAvailable": true,
+      "liveExplicitVariantUsesSameProduct": false,
+      "liveExactSvpSetLogoStaffPair": false,
+      "liveExactSvpStampProducts": {},
+      "liveExactEx5BeldumGymChallenge": false,
+      "liveExactEx5BeldumProducts": null,
+      "liveExactSwsh028GameStop": false,
+      "liveExactSwsh028GameStopProductId": null,
+      "verifiedPrimaryWorldsPair": false,
+      "verifiedPrimaryWorldsProducts": null,
+      "verifiedPrimarySpecialPair": false,
+      "verifiedPrimarySpecialProducts": null,
+      "verifiedStandardJumboPair": false,
+      "verifiedStandardJumboProducts": null,
+      "snapshotExactAlternateProductProtected": false,
+      "realPriceGuideValues": {},
+      "trendDeltaVersusCurrent": {},
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "confidence": "MEDIUM",
+      "reason": "Il prodotto top-level corrente non compare tra le righe fisiche base unstamped/unfoiled.",
+      "recommendedAction": "Verifica esatta V1/V2/V3 prima di qualsiasi mapping."
+    },
+    "svp-101": {
+      "tcgdexId": "svp-101",
+      "setId": "svp",
+      "setNameEN": "SVP Black Star Promos",
+      "setNameIT": "SVP Black Star Promos",
+      "localId": "101",
+      "normalizedLocalId": "101",
+      "name": "Pikachu",
+      "nameIT": "Pikachu",
+      "rarity": "Promo",
+      "regulationMark": "G",
+      "inHistorical4252": true,
+      "currentProductId": null,
+      "alternateProductIds": [
+        726923,
+        740411
+      ],
+      "allProductIds": [
+        726923,
+        740411
+      ],
+      "baseRowProductIdsAccordingToTcgdex": [],
+      "physicalVariantsByProductId": {
+        "726923": [
+          {
+            "finish": "normal",
+            "foil": [],
+            "stamp": [
+              "asia-2023-24"
+            ],
+            "size": null,
+            "subtype": null,
+            "language": null,
+            "variantId": null,
+            "firstEdition": null
+          }
+        ],
+        "740411": [
+          {
+            "finish": "normal",
+            "foil": [],
+            "stamp": [
+              "player-rewards-program"
+            ],
+            "size": null,
+            "subtype": null,
+            "language": null,
+            "variantId": null,
+            "firstEdition": null
+          }
+        ]
+      },
+      "cardmarketProductCatalog": {
+        "726923": {
+          "idProduct": 726923,
+          "name": "Pikachu [Scrappy Spark]",
+          "idCategory": 51,
+          "categoryName": "Pokémon Single",
+          "idExpansion": 5241,
+          "idMetacard": 422758,
+          "dateAdded": "2023-08-09 12:54:53"
+        },
+        "740411": {
+          "idProduct": 740411,
+          "name": "Pikachu [Scrappy Spark]",
+          "idCategory": 51,
+          "categoryName": "Pokémon Single",
+          "idExpansion": 5241,
+          "idMetacard": 422758,
+          "dateAdded": "2023-10-20 10:47:58"
+        }
+      },
+      "sharedProductWithTcgdexIds": [],
+      "currentCardoryxValue": null,
+      "baseOverrideApplied": false,
+      "resolvedProductId": null,
+      "resolvedCardoryxValue": null,
+      "baseOverrideGuardTests": null,
+      "liveExactBaseEvidence": false,
+      "liveExactBaseProductId": null,
+      "liveExactBasePriceAvailable": false,
+      "liveExplicitVariantUsesSameProduct": false,
+      "liveExactSvpSetLogoStaffPair": false,
+      "liveExactSvpStampProducts": {},
+      "liveExactEx5BeldumGymChallenge": false,
+      "liveExactEx5BeldumProducts": null,
+      "liveExactSwsh028GameStop": false,
+      "liveExactSwsh028GameStopProductId": null,
+      "verifiedPrimaryWorldsPair": false,
+      "verifiedPrimaryWorldsProducts": null,
+      "verifiedPrimarySpecialPair": false,
+      "verifiedPrimarySpecialProducts": null,
+      "verifiedStandardJumboPair": false,
+      "verifiedStandardJumboProducts": null,
+      "snapshotExactAlternateProductProtected": false,
+      "realPriceGuideValues": {
+        "726923": {
+          "idProduct": 726923,
+          "trend": 295.69,
+          "avg7": 150.95,
+          "avg30": 48.02,
+          "low": null,
+          "avg": 299.95
+        },
+        "740411": {
+          "idProduct": 740411,
+          "trend": 32.31,
+          "avg7": 34.36,
+          "avg30": 33.49,
+          "low": 14,
+          "avg": 31.49
+        }
+      },
+      "trendDeltaVersusCurrent": {},
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "confidence": "LOW",
+      "reason": "La sorgente espone più prodotti ma non un product ID top-level corrente verificabile.",
+      "recommendedAction": "Restare fail-closed finché il prodotto principale non è dimostrato."
+    },
+    "sm12-29": {
+      "tcgdexId": "sm12-29",
+      "setId": "sm12",
+      "setNameEN": "Cosmic Eclipse",
+      "setNameIT": "Eclissi Cosmica",
+      "localId": "29",
+      "normalizedLocalId": "29",
+      "name": "Torkoal",
+      "nameIT": "Torkoal",
+      "rarity": "Uncommon",
+      "regulationMark": null,
+      "inHistorical4252": false,
+      "currentProductId": 398524,
+      "alternateProductIds": [],
+      "allProductIds": [],
+      "baseRowProductIdsAccordingToTcgdex": [],
+      "physicalVariantsByProductId": {},
+      "cardmarketProductCatalog": {},
+      "sharedProductWithTcgdexIds": [],
+      "currentCardoryxValue": 8.43,
+      "baseOverrideApplied": false,
+      "resolvedProductId": 398524,
+      "resolvedCardoryxValue": 8.43,
+      "baseOverrideGuardTests": null,
+      "liveExactBaseEvidence": false,
+      "liveExactBaseProductId": null,
+      "liveExactBasePriceAvailable": true,
+      "liveExplicitVariantUsesSameProduct": false,
+      "liveExactSvpSetLogoStaffPair": false,
+      "liveExactSvpStampProducts": {},
+      "liveExactEx5BeldumGymChallenge": false,
+      "liveExactEx5BeldumProducts": null,
+      "liveExactSwsh028GameStop": false,
+      "liveExactSwsh028GameStopProductId": null,
+      "verifiedPrimaryWorldsPair": false,
+      "verifiedPrimaryWorldsProducts": null,
+      "verifiedPrimarySpecialPair": false,
+      "verifiedPrimarySpecialProducts": null,
+      "verifiedStandardJumboPair": false,
+      "verifiedStandardJumboProducts": null,
+      "snapshotExactAlternateProductProtected": false,
+      "realPriceGuideValues": {},
+      "trendDeltaVersusCurrent": {},
+      "classification": "SOURCE_CONFLICT",
+      "priority": "P0_PROTECTED",
+      "confidence": "HIGH",
+      "reason": "TCGdex assegna il prodotto 398524 a un'altra identità fisica; Cardoryx lo blocca già con guardia esatta.",
+      "recommendedAction": "Mantenere il fail-closed esistente."
+    }
+  },
+  "caseIndex": [
+    {
+      "tcgdexId": "cel25-10",
+      "classification": "SAFE",
+      "priority": null,
+      "inHistorical4252": false
+    },
+    {
+      "tcgdexId": "cel25-2",
+      "classification": "SAFE",
+      "priority": null,
+      "inHistorical4252": false
+    },
+    {
+      "tcgdexId": "cel25cc-CC020",
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "inHistorical4252": true
+    },
+    {
+      "tcgdexId": "cel25cc-CC021",
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "inHistorical4252": true
+    },
+    {
+      "tcgdexId": "mfb-1",
+      "classification": "EXACT_ALTERNATE_PRODUCT",
+      "priority": "P2",
+      "inHistorical4252": true
+    },
+    {
+      "tcgdexId": "mfb-9",
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "inHistorical4252": true
+    },
+    {
+      "tcgdexId": "sm12-237",
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "inHistorical4252": false
+    },
+    {
+      "tcgdexId": "sm12-29",
+      "classification": "SOURCE_CONFLICT",
+      "priority": "P0_PROTECTED",
+      "inHistorical4252": false
+    },
+    {
+      "tcgdexId": "svp-101",
+      "classification": "P1_AMBIGUOUS_PRODUCT",
+      "priority": "P1",
+      "inHistorical4252": true
+    }
+  ],
+  "alreadyProtected": {
+    "torkoalSm12_29Product398524": true,
+    "reverseConflicts": {
+      "pl2-102": true,
+      "pl3-26": true,
+      "pl3-5": true,
+      "pl3-59": true,
+      "pl3-83": true,
+      "sv10.5b-013": true
+    },
+    "allRequestedProtectionsPresent": true
+  }
+}
