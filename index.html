@@ -567,6 +567,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Staff">Staff</option>
           <option value="Set Stamp">Set Stamp</option>
           <option value="GameStop">GameStop</option>
+          <option value="McDonald's">McDonald's</option>
           <option value="Altro">Altro</option>
         </select>
         <div id="stampAvailabilityInfo" class="small" style="margin-top:6px;color:#667085"></div>
@@ -638,6 +639,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Staff">Staff</option>
           <option value="Set Stamp">Set Stamp</option>
           <option value="GameStop">GameStop</option>
+          <option value="McDonald's">McDonald's</option>
           <option value="Altro">Altro</option>
         </select>
       </div>
@@ -862,6 +864,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
               <option value="Staff">Staff</option>
               <option value="Set Stamp">Set Stamp</option>
               <option value="GameStop">GameStop</option>
+              <option value="McDonald's">McDonald's</option>
               <option value="Altro">Altro</option>
             </select>
           </label>
@@ -3959,6 +3962,7 @@ function canonicalStamp(v){
   if(n.includes('set stamp')||n.includes('set-promo'))return 'Set Stamp';
   if(n.includes('gamestop'))return 'GameStop';
   if(n.includes('gymchallenge'))return 'Gym Challenge';
+  if(n==='mcdonalds'||n==='mcdonald')return "McDonald's";
   return v||'Altro';
 }
 function stampBadgeHTML(v){
@@ -3994,7 +3998,8 @@ function stampEvidenceFromTCGdex(card,stamp){
     'Pre-release':['prerelease','prereleasepromo'],
     'Staff':['staff'],
     'Set Stamp':['setstamp','setpromo'],
-    'GameStop':['gamestop']
+    'GameStop':['gamestop'],
+    "McDonald's":['mcdonalds']
   }[st]||[];
   if(!tokens.length)return false;
   return list.some(x=>{
@@ -4002,6 +4007,32 @@ function stampEvidenceFromTCGdex(card,stamp){
     return vals.some(v=>tokens.some(t=>v.includes(t)));
   });
 }
+// Exact physical stamp evidence for the dedicated McDonald's Collection
+// 2012 and 2014 sets. Scope is intentionally limited to these two set ids:
+// other McDonald's releases have different physical structures and are not
+// inferred from this rule.
+function isVerifiedMcdonaldsStampedSet(card){
+  const sid=cardSetId(card);
+  return sid==='2012bw'||sid==='2014xy';
+}
+function tcgdexExactMcdonaldsStampRow(card){
+  if(!isVerifiedMcdonaldsStampedSet(card))return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    const pid=Number(row?.thirdParty?.cardmarket||0);
+    return stamps.length===1 && stamps[0]==='mcdonalds' &&
+      canonicalFinishTypeLabel(row?.type)==='holo' &&
+      !canonicalFinishFoilLabel(row?.foil) &&
+      String(row?.size||'standard').trim().toLowerCase()==='standard' &&
+      pid>0;
+  });
+  return rows.length===1?rows[0]:null;
+}
+function verifiedMcdonaldsStampFinishes(card,stamp){
+  if(canonicalStamp(stamp)!=="McDonald's")return [];
+  return tcgdexExactMcdonaldsStampRow(card)?['Holo']:[];
+}
+
 const VERIFIED_MFB_POKEBALL_ROWS={
   'mfb-1':{setId:'mfb',localId:'1',name:'Bulbasaur',deckToken:'bulbasaur',baseProductId:741976,pokeballProductId:741975},
   'mfb-8':{setId:'mfb',localId:'8',name:'Grass Energy',deckToken:'bulbasaur',baseProductId:741986,pokeballProductId:741985},
@@ -4104,6 +4135,7 @@ function stampExistsForCard(card,stamp){
     return st==='30° Anniversario'||st==='Altro';
   }
   if(st==='MFB Poké Ball')return !!tcgdexExactMfbPokeballRow(card);
+  if(st==="McDonald's")return !!tcgdexExactMcdonaldsStampRow(card);
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
 }
@@ -4124,6 +4156,11 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
   const exactWorlds=verifiedPrimaryWorldsStamp(card);
   if(exactWorlds && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
     sel.value=exactWorlds;
+    const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
+    if(ps)ps.value='';
+  }
+  if(tcgdexExactMcdonaldsStampRow(card) && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
+    sel.value="McDonald's";
     const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
     if(ps)ps.value='';
   }
@@ -4786,6 +4823,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   // Exact, independently verified non-Play stamp mappings only. This must not
   // inherit any finish from the unstamped/base printing.
   for(const finish of verifiedSpecialStampFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedMcdonaldsStampFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
@@ -5534,6 +5572,22 @@ function tcgdexExactEx5BeldumGymChallengePrice(card,variant,stamp){
   return {...cm,idProduct:280585,source:'TCGdex · Cardmarket · Beldum HL29 Gym Challenge',verified:String(cm?.updated||'')};
 }
 
+function tcgdexExactMcdonaldsStampedPrice(card,variant,stamp){
+  if(!isVerifiedMcdonaldsStampedSet(card) ||
+     canonicalStamp(stamp)!=="McDonald's" ||
+     canonicalVariant(variant||'Normal')!=='Holo')return null;
+  const row=tcgdexExactMcdonaldsStampRow(card);if(!row)return null;
+  const productId=Number(row?.thirdParty?.cardmarket||0);
+  const cm=row?.pricing?.cardmarket;
+  const pricingProductId=Number(cm?.idProduct||cm?.id_product||0);
+  if(!(productId>0)||!cm||pricingProductId!==productId)return null;
+  const hasRealPrice=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k])>0);
+  if(!hasRealPrice)return null;
+  return {...cm,idProduct:productId,
+    source:`TCGdex · Cardmarket · McDonald's ${cardSetId(card)==='2012bw'?'2012':'2014'} · product ${productId}`,
+    verified:String(cm?.updated||'')};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
@@ -5547,6 +5601,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(worldsExact)return worldsExact;
   const tcgdexExact=tcgdexExactSvpStampPrice(card,variant,stamp);
   if(tcgdexExact)return tcgdexExact;
+  const mcdExact=tcgdexExactMcdonaldsStampedPrice(card,variant,stamp);
+  if(mcdExact)return mcdExact;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
