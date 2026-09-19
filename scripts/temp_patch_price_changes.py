@@ -25,12 +25,12 @@ css_insert=""".price-change-panel{margin-top:12px}
 assert css_anchor in s
 s=s.replace(css_anchor,css_insert,1)
 
-html_old="""<div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">ⅻ Aggiorna valori</button><button class="btn alt" type="button" onclick="showView('catalog')">📚 Vedi carte</button></div>
+html_old="""<div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">↻ Aggiorna valori</button><button class="btn alt" type="button" onclick="showView('catalog')">📚 Vedi carte</button></div>
       <div id="priceRefreshStatus" class="footer-note"></div>
     </div>
 
     <div class="category-hero">"""
-html_new="""<div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">ⅻ Aggiorna valori</button><button id="priceChangesBtn" class="btn alt" type="button" onclick="showPriceChanges()">📉 Variazioni prezzo</button></div>
+html_new="""<div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">↻ Aggiorna valori</button><button id="priceChangesBtn" class="btn alt" type="button" onclick="showPriceChanges()">📈 Variazioni prezzo</button></div>
       <div id="priceRefreshStatus" class="footer-note"></div>
     </div>
 
@@ -50,7 +50,7 @@ s=s.replace(html_old,html_new,1)
 refresh_old="""async function refreshAllPrices(){
   const st=document.getElementById('priceRefreshStatus');let ok=0,done=0,noPrice=0;
   if(st)st.textContent='Associo le carte a TCGdex e aggiorno Cardmarket…';
-  for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} µ prezzi trovati ${ok}… }
+  for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} · prezzi trovati ${ok}…`}
   if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
 }"""
 refresh_new=r"""let lastPriceRefreshReport=null;
@@ -134,16 +134,16 @@ function renderPriceChanges(){
     const current=[...db].find(c=>recordKey(c)===x.recordKey)||[...db].find(c=>priceRefreshStableKey(c)===x.key);
     const img=current?cardImageSrc(current,'low'):'';
     const values=x.kind==='new'?`Nuovo valore: ${euro(x.afterValue)}`
-      :x.kind==='lost'?`Prima: ${euro(x.beforeValue)} µ ora non disponibile`
+      :x.kind==='lost'?`Prima: ${euro(x.beforeValue)} · ora non disponibile`
       :`${euro(x.beforeValue)} → ${euro(x.afterValue)}`;
     const delta=x.kind==='new'?`Nuovo valore Cardmarket`
       :x.kind==='lost'?`Quotazione affidabile non disponibile`
-      :`${x.delta>0?'↑ +':'↓ '}${euro(x.delta)} / copia${x.percent!=null?` · ${x.percent>0?'+':''}${x.percent.toFixed(1)}%b`:''}${x.qty>1?` · impatto ${x.totalDelta>=0?'+':''}${euro(x.totalDelta)}`:'`}`;
+      :`${x.delta>0?'↑ +':'↓ '}${euro(x.delta)} / copia${x.percent!=null?` · ${x.percent>0?'+':''}${x.percent.toFixed(1)}%`:''}${x.qty>1?` · impatto ${x.totalDelta>=0?'+':''}${euro(x.totalDelta)}`:''}`;
     const cls=x.kind==='up'?'price-change-up':x.kind==='down'?'price-change-down':x.kind==='new'?'price-change-new':'price-change-lost';
     const safe=current?encodeURIComponent(recordKey(current)):'';
-    return `<div class="price-change-row ${cls}" ${safe?`onclick="openCardDetail('${safe}')"`:'}>
+    return `<div class="price-change-row ${cls}" ${safe?`onclick="openCardDetail('${safe}')"`:''}>
       <div>${img?`<img src="${esc(img)}" onerror="this.style.visibility='hidden'">`:'<div style="width:56px;height:78px"></div>'}</div>
-      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} µ ${esc(x.variant)} µ ${esc(x.condition)}${x.qty>1?` ·×${x.qty}`:''}</div>
+      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} · ${esc(x.variant)} · ${esc(x.condition)}${x.qty>1?` · ×${x.qty}`:''}</div>
       <div class="price-change-values">${values}</div><div class="price-change-delta">${delta}</div></div>
     </div>`;
   }).join('');
@@ -158,7 +158,7 @@ async function refreshAllPrices(){
   const st=document.getElementById('priceRefreshStatus');let ok=0,done=0,noPrice=0;
   const before=priceRefreshSnapshot();
   if(st)st.textContent='Associo le carte a TCGdex e aggiorno Cardmarket…';
-  for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} µ prezzi trovati ${ok} …`}
+  for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} · prezzi trovati ${ok}…`}
   const after=priceRefreshSnapshot();
   const report=buildPriceRefreshReport(before,after);
   if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}
