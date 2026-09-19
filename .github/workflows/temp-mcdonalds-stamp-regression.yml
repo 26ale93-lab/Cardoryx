@@ -1,0 +1,125 @@
+name: TEMP McDonalds 2012 2014 Stamp Regression
+
+on:
+  push:
+    branches:
+      - feature/mcdonalds-stamp-2012-2014-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output temp_mcdonalds_finish_report.json             --workers 24
+
+      - name: Verify permanent audit result
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("temp_mcdonalds_finish_report.json").read_text())
+          a=r["mcdonaldsStampAudit"]
+          assert a["expectedIdentities"] == 24, a
+          assert a["verifiedIdentities"] == 24, a
+          assert a["uniqueProductIds"] == 24, a
+          assert a["runtime"]["tested"] == 24, a
+          assert a["runtime"]["allExact"] is True, a
+          assert r["summary"]["classifications"]["FALSO POSITIVO"] == 0, r["summary"]
+          assert r["summary"]["classifications"]["FALSO NEGATIVO"] == 0, r["summary"]
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+          print(json.dumps({
+            "summary":r["summary"],
+            "mcdonaldsStampAudit":{
+              "verifiedIdentities":a["verifiedIdentities"],
+              "uniqueProductIds":a["uniqueProductIds"],
+              "runtime":a["runtime"],
+            }
+          },ensure_ascii=False))
+          PY
+
+      - name: Verify live TCGdex price rows
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request, urllib.error
+          from pathlib import Path
+
+          r=json.loads(Path("temp_mcdonalds_finish_report.json").read_text())
+          identities=r["mcdonaldsStampAudit"]["identities"]
+          expected={x["tcgdexId"]:int(x["productId"]) for x in identities}
+          results=[]
+          for cid,pid in expected.items():
+              data=None
+              err=None
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(
+                          f"https://api.tcgdex.net/v2/en/cards/{cid}",
+                          headers={"User-Agent":"Cardoryx-McDonalds-Stamp-Audit/1.0"},
+                      )
+                      with urllib.request.urlopen(req,timeout=60) as resp:
+                          data=json.load(resp)
+                      break
+                  except Exception as exc:
+                      err=repr(exc)
+                      time.sleep(1+attempt)
+              if not data:
+                  raise AssertionError(f"TCGdex live unavailable for {cid}: {err}")
+              matches=[]
+              for row in data.get("variants_detailed") or []:
+                  stamps=[str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or [])]
+                  row_pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+                  cm=(row.get("pricing") or {}).get("cardmarket") or {}
+                  pricing_pid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+                  if stamps==["mcdonalds"] and str(row.get("type") or "").lower() in {"holo","olografica"}:
+                      matches.append((row_pid,pricing_pid,cm))
+              assert len(matches)==1, (cid,matches)
+              row_pid,pricing_pid,cm=matches[0]
+              assert row_pid==pid, (cid,row_pid,pid)
+              assert pricing_pid==pid, (cid,pricing_pid,pid)
+              usable=any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+              results.append({"tcgdexId":cid,"productId":pid,"usablePrice":usable})
+          print(json.dumps({
+              "checked":len(results),
+              "usablePriceRows":sum(x["usablePrice"] for x in results),
+              "unpriced":[x["tcgdexId"] for x in results if not x["usablePrice"]],
+          }))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("temp_mcdonalds_finish_report.json").read_text())
+          a=r["mcdonaldsStampAudit"]
+          Path("temp_mcdonalds_stamp_validation.txt").write_text(
+              "PASS\nverifiedIdentities=%s\nuniqueProductIds=%s\n" %
+              (a["verifiedIdentities"],a["uniqueProductIds"])
+          )
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_mcdonalds_stamp_validation.txt
+          git commit -m "TEMP record McDonalds stamp validation"
+          git push
