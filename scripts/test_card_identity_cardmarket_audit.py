@@ -361,6 +361,15 @@ BATCH2_BASE_OVERRIDE_ROWS = {
     "pl2-1": ("pl2", "1", 278570, 278575), "pl2-2": ("pl2", "2", 278569, 278576),
     "pl2-3": ("pl2", "3", 278572, 278577), "pl2-4": ("pl2", "4", 278571, 278578),
     "pl2-6": ("pl2", "6", 278574, 278580),
+    "2018sm-fr-38": ("2018sm-fr", "38", 362810, 362809),
+    "pl4-ar1": ("pl4", "AR1", 278861, 278865),
+    "pl4-ar2": ("pl4", "AR2", 278861, 278864),
+    "pl4-ar3": ("pl4", "AR3", 278861, 278863),
+    "pl4-ar5": ("pl4", "AR5", 278861, 278867),
+    "pl4-ar6": ("pl4", "AR6", 278861, 278862),
+    "pl4-ar7": ("pl4", "AR7", 278861, 278866),
+    "pl4-ar8": ("pl4", "AR8", 278861, 278868),
+    "pl4-ar9": ("pl4", "AR9", 278861, 278871),
     "swshp-swsh055": ("swshp", "SWSH055", 510175, 510180),
 }
 EXPECTED_BASE_OVERRIDES.update({
@@ -532,6 +541,15 @@ BATCH2_SHARED_PRODUCT_OWNERS = {
     "hgss1-4": ("hgss1", "4", "Gyarados", 278976), "pl2-RT1": ("pl2", "RT1", "Fan Rotom", 278570),
     "pl2-RT2": ("pl2", "RT2", "Frost Rotom", 278569), "pl2-RT3": ("pl2", "RT3", "Heat Rotom", 278572),
     "pl2-RT4": ("pl2", "RT4", "Mow Rotom", 278571), "pl2-RT6": ("pl2", "RT6", "Charon's Choice", 278574),
+    "pl4-AR4": ("pl4", "AR4", "Arceus", 278861),
+}
+
+# Invalid source aliases: the AR1–AR9 subset belongs to Platinum—Arceus (pl4),
+# not Supreme Victors (pl3). Keep these exact IDs fail-closed; do not infer a
+# generic set/number rewrite.
+INVALID_PL3_AR_ALIASES = {
+    "pl3-AR1", "pl3-AR2", "pl3-AR3", "pl3-AR4", "pl3-AR5",
+    "pl3-AR6", "pl3-AR7", "pl3-AR8", "pl3-AR9",
 }
 
 
@@ -2409,6 +2427,27 @@ def main():
                 classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
                 reason = "La proprietà esatta di 362810 per Fletchling 39/40 non supera più i gate Cardmarket."
                 action = "Fail-closed e nuova verifica delle fonti ufficiali."
+        elif card_id in INVALID_PL3_AR_ALIASES:
+            exact_alias_conflict = bool(
+                (card.get("set") or {}).get("id") == "pl3" and
+                norm_local(card.get("localId")) in {"ar1","ar2","ar3","ar4","ar5","ar6","ar7","ar8","ar9"} and
+                current_pid == 278861 and
+                products.get(278861, {}).get("idExpansion") == 1565 and
+                products.get(278861, {}).get("name") == "Arceus Lv.100 [Water | Fastwave]" and
+                "pl4-ar4" in source.lower()
+            )
+            if exact_alias_conflict:
+                classification, priority, confidence = "SOURCE_CONFLICT", "P0_PROTECTED", "HIGH"
+                resolved_pid, resolved_value = None, None
+                reason = (
+                    "TCGdex espone un alias pl3-AR* impossibile: il subset AR1–AR9 appartiene a pl4, "
+                    "e il productId 278861 è l'Arceus AR4 Water/Fastwave verificato."
+                )
+                action = "Fail-closed: non valorizzare né riscrivere automaticamente l'alias pl3."
+            else:
+                classification, priority, confidence = "P1_AMBIGUOUS_PRODUCT", "P1", "LOW"
+                reason = "L'alias pl3-AR* non supera più tutti i gate esatti del conflitto sorgente."
+                action = "Fail-closed e nuova verifica delle fonti."
         elif card_id in BASE1_VERIFIED_SHADOWLESS_PRODUCTS:
             expected_local, expected_name, base_pid, shadowless_pid = BASE1_VERIFIED_SHADOWLESS_PRODUCTS[card_id]
             base_product = products.get(base_pid) or {}
