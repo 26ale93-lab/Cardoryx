@@ -59,6 +59,22 @@
 .collection-card-img{width:96px;height:134px;object-fit:contain;border-radius:11px;background:#f3f4f6;cursor:zoom-in}
 .collection-card-main{min-width:0}
 .price-main{font-size:18px;font-weight:900;color:#166534;margin-top:7px}.price-sub{font-size:11px;color:#6b7280;margin-top:2px}.value-hero{background:linear-gradient(135deg,#052e16,#166534);color:#fff;border-radius:18px;padding:16px;margin:12px 0}.value-hero .value-total{font-size:32px;font-weight:900;margin-top:4px}.value-hero .small{color:#d1fae5}.value-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.price-change-panel{margin-top:12px}
+.price-change-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.price-change-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}
+.price-change-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:9px;text-align:center}
+.price-change-stat strong{display:block;font-size:16px}.price-change-stat span{font-size:10px;color:#6b7280}
+.price-change-list{display:grid;gap:9px}
+.price-change-row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center;border:1px solid #e5e7eb;border-radius:15px;padding:9px;background:#fff;cursor:pointer}
+.price-change-row img{width:56px;height:78px;object-fit:contain;border-radius:8px;background:#f3f4f6}
+.price-change-name{font-weight:900;font-size:14px;line-height:1.15}
+.price-change-meta{font-size:10px;color:#6b7280;margin-top:2px}
+.price-change-values{font-size:12px;font-weight:800;margin-top:5px}
+.price-change-delta{font-size:12px;font-weight:900;margin-top:3px}
+.price-change-up .price-change-delta{color:#15803d}
+.price-change-down .price-change-delta{color:#b42318}
+.price-change-new .price-change-delta{color:#2563eb}
+.price-change-lost .price-change-delta{color:#6b7280}
 .collection-card h3{font-size:18px;line-height:1.1;margin:2px 0 5px}
 .collection-sub{font-size:12px;color:#6b7280;line-height:1.4;margin-bottom:8px}
 .collection-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
@@ -663,8 +679,17 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
       <div class="small">💰 VALORE COLLEZIONE · CARDMARKET</div>
       <div class="value-total" id="collectionValue">€0,00</div>
       <div class="small" id="collectionValueInfo">Valore indicativo basato sul trend Cardmarket disponibile.</div>
-      <div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">↻ Aggiorna valori</button><button class="btn alt" type="button" onclick="showView('catalog')">📚 Vedi carte</button></div>
+      <div class="value-actions"><button class="btn green" type="button" onclick="refreshAllPrices()">↻ Aggiorna valori</button><button id="priceChangesBtn" class="btn alt" type="button" onclick="showPriceChanges()">📈 Variazioni prezzo</button></div>
       <div id="priceRefreshStatus" class="footer-note"></div>
+    </div>
+
+    <div id="priceChangesPanel" class="card price-change-panel hidden">
+      <div class="price-change-head">
+        <div><div class="section-title">Variazioni ultimo aggiornamento</div><div id="priceChangesMeta" class="small">Aggiorna i valori per confrontare i prezzi Cardmarket.</div></div>
+        <button class="btn alt" type="button" onclick="hidePriceChanges()">Chiudi</button>
+      </div>
+      <div id="priceChangesSummary"></div>
+      <div id="priceChangesList" class="price-change-list"></div>
     </div>
 
     <div class="category-hero">
@@ -1038,6 +1063,26 @@ async function idbWriteDecks(decksValue){
   tx.objectStore(CARDORYX_IDB_STATE_STORE).put(indexedStateRow('decks',decksValue));
   await done;
 }
+const CARDORYX_PRICE_REFRESH_REPORT_KEY='price-refresh-report';
+async function idbWritePriceRefreshReport(report){
+  if(!storageDb)return;
+  const tx=storageDb.transaction(CARDORYX_IDB_STATE_STORE,'readwrite');
+  const done=idbTransactionDone(tx);
+  tx.objectStore(CARDORYX_IDB_STATE_STORE).put({
+    key:CARDORYX_PRICE_REFRESH_REPORT_KEY,
+    value:report,
+    fingerprint:storageFingerprint(report),
+    updatedAt:new Date().toISOString()
+  });
+  await done;
+}
+async function idbReadPriceRefreshReport(){
+  if(!storageDb)return null;
+  const row=await idbGet(CARDORYX_IDB_STATE_STORE,CARDORYX_PRICE_REFRESH_REPORT_KEY);
+  if(!row||row.key!==CARDORYX_PRICE_REFRESH_REPORT_KEY||!row.value)return null;
+  if(row.fingerprint!==storageFingerprint(row.value))return null;
+  return row.value;
+}
 async function idbWriteMigrationMarker(marker){
   const tx=storageDb.transaction(CARDORYX_IDB_META_STORE,'readwrite');
   const done=idbTransactionDone(tx);
@@ -1245,8 +1290,13 @@ async function initializeCardoryxStorage(){
     persistedCollectionJson=JSON.stringify(db);
     persistedDecksJson=JSON.stringify(decks);
     storageBackend='indexeddb';
+    try{
+      const savedPriceReport=await idbReadPriceRefreshReport();
+      if(savedPriceReport&&Array.isArray(savedPriceReport.changes))lastPriceRefreshReport=savedPriceReport;
+    }catch(e){console.warn('Cardoryx price refresh report load:',e)}
     await requestPersistentStorage();
     renderAfterCollectionPersistence();
+    try{renderPriceChanges()}catch(e){console.warn('Cardoryx price refresh report render:',e)}
   }catch(error){
     storageBackend='localStorage-fallback';
     storageMigrationState=`Fallback attivo: ${error?.message||'IndexedDB non disponibile'}`;
@@ -9315,11 +9365,125 @@ async function refreshPriceForRecord(c){
   c.pricing={...full.pricing,cardmarket:{...resolved}};
   c.priceUpdatedAt=resolved._cardoryxVerified||resolved.updated||new Date().toISOString();c.tcgdexId=full.id;c.id=full.id;return true;
 }
+let lastPriceRefreshReport=null;
+function priceRefreshStableKey(c){
+  return [
+    normText(c?.name||''),normText(c?.set?.name||c?.set||''),String(c?.localId||'').trim().toLowerCase(),
+    canonicalVariant(c?.variant||'Normal'),canonicalStamp(c?.stamp||'None'),
+    normalizedPlaySeries(c?.playSeries||''),normText(c?.language||c?.lang||'Italiano'),
+    String(c?.condition||'NM').trim().toUpperCase()
+  ].join('|||');
+}
+function priceRefreshSnapshot(){
+  const out=new Map();
+  for(const c of db||[]){
+    const key=priceRefreshStableKey(c),qty=Math.max(1,Number(c?.qty)||1),value=cardPriceInfo(c).value;
+    let row=out.get(key);
+    if(!row){
+      row={key,name:c?.name||'Carta',set:c?.set?.name||c?.set||'',localId:c?.localId||'',
+        variant:canonicalVariant(c?.variant||'Normal'),stamp:canonicalStamp(c?.stamp||'None'),
+        language:c?.language||c?.lang||'Italiano',condition:c?.condition||'NM',
+        qty:0,value:value==null?null:Number(value),recordKey:recordKey(c)};
+      out.set(key,row);
+    }
+    row.qty+=qty;
+    if(row.value==null && value!=null)row.value=Number(value);
+  }
+  return out;
+}
+function buildPriceRefreshReport(before,after){
+  const changes=[];
+  let totalBefore=0,totalAfter=0;
+  for(const row of before.values())if(row.value!=null)totalBefore+=row.value*row.qty;
+  for(const row of after.values())if(row.value!=null)totalAfter+=row.value*row.qty;
+  for(const [key,newRow] of after){
+    const oldRow=before.get(key);if(!oldRow)continue;
+    const beforeValue=oldRow.value,afterValue=newRow.value,qty=newRow.qty;
+    let kind='',delta=null,percent=null,totalDelta=null;
+    if(beforeValue!=null&&afterValue!=null){
+      delta=afterValue-beforeValue;
+      if(Math.abs(delta)<0.000001)continue;
+      kind=delta>0?'up':'down';
+      percent=beforeValue>0?(delta/beforeValue)*100:null;
+      totalDelta=delta*qty;
+    }else if(beforeValue==null&&afterValue!=null){
+      kind='new';totalDelta=afterValue*qty;
+    }else if(beforeValue!=null&&afterValue==null){
+      kind='lost';totalDelta=null;
+    }else continue;
+    changes.push({...newRow,beforeValue,afterValue,kind,delta,percent,totalDelta});
+  }
+  changes.sort((a,b)=>{
+    const av=Math.abs(Number(a.totalDelta)||0),bv=Math.abs(Number(b.totalDelta)||0);
+    if(bv!==av)return bv-av;
+    return String(a.name).localeCompare(String(b.name),'it');
+  });
+  const net=changes.reduce((sum,x)=>sum+(Number.isFinite(Number(x.totalDelta))?Number(x.totalDelta):0),0);
+  return {
+    at:new Date().toISOString(),changes,totalBefore,totalAfter,net,
+    up:changes.filter(x=>x.kind==='up').length,down:changes.filter(x=>x.kind==='down').length,
+    newCount:changes.filter(x=>x.kind==='new').length,lost:changes.filter(x=>x.kind==='lost').length
+  };
+}
+function renderPriceChanges(){
+  const report=lastPriceRefreshReport,meta=document.getElementById('priceChangesMeta'),
+    summary=document.getElementById('priceChangesSummary'),list=document.getElementById('priceChangesList'),
+    btn=document.getElementById('priceChangesBtn');
+  if(btn)btn.textContent=report?`📈 Variazioni (${report.changes.length})`:'📈 Variazioni prezzo';
+  if(!meta||!summary||!list)return;
+  if(!report){
+    meta.textContent='Aggiorna i valori per confrontare i prezzi Cardmarket.';
+    summary.innerHTML='';list.innerHTML='<div class="small">Nessun aggiornamento eseguito in questa sessione.</div>';return;
+  }
+  const when=new Date(report.at);
+  meta.textContent=`Ultimo aggiornamento: ${when.toLocaleString('it-IT')} · confronto sul valore unitario Cardmarket.`;
+  summary.innerHTML=`<div class="price-change-summary">
+    <div class="price-change-stat"><strong>↑ ${report.up}</strong><span>AUMENTI</span></div>
+    <div class="price-change-stat"><strong>↓ ${report.down}</strong><span>DIMINUZIONI</span></div>
+    <div class="price-change-stat"><strong>${report.newCount+report.lost}</strong><span>NUOVI / PERSI</span></div>
+  </div><div class="small">Impatto netto quantificabile: <b>${report.net>=0?'+':''}${euro(report.net)}</b>.${report.lost?' Le quotazioni non più disponibili non vengono conteggiate come perdita.':''}</div>`;
+  if(!report.changes.length){
+    list.innerHTML='<div class="catalog-empty"><b>Nessuna variazione di prezzo</b><div class="small" style="margin-top:5px">I valori Cardmarket sono rimasti invariati rispetto a prima dell’aggiornamento.</div></div>';return;
+  }
+  list.innerHTML=report.changes.map(x=>{
+    const current=[...db].find(c=>recordKey(c)===x.recordKey)||[...db].find(c=>priceRefreshStableKey(c)===x.key);
+    const img=current?cardImageSrc(current,'low'):'';
+    const values=x.kind==='new'?`Nuovo valore: ${euro(x.afterValue)}`
+      :x.kind==='lost'?`Prima: ${euro(x.beforeValue)} · ora non disponibile`
+      :`${euro(x.beforeValue)} → ${euro(x.afterValue)}`;
+    const delta=x.kind==='new'?`Nuovo valore Cardmarket`
+      :x.kind==='lost'?`Quotazione affidabile non disponibile`
+      :`${x.delta>0?'↑ +':'↓ '}${euro(x.delta)} / copia${x.percent!=null?` · ${x.percent>0?'+':''}${x.percent.toFixed(1)}%`:''}${x.qty>1?` · impatto ${x.totalDelta>=0?'+':''}${euro(x.totalDelta)}`:''}`;
+    const cls=x.kind==='up'?'price-change-up':x.kind==='down'?'price-change-down':x.kind==='new'?'price-change-new':'price-change-lost';
+    const safe=current?encodeURIComponent(recordKey(current)):'';
+    return `<div class="price-change-row ${cls}" ${safe?`onclick="openCardDetail('${safe}')"`:''}>
+      <div>${img?`<img src="${esc(img)}" onerror="this.style.visibility='hidden'">`:'<div style="width:56px;height:78px"></div>'}</div>
+      <div><div class="price-change-name">${esc(x.name)}</div><div class="price-change-meta">${esc(x.set||'Set sconosciuto')} · N° ${esc(x.localId||'—')} · ${esc(x.variant)} · ${esc(x.language||'—')} · ${esc(x.condition)}${x.qty>1?` · ×${x.qty}`:''}</div>
+      <div class="price-change-values">${values}</div><div class="price-change-delta">${delta}</div></div>
+    </div>`;
+  }).join('');
+}
+function showPriceChanges(){
+  const panel=document.getElementById('priceChangesPanel');if(!panel)return;
+  renderPriceChanges();panel.classList.remove('hidden');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),20);
+}
+function hidePriceChanges(){document.getElementById('priceChangesPanel')?.classList.add('hidden')}
 async function refreshAllPrices(){
   const st=document.getElementById('priceRefreshStatus');let ok=0,done=0,noPrice=0;
+  const before=priceRefreshSnapshot();
   if(st)st.textContent='Associo le carte a TCGdex e aggiorno Cardmarket…';
   for(const c of db){done++;const got=await refreshPriceForRecord(c);if(got)ok++;else noPrice++;if(st)st.textContent=`Controllo ${done}/${db.length} · prezzi trovati ${ok}…`}
-  if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}renderCatalog();renderStats();if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length}.`;
+  const after=priceRefreshSnapshot();
+  const report=buildPriceRefreshReport(before,after);
+  if(!await persist()){if(st)st.textContent='Aggiornamento non salvato.';return}
+  lastPriceRefreshReport=report;
+  if(storageBackend==='indexeddb'){
+    try{await idbWritePriceRefreshReport(report)}
+    catch(e){console.warn('Cardoryx price refresh report save:',e)}
+  }
+  renderCatalog();renderStats();renderPriceChanges();
+  if(st)st.textContent=`Completato: ${ok} con prezzo · ${noPrice} senza prezzo su ${db.length} · ${report.changes.length} variazioni.`;
 }
 
 // V2.1.36 — dynamic deck allocations + sale deck lifecycle. V2.1.35 catalog grouping remains: identical physical printing/condition records are
@@ -9477,6 +9641,7 @@ async function deleteRecord(key){
 async function editQty(id,v,s){const c=db.find(x=>x.id===id&&x.variant===v&&x.status===s);if(!c)return;const val=prompt(`Quantità per ${c.name}`,c.qty);if(val===null)return;const n=parseInt(val);if(!Number.isFinite(n)||n<0)return;if(n===0)db=db.filter(x=>x!==c);else c.qty=n;await persist()}
 function renderStats(){
   const cv=document.getElementById('collectionValue'),ci=document.getElementById('collectionValueInfo');if(cv)cv.textContent=euro(collectionMarketValue());if(ci)ci.textContent=`${pricedCopies()} carte valorizzate su ${catalogCopyCount()} · trend Cardmarket disponibile.`;
+  renderPriceChanges();
   const su=document.getElementById('statUnique'), sc=document.getElementById('statCopies'), sh=document.getElementById('statHolo'), sn=document.getElementById('statNM');
   if(su)su.textContent=catalogUniqueCount();
   if(sc)sc.textContent=catalogCopyCount();
