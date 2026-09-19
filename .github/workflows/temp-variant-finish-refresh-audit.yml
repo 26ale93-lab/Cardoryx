@@ -152,7 +152,7 @@ jobs:
                   "set":set_name,
                   "count":count,
                   "signatures":dict(set_signature[set_name]),
-                  "coarsePatterns":dict(Counter(tuple(x["coarseTrue"]) for x in rows if x["set"]==set_name)),
+                  "coarsePatterns":dict(Counter("+".join(x["coarseTrue"]) if x["coarseTrue"] else "NONE" for x in rows if x["set"]==set_name)),
               })
 
           out={
