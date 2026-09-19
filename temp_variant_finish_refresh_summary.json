@@ -7,7 +7,7 @@
     "tcgdexDatabaseSha": "46e7d514d534d38257914a5ffee54c17849f72c3",
     "upstreamParseErrors": 0,
     "cardmarketPlayIndex": "data/cardmarket_play_index.json",
-    "generatedAt": "2026-09-19T23:00:38.679810+00:00"
+    "generatedAt": "2026-09-19T23:04:28.333964+00:00"
   },
   "summary": {
     "totalIdentitiesTested": 4254,
@@ -789,7 +789,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 658509,
                 "avg": 0.03,
@@ -837,7 +837,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 658509,
                 "avg": 0.03,
@@ -930,7 +930,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658509,
                     "avg": 0.03,
@@ -978,7 +978,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658509,
                     "avg": 0.03,
@@ -1059,7 +1059,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658509,
                     "avg": 0.03,
@@ -1107,7 +1107,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658509,
                     "avg": 0.03,
@@ -1175,7 +1175,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658509,
                     "avg": 0.03,
@@ -1223,7 +1223,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658509,
                     "avg": 0.03,
@@ -1402,7 +1402,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.976Z",
                 "unit": "EUR",
                 "idProduct": 658738,
                 "avg": 0.04,
@@ -1450,7 +1450,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.976Z",
                 "unit": "EUR",
                 "idProduct": 658738,
                 "avg": 0.04,
@@ -1543,7 +1543,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 658738,
                     "avg": 0.04,
@@ -1591,7 +1591,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 658738,
                     "avg": 0.04,
@@ -1672,7 +1672,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 658738,
                     "avg": 0.04,
@@ -1720,7 +1720,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 658738,
                     "avg": 0.04,
@@ -1788,7 +1788,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 658738,
                     "avg": 0.04,
@@ -1836,7 +1836,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 658738,
                     "avg": 0.04,
@@ -2015,7 +2015,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658538,
                 "avg": 0.04,
@@ -2063,7 +2063,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658538,
                 "avg": 0.04,
@@ -2156,7 +2156,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658538,
                     "avg": 0.04,
@@ -2204,7 +2204,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658538,
                     "avg": 0.04,
@@ -2285,7 +2285,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658538,
                     "avg": 0.04,
@@ -2333,7 +2333,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658538,
                     "avg": 0.04,
@@ -2401,7 +2401,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658538,
                     "avg": 0.04,
@@ -2449,7 +2449,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658538,
                     "avg": 0.04,
@@ -2530,7 +2530,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658820,
                 "avg": 0.04,
@@ -2578,7 +2578,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658820,
                 "avg": 0.04,
@@ -2628,7 +2628,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 658820,
                 "avg": 0.04,
@@ -2676,7 +2676,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 658820,
                 "avg": 0.04,
@@ -2769,7 +2769,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658820,
                     "avg": 0.04,
@@ -2817,7 +2817,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658820,
                     "avg": 0.04,
@@ -2898,7 +2898,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658820,
                     "avg": 0.04,
@@ -2946,7 +2946,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658820,
                     "avg": 0.04,
@@ -3014,7 +3014,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658820,
                     "avg": 0.04,
@@ -3062,7 +3062,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 658820,
                     "avg": 0.04,
@@ -3143,7 +3143,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658805,
                 "avg": 0.08,
@@ -3191,7 +3191,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658805,
                 "avg": 0.08,
@@ -3756,7 +3756,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 658803,
                 "avg": 0.06,
@@ -3804,7 +3804,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 658803,
                 "avg": 0.06,
@@ -3854,7 +3854,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 658803,
                 "avg": 0.06,
@@ -3902,7 +3902,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 658803,
                 "avg": 0.06,
@@ -3995,7 +3995,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 658803,
                     "avg": 0.06,
@@ -4043,7 +4043,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 658803,
                     "avg": 0.06,
@@ -4124,7 +4124,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 658803,
                     "avg": 0.06,
@@ -4172,7 +4172,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 658803,
                     "avg": 0.06,
@@ -4240,7 +4240,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 658803,
                     "avg": 0.06,
@@ -4288,7 +4288,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 658803,
                     "avg": 0.06,
@@ -4369,7 +4369,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658809,
                 "avg": 0.05,
@@ -4417,7 +4417,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658809,
                 "avg": 0.05,
@@ -4467,7 +4467,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658809,
                 "avg": 0.05,
@@ -4515,7 +4515,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 658809,
                 "avg": 0.05,
@@ -4608,7 +4608,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658809,
                     "avg": 0.05,
@@ -4656,7 +4656,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658809,
                     "avg": 0.05,
@@ -4737,7 +4737,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658809,
                     "avg": 0.05,
@@ -4785,7 +4785,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658809,
                     "avg": 0.05,
@@ -4853,7 +4853,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658809,
                     "avg": 0.05,
@@ -4901,7 +4901,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 658809,
                     "avg": 0.05,
@@ -4982,7 +4982,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 670820,
                 "avg": 0.05,
@@ -5030,7 +5030,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 670820,
                 "avg": 0.05,
@@ -5080,7 +5080,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 670820,
                 "avg": 0.05,
@@ -5128,7 +5128,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 670820,
                 "avg": 0.05,
@@ -5221,7 +5221,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 670820,
                     "avg": 0.05,
@@ -5269,7 +5269,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 670820,
                     "avg": 0.05,
@@ -5350,7 +5350,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 670820,
                     "avg": 0.05,
@@ -5398,7 +5398,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 670820,
                     "avg": 0.05,
@@ -5466,7 +5466,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 670820,
                     "avg": 0.05,
@@ -5514,7 +5514,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 670820,
                     "avg": 0.05,
@@ -5595,7 +5595,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674088,
                 "avg": 0.04,
@@ -5643,7 +5643,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674088,
                 "avg": 0.04,
@@ -5693,7 +5693,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 674088,
                 "avg": 0.04,
@@ -5741,7 +5741,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 674088,
                 "avg": 0.04,
@@ -5834,7 +5834,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674088,
                     "avg": 0.04,
@@ -5882,7 +5882,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674088,
                     "avg": 0.04,
@@ -5963,7 +5963,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674088,
                     "avg": 0.04,
@@ -6011,7 +6011,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674088,
                     "avg": 0.04,
@@ -6079,7 +6079,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674088,
                     "avg": 0.04,
@@ -6127,7 +6127,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674088,
                     "avg": 0.04,
@@ -6208,7 +6208,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 674052,
                 "avg": 0.03,
@@ -6256,7 +6256,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 674052,
                 "avg": 0.03,
@@ -6306,7 +6306,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 674052,
                 "avg": 0.03,
@@ -6354,7 +6354,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 674052,
                 "avg": 0.03,
@@ -6447,7 +6447,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674052,
                     "avg": 0.03,
@@ -6495,7 +6495,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674052,
                     "avg": 0.03,
@@ -6576,7 +6576,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674052,
                     "avg": 0.03,
@@ -6624,7 +6624,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674052,
                     "avg": 0.03,
@@ -6692,7 +6692,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674052,
                     "avg": 0.03,
@@ -6740,7 +6740,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 674052,
                     "avg": 0.03,
@@ -6821,7 +6821,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 674175,
                 "avg": 0.03,
@@ -6869,7 +6869,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 674175,
                 "avg": 0.03,
@@ -6919,7 +6919,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674175,
                 "avg": 0.03,
@@ -6967,7 +6967,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674175,
                 "avg": 0.03,
@@ -7060,7 +7060,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674175,
                     "avg": 0.03,
@@ -7108,7 +7108,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674175,
                     "avg": 0.03,
@@ -7189,7 +7189,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674175,
                     "avg": 0.03,
@@ -7237,7 +7237,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674175,
                     "avg": 0.03,
@@ -7305,7 +7305,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674175,
                     "avg": 0.03,
@@ -7353,7 +7353,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674175,
                     "avg": 0.03,
@@ -7434,7 +7434,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674174,
                 "avg": 0.04,
@@ -7482,7 +7482,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674174,
                 "avg": 0.04,
@@ -7532,7 +7532,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 674174,
                 "avg": 0.04,
@@ -7580,7 +7580,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 674174,
                 "avg": 0.04,
@@ -7673,7 +7673,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 674174,
                     "avg": 0.04,
@@ -7721,7 +7721,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 674174,
                     "avg": 0.04,
@@ -7802,7 +7802,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 674174,
                     "avg": 0.04,
@@ -7850,7 +7850,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 674174,
                     "avg": 0.04,
@@ -7918,7 +7918,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 674174,
                     "avg": 0.04,
@@ -7966,7 +7966,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 674174,
                     "avg": 0.04,
@@ -8047,7 +8047,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 674165,
                 "avg": 0.05,
@@ -8095,7 +8095,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 674165,
                 "avg": 0.05,
@@ -8145,7 +8145,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 674165,
                 "avg": 0.05,
@@ -8193,7 +8193,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 674165,
                 "avg": 0.05,
@@ -8286,7 +8286,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 674165,
                     "avg": 0.05,
@@ -8334,7 +8334,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 674165,
                     "avg": 0.05,
@@ -8415,7 +8415,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 674165,
                     "avg": 0.05,
@@ -8463,7 +8463,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 674165,
                     "avg": 0.05,
@@ -8531,7 +8531,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 674165,
                     "avg": 0.05,
@@ -8579,7 +8579,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 674165,
                     "avg": 0.05,
@@ -9886,7 +9886,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 674161,
                 "avg": 0.04,
@@ -9934,7 +9934,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 674161,
                 "avg": 0.04,
@@ -10597,7 +10597,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674168,
                 "avg": 0.05,
@@ -10645,7 +10645,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 674168,
                 "avg": 0.05,
@@ -10738,7 +10738,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674168,
                     "avg": 0.05,
@@ -10786,7 +10786,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674168,
                     "avg": 0.05,
@@ -10867,7 +10867,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674168,
                     "avg": 0.05,
@@ -10915,7 +10915,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674168,
                     "avg": 0.05,
@@ -10983,7 +10983,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674168,
                     "avg": 0.05,
@@ -11031,7 +11031,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 674168,
                     "avg": 0.05,
@@ -11112,7 +11112,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665243,
                 "avg": 0.08,
@@ -11160,7 +11160,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665243,
                 "avg": 0.08,
@@ -11210,7 +11210,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 665243,
                 "avg": 0.08,
@@ -11258,7 +11258,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 665243,
                 "avg": 0.08,
@@ -11351,7 +11351,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 665243,
                     "avg": 0.08,
@@ -11399,7 +11399,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 665243,
                     "avg": 0.08,
@@ -11480,7 +11480,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 665243,
                     "avg": 0.08,
@@ -11528,7 +11528,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 665243,
                     "avg": 0.08,
@@ -11596,7 +11596,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 665243,
                     "avg": 0.08,
@@ -11644,7 +11644,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 665243,
                     "avg": 0.08,
@@ -11725,7 +11725,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 665657,
                 "avg": 0.15,
@@ -11773,7 +11773,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 665657,
                 "avg": 0.15,
@@ -11847,7 +11847,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665657,
                 "avg": 0.15,
@@ -11895,7 +11895,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665657,
                 "avg": 0.15,
@@ -12016,7 +12016,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665657,
                     "avg": 0.15,
@@ -12064,7 +12064,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665657,
                     "avg": 0.15,
@@ -12169,7 +12169,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665657,
                     "avg": 0.15,
@@ -12217,7 +12217,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665657,
                     "avg": 0.15,
@@ -12309,7 +12309,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665657,
                     "avg": 0.15,
@@ -12357,7 +12357,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.955Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665657,
                     "avg": 0.15,
@@ -12463,7 +12463,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 665659,
                 "avg": 0.06,
@@ -12511,7 +12511,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 665659,
                 "avg": 0.06,
@@ -12561,7 +12561,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665659,
                 "avg": 0.06,
@@ -12609,7 +12609,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665659,
                 "avg": 0.06,
@@ -12702,7 +12702,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665659,
                     "avg": 0.06,
@@ -12750,7 +12750,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665659,
                     "avg": 0.06,
@@ -12831,7 +12831,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665659,
                     "avg": 0.06,
@@ -12879,7 +12879,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665659,
                     "avg": 0.06,
@@ -12947,7 +12947,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665659,
                     "avg": 0.06,
@@ -12995,7 +12995,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 665659,
                     "avg": 0.06,
@@ -13076,7 +13076,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 665681,
                 "avg": 0.04,
@@ -13124,7 +13124,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 665681,
                 "avg": 0.04,
@@ -13689,7 +13689,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665288,
                 "avg": 0.09,
@@ -13737,7 +13737,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 665288,
                 "avg": 0.09,
@@ -13788,7 +13788,7 @@
             "variantId": "1t06ikeqvv2mcdtu9gimt6f748mmn",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 833226,
                 "avg": null,
@@ -13819,7 +13819,7 @@
             "variantId": "2tszcx1bpt3or7dq1et4jexwj9",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 815426,
                 "avg": 0.46,
@@ -13850,7 +13850,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 665288,
                 "avg": 0.09,
@@ -13898,7 +13898,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 665288,
                 "avg": 0.09,
@@ -13949,7 +13949,7 @@
             "variantId": "1t06ikeqvv2mcdtu9gimt6f748mmn",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 833226,
                 "avg": null,
@@ -13980,7 +13980,7 @@
             "variantId": "2tszcx1bpt3or7dq1et4jexwj9",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 815426,
                 "avg": 0.46,
@@ -14054,7 +14054,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 665288,
                     "avg": 0.09,
@@ -14102,7 +14102,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 665288,
                     "avg": 0.09,
@@ -14153,7 +14153,7 @@
                 "variantId": "1t06ikeqvv2mcdtu9gimt6f748mmn",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 833226,
                     "avg": null,
@@ -14184,7 +14184,7 @@
                 "variantId": "2tszcx1bpt3or7dq1et4jexwj9",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 815426,
                     "avg": 0.46,
@@ -14246,7 +14246,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 665288,
                     "avg": 0.09,
@@ -14294,7 +14294,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 665288,
                     "avg": 0.09,
@@ -14345,7 +14345,7 @@
                 "variantId": "1t06ikeqvv2mcdtu9gimt6f748mmn",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 833226,
                     "avg": null,
@@ -14376,7 +14376,7 @@
                 "variantId": "2tszcx1bpt3or7dq1et4jexwj9",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 815426,
                     "avg": 0.46,
@@ -14425,7 +14425,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 665288,
                     "avg": 0.09,
@@ -14473,7 +14473,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 665288,
                     "avg": 0.09,
@@ -14524,7 +14524,7 @@
                 "variantId": "1t06ikeqvv2mcdtu9gimt6f748mmn",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 833226,
                     "avg": null,
@@ -14555,7 +14555,7 @@
                 "variantId": "2tszcx1bpt3or7dq1et4jexwj9",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 815426,
                     "avg": 0.46,
@@ -14938,7 +14938,7 @@
             "variantId": "jr7oetx1mqug9",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.954Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 715647,
                 "avg": 0.3,
@@ -14988,7 +14988,7 @@
             "variantId": "3takscxpcoigvo2yqjgyj4u3",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.954Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 872163,
                 "avg": 0.06,
@@ -15018,7 +15018,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.954Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 715647,
                 "avg": 0.3,
@@ -15069,7 +15069,7 @@
             "variantId": "jr7oetx1mqug9",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 715647,
                 "avg": 0.3,
@@ -15119,7 +15119,7 @@
             "variantId": "3takscxpcoigvo2yqjgyj4u3",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 872163,
                 "avg": 0.06,
@@ -15149,7 +15149,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 715647,
                 "avg": 0.3,
@@ -15243,7 +15243,7 @@
                 "variantId": "jr7oetx1mqug9",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 715647,
                     "avg": 0.3,
@@ -15293,7 +15293,7 @@
                 "variantId": "3takscxpcoigvo2yqjgyj4u3",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 872163,
                     "avg": 0.06,
@@ -15323,7 +15323,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 715647,
                     "avg": 0.3,
@@ -15405,7 +15405,7 @@
                 "variantId": "jr7oetx1mqug9",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 715647,
                     "avg": 0.3,
@@ -15455,7 +15455,7 @@
                 "variantId": "3takscxpcoigvo2yqjgyj4u3",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 872163,
                     "avg": 0.06,
@@ -15485,7 +15485,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 715647,
                     "avg": 0.3,
@@ -15554,7 +15554,7 @@
                 "variantId": "jr7oetx1mqug9",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 715647,
                     "avg": 0.3,
@@ -15604,7 +15604,7 @@
                 "variantId": "3takscxpcoigvo2yqjgyj4u3",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 872163,
                     "avg": 0.06,
@@ -15634,7 +15634,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 715647,
                     "avg": 0.3,
@@ -15715,7 +15715,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 372315,
                 "avg": 0.22,
@@ -15763,7 +15763,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 372315,
                 "avg": 0.22,
@@ -15813,7 +15813,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 372315,
                 "avg": 0.22,
@@ -15861,7 +15861,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.958Z",
                 "unit": "EUR",
                 "idProduct": 372315,
                 "avg": 0.22,
@@ -15954,7 +15954,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 372315,
                     "avg": 0.22,
@@ -16002,7 +16002,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 372315,
                     "avg": 0.22,
@@ -16083,7 +16083,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 372315,
                     "avg": 0.22,
@@ -16131,7 +16131,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 372315,
                     "avg": 0.22,
@@ -16199,7 +16199,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 372315,
                     "avg": 0.22,
@@ -16247,7 +16247,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.946Z",
+                    "updated": "2026-09-18T22:54:32.958Z",
                     "unit": "EUR",
                     "idProduct": 372315,
                     "avg": 0.22,
@@ -16328,7 +16328,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 825906,
                 "avg": 0.09,
@@ -16376,7 +16376,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 825906,
                 "avg": 0.09,
@@ -16426,7 +16426,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 825906,
                 "avg": 0.09,
@@ -16474,7 +16474,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 825906,
                 "avg": 0.09,
@@ -16567,7 +16567,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 825906,
                     "avg": 0.09,
@@ -16615,7 +16615,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 825906,
                     "avg": 0.09,
@@ -16696,7 +16696,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 825906,
                     "avg": 0.09,
@@ -16744,7 +16744,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 825906,
                     "avg": 0.09,
@@ -16812,7 +16812,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 825906,
                     "avg": 0.09,
@@ -16860,7 +16860,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 825906,
                     "avg": 0.09,
@@ -17318,7 +17318,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 691724,
                 "avg": 0.04,
@@ -17366,7 +17366,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 691724,
                 "avg": 0.04,
@@ -17416,7 +17416,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 691724,
                 "avg": 0.04,
@@ -17464,7 +17464,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.964Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 691724,
                 "avg": 0.04,
@@ -17557,7 +17557,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 691724,
                     "avg": 0.04,
@@ -17605,7 +17605,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 691724,
                     "avg": 0.04,
@@ -17686,7 +17686,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 691724,
                     "avg": 0.04,
@@ -17734,7 +17734,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 691724,
                     "avg": 0.04,
@@ -17802,7 +17802,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 691724,
                     "avg": 0.04,
@@ -17850,7 +17850,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.964Z",
+                    "updated": "2026-09-18T22:54:32.954Z",
                     "unit": "EUR",
                     "idProduct": 691724,
                     "avg": 0.04,
@@ -17931,7 +17931,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 691728,
                 "avg": 0.04,
@@ -17979,7 +17979,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.954Z",
                 "unit": "EUR",
                 "idProduct": 691728,
                 "avg": 0.04,
@@ -18029,7 +18029,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 691728,
                 "avg": 0.04,
@@ -18077,7 +18077,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.958Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 691728,
                 "avg": 0.04,
@@ -18170,7 +18170,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 691728,
                     "avg": 0.04,
@@ -18218,7 +18218,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 691728,
                     "avg": 0.04,
@@ -18299,7 +18299,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 691728,
                     "avg": 0.04,
@@ -18347,7 +18347,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 691728,
                     "avg": 0.04,
@@ -18415,7 +18415,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 691728,
                     "avg": 0.04,
@@ -18463,7 +18463,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.958Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 691728,
                     "avg": 0.04,
@@ -18864,7 +18864,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 805390,
                 "avg": 0.04,
@@ -18912,7 +18912,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 805390,
                 "avg": 0.04,
@@ -18961,7 +18961,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 806408,
                 "avg": null,
@@ -19002,7 +19002,7 @@
             "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 806409,
                 "avg": null,
@@ -19044,7 +19044,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805390,
                 "avg": 0.04,
@@ -19092,7 +19092,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805390,
                 "avg": 0.04,
@@ -19141,7 +19141,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806408,
                 "avg": null,
@@ -19182,7 +19182,7 @@
             "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.976Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806409,
                 "avg": null,
@@ -19275,7 +19275,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805390,
                     "avg": 0.04,
@@ -19323,7 +19323,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805390,
                     "avg": 0.04,
@@ -19372,7 +19372,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806408,
                     "avg": null,
@@ -19413,7 +19413,7 @@
                 "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806409,
                     "avg": null,
@@ -19486,7 +19486,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805390,
                     "avg": 0.04,
@@ -19534,7 +19534,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805390,
                     "avg": 0.04,
@@ -19583,7 +19583,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806408,
                     "avg": null,
@@ -19624,7 +19624,7 @@
                 "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806409,
                     "avg": null,
@@ -19684,7 +19684,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805390,
                     "avg": 0.04,
@@ -19732,7 +19732,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805390,
                     "avg": 0.04,
@@ -19781,7 +19781,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806408,
                     "avg": null,
@@ -19822,7 +19822,7 @@
                 "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.976Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806409,
                     "avg": null,
@@ -19895,7 +19895,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805409,
                 "avg": 0.05,
@@ -19943,7 +19943,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805409,
                 "avg": 0.05,
@@ -19992,7 +19992,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806436,
                 "avg": 0.85,
@@ -20033,7 +20033,7 @@
             "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.955Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806437,
                 "avg": null,
@@ -20075,7 +20075,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805409,
                 "avg": 0.05,
@@ -20123,7 +20123,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805409,
                 "avg": 0.05,
@@ -20172,7 +20172,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806436,
                 "avg": 0.85,
@@ -20213,7 +20213,7 @@
             "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806437,
                 "avg": null,
@@ -20306,7 +20306,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805409,
                     "avg": 0.05,
@@ -20354,7 +20354,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805409,
                     "avg": 0.05,
@@ -20403,7 +20403,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806436,
                     "avg": 0.85,
@@ -20444,7 +20444,7 @@
                 "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806437,
                     "avg": null,
@@ -20517,7 +20517,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805409,
                     "avg": 0.05,
@@ -20565,7 +20565,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805409,
                     "avg": 0.05,
@@ -20614,7 +20614,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806436,
                     "avg": 0.85,
@@ -20655,7 +20655,7 @@
                 "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806437,
                     "avg": null,
@@ -20715,7 +20715,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805409,
                     "avg": 0.05,
@@ -20763,7 +20763,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805409,
                     "avg": 0.05,
@@ -20812,7 +20812,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806436,
                     "avg": 0.85,
@@ -20853,7 +20853,7 @@
                 "variantId": "2asus05yghmpd1ud1sdmlq3as4e",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806437,
                     "avg": null,
@@ -20926,7 +20926,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.954Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805514,
                 "avg": 0.04,
@@ -20974,7 +20974,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.954Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805514,
                 "avg": 0.04,
@@ -21023,7 +21023,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.954Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806590,
                 "avg": 0.56,
@@ -21065,7 +21065,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 805514,
                 "avg": 0.04,
@@ -21113,7 +21113,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 805514,
                 "avg": 0.04,
@@ -21162,7 +21162,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.972Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 806590,
                 "avg": 0.56,
@@ -21251,7 +21251,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805514,
                     "avg": 0.04,
@@ -21299,7 +21299,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805514,
                     "avg": 0.04,
@@ -21348,7 +21348,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 806590,
                     "avg": 0.56,
@@ -21421,7 +21421,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805514,
                     "avg": 0.04,
@@ -21469,7 +21469,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805514,
                     "avg": 0.04,
@@ -21518,7 +21518,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 806590,
                     "avg": 0.56,
@@ -21578,7 +21578,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805514,
                     "avg": 0.04,
@@ -21626,7 +21626,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805514,
                     "avg": 0.04,
@@ -21675,7 +21675,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.972Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 806590,
                     "avg": 0.56,
@@ -21748,7 +21748,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805501,
                 "avg": 0.04,
@@ -21796,7 +21796,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805501,
                 "avg": 0.04,
@@ -21845,7 +21845,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806570,
                 "avg": null,
@@ -21887,7 +21887,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.976Z",
                 "unit": "EUR",
                 "idProduct": 805501,
                 "avg": 0.04,
@@ -21935,7 +21935,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.976Z",
                 "unit": "EUR",
                 "idProduct": 805501,
                 "avg": 0.04,
@@ -21984,7 +21984,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.976Z",
                 "unit": "EUR",
                 "idProduct": 806570,
                 "avg": null,
@@ -22073,7 +22073,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 805501,
                     "avg": 0.04,
@@ -22121,7 +22121,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 805501,
                     "avg": 0.04,
@@ -22170,7 +22170,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 806570,
                     "avg": null,
@@ -22243,7 +22243,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 805501,
                     "avg": 0.04,
@@ -22291,7 +22291,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 805501,
                     "avg": 0.04,
@@ -22340,7 +22340,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 806570,
                     "avg": null,
@@ -22400,7 +22400,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 805501,
                     "avg": 0.04,
@@ -22448,7 +22448,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 805501,
                     "avg": 0.04,
@@ -22497,7 +22497,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.976Z",
                     "unit": "EUR",
                     "idProduct": 806570,
                     "avg": null,
@@ -22570,7 +22570,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805521,
                 "avg": 0.08,
@@ -22618,7 +22618,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805521,
                 "avg": 0.08,
@@ -22667,7 +22667,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806604,
                 "avg": null,
@@ -22709,7 +22709,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805521,
                 "avg": 0.08,
@@ -22757,7 +22757,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805521,
                 "avg": 0.08,
@@ -22806,7 +22806,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806604,
                 "avg": null,
@@ -22895,7 +22895,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805521,
                     "avg": 0.08,
@@ -22943,7 +22943,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805521,
                     "avg": 0.08,
@@ -22992,7 +22992,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806604,
                     "avg": null,
@@ -23065,7 +23065,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805521,
                     "avg": 0.08,
@@ -23113,7 +23113,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805521,
                     "avg": 0.08,
@@ -23162,7 +23162,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806604,
                     "avg": null,
@@ -23222,7 +23222,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805521,
                     "avg": 0.08,
@@ -23270,7 +23270,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 805521,
                     "avg": 0.08,
@@ -23319,7 +23319,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.964Z",
                     "unit": "EUR",
                     "idProduct": 806604,
                     "avg": null,
@@ -23392,7 +23392,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805507,
                 "avg": 0.08,
@@ -23440,7 +23440,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 805507,
                 "avg": 0.08,
@@ -23489,7 +23489,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.946Z",
+                "updated": "2026-09-18T22:54:32.964Z",
                 "unit": "EUR",
                 "idProduct": 806582,
                 "avg": 0.56,
@@ -23531,7 +23531,7 @@
             "variantId": "endfynwn4n10gzq",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 805507,
                 "avg": 0.08,
@@ -23579,7 +23579,7 @@
             "variantId": "cm4kqul3x1bwlz1f",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 805507,
                 "avg": 0.08,
@@ -23628,7 +23628,7 @@
             "variantId": "3739bbtj3i910y5ynn9xc6ryf",
             "pricing": {
               "cardmarket": {
-                "updated": "2026-09-18T22:54:32.937Z",
+                "updated": "2026-09-18T22:54:32.955Z",
                 "unit": "EUR",
                 "idProduct": 806582,
                 "avg": 0.56,
@@ -23717,7 +23717,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805507,
                     "avg": 0.08,
@@ -23765,7 +23765,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805507,
                     "avg": 0.08,
@@ -23814,7 +23814,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 806582,
                     "avg": 0.56,
@@ -23887,7 +23887,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805507,
                     "avg": 0.08,
@@ -23935,7 +23935,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805507,
                     "avg": 0.08,
@@ -23984,7 +23984,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 806582,
                     "avg": 0.56,
@@ -24044,7 +24044,7 @@
                 "variantId": "endfynwn4n10gzq",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805507,
                     "avg": 0.08,
@@ -24092,7 +24092,7 @@
                 "variantId": "cm4kqul3x1bwlz1f",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 805507,
                     "avg": 0.08,
@@ -24141,7 +24141,7 @@
                 "variantId": "3739bbtj3i910y5ynn9xc6ryf",
                 "pricing": {
                   "cardmarket": {
-                    "updated": "2026-09-18T22:54:32.937Z",
+                    "updated": "2026-09-18T22:54:32.955Z",
                     "unit": "EUR",
                     "idProduct": 806582,
                     "avg": 0.56,
