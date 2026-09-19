@@ -6,6 +6,9 @@ on:
       - audit/cardmarket-p1-refresh-20260919
     paths:
       - .github/workflows/temp-cardmarket-p1-refresh-audit.yml
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -52,6 +55,7 @@ jobs:
           PY
 
       - name: Record successful audit summary
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
