@@ -1,3 +1,0 @@
-PASS
-verifiedIdentities=4
-pricingP0=0
