@@ -103,6 +103,97 @@ jobs:
           },ensure_ascii=False))
           PY
 
+      - name: Live verify all 44 Set Logo rows
+        run: |
+          python3 - <<'PY'
+          import concurrent.futures,json,time,urllib.request
+          from pathlib import Path
+
+          audit=json.loads(Path("temp_swshp_set_logo_staff_audit.json").read_text())
+
+          def fetch(item):
+              cid=item["tcgdexId"]
+              data=None
+              err=None
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(
+                          f"https://api.tcgdex.net/v2/en/cards/{cid}",
+                          headers={"User-Agent":"Cardoryx-SWSH-SetLogoStaff-Live/1.0"},
+                      )
+                      with urllib.request.urlopen(req,timeout=60) as r:
+                          data=json.load(r)
+                      break
+                  except Exception as exc:
+                      err=repr(exc);time.sleep(1+attempt)
+              if not data:
+                  return {"id":cid,"ok":False,"reason":"api_unavailable","error":err}
+
+              set_rows=[]
+              staff_rows=[]
+              for row in data.get("variants_detailed") or []:
+                  stamps=[str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or [])]
+                  if "setlogo" not in stamps:
+                      continue
+                  if "staff" in stamps:
+                      staff_rows.append(row)
+                  else:
+                      set_rows.append(row)
+
+              if len(set_rows)!=1 or len(staff_rows)!=1:
+                  return {"id":cid,"ok":False,"reason":"row_count","set":len(set_rows),"staff":len(staff_rows)}
+
+              row=set_rows[0]
+              staff=staff_rows[0]
+              expected=int(item["baseProductId"])
+              pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+              cm=(row.get("pricing") or {}).get("cardmarket") or {}
+              ppid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+              staff_pid=int((staff.get("thirdParty") or {}).get("cardmarket") or 0)
+              staff_cm=(staff.get("pricing") or {}).get("cardmarket") or {}
+              staff_ppid=int(staff_cm.get("idProduct") or staff_cm.get("id_product") or 0)
+              usable=any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+              top=(data.get("pricing") or {}).get("cardmarket") or {}
+              top_pid=int(top.get("idProduct") or top.get("id_product") or 0)
+              ok=(
+                  str(row.get("type") or "").lower()=="holo" and
+                  str(row.get("size") or "standard").lower()!="jumbo" and
+                  pid==expected and ppid==expected and usable and
+                  staff_pid==0 and staff_ppid==0
+              )
+              return {
+                  "id":cid,"ok":ok,"expectedProductId":expected,
+                  "rowProductId":pid,"pricingProductId":ppid,
+                  "topLevelProductId":top_pid,"topLevelMatches":top_pid==expected,
+                  "usablePrice":usable,
+                  "staffProductId":staff_pid,"staffPricingProductId":staff_ppid,
+              }
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=12) as ex:
+              results=list(ex.map(fetch,audit["rows"]))
+
+          failures=[x for x in results if not x.get("ok")]
+          out={
+              "checked":len(results),
+              "usableSetLogoPrices":sum(1 for x in results if x.get("usablePrice")),
+              "topLevelMatches":sum(1 for x in results if x.get("topLevelMatches")),
+              "staffWithoutProduct":sum(1 for x in results if x.get("staffProductId")==0 and x.get("staffPricingProductId")==0),
+              "failures":failures,
+              "rows":results,
+          }
+          Path("temp_swshp_set_logo_staff_live.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              "checked":out["checked"],
+              "usableSetLogoPrices":out["usableSetLogoPrices"],
+              "topLevelMatches":out["topLevelMatches"],
+              "staffWithoutProduct":out["staffWithoutProduct"],
+              "failures":failures,
+          },ensure_ascii=False))
+          assert len(results)==44 and not failures,out
+          assert out["usableSetLogoPrices"]==44,out
+          assert out["staffWithoutProduct"]==44,out
+          PY
+
       - name: Record audit
         if: github.event_name == 'push'
         run: |
