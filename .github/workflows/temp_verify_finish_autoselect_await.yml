@@ -1,0 +1,25 @@
+name: TEMP Verify Finish Autoselect Await
+on:
+  push:
+    branches: [fix/finish-autoselect-await-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static regression
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("index.html").read_text()
+          assert "await refreshOfficialPlayAvailability(selectedCard,false,false);" in s
+          assert "syncVariantAvailability(selectedCard,false);" in s
+          p=s.index("async function chooseCard")
+          q=s.index("function inferCategory",p)
+          block=s[p:q]
+          assert block.index("await refreshOfficialPlayAvailability(selectedCard,false,false);") < block.index("syncVariantAvailability(selectedCard,false);") < block.rindex("renderScanValue(selectedCard);")
+          sync=s[s.index("function syncVariantAvailability"):s.index("// Prezzi Cardmarket",s.index("function syncVariantAvailability"))]
+          assert "if(!edit && physical.length===1)" in sync
+          assert "sel.value=physical[0].value" in sync
+          print("FINISH_AUTOSELECT_AWAIT_OK")
+          PY
