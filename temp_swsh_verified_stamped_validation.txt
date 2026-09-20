@@ -1,6 +1,0 @@
-PASS
-verifiedStampedSWSH=10
-ambiguous=345
-falsePositive=0
-falseNegative=0
-pricingP0=0
