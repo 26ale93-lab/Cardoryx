@@ -1,0 +1,25 @@
+name: TEMP Verify Scanner Custom Select Triggers
+on:
+  push:
+    branches: [fix/scanner-custom-select-trigger-ios-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Static regression gates
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("index.html").read_text()
+          assert "scanner-select-trigger" in s
+          assert "@media(pointer:coarse)" in s
+          assert "trigger.onclick=()=>openScannerSelectSheet(select)" in s
+          assert "syncScannerSelectTrigger(select)" in s
+          for x in ["variant","stamp","playSeries","status","condition"]:
+            assert ("'"+x+"'") in s
+          assert "if(!edit && selectable.length===1)" in s
+          assert "VERIFIED_VARIANT_PRICES" in s and "VERIFIED_STAMP_PRICES" in s
+          print("SCANNER_CUSTOM_TRIGGER_GATES_OK")
+          PY
