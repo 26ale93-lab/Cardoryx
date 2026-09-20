@@ -1,0 +1,95 @@
+name: TEMP Celebrations Classic 25th Regression
+
+on:
+  push:
+    branches:
+      - feature/celebrations-classic-25th-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/celebrations_classic_finish_report.json             --workers 24
+
+      - name: Verify finish result
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/celebrations_classic_finish_report.json").read_text())
+          s=r["summary"]
+          a=r["celebrationsClassic25thAudit"]
+          assert s["classifications"]["FALSO POSITIVO"] == 0, s
+          assert s["classifications"]["FALSO NEGATIVO"] == 0, s
+          assert s["classifications"]["AMBIGUA"] == 343, s
+          assert s["pricingP0"] == 0, s
+          assert a["verifiedIdentities"] == 2, a
+          assert a["finish"] == "Holo", a
+          assert a["stamp"] == "25° Anniversario", a
+          assert a["runtime"]["tested"] == 2, a
+          ids={x["tcgdexId"] for x in a["identities"]}
+          assert ids == {"cel25cc-CC020","cel25cc-CC021"}, ids
+          issue_ids={x["tcgdexId"] for x in r.get("issuesByPriority",[])}
+          assert "cel25cc-CC020" not in issue_ids, issue_ids
+          assert "cel25cc-CC021" not in issue_ids, issue_ids
+          print(json.dumps({"summary":s,"audit":a},ensure_ascii=False))
+          PY
+
+      - name: Cardmarket identity audit
+        run: |
+          rm -rf scripts/__pycache__
+          python3 scripts/test_card_identity_cardmarket_audit.py             --tcgdex-db ../tcgdex-cards-database             --workers 24
+
+      - name: Verify exact Cardmarket products
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          idx={x["tcgdexId"]:x for x in r["caseIndex"]}
+          for cid in ("cel25cc-CC020","cel25cc-CC021"):
+              assert idx[cid]["classification"] == "SAFE", idx[cid]
+          assert r["classificationTotals"]["P0_WRONG_PRODUCT"] == 0, r["classificationTotals"]
+          print(json.dumps({
+              "classificationTotals":r["classificationTotals"],
+              "CC020":idx["cel25cc-CC020"]["classification"],
+              "CC021":idx["cel25cc-CC021"]["classification"],
+          }))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          cat > temp_celebrations_classic_25th_validation.txt <<'EOF'
+          PASS
+          ambiguous=343
+          verifiedIdentities=2
+          pricingP0=0
+          EOF
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_celebrations_classic_25th_validation.txt
+          git commit -m "TEMP record Celebrations Classic 25th validation"
+          git push
