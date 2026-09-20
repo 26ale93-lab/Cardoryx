@@ -5095,7 +5095,10 @@ function syncVariantAvailability(card,edit=false){
   const allowed=documentedVariantsForCard(card,stamp,series);
 
   for(const o of sel.options){
-    const ok=allowed.has(canonicalVariant(o.value));
+    const manual=['Speciale / Altro','Non so'].includes(canonicalVariant(o.value));
+    // Manual escape choices must always remain selectable. They are deliberately
+    // excluded from automatic finish selection but must never be disabled.
+    const ok=manual || allowed.has(canonicalVariant(o.value));
     o.disabled=!ok;
     o.setAttribute('aria-disabled',ok?'false':'true');
   }
