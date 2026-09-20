@@ -1,0 +1,7 @@
+PASS
+cards=19
+variants=34
+setStamp=19
+staff=15
+livePriceRows=34
+pricingP0=0
