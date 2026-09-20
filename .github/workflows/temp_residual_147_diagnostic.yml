@@ -19,13 +19,10 @@ jobs:
           python3 - <<'PY'
           import json, collections
           r=json.load(open("artifacts/report.json"))
-          rows=r.get("cards") or r.get("results") or r.get("identities") or []
-          amb=[x for x in rows if x.get("classification")=="AMBIGUA"]
+          rows=r.get("cards") or []
+          amb=[x for x in (r.get("issues") or []) if x.get("classification")=="AMBIGUA"]
           print("SUMMARY",r["summary"])
           print("AMB_COUNT",len(amb))
-          for x in amb:
-            cid=x.get("id") or x.get("tcgdexId") or x.get("cardId")
-            det=x.get("variants_detailed") or x.get("variantsDetailed") or x.get("sourceVariantsDetailed")
-            if det: print("DETAILED",cid,json.dumps(det,ensure_ascii=False))
-          print("KEYS", list(rows[0]) if rows else [])
+          for x in amb: print("AMB",json.dumps(x,ensure_ascii=False))
+          print("ISSUE_KEYS", list(amb[0]) if amb else [])
           PY
