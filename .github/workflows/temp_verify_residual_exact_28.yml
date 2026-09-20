@@ -1,0 +1,56 @@
+name: TEMP Verify Exact Residual 28
+
+on:
+  push:
+    branches:
+      - audit/classify-exact-residual-28-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout TCGdex cards database
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run full audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+      - name: Enforce exact residual impact
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          c=r["summary"]["classifications"]
+          x=r["residualExactFinishClassification"]
+          issues={i["tcgdexId"]:i for i in r.get("issuesByPriority",[])}
+          assert r["summary"]["totalIdentitiesTested"] == 4254, r["summary"]
+          assert c["CORRETTA"] == 4099, c
+          assert c["AMBIGUA"] == 147, c
+          assert c["FALSO POSITIVO"] == 0, c
+          assert c["FALSO NEGATIVO"] == 0, c
+          assert c["SOURCE CONFLICT"] == 8, c
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+          assert x["expectedIdentities"] == 28, x
+          assert len(x["classifiedIds"]) == 28, x
+          assert "mep-028" not in x["classifiedIds"], x
+          assert issues["mep-028"]["classification"] == "AMBIGUA", issues["mep-028"]
+          assert issues["ex5-98"]["classification"] == "AMBIGUA", issues["ex5-98"]
+          assert issues["svp-225"]["classification"] == "AMBIGUA", issues["svp-225"]
+          assert x["productionModified"] is False, x
+          print(json.dumps({"summary":r["summary"],"residualExact":x},ensure_ascii=False,indent=2))
+          PY
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-exact-28-audit
+          path: artifacts/variant_finish_audit_report.json
