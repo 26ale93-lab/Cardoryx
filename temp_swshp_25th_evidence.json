@@ -1,0 +1,956 @@
+{
+  "targets": 12,
+  "rows": [
+    {
+      "tcgdexId": "swshp-SWSH062",
+      "name": "Pikachu VMAX",
+      "localId": "SWSH062",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576730,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576730,
+              "tcgplayer": 251086
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576730,
+            "name": "Pikachu VMAX [G-Max Volt Tackle]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 317665,
+            "dateAdded": "2021-10-01 10:45:33"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576730,
+            "idCategory": 51,
+            "avg": 19.34,
+            "low": 6.99,
+            "trend": 20.65,
+            "avg1": 18.29,
+            "avg7": 16.97,
+            "avg30": 17.33,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH132",
+      "name": "Dragapult",
+      "localId": "SWSH132",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576731,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576731,
+              "tcgplayer": 251088
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576731,
+            "name": "Dragapult [Mach Turn | Diving Swipe]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345894,
+            "dateAdded": "2021-10-01 10:47:47"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576731,
+            "idCategory": 51,
+            "avg": 2.44,
+            "low": 0.4,
+            "trend": 2.57,
+            "avg1": 2.77,
+            "avg7": 2.36,
+            "avg30": 2.4,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        },
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": "jumbo",
+          "thirdPartyProductId": 576905,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "size": "jumbo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576905,
+              "tcgplayer": 252817
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576905,
+            "name": "Dragapult [Mach Turn | Diving Swipe]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345894,
+            "dateAdded": "2021-10-04 16:17:32"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576905,
+            "idCategory": 51,
+            "avg": 1.06,
+            "low": 0.1,
+            "trend": 1.2,
+            "avg1": 1,
+            "avg7": 1.15,
+            "avg30": 1.16,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH133",
+      "name": "Lance's Charizard V",
+      "localId": "SWSH133",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576732,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576732,
+              "tcgplayer": 251089
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576732,
+            "name": "Lance's Charizard V [Flamethrower]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345895,
+            "dateAdded": "2021-10-01 10:48:43"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576732,
+            "idCategory": 51,
+            "avg": 15.83,
+            "low": 4,
+            "trend": 13.27,
+            "avg1": 14.57,
+            "avg7": 13.98,
+            "avg30": 14.54,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        },
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": "jumbo",
+          "thirdPartyProductId": 576906,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "size": "jumbo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576906,
+              "tcgplayer": 251104
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576906,
+            "name": "Lance's Charizard V [Flamethrower]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345895,
+            "dateAdded": "2021-10-04 16:19:43"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576906,
+            "idCategory": 51,
+            "avg": 3.18,
+            "low": 1.8,
+            "trend": 2.98,
+            "avg1": 4,
+            "avg7": 2.8,
+            "avg30": 3.11,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH134",
+      "name": "Dark Sylveon V",
+      "localId": "SWSH134",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576733,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576733,
+              "tcgplayer": 251090
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576733,
+            "name": "Dark Sylveon V [Disarming Voice | Tricky Ribbon]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345896,
+            "dateAdded": "2021-10-01 10:49:37"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576733,
+            "idCategory": 51,
+            "avg": 10.68,
+            "low": 6.95,
+            "trend": 10.21,
+            "avg1": 7.5,
+            "avg7": 10.61,
+            "avg30": 10.53,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        },
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": "jumbo",
+          "thirdPartyProductId": 576907,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "size": "jumbo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576907,
+              "tcgplayer": 251105
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576907,
+            "name": "Dark Sylveon V [Disarming Voice | Tricky Ribbon]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345896,
+            "dateAdded": "2021-10-04 16:20:42"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576907,
+            "idCategory": 51,
+            "avg": 2.64,
+            "low": 0.7,
+            "trend": 2.7,
+            "avg1": 0.8,
+            "avg7": 2.76,
+            "avg30": 2.71,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH135",
+      "name": "Zacian",
+      "localId": "SWSH135",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576734,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576734,
+              "tcgplayer": 251091
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576734,
+            "name": "Zacian LV.X [Bladed Armament | Brave Blade]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345897,
+            "dateAdded": "2021-10-01 10:52:22"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576734,
+            "idCategory": 51,
+            "avg": 1.56,
+            "low": 0.2,
+            "trend": 1.38,
+            "avg1": 1.5,
+            "avg7": 1.76,
+            "avg30": 1.67,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH136",
+      "name": "Mimikyu",
+      "localId": "SWSH136",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576735,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576735,
+              "tcgplayer": 251092
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576735,
+            "name": "Mimikyu δ Delta Species [Filch | Wet Claw]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345898,
+            "dateAdded": "2021-10-01 11:04:56"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576735,
+            "idCategory": 51,
+            "avg": 12.18,
+            "low": 4,
+            "trend": 13.23,
+            "avg1": 10.94,
+            "avg7": 11.66,
+            "avg30": 12.16,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        },
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": "jumbo",
+          "thirdPartyProductId": 576908,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "size": "jumbo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576908,
+              "tcgplayer": 260878
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576908,
+            "name": "Mimikyu δ Delta Species [Filch | Wet Claw]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345898,
+            "dateAdded": "2021-10-04 16:21:52"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576908,
+            "idCategory": 51,
+            "avg": 10,
+            "low": 6.5,
+            "trend": 8.05,
+            "avg1": 10,
+            "avg7": 9.14,
+            "avg30": 7.52,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH137",
+      "name": "Light Toxtricity",
+      "localId": "SWSH137",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576736,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576736,
+              "tcgplayer": 251093
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576736,
+            "name": "Light Toxtricity [Slow Ballad | Beatdown Smash]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345899,
+            "dateAdded": "2021-10-01 11:15:19"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576736,
+            "idCategory": 51,
+            "avg": 4.41,
+            "low": 0.5,
+            "trend": 6.49,
+            "avg1": 3.84,
+            "avg7": 5.29,
+            "avg30": 4.85,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        },
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": "jumbo",
+          "thirdPartyProductId": 576909,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "size": "jumbo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576909,
+              "tcgplayer": 260877
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576909,
+            "name": "Light Toxtricity [Slow Ballad | Beatdown Smash]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345899,
+            "dateAdded": "2021-10-04 16:23:09"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576909,
+            "idCategory": 51,
+            "avg": 5.24,
+            "low": 4,
+            "trend": 5.82,
+            "avg1": 6,
+            "avg7": 6.71,
+            "avg30": 5.93,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH138",
+      "name": "Hydreigon C",
+      "localId": "SWSH138",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576737,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576737,
+              "tcgplayer": 251094
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576737,
+            "name": "Hydreigon [C] Lv.61 [Bite | Berserker Blade]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345900,
+            "dateAdded": "2021-10-01 11:16:36"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576737,
+            "idCategory": 51,
+            "avg": 1.38,
+            "low": 0.19,
+            "trend": 1.57,
+            "avg1": 1.16,
+            "avg7": 1.33,
+            "avg30": 1.33,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        },
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": "jumbo",
+          "thirdPartyProductId": 576910,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "size": "jumbo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576910,
+              "tcgplayer": 260879
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576910,
+            "name": "Hydreigon [C] Lv.61 [Bite | Berserker Blade]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345900,
+            "dateAdded": "2021-10-04 16:24:09"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576910,
+            "idCategory": 51,
+            "avg": 4.48,
+            "low": 4,
+            "trend": 4.94,
+            "avg1": 4.95,
+            "avg7": 5.26,
+            "avg30": 5.28,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH143",
+      "name": "Pikachu V",
+      "localId": "SWSH143",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576742,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576742,
+              "tcgplayer": 251101
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576742,
+            "name": "Pikachu V [Volt Tackle]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345905,
+            "dateAdded": "2021-10-01 11:22:19"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576742,
+            "idCategory": 51,
+            "avg": 18.02,
+            "low": 5.9,
+            "trend": 14.79,
+            "avg1": 12.49,
+            "avg7": 17.86,
+            "avg30": 19.22,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH144",
+      "name": "Greninja ☆",
+      "localId": "SWSH144",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576743,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576743,
+              "tcgplayer": 248731
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576743,
+            "name": "Greninja Gold Star [Shadow Knife | Mist Slash]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345906,
+            "dateAdded": "2021-10-01 11:24:13"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576743,
+            "idCategory": 51,
+            "avg": 31.57,
+            "low": 12.99,
+            "trend": 27.85,
+            "avg1": 32.45,
+            "avg7": 27.53,
+            "avg30": 29.81,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH145",
+      "name": "Pikachu V",
+      "localId": "SWSH145",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576744,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576744,
+              "tcgplayer": 251102
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576744,
+            "name": "Pikachu V [Volt Tackle]",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 345905,
+            "dateAdded": "2021-10-01 11:27:09"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576744,
+            "idCategory": 51,
+            "avg": 86.2,
+            "low": 59.9,
+            "trend": 85.71,
+            "avg1": 79.78,
+            "avg7": 83.36,
+            "avg30": 84.5,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH146",
+      "name": "Poké Ball",
+      "localId": "SWSH146",
+      "rarity": "Promo",
+      "detailed": [
+        {
+          "type": "holo",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "languages": null,
+          "size": null,
+          "thirdPartyProductId": 576745,
+          "pricingProductId": 0,
+          "pricing": {},
+          "raw": {
+            "type": "holo",
+            "stamp": [
+              "25th-celebration"
+            ],
+            "thirdParty": {
+              "cardmarket": 576745,
+              "tcgplayer": 251103
+            }
+          },
+          "cardmarketProduct": {
+            "idProduct": 576745,
+            "name": "Poké Ball",
+            "idCategory": 51,
+            "categoryName": "Pokémon Single",
+            "idExpansion": 2916,
+            "idMetacard": 222049,
+            "dateAdded": "2021-10-01 11:29:07"
+          },
+          "officialPriceGuide": {
+            "idProduct": 576745,
+            "idCategory": 51,
+            "avg": 88.28,
+            "low": 12.5,
+            "trend": 39.43,
+            "avg1": 24.44,
+            "avg7": 32.18,
+            "avg30": 62.61,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 0,
+            "avg1-holo": null,
+            "avg7-holo": null,
+            "avg30-holo": null
+          }
+        }
+      ]
+    }
+  ],
+  "distinctSourceProductIds": 18,
+  "allSourceProductIds": [
+    576730,
+    576731,
+    576732,
+    576733,
+    576734,
+    576735,
+    576736,
+    576737,
+    576742,
+    576743,
+    576744,
+    576745,
+    576905,
+    576906,
+    576907,
+    576908,
+    576909,
+    576910
+  ]
+}
