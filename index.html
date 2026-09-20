@@ -1270,7 +1270,9 @@ async function requestPersistentStorage(){
   try{storagePersistentState=(await navigator.storage.persist())?'Concessa':'Non concessa'}catch(e){storagePersistentState='Richiesta non riuscita'}
 }
 async function initializeCardoryxStorage(){
-  const localCollection=db,localDecks=decks;
+  // Reconciliation must compare the persisted fallback bytes, not runtime-normalized copies.
+  const localCollection=loadDB();
+  const localDecks=(()=>{try{const x=JSON.parse(localStorage.getItem(DECK_KEY)||'[]');return Array.isArray(x)?x:[]}catch(e){return[]}})();
   try{
     storageDb=await openCardoryxIndexedDb();
     let state=await readIndexedDbState();
