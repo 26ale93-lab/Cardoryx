@@ -406,6 +406,7 @@ function isModernParallelEra(){return false;}
 function verifiedSpecialStampFinishes(){return [];}
 function verifiedMcdonaldsStampFinishes(){return [];}
 function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
+function verifiedSwshp25thStandardFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
@@ -729,6 +730,160 @@ for(const card of cards){
 }
 process.stdout.write(JSON.stringify({testedCards:cards.length,testedPrices:prices,wrongSetRejected:true,wrongStampRejected:true,reverseRejected:true,priceParity:true,migrationPreservesFinish:true}));
 '''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
+    )
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
+def audit_swshp_25th_standard_promos(cards, source):
+    supported = {
+        "swshp-SWSH062": ("SWSH062", "Pikachu VMAX", 576730),
+        "swshp-SWSH135": ("SWSH135", "Zacian", 576734),
+        "swshp-SWSH143": ("SWSH143", "Pikachu V", 576742),
+        "swshp-SWSH144": ("SWSH144", "Greninja ☆", 576743),
+        "swshp-SWSH145": ("SWSH145", "Pikachu V", 576744),
+        "swshp-SWSH146": ("SWSH146", "Poké Ball", 576745),
+    }
+    must_remain_ambiguous = {
+        "swshp-SWSH132", "swshp-SWSH133", "swshp-SWSH134",
+        "swshp-SWSH136", "swshp-SWSH137", "swshp-SWSH138",
+    }
+    by_id = {c["id"]: c for c in cards}
+    missing = (set(supported) | must_remain_ambiguous) - set(by_id)
+    if missing:
+        raise AssertionError(f"SWSH 25th source identities missing: {sorted(missing)}")
+
+    registry = extract_js_object(source, "VERIFIED_SWSHP_25TH_STANDARD_PRODUCTS")
+    if set(registry) != set(supported):
+        raise AssertionError("SWSH 25th production registry must contain exactly the six non-Jumbo identities")
+
+    verified = []
+    for cid, (local_id, name, product_id) in supported.items():
+        card = by_id[cid]
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if str(card.get("localId")) != local_id or str(source_name) != name:
+            raise AssertionError(f"SWSH 25th identity mismatch: {cid}")
+        rows = [
+            row for row in (card.get("variants_detailed") or [])
+            if [norm(x) for x in (row.get("stamp") or [])] == ["25thcelebration"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+        ]
+        if len(rows) != 1:
+            raise AssertionError(f"SWSH 25th supported identity must have one stamped row: {cid}")
+        row = rows[0]
+        if str(row.get("size") or "standard").lower() == "jumbo":
+            raise AssertionError(f"SWSH 25th supported identity unexpectedly Jumbo: {cid}")
+        source_pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+        if source_pid != product_id:
+            raise AssertionError(f"SWSH 25th product mismatch: {cid}")
+        rule = registry[cid]
+        if int(rule.get("productId") or 0) != product_id:
+            raise AssertionError(f"SWSH 25th registry product mismatch: {cid}")
+        verified.append({"tcgdexId": cid, "productId": product_id})
+
+    excluded = []
+    for cid in sorted(must_remain_ambiguous):
+        card = by_id[cid]
+        rows = [
+            row for row in (card.get("variants_detailed") or [])
+            if [norm(x) for x in (row.get("stamp") or [])] == ["25thcelebration"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+        ]
+        standard = [row for row in rows if str(row.get("size") or "standard").lower() != "jumbo"]
+        jumbo = [row for row in rows if str(row.get("size") or "standard").lower() == "jumbo"]
+        if len(rows) != 2 or len(standard) != 1 or len(jumbo) != 1:
+            raise AssertionError(f"SWSH 25th expected standard+Jumbo pair changed: {cid}")
+        spid = int(((standard[0].get("thirdParty") or {}).get("cardmarket")) or 0)
+        jpid = int(((jumbo[0].get("thirdParty") or {}).get("cardmarket")) or 0)
+        if not spid or not jpid or spid == jpid:
+            raise AssertionError(f"SWSH 25th standard/Jumbo products not distinct: {cid}")
+        excluded.append({"tcgdexId": cid, "standardProductId": spid, "jumboProductId": jpid})
+
+    runtime = run_swshp_25th_standard_runtime(source, by_id, supported, must_remain_ambiguous)
+    if runtime.get("supported") != 6 or runtime.get("excludedJumboPairs") != 6:
+        raise AssertionError("SWSH 25th runtime regression failed")
+
+    return {
+        "supportedStandardOnly": len(verified),
+        "excludedStandardPlusJumbo": len(excluded),
+        "stamp": "25° Anniversario",
+        "finish": "Holo",
+        "supported": verified,
+        "excluded": excluded,
+        "runtime": runtime,
+        "scope": "only six exact swshp identities with one non-Jumbo stamped row; six standard+Jumbo identities remain fail-closed",
+    }
+
+
+def run_swshp_25th_standard_runtime(source, by_id, supported, excluded_ids):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "canonicalPrintedLocalId", "printedLocalIdParts",
+        "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
+        "verifiedSwshp25thStandardRule", "tcgdexExactSwshp25thStandardRow",
+        "verifiedSwshp25thStandardFinishes", "tcgdexExactSwshp25thStandardPrice",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    registry = extract_js_object(source, "VERIFIED_SWSHP_25TH_STANDARD_PRODUCTS")
+
+    fixtures = []
+    for cid, (_, _, product_id) in supported.items():
+        card = by_id[cid]
+        detailed = json.loads(json.dumps(card.get("variants_detailed") or []))
+        for row in detailed:
+            stamps = [norm(x) for x in (row.get("stamp") or [])]
+            if stamps == ["25thcelebration"] and canonical_finish_type_label(row.get("type")) == "holo":
+                row["pricing"] = {"cardmarket": {
+                    "idProduct": product_id, "trend": 1.23, "low": 0.5,
+                    "updated": "runtime-fixture",
+                }}
+        fixtures.append({
+            "id": cid, "tcgdexId": cid, "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "swshp"}, "variants_detailed": detailed,
+        })
+
+    excluded = []
+    for cid in sorted(excluded_ids):
+        card = by_id[cid]
+        excluded.append({
+            "id": cid, "tcgdexId": cid, "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "swshp"}, "variants_detailed": card.get("variants_detailed") or [],
+        })
+
+    js = (
+        "const VERIFIED_SWSHP_25TH_STANDARD_PRODUCTS="
+        + json.dumps(registry, ensure_ascii=False) + ";\n"
+        + functions + "\n"
+        + r'''
+const supported=__SUPPORTED__;
+const excluded=__EXCLUDED__;
+function fail(msg){throw new Error(msg);}
+for(const card of supported){
+  const row=tcgdexExactSwshp25thStandardRow(card);
+  if(!row)fail('supported row missing '+card.id);
+  const finishes=verifiedSwshp25thStandardFinishes(card,'25° Anniversario');
+  if(finishes.length!==1||finishes[0]!=='Holo')fail('finish mismatch '+card.id);
+  const price=tcgdexExactSwshp25thStandardPrice(card,'Holo','25° Anniversario');
+  const expected=Number(VERIFIED_SWSHP_25TH_STANDARD_PRODUCTS[card.id].productId);
+  if(!price||Number(price.idProduct)!==expected||Number(price.trend)!==1.23)fail('price mismatch '+card.id);
+  if(tcgdexExactSwshp25thStandardPrice(card,'Normal','25° Anniversario')!==null)fail('Normal leaked '+card.id);
+  if(tcgdexExactSwshp25thStandardPrice(card,'Holo','30° Anniversario')!==null)fail('wrong stamp leaked '+card.id);
+  const wrong={...card,set:{id:'wrong-set'}};
+  if(tcgdexExactSwshp25thStandardRow(wrong)!==null)fail('wrong set leaked '+card.id);
+}
+for(const card of excluded){
+  if(tcgdexExactSwshp25thStandardRow(card)!==null)fail('Jumbo pair incorrectly supported '+card.id);
+  if(verifiedSwshp25thStandardFinishes(card,'25° Anniversario').length!==0)fail('Jumbo finish leaked '+card.id);
+  if(tcgdexExactSwshp25thStandardPrice(card,'Holo','25° Anniversario')!==null)fail('Jumbo price leaked '+card.id);
+}
+process.stdout.write(JSON.stringify({supported:supported.length,excludedJumboPairs:excluded.length,wrongSetRejected:true,wrongStampRejected:true,wrongFinishRejected:true,jumboPairsFailClosed:true}));
+'''
+        .replace("__SUPPORTED__", json.dumps(fixtures, ensure_ascii=False))
+        .replace("__EXCLUDED__", json.dumps(excluded, ensure_ascii=False))
     )
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
@@ -1280,10 +1435,15 @@ def main():
         "status": "not-run",
         "reason": "full cards-database snapshot required",
     }
+    swshp_25th_standard_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     if args.tcgdex_db:
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
         mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
         mcdonalds_2021_25th_audit = audit_mcdonalds_2021_25th_source(all_cards, source)
+        swshp_25th_standard_audit = audit_swshp_25th_standard_promos(all_cards, source)
         grouped = defaultdict(list)
         for c in all_cards: grouped[(c.get("set") or {}).get("id")].append(c)
         sample, era_by_id = [], {}
@@ -1688,6 +1848,7 @@ def main():
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
         "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
+        "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
             "recoveredIdentities": len(normal_registry_applied_ids),
