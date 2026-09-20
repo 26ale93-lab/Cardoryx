@@ -52,7 +52,7 @@ SAMPLE_PER_SET = 18
 
 FINISHES = (
     "Normal", "Holo", "Reverse Holo", "Cosmos Holo",
-    "Poké Ball Reverse Holo", "Master Ball Reverse Holo", "Ditto Peelable",
+    "Poké Ball Reverse Holo", "Master Ball Reverse Holo", "Gold", "Ditto Peelable",
 )
 MANUAL_FINISHES = ("Speciale / Altro", "Non so")
 CLASSIFICATIONS = ("CORRETTA", "FALSO POSITIVO", "FALSO NEGATIVO", "AMBIGUA", "SOURCE CONFLICT")
@@ -166,6 +166,8 @@ def canonical_finish(value):
         return "Poké Ball Reverse Holo"
     if "cosmos" in n:
         return "Cosmos Holo"
+    if n in {"gold", "oro"}:
+        return "Gold"
     if "reverse" in n:
         return "Reverse Holo"
     if "holo" in n or "olografic" in n:
@@ -197,6 +199,8 @@ def canonical_finish_foil_label(value):
         return "pokeball"
     if n == "masterball":
         return "masterball"
+    if n in {"gold", "oro"}:
+        return "gold"
     return n
 
 def canonical_finish_subtype_label(value):
@@ -224,6 +228,8 @@ def canonical_row_finish(row, translate_localized=True):
         return "Ditto Peelable"
     if foil in {"cosmos", "cosmo"}:
         return "Cosmos Holo"
+    if foil == "gold":
+        return "Gold"
     if typ == "reverse" and foil == "pokeball":
         return "Poké Ball Reverse Holo"
     if typ == "reverse" and foil == "masterball":
@@ -1551,6 +1557,7 @@ def cardoryx_add_detailed(allowed, rows, base=True, special=True):
             if peelable_ditto and not foil: allowed.add("Ditto Peelable")
         if special:
             if typ in {"normal", "holo", "reverse"} and foil == "cosmos": allowed.add("Cosmos Holo")
+            if foil == "gold": allowed.add("Gold")
             if typ == "reverse" and foil == "pokeball": allowed.add("Poké Ball Reverse Holo")
             if typ == "reverse" and foil == "masterball": allowed.add("Master Ball Reverse Holo")
 
