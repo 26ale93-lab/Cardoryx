@@ -1,0 +1,6263 @@
+{
+  "tcgdexSha": "46e7d514d534d38257914a5ffee54c17849f72c3",
+  "families": {
+    "SWSH Black Star Promos": {
+      "count": 55,
+      "detailedRows": 112,
+      "cardsWithDetailed": 55,
+      "cardsWithProducts": 55,
+      "rarities": {
+        "Promo": 54,
+        "Rare": 1
+      },
+      "coarsePatterns": {
+        "NONE": 55
+      },
+      "rows": [
+        {
+          "id": "swshp-SWSH006",
+          "name": "Rillaboom",
+          "localId": "SWSH006",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            437154
+          ]
+        },
+        {
+          "id": "swshp-SWSH007",
+          "name": "Frosmoth",
+          "localId": "SWSH007",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            437159
+          ]
+        },
+        {
+          "id": "swshp-SWSH008",
+          "name": "Galarian Perrserker",
+          "localId": "SWSH008",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            437164
+          ]
+        },
+        {
+          "id": "swshp-SWSH009",
+          "name": "Cinccino",
+          "localId": "SWSH009",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            437169
+          ]
+        },
+        {
+          "id": "swshp-SWSH022",
+          "name": "Flapple",
+          "localId": "SWSH022",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            453448
+          ]
+        },
+        {
+          "id": "swshp-SWSH023",
+          "name": "Luxray",
+          "localId": "SWSH023",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            453453
+          ]
+        },
+        {
+          "id": "swshp-SWSH024",
+          "name": "Coalossal",
+          "localId": "SWSH024",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            453458
+          ]
+        },
+        {
+          "id": "swshp-SWSH025",
+          "name": "Garbodor",
+          "localId": "SWSH025",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            453463
+          ]
+        },
+        {
+          "id": "swshp-SWSH035",
+          "name": "Decidueye",
+          "localId": "SWSH035",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            487069
+          ]
+        },
+        {
+          "id": "swshp-SWSH036",
+          "name": "Arctozolt",
+          "localId": "SWSH036",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            487074
+          ]
+        },
+        {
+          "id": "swshp-SWSH037",
+          "name": "Hydreigon",
+          "localId": "SWSH037",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            487079
+          ]
+        },
+        {
+          "id": "swshp-SWSH038",
+          "name": "Kangaskhan",
+          "localId": "SWSH038",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            487084
+          ]
+        },
+        {
+          "id": "swshp-SWSH066",
+          "name": "Charizard",
+          "localId": "SWSH066",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            516329
+          ]
+        },
+        {
+          "id": "swshp-SWSH067",
+          "name": "Donphan",
+          "localId": "SWSH067",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            516334
+          ]
+        },
+        {
+          "id": "swshp-SWSH068",
+          "name": "Snorlax",
+          "localId": "SWSH068",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            516339
+          ]
+        },
+        {
+          "id": "swshp-SWSH069",
+          "name": "Lugia",
+          "localId": "SWSH069",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            516344
+          ]
+        },
+        {
+          "id": "swshp-SWSH088",
+          "name": "Cherrim",
+          "localId": "SWSH088",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            546936
+          ]
+        },
+        {
+          "id": "swshp-SWSH089",
+          "name": "Octillery",
+          "localId": "SWSH089",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            546941
+          ]
+        },
+        {
+          "id": "swshp-SWSH090",
+          "name": "Houndoom",
+          "localId": "SWSH090",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            546961
+          ]
+        },
+        {
+          "id": "swshp-SWSH091",
+          "name": "Bronzong",
+          "localId": "SWSH091",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            546966
+          ]
+        },
+        {
+          "id": "swshp-SWSH112",
+          "name": "Cinderace",
+          "localId": "SWSH112",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            566760
+          ]
+        },
+        {
+          "id": "swshp-SWSH113",
+          "name": "Inteleon",
+          "localId": "SWSH113",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            566761
+          ]
+        },
+        {
+          "id": "swshp-SWSH114",
+          "name": "Cresselia",
+          "localId": "SWSH114",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            566762
+          ]
+        },
+        {
+          "id": "swshp-SWSH115",
+          "name": "Passimian",
+          "localId": "SWSH115",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            566763
+          ]
+        },
+        {
+          "id": "swshp-SWSH122",
+          "name": "Flaaffy",
+          "localId": "SWSH122",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            573857
+          ]
+        },
+        {
+          "id": "swshp-SWSH123",
+          "name": "Galarian Articuno",
+          "localId": "SWSH123",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            573858
+          ]
+        },
+        {
+          "id": "swshp-SWSH124",
+          "name": "Galarian Zapdos",
+          "localId": "SWSH124",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            573859
+          ]
+        },
+        {
+          "id": "swshp-SWSH125",
+          "name": "Galarian Moltres",
+          "localId": "SWSH125",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            573860
+          ]
+        },
+        {
+          "id": "swshp-SWSH132",
+          "name": "Dragapult",
+          "localId": "SWSH132",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "25th-celebration": 2
+          },
+          "foils": {},
+          "productIds": [
+            576731,
+            576905
+          ]
+        },
+        {
+          "id": "swshp-SWSH133",
+          "name": "Lance's Charizard V",
+          "localId": "SWSH133",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "25th-celebration": 2
+          },
+          "foils": {},
+          "productIds": [
+            576732,
+            576906
+          ]
+        },
+        {
+          "id": "swshp-SWSH134",
+          "name": "Dark Sylveon V",
+          "localId": "SWSH134",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "25th-celebration": 2
+          },
+          "foils": {},
+          "productIds": [
+            576733,
+            576907
+          ]
+        },
+        {
+          "id": "swshp-SWSH136",
+          "name": "Mimikyu",
+          "localId": "SWSH136",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "25th-celebration": 2
+          },
+          "foils": {},
+          "productIds": [
+            576735,
+            576908
+          ]
+        },
+        {
+          "id": "swshp-SWSH137",
+          "name": "Light Toxtricity",
+          "localId": "SWSH137",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "25th-celebration": 2
+          },
+          "foils": {},
+          "productIds": [
+            576736,
+            576909
+          ]
+        },
+        {
+          "id": "swshp-SWSH138",
+          "name": "Hydreigon C",
+          "localId": "SWSH138",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "25th-celebration": 2
+          },
+          "foils": {},
+          "productIds": [
+            576737,
+            576910
+          ]
+        },
+        {
+          "id": "swshp-SWSH153",
+          "name": "Pikachu",
+          "localId": "SWSH153",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "snowflake": 1
+          },
+          "foils": {},
+          "productIds": [
+            672386
+          ]
+        },
+        {
+          "id": "swshp-SWSH185",
+          "name": "Moltres",
+          "localId": "SWSH185",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            606599
+          ]
+        },
+        {
+          "id": "swshp-SWSH186",
+          "name": "Lucario",
+          "localId": "SWSH186",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            606600
+          ]
+        },
+        {
+          "id": "swshp-SWSH187",
+          "name": "Liepard",
+          "localId": "SWSH187",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            606601
+          ]
+        },
+        {
+          "id": "swshp-SWSH188",
+          "name": "Bibarel",
+          "localId": "SWSH188",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            606602
+          ]
+        },
+        {
+          "id": "swshp-SWSH205",
+          "name": "Hisuian Basculegion",
+          "localId": "SWSH205",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            611336
+          ]
+        },
+        {
+          "id": "swshp-SWSH206",
+          "name": "Wyrdeer",
+          "localId": "SWSH206",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            611337
+          ]
+        },
+        {
+          "id": "swshp-SWSH207",
+          "name": "Hisuian Samurott",
+          "localId": "SWSH207",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            611338
+          ]
+        },
+        {
+          "id": "swshp-SWSH208",
+          "name": "Magnezone",
+          "localId": "SWSH208",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            611339
+          ]
+        },
+        {
+          "id": "swshp-SWSH240",
+          "name": "Finneon",
+          "localId": "SWSH240",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            665983
+          ]
+        },
+        {
+          "id": "swshp-SWSH241",
+          "name": "Gengar",
+          "localId": "SWSH241",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            665984
+          ]
+        },
+        {
+          "id": "swshp-SWSH242",
+          "name": "Comfey",
+          "localId": "SWSH242",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            665985
+          ]
+        },
+        {
+          "id": "swshp-SWSH243",
+          "name": "Machamp",
+          "localId": "SWSH243",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            665986
+          ]
+        },
+        {
+          "id": "swshp-SWSH269",
+          "name": "Sunflora",
+          "localId": "SWSH269",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            681798
+          ]
+        },
+        {
+          "id": "swshp-SWSH270",
+          "name": "Rapidash",
+          "localId": "SWSH270",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            681799
+          ]
+        },
+        {
+          "id": "swshp-SWSH271",
+          "name": "Kirlia",
+          "localId": "SWSH271",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            681800
+          ]
+        },
+        {
+          "id": "swshp-SWSH272",
+          "name": "Archeops",
+          "localId": "SWSH272",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            681801
+          ]
+        },
+        {
+          "id": "swshp-SWSH296",
+          "name": "Champions Festival",
+          "localId": "SWSH296",
+          "rarity": "Promo",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 8,
+          "detailedTypes": {
+            "normal": 8
+          },
+          "stamps": {
+            "worlds-2022": 8,
+            "champion": 1,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "staff": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": [
+            671798,
+            672087
+          ]
+        },
+        {
+          "id": "swshp-SWSH303",
+          "name": "Bulbasaur",
+          "localId": "SWSH303",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "illustration-contest-2022": 1
+          },
+          "foils": {},
+          "productIds": [
+            690365
+          ]
+        },
+        {
+          "id": "swshp-SWSH304",
+          "name": "Arcanine",
+          "localId": "SWSH304",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "illustration-contest-2022": 1
+          },
+          "foils": {},
+          "productIds": [
+            690366
+          ]
+        },
+        {
+          "id": "swshp-SWSH305",
+          "name": "Greninja",
+          "localId": "SWSH305",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "illustration-contest-2022": 1
+          },
+          "foils": {},
+          "productIds": [
+            690367
+          ]
+        }
+      ]
+    },
+    "SVP Black Star Promos": {
+      "count": 47,
+      "detailedRows": 103,
+      "cardsWithDetailed": 47,
+      "cardsWithProducts": 45,
+      "rarities": {
+        "Promo": 47
+      },
+      "coarsePatterns": {
+        "NONE": 47
+      },
+      "rows": [
+        {
+          "id": "svp-005",
+          "name": "Quaquaval",
+          "localId": "005",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            692227,
+            761119
+          ]
+        },
+        {
+          "id": "svp-006",
+          "name": "Pawmot",
+          "localId": "006",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            692228,
+            761120
+          ]
+        },
+        {
+          "id": "svp-007",
+          "name": "Hawlucha",
+          "localId": "007",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            692229,
+            761121
+          ]
+        },
+        {
+          "id": "svp-008",
+          "name": "Revavroom",
+          "localId": "008",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            692230,
+            761122
+          ]
+        },
+        {
+          "id": "svp-019",
+          "name": "Baxcalibur",
+          "localId": "019",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            715467,
+            761123
+          ]
+        },
+        {
+          "id": "svp-020",
+          "name": "Tinkaton",
+          "localId": "020",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            715468,
+            761124
+          ]
+        },
+        {
+          "id": "svp-021",
+          "name": "Murkrow",
+          "localId": "021",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            715469,
+            761125
+          ]
+        },
+        {
+          "id": "svp-022",
+          "name": "Pelipper",
+          "localId": "022",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            715470,
+            761126
+          ]
+        },
+        {
+          "id": "svp-036",
+          "name": "Palafin",
+          "localId": "036",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            720386,
+            761127
+          ]
+        },
+        {
+          "id": "svp-037",
+          "name": "Cleffa",
+          "localId": "037",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            720387,
+            761128
+          ]
+        },
+        {
+          "id": "svp-038",
+          "name": "Togekiss",
+          "localId": "038",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            720388,
+            761129
+          ]
+        },
+        {
+          "id": "svp-039",
+          "name": "Mawile",
+          "localId": "039",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            720389,
+            761130
+          ]
+        },
+        {
+          "id": "svp-045",
+          "name": "Paradise Resort",
+          "localId": "045",
+          "rarity": "Promo",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2023": 7,
+            "staff": 1,
+            "top-thirty-two": 1,
+            "top-sixteen": 1,
+            "top-eight": 1,
+            "semi-finalist": 1,
+            "finalist": 1
+          },
+          "foils": {},
+          "productIds": [
+            726924,
+            727542
+          ]
+        },
+        {
+          "id": "svp-057",
+          "name": "Chi-Yu",
+          "localId": "057",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            739441,
+            761131
+          ]
+        },
+        {
+          "id": "svp-058",
+          "name": "Iron Bundle",
+          "localId": "058",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            739443,
+            761132
+          ]
+        },
+        {
+          "id": "svp-059",
+          "name": "Xatu",
+          "localId": "059",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            739448,
+            761133
+          ]
+        },
+        {
+          "id": "svp-060",
+          "name": "Aegislash",
+          "localId": "060",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            739449,
+            761134
+          ]
+        },
+        {
+          "id": "svp-089",
+          "name": "Feraligatr",
+          "localId": "089",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            760231,
+            761135
+          ]
+        },
+        {
+          "id": "svp-090",
+          "name": "Metang",
+          "localId": "090",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            760232,
+            761136
+          ]
+        },
+        {
+          "id": "svp-091",
+          "name": "Koraidon",
+          "localId": "091",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            760233,
+            761137
+          ]
+        },
+        {
+          "id": "svp-092",
+          "name": "Miraidon",
+          "localId": "092",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            760234,
+            761138
+          ]
+        },
+        {
+          "id": "svp-101",
+          "name": "Pikachu",
+          "localId": "101",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "player-rewards-program": 1,
+            "asia-2023-24": 1
+          },
+          "foils": {},
+          "productIds": [
+            726923,
+            740411
+          ]
+        },
+        {
+          "id": "svp-115",
+          "name": "Thwackey",
+          "localId": "115",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            769411,
+            769412
+          ]
+        },
+        {
+          "id": "svp-116",
+          "name": "Infernape",
+          "localId": "116",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            769413,
+            769414
+          ]
+        },
+        {
+          "id": "svp-117",
+          "name": "Froslass",
+          "localId": "117",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            769415,
+            769416
+          ]
+        },
+        {
+          "id": "svp-118",
+          "name": "Tatsugiri",
+          "localId": "118",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            769417,
+            769418
+          ]
+        },
+        {
+          "id": "svp-133",
+          "name": "Ledian",
+          "localId": "133",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            785838,
+            785839
+          ]
+        },
+        {
+          "id": "svp-134",
+          "name": "Crabominable",
+          "localId": "134",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            785840,
+            785841
+          ]
+        },
+        {
+          "id": "svp-135",
+          "name": "Drifblim",
+          "localId": "135",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            785842,
+            785843
+          ]
+        },
+        {
+          "id": "svp-136",
+          "name": "Bouffalant",
+          "localId": "136",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            785844,
+            785845
+          ]
+        },
+        {
+          "id": "svp-150",
+          "name": "Paradise Resort",
+          "localId": "150",
+          "rarity": "Promo",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2024": 7,
+            "staff": 1,
+            "top-thirty-two": 1,
+            "top-sixteen": 1,
+            "top-eight": 1,
+            "semi-finalist": 1,
+            "finalist": 1
+          },
+          "foils": {},
+          "productIds": [
+            783445,
+            783446
+          ]
+        },
+        {
+          "id": "svp-151",
+          "name": "Gouging Fire",
+          "localId": "151",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            793739,
+            799711
+          ]
+        },
+        {
+          "id": "svp-152",
+          "name": "Chien-Pao",
+          "localId": "152",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            793742,
+            799712
+          ]
+        },
+        {
+          "id": "svp-153",
+          "name": "Magneton",
+          "localId": "153",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            793743,
+            799713
+          ]
+        },
+        {
+          "id": "svp-154",
+          "name": "Indeedee",
+          "localId": "154",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            793744,
+            799714
+          ]
+        },
+        {
+          "id": "svp-181",
+          "name": "N's Darmanitan",
+          "localId": "181",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            816614,
+            817772
+          ]
+        },
+        {
+          "id": "svp-182",
+          "name": "Iono's Kilowattrel",
+          "localId": "182",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            816615,
+            817773
+          ]
+        },
+        {
+          "id": "svp-183",
+          "name": "Lillie's Ribombee",
+          "localId": "183",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            816616,
+            817774
+          ]
+        },
+        {
+          "id": "svp-184",
+          "name": "Hop's Snorlax",
+          "localId": "184",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            816617,
+            817775
+          ]
+        },
+        {
+          "id": "svp-191",
+          "name": "Sprigatito",
+          "localId": "191",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "horizons": 1
+          },
+          "foils": {},
+          "productIds": [
+            784941
+          ]
+        },
+        {
+          "id": "svp-192",
+          "name": "Fuecoco",
+          "localId": "192",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "horizons": 1
+          },
+          "foils": {},
+          "productIds": [
+            784942
+          ]
+        },
+        {
+          "id": "svp-213",
+          "name": "Feraligatr",
+          "localId": "213",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "illustration-contest-2024": 1
+          },
+          "foils": {},
+          "productIds": [
+            810397
+          ]
+        },
+        {
+          "id": "svp-214",
+          "name": "Pikachu",
+          "localId": "214",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "illustration-contest-2024": 1
+          },
+          "foils": {},
+          "productIds": [
+            810398
+          ]
+        },
+        {
+          "id": "svp-215",
+          "name": "Toxtricity ex",
+          "localId": "215",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "illustration-contest-2024": 1
+          },
+          "foils": {},
+          "productIds": [
+            810399
+          ]
+        },
+        {
+          "id": "svp-224",
+          "name": "Paradise Resort",
+          "localId": "224",
+          "rarity": "Promo",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2025": 7,
+            "staff": 1,
+            "top-thirty-two": 1,
+            "top-sixteen": 1,
+            "top-eight": 1,
+            "semi-finalist": 1,
+            "finalist": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "svp-225",
+          "name": "Pikachu",
+          "localId": "225",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 1,
+            "reverse": 1
+          },
+          "stamps": {
+            "worlds-2025": 1,
+            "winner": 1
+          },
+          "foils": {
+            "league": 1
+          },
+          "productIds": []
+        },
+        {
+          "id": "svp-500",
+          "name": "Terapagos & Friends",
+          "localId": "500",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "horizons": 1
+          },
+          "foils": {},
+          "productIds": [
+            784943
+          ]
+        }
+      ]
+    },
+    "My First Battle": {
+      "count": 34,
+      "detailedRows": 48,
+      "cardsWithDetailed": 34,
+      "cardsWithProducts": 34,
+      "rarities": {
+        "None": 34
+      },
+      "coarsePatterns": {
+        "NONE": 34
+      },
+      "rows": [
+        {
+          "id": "mfb-1",
+          "name": "Bulbasaur",
+          "localId": "1",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "bulbasaur": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            741975,
+            741976
+          ]
+        },
+        {
+          "id": "mfb-10",
+          "name": "Charmeleon",
+          "localId": "10",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741989
+          ]
+        },
+        {
+          "id": "mfb-11",
+          "name": "Vulpix",
+          "localId": "11",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741990
+          ]
+        },
+        {
+          "id": "mfb-12",
+          "name": "Ninetales",
+          "localId": "12",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741991
+          ]
+        },
+        {
+          "id": "mfb-13",
+          "name": "Growlithe",
+          "localId": "13",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741992
+          ]
+        },
+        {
+          "id": "mfb-14",
+          "name": "Arcanine",
+          "localId": "14",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741993
+          ]
+        },
+        {
+          "id": "mfb-15",
+          "name": "Magmar",
+          "localId": "15",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741994
+          ]
+        },
+        {
+          "id": "mfb-16",
+          "name": "Fire Energy",
+          "localId": "16",
+          "rarity": "None",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "charmander": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            741997,
+            741998
+          ]
+        },
+        {
+          "id": "mfb-17",
+          "name": "Pikachu",
+          "localId": "17",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "pikachu": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            741999,
+            742000
+          ]
+        },
+        {
+          "id": "mfb-18",
+          "name": "Raichu",
+          "localId": "18",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pikachu": 1
+          },
+          "foils": {},
+          "productIds": [
+            742001
+          ]
+        },
+        {
+          "id": "mfb-19",
+          "name": "Magnemite",
+          "localId": "19",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pikachu": 1
+          },
+          "foils": {},
+          "productIds": [
+            742002
+          ]
+        },
+        {
+          "id": "mfb-2",
+          "name": "Ivysaur",
+          "localId": "2",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "bulbasaur": 1
+          },
+          "foils": {},
+          "productIds": [
+            741977
+          ]
+        },
+        {
+          "id": "mfb-20",
+          "name": "Magneton",
+          "localId": "20",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pikachu": 1
+          },
+          "foils": {},
+          "productIds": [
+            742003
+          ]
+        },
+        {
+          "id": "mfb-21",
+          "name": "Voltorb",
+          "localId": "21",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pikachu": 1
+          },
+          "foils": {},
+          "productIds": [
+            742004
+          ]
+        },
+        {
+          "id": "mfb-22",
+          "name": "Electrode",
+          "localId": "22",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pikachu": 1
+          },
+          "foils": {},
+          "productIds": [
+            742005
+          ]
+        },
+        {
+          "id": "mfb-23",
+          "name": "Electabuzz",
+          "localId": "23",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pikachu": 1
+          },
+          "foils": {},
+          "productIds": [
+            742006
+          ]
+        },
+        {
+          "id": "mfb-24",
+          "name": "Lightning Energy",
+          "localId": "24",
+          "rarity": "None",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "pikachu": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            742009,
+            742010
+          ]
+        },
+        {
+          "id": "mfb-25",
+          "name": "Squirtle",
+          "localId": "25",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "squirtle": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            742011,
+            742012
+          ]
+        },
+        {
+          "id": "mfb-26",
+          "name": "Wartortle",
+          "localId": "26",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "squirtle": 1
+          },
+          "foils": {},
+          "productIds": [
+            742013
+          ]
+        },
+        {
+          "id": "mfb-27",
+          "name": "Poliwag",
+          "localId": "27",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "squirtle": 1
+          },
+          "foils": {},
+          "productIds": [
+            742014
+          ]
+        },
+        {
+          "id": "mfb-28",
+          "name": "Poliwhirl",
+          "localId": "28",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "squirtle": 1
+          },
+          "foils": {},
+          "productIds": [
+            742015
+          ]
+        },
+        {
+          "id": "mfb-29",
+          "name": "Magikarp",
+          "localId": "29",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "squirtle": 1
+          },
+          "foils": {},
+          "productIds": [
+            742016
+          ]
+        },
+        {
+          "id": "mfb-3",
+          "name": "Oddish",
+          "localId": "3",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "bulbasaur": 1
+          },
+          "foils": {},
+          "productIds": [
+            741978
+          ]
+        },
+        {
+          "id": "mfb-30",
+          "name": "Gyarados",
+          "localId": "30",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "squirtle": 1
+          },
+          "foils": {},
+          "productIds": [
+            742017
+          ]
+        },
+        {
+          "id": "mfb-31",
+          "name": "Lapras",
+          "localId": "31",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "squirtle": 1
+          },
+          "foils": {},
+          "productIds": [
+            742018
+          ]
+        },
+        {
+          "id": "mfb-32",
+          "name": "Water Energy",
+          "localId": "32",
+          "rarity": "None",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "squirtle": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            742022
+          ]
+        },
+        {
+          "id": "mfb-33",
+          "name": "Potion",
+          "localId": "33",
+          "rarity": "None",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 4,
+          "detailedTypes": {
+            "normal": 4
+          },
+          "stamps": {
+            "pikachu": 1,
+            "squirtle": 1,
+            "bulbasaur": 1,
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            524029,
+            741983,
+            741995,
+            742007
+          ]
+        },
+        {
+          "id": "mfb-34",
+          "name": "Switch",
+          "localId": "34",
+          "rarity": "None",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 4,
+          "detailedTypes": {
+            "normal": 4
+          },
+          "stamps": {
+            "pikachu": 1,
+            "squirtle": 1,
+            "bulbasaur": 1,
+            "charmander": 1
+          },
+          "foils": {},
+          "productIds": [
+            741984,
+            741996,
+            742008,
+            742020
+          ]
+        },
+        {
+          "id": "mfb-4",
+          "name": "Gloom",
+          "localId": "4",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "bulbasaur": 1
+          },
+          "foils": {},
+          "productIds": [
+            741979
+          ]
+        },
+        {
+          "id": "mfb-5",
+          "name": "Exeggcute",
+          "localId": "5",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "bulbasaur": 1
+          },
+          "foils": {},
+          "productIds": [
+            741980
+          ]
+        },
+        {
+          "id": "mfb-6",
+          "name": "Exeggutor",
+          "localId": "6",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "bulbasaur": 1
+          },
+          "foils": {},
+          "productIds": [
+            741981
+          ]
+        },
+        {
+          "id": "mfb-7",
+          "name": "Scyther",
+          "localId": "7",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "bulbasaur": 1
+          },
+          "foils": {},
+          "productIds": [
+            741982
+          ]
+        },
+        {
+          "id": "mfb-8",
+          "name": "Grass Energy",
+          "localId": "8",
+          "rarity": "None",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "bulbasaur": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            741985,
+            741986
+          ]
+        },
+        {
+          "id": "mfb-9",
+          "name": "Charmander",
+          "localId": "9",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "charmander": 2,
+            "pokeball": 1
+          },
+          "foils": {},
+          "productIds": [
+            741976,
+            741988
+          ]
+        }
+      ]
+    },
+    "MEP Black Star Promos": {
+      "count": 20,
+      "detailedRows": 35,
+      "cardsWithDetailed": 20,
+      "cardsWithProducts": 20,
+      "rarities": {
+        "Promo": 20
+      },
+      "coarsePatterns": {
+        "NONE": 20
+      },
+      "rows": [
+        {
+          "id": "mep-001",
+          "name": "Meganium",
+          "localId": "001",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            851043,
+            851044
+          ]
+        },
+        {
+          "id": "mep-002",
+          "name": "Inteleon",
+          "localId": "002",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            851045,
+            851046
+          ]
+        },
+        {
+          "id": "mep-003",
+          "name": "Alakazam",
+          "localId": "003",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            851047,
+            851048
+          ]
+        },
+        {
+          "id": "mep-004",
+          "name": "Lunatone",
+          "localId": "004",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            851049,
+            851050
+          ]
+        },
+        {
+          "id": "mep-014",
+          "name": "Ceruledge",
+          "localId": "014",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            857390,
+            859014
+          ]
+        },
+        {
+          "id": "mep-015",
+          "name": "Zacian",
+          "localId": "015",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            857393,
+            859015
+          ]
+        },
+        {
+          "id": "mep-016",
+          "name": "Flygon",
+          "localId": "016",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            857396,
+            859016
+          ]
+        },
+        {
+          "id": "mep-017",
+          "name": "Toxtricity",
+          "localId": "017",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            857400,
+            859018
+          ]
+        },
+        {
+          "id": "mep-028",
+          "name": "Celebratory Fanfare",
+          "localId": "028",
+          "rarity": "Promo",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "ace-trainer": 1
+          },
+          "foils": {},
+          "productIds": [
+            850977
+          ]
+        },
+        {
+          "id": "mep-065",
+          "name": "Barbaracle",
+          "localId": "065",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            877544,
+            879305
+          ]
+        },
+        {
+          "id": "mep-066",
+          "name": "Tyrantrum",
+          "localId": "066",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            877545,
+            879315
+          ]
+        },
+        {
+          "id": "mep-067",
+          "name": "Doublade",
+          "localId": "067",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            877546,
+            879312
+          ]
+        },
+        {
+          "id": "mep-074",
+          "name": "Delphox",
+          "localId": "074",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            884752,
+            884753
+          ]
+        },
+        {
+          "id": "mep-075",
+          "name": "Ampharos",
+          "localId": "075",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            884754,
+            884755
+          ]
+        },
+        {
+          "id": "mep-076",
+          "name": "Crobat",
+          "localId": "076",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            884756,
+            884757
+          ]
+        },
+        {
+          "id": "mep-077",
+          "name": "Goodra",
+          "localId": "077",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "set-logo": 2,
+            "staff": 1
+          },
+          "foils": {},
+          "productIds": [
+            884758,
+            884759
+          ]
+        },
+        {
+          "id": "mep-082",
+          "name": "Miraidon",
+          "localId": "082",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "set-logo": 1
+          },
+          "foils": {},
+          "productIds": [
+            894261
+          ]
+        },
+        {
+          "id": "mep-083",
+          "name": "Slowbro",
+          "localId": "083",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "set-logo": 1
+          },
+          "foils": {},
+          "productIds": [
+            894262
+          ]
+        },
+        {
+          "id": "mep-084",
+          "name": "Dhelmise",
+          "localId": "084",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "set-logo": 1
+          },
+          "foils": {},
+          "productIds": [
+            894263
+          ]
+        },
+        {
+          "id": "mep-085",
+          "name": "Bastiodon",
+          "localId": "085",
+          "rarity": "Promo",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "set-logo": 1
+          },
+          "foils": {},
+          "productIds": [
+            894264
+          ]
+        }
+      ]
+    },
+    "Black & White": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Common": 9,
+        "Rare": 4,
+        "Uncommon": 5
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "bw1-1",
+          "name": "Snivy",
+          "localId": "1",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-105",
+          "name": "Grass Energy",
+          "localId": "105",
+          "rarity": "Common",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-110",
+          "name": "Fighting Energy",
+          "localId": "110",
+          "rarity": "Common",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-13",
+          "name": "Deerling",
+          "localId": "13",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-2",
+          "name": "Snivy",
+          "localId": "2",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-26",
+          "name": "Reshiram",
+          "localId": "26",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-31",
+          "name": "Samurott",
+          "localId": "31",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-38",
+          "name": "Alomomola",
+          "localId": "38",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-44",
+          "name": "Joltik",
+          "localId": "44",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-5",
+          "name": "Serperior",
+          "localId": "5",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-56",
+          "name": "Duosion",
+          "localId": "56",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-62",
+          "name": "Sawk",
+          "localId": "62",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-68",
+          "name": "Scraggy",
+          "localId": "68",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-74",
+          "name": "Klink",
+          "localId": "74",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-80",
+          "name": "Lillipup",
+          "localId": "80",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-87",
+          "name": "Audino",
+          "localId": "87",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-92",
+          "name": "Energy Retrieval",
+          "localId": "92",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw1-99",
+          "name": "Pokémon Communication",
+          "localId": "99",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Legendary Treasures": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Common": 5,
+        "Uncommon": 6,
+        "Rare": 6,
+        "Ultra Rare": 1
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "bw11-1",
+          "name": "Tangela",
+          "localId": "1",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-106",
+          "name": "Druddigon",
+          "localId": "106",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-113",
+          "name": "Double Colorless Energy",
+          "localId": "113",
+          "rarity": "Uncommon",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-18",
+          "name": "Charmeleon",
+          "localId": "18",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-25",
+          "name": "Tepig",
+          "localId": "25",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-32",
+          "name": "Articuno",
+          "localId": "32",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-4",
+          "name": "Cherubi",
+          "localId": "4",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-47",
+          "name": "Plusle",
+          "localId": "47",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-54",
+          "name": "Mewtwo-EX",
+          "localId": "54",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-62",
+          "name": "Croagunk",
+          "localId": "62",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-7",
+          "name": "Servine",
+          "localId": "7",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-77",
+          "name": "Chandelure-EX",
+          "localId": "77",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-84",
+          "name": "Terrakion",
+          "localId": "84",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-91",
+          "name": "Cobalion",
+          "localId": "91",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-99",
+          "name": "Hydreigon",
+          "localId": "99",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-RC17",
+          "name": "Audino",
+          "localId": "RC17",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-RC24",
+          "name": "Mew-EX",
+          "localId": "RC24",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "bw11-RC9",
+          "name": "Kirlia",
+          "localId": "RC9",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Generations": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Ultra Rare": 4,
+        "Common": 8,
+        "Uncommon": 6
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "g1-1",
+          "name": "Venusaur EX",
+          "localId": "1",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-16",
+          "name": "Magmar",
+          "localId": "16",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-22",
+          "name": "Magikarp",
+          "localId": "22",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-28",
+          "name": "Jolteon EX",
+          "localId": "28",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-33",
+          "name": "Gastly",
+          "localId": "33",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-4",
+          "name": "Metapod",
+          "localId": "4",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-46",
+          "name": "Golem EX",
+          "localId": "46",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-52",
+          "name": "Mr. Mime",
+          "localId": "52",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-59",
+          "name": "Clemont",
+          "localId": "59",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-64",
+          "name": "Maintenance",
+          "localId": "64",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-70",
+          "name": "Revitalizer",
+          "localId": "70",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-76",
+          "name": "Fire Energy",
+          "localId": "76",
+          "rarity": "Common",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-82",
+          "name": "Metal Energy",
+          "localId": "82",
+          "rarity": "Common",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-RC13",
+          "name": "Jirachi",
+          "localId": "RC13",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-RC2",
+          "name": "Shroomish",
+          "localId": "RC2",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-RC25",
+          "name": "Fletchling",
+          "localId": "RC25",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-RC31",
+          "name": "M Gardevoir EX",
+          "localId": "RC31",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "g1-RC9",
+          "name": "Raichu",
+          "localId": "RC9",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Sun & Moon": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Common": 5,
+        "Rare": 4,
+        "Uncommon": 4,
+        "Ultra Rare": 3,
+        "Secret Rare": 2
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "sm1-1",
+          "name": "Caterpie",
+          "localId": "1",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-108",
+          "name": "Toucannon",
+          "localId": "108",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-117",
+          "name": "Energy Switch",
+          "localId": "117",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-126",
+          "name": "Pokémon Catcher",
+          "localId": "126",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-135",
+          "name": "Ultra Ball",
+          "localId": "135",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-144",
+          "name": "Tauros GX",
+          "localId": "144",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-153",
+          "name": "Lunala GX",
+          "localId": "153",
+          "rarity": "Secret Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-162",
+          "name": "Psychic Energy",
+          "localId": "162",
+          "rarity": "Secret Rare",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-171",
+          "name": "Metal Energy",
+          "localId": "171",
+          "rarity": "Common",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-26",
+          "name": "Incineroar",
+          "localId": "26",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-35",
+          "name": "Lapras GX",
+          "localId": "35",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-44",
+          "name": "Wishiwashi",
+          "localId": "44",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-53",
+          "name": "Togedemaru",
+          "localId": "53",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-62",
+          "name": "Mareanie",
+          "localId": "62",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-71",
+          "name": "Gigalith",
+          "localId": "71",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-80",
+          "name": "Umbreon GX",
+          "localId": "80",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-9",
+          "name": "Rowlet",
+          "localId": "9",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm1-99",
+          "name": "Kangaskhan",
+          "localId": "99",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Cosmic Eclipse": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Ultra Rare": 4,
+        "Rare": 2,
+        "Common": 5,
+        "Uncommon": 4,
+        "Secret Rare": 3
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "sm12-1",
+          "name": "Venusaur & Snivy GX",
+          "localId": "1",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-113",
+          "name": "Groudon",
+          "localId": "113",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-128",
+          "name": "Alolan Meowth",
+          "localId": "128",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-142",
+          "name": "Solgaleo",
+          "localId": "142",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-157",
+          "name": "Reshiram & Zekrom GX",
+          "localId": "157",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-170",
+          "name": "Ambipom",
+          "localId": "170",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-185",
+          "name": "Beastite",
+          "localId": "185",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-2",
+          "name": "Oddish",
+          "localId": "2",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-213",
+          "name": "Volcarona GX",
+          "localId": "213",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-228",
+          "name": "Cynthia & Caitlin",
+          "localId": "228",
+          "rarity": "Ultra Rare",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-242",
+          "name": "Magnemite",
+          "localId": "242",
+          "rarity": "Secret Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-257",
+          "name": "Alolan Persian GX",
+          "localId": "257",
+          "rarity": "Secret Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-271",
+          "name": "Draw Energy",
+          "localId": "271",
+          "rarity": "Secret Rare",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-40",
+          "name": "Psyduck",
+          "localId": "40",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-55",
+          "name": "Prinplup",
+          "localId": "55",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-7",
+          "name": "Sunkern",
+          "localId": "7",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-84",
+          "name": "Dusclops",
+          "localId": "84",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sm12-99",
+          "name": "Cosmog",
+          "localId": "99",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Hidden Fates Shiny Vault": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Shiny rare": 17,
+        "Secret Rare": 1
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "sma-SV1",
+          "name": "Scyther",
+          "localId": "SV1",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV14",
+          "name": "Xurkitree",
+          "localId": "SV14",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV2",
+          "name": "Rowlet",
+          "localId": "SV2",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV24",
+          "name": "Buzzwole",
+          "localId": "SV24",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV3",
+          "name": "Dartrix",
+          "localId": "SV3",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV34",
+          "name": "Ralts",
+          "localId": "SV34",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV4",
+          "name": "Wimpod",
+          "localId": "SV4",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV44",
+          "name": "Oranguru",
+          "localId": "SV44",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV5",
+          "name": "Pheromosa",
+          "localId": "SV5",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV54",
+          "name": "Articuno-GX",
+          "localId": "SV54",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV6",
+          "name": "Charmander",
+          "localId": "SV6",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV64",
+          "name": "Lucario-GX",
+          "localId": "SV64",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV7",
+          "name": "Charmeleon",
+          "localId": "SV7",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV74",
+          "name": "Stakataka-GX",
+          "localId": "SV74",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV8",
+          "name": "Alolan Vulpix",
+          "localId": "SV8",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV84",
+          "name": "Guzma",
+          "localId": "SV84",
+          "rarity": "Shiny rare",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV9",
+          "name": "Wooper",
+          "localId": "SV9",
+          "rarity": "Shiny rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "sma-SV94",
+          "name": "Tapu Lele-GX",
+          "localId": "SV94",
+          "rarity": "Secret Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Sword & Shield": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Holo Rare V": 1,
+        "Holo Rare": 4,
+        "Common": 5,
+        "Uncommon": 4,
+        "Ultra Rare": 2,
+        "Secret Rare": 1,
+        "Rare": 1
+      },
+      "coarsePatterns": {
+        "holo": 4,
+        "holo+reverse": 4,
+        "normal+reverse": 10
+      },
+      "rows": [
+        {
+          "id": "swsh1-1",
+          "name": "Celebi V",
+          "localId": "1",
+          "rarity": "Holo Rare V",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-110",
+          "name": "Sandaconda",
+          "localId": "110",
+          "rarity": "Holo Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-121",
+          "name": "Skorupi",
+          "localId": "121",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-133",
+          "name": "Pawniard",
+          "localId": "133",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-145",
+          "name": "Minccino",
+          "localId": "145",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-156",
+          "name": "Air Balloon",
+          "localId": "156",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-168",
+          "name": "Lum Berry",
+          "localId": "168",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-18",
+          "name": "Dottler",
+          "localId": "18",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-190",
+          "name": "Morpeko V",
+          "localId": "190",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-201",
+          "name": "Professor's Research (Professor Magnolia)",
+          "localId": "201",
+          "rarity": "Ultra Rare",
+          "category": "Trainer",
+          "coarseTrue": [
+            "holo"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-212",
+          "name": "Zamazenta V",
+          "localId": "212",
+          "rarity": "Secret Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-3",
+          "name": "Roselia",
+          "localId": "3",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-41",
+          "name": "Cloyster",
+          "localId": "41",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-52",
+          "name": "Mantine",
+          "localId": "52",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-64",
+          "name": "Frosmoth",
+          "localId": "64",
+          "rarity": "Holo Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-76",
+          "name": "Boltund",
+          "localId": "76",
+          "rarity": "Holo Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-87",
+          "name": "Munna",
+          "localId": "87",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "normal",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "swsh1-99",
+          "name": "Rhyperior",
+          "localId": "99",
+          "rarity": "Holo Rare",
+          "category": "Pokemon",
+          "coarseTrue": [
+            "holo",
+            "reverse"
+          ],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "XY": {
+      "count": 18,
+      "detailedRows": 0,
+      "cardsWithDetailed": 0,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Ultra Rare": 3,
+        "Rare": 4,
+        "Uncommon": 5,
+        "Common": 6
+      },
+      "coarsePatterns": {
+        "NONE": 18
+      },
+      "rows": [
+        {
+          "id": "xy1-1",
+          "name": "Venusaur EX",
+          "localId": "1",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-107",
+          "name": "Bibarel",
+          "localId": "107",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-114",
+          "name": "Furfrou",
+          "localId": "114",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-122",
+          "name": "Professor Sycamore",
+          "localId": "122",
+          "rarity": "Uncommon",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-13",
+          "name": "Quilladin",
+          "localId": "13",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-138",
+          "name": "Darkness Energy",
+          "localId": "138",
+          "rarity": "Common",
+          "category": "Energy",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-145",
+          "name": "Skarmory EX",
+          "localId": "145",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-21",
+          "name": "Magcargo",
+          "localId": "21",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-29",
+          "name": "Blastoise EX",
+          "localId": "29",
+          "rarity": "Ultra Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-37",
+          "name": "Panpour",
+          "localId": "37",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-44",
+          "name": "Voltorb",
+          "localId": "44",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-52",
+          "name": "Whirlipede",
+          "localId": "52",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-6",
+          "name": "Ledyba",
+          "localId": "6",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-68",
+          "name": "Sableye",
+          "localId": "68",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-75",
+          "name": "Inkay",
+          "localId": "75",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-83",
+          "name": "Honedge",
+          "localId": "83",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-90",
+          "name": "Wigglytuff",
+          "localId": "90",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "xy1-99",
+          "name": "Dodrio",
+          "localId": "99",
+          "rarity": "Uncommon",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 0,
+          "detailedTypes": {},
+          "stamps": {},
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Fossil": {
+      "count": 14,
+      "detailedRows": 30,
+      "cardsWithDetailed": 14,
+      "cardsWithProducts": 14,
+      "rarities": {
+        "Rare": 14
+      },
+      "coarsePatterns": {
+        "NONE": 14
+      },
+      "rows": [
+        {
+          "id": "base3-1",
+          "name": "Aerodactyl",
+          "localId": "1",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 4,
+          "detailedTypes": {
+            "holo": 4
+          },
+          "stamps": {
+            "1st-edition": 1,
+            "pre-release": 2
+          },
+          "foils": {
+            "galaxy": 2,
+            "cosmos": 1,
+            "starlight": 1
+          },
+          "productIds": [
+            273862
+          ]
+        },
+        {
+          "id": "base3-10",
+          "name": "Lapras",
+          "localId": "10",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273871
+          ]
+        },
+        {
+          "id": "base3-11",
+          "name": "Magneton",
+          "localId": "11",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273872
+          ]
+        },
+        {
+          "id": "base3-12",
+          "name": "Moltres",
+          "localId": "12",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273873
+          ]
+        },
+        {
+          "id": "base3-13",
+          "name": "Muk",
+          "localId": "13",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273874
+          ]
+        },
+        {
+          "id": "base3-14",
+          "name": "Raichu",
+          "localId": "14",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273875
+          ]
+        },
+        {
+          "id": "base3-2",
+          "name": "Articuno",
+          "localId": "2",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273863
+          ]
+        },
+        {
+          "id": "base3-3",
+          "name": "Ditto",
+          "localId": "3",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273864
+          ]
+        },
+        {
+          "id": "base3-4",
+          "name": "Dragonite",
+          "localId": "4",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273865
+          ]
+        },
+        {
+          "id": "base3-5",
+          "name": "Gengar",
+          "localId": "5",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273866
+          ]
+        },
+        {
+          "id": "base3-6",
+          "name": "Haunter",
+          "localId": "6",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273867
+          ]
+        },
+        {
+          "id": "base3-7",
+          "name": "Hitmonlee",
+          "localId": "7",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273868
+          ]
+        },
+        {
+          "id": "base3-8",
+          "name": "Hypno",
+          "localId": "8",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273869
+          ]
+        },
+        {
+          "id": "base3-9",
+          "name": "Kabutops",
+          "localId": "9",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 2
+          },
+          "stamps": {
+            "1st-edition": 1
+          },
+          "foils": {
+            "galaxy": 2
+          },
+          "productIds": [
+            273870
+          ]
+        }
+      ]
+    },
+    "Nintendo Black Star Promos": {
+      "count": 10,
+      "detailedRows": 31,
+      "cardsWithDetailed": 10,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Common": 10
+      },
+      "coarsePatterns": {
+        "NONE": 10
+      },
+      "rows": [
+        {
+          "id": "np-11",
+          "name": "Marshtomp",
+          "localId": "11",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "winner": 2
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-23",
+          "name": "Metang",
+          "localId": "23",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "stadium-challenge": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-26",
+          "name": "Tropical Wind",
+          "localId": "26",
+          "rarity": "Common",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2004": 7,
+            "staff": 1,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-27",
+          "name": "Tropical Tidal Wave",
+          "localId": "27",
+          "rarity": "Common",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2005": 7,
+            "staff": 1,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-36",
+          "name": "Tropical Tidal Wave",
+          "localId": "36",
+          "rarity": "Common",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2010": 7,
+            "staff": 1,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-4",
+          "name": "Grovyle",
+          "localId": "4",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "winner": 2
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-5",
+          "name": "Mudkip",
+          "localId": "5",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "pop-tournament": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-6",
+          "name": "Torchic",
+          "localId": "6",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "pop-tournament": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-7",
+          "name": "Treecko",
+          "localId": "7",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "pop-tournament": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "np-9",
+          "name": "Combusken",
+          "localId": "9",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "winner": 2
+          },
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Wizards Black Star Promos": {
+      "count": 6,
+      "detailedRows": 11,
+      "cardsWithDetailed": 6,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Common": 6
+      },
+      "coarsePatterns": {
+        "NONE": 6
+      },
+      "rows": [
+        {
+          "id": "basep-2",
+          "name": "Electabuzz",
+          "localId": "2",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "1st-movie-inverted": 1,
+            "1st-movie": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "basep-3",
+          "name": "Mewtwo",
+          "localId": "3",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "1st-movie-inverted": 1,
+            "1st-movie": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "basep-4",
+          "name": "Pikachu",
+          "localId": "4",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 3,
+          "detailedTypes": {
+            "normal": 3
+          },
+          "stamps": {
+            "1st-movie-inverted": 1,
+            "1st-movie": 1,
+            "pikachu-tail": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "basep-5",
+          "name": "Dragonite",
+          "localId": "5",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "normal": 2
+          },
+          "stamps": {
+            "1st-movie-inverted": 1,
+            "1st-movie": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "basep-50",
+          "name": "Celebi",
+          "localId": "50",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pokemon-4-ever": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "basep-53",
+          "name": "Suicune",
+          "localId": "53",
+          "rarity": "Common",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "normal": 1
+          },
+          "stamps": {
+            "pokemon-4-ever": 1
+          },
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Prismatic Evolutions": {
+      "count": 5,
+      "detailedRows": 5,
+      "cardsWithDetailed": 5,
+      "cardsWithProducts": 5,
+      "rarities": {
+        "Hyper rare": 5
+      },
+      "coarsePatterns": {
+        "NONE": 5
+      },
+      "rows": [
+        {
+          "id": "sv08.5-176",
+          "name": "Iron Leaves ex",
+          "localId": "176",
+          "rarity": "Hyper rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {},
+          "foils": {
+            "gold": 1
+          },
+          "productIds": [
+            805570
+          ]
+        },
+        {
+          "id": "sv08.5-177",
+          "name": "Teal Mask Ogerpon ex",
+          "localId": "177",
+          "rarity": "Hyper rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {},
+          "foils": {
+            "gold": 1
+          },
+          "productIds": [
+            805571
+          ]
+        },
+        {
+          "id": "sv08.5-178",
+          "name": "Walking Wake ex",
+          "localId": "178",
+          "rarity": "Hyper rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {},
+          "foils": {
+            "gold": 1
+          },
+          "productIds": [
+            805572
+          ]
+        },
+        {
+          "id": "sv08.5-179",
+          "name": "Pikachu ex",
+          "localId": "179",
+          "rarity": "Hyper rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {},
+          "foils": {
+            "gold": 1
+          },
+          "productIds": [
+            805573
+          ]
+        },
+        {
+          "id": "sv08.5-180",
+          "name": "Terapagos ex",
+          "localId": "180",
+          "rarity": "Hyper rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {},
+          "foils": {
+            "gold": 1
+          },
+          "productIds": [
+            805574
+          ]
+        }
+      ]
+    },
+    "DP Black Star Promos": {
+      "count": 3,
+      "detailedRows": 21,
+      "cardsWithDetailed": 3,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "Common": 3
+      },
+      "coarsePatterns": {
+        "NONE": 3
+      },
+      "rows": [
+        {
+          "id": "dpp-DP05",
+          "name": "Tropical Wind",
+          "localId": "DP05",
+          "rarity": "Common",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2007": 7,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "staff": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "dpp-DP25",
+          "name": "Tropical Wind",
+          "localId": "DP25",
+          "rarity": "Common",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2008": 7,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "staff": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": []
+        },
+        {
+          "id": "dpp-DP48",
+          "name": "Tropical Wind",
+          "localId": "DP48",
+          "rarity": "Common",
+          "category": "Trainer",
+          "coarseTrue": [],
+          "detailedCount": 7,
+          "detailedTypes": {
+            "normal": 7
+          },
+          "stamps": {
+            "worlds-2009": 7,
+            "finalist": 1,
+            "quarter-finalist": 1,
+            "semi-finalist": 1,
+            "staff": 1,
+            "top-sixteen": 1,
+            "top-thirty-two": 1
+          },
+          "foils": {},
+          "productIds": []
+        }
+      ]
+    },
+    "Best of game": {
+      "count": 2,
+      "detailedRows": 4,
+      "cardsWithDetailed": 2,
+      "cardsWithProducts": 0,
+      "rarities": {
+        "None": 2
+      },
+      "coarsePatterns": {
+        "NONE": 2
+      },
+      "rows": [
+        {
+          "id": "bog-8",
+          "name": "Rocket’s Mewtwo",
+          "localId": "8",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "reverse": 2
+          },
+          "stamps": {
+            "winner": 2
+          },
+          "foils": {
+            "cosmos": 2
+          },
+          "productIds": []
+        },
+        {
+          "id": "bog-9",
+          "name": "Rocket’s Hitmonchan",
+          "localId": "9",
+          "rarity": "None",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "reverse": 2
+          },
+          "stamps": {
+            "winner": 2
+          },
+          "foils": {
+            "cosmos": 2
+          },
+          "productIds": []
+        }
+      ]
+    },
+    "Celebrations Classic Collection": {
+      "count": 2,
+      "detailedRows": 2,
+      "cardsWithDetailed": 2,
+      "cardsWithProducts": 2,
+      "rarities": {
+        "Classic Collection": 2
+      },
+      "coarsePatterns": {
+        "NONE": 2
+      },
+      "rows": [
+        {
+          "id": "cel25cc-CC020",
+          "name": "Reshiram",
+          "localId": "CC020",
+          "rarity": "Classic Collection",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "25th-celebration": 1
+          },
+          "foils": {},
+          "productIds": [
+            576747
+          ]
+        },
+        {
+          "id": "cel25cc-CC021",
+          "name": "Zekrom",
+          "localId": "CC021",
+          "rarity": "Classic Collection",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 1,
+          "detailedTypes": {
+            "holo": 1
+          },
+          "stamps": {
+            "25th-celebration": 1
+          },
+          "foils": {},
+          "productIds": [
+            576755
+          ]
+        }
+      ]
+    },
+    "Hidden Legends": {
+      "count": 1,
+      "detailedRows": 2,
+      "cardsWithDetailed": 1,
+      "cardsWithProducts": 1,
+      "rarities": {
+        "Rare": 1
+      },
+      "coarsePatterns": {
+        "NONE": 1
+      },
+      "rows": [
+        {
+          "id": "ex5-98",
+          "name": "Regirock ex",
+          "localId": "98",
+          "rarity": "Rare",
+          "category": "Pokemon",
+          "coarseTrue": [],
+          "detailedCount": 2,
+          "detailedTypes": {
+            "holo": 1,
+            "normal": 1
+          },
+          "stamps": {
+            "jason-klaczynski": 1
+          },
+          "foils": {
+            "cracked-ice": 1
+          },
+          "productIds": [
+            276172,
+            869536
+          ]
+        }
+      ]
+    }
+  }
+}
