@@ -5104,9 +5104,12 @@ function syncVariantAvailability(card,edit=false){
   // select it automatically. Multiple finishes and unknown/manual cases remain user choices.
   if(!edit && selectable.length===1){
     sel.value=selectable[0].value;
+    // Keep dependent price/preview UI synchronized with the automatic choice.
+    sel.dispatchEvent(new Event('change',{bubbles:true}));
   }else if(sel.selectedOptions[0]?.disabled){
-    const preferred=selectable[0];
-    sel.value=preferred?.value||'Non so';
+    // Never silently choose the first of multiple physical finishes.
+    // Only auto-select when evidence leaves exactly one choice; otherwise fail closed.
+    sel.value=selectable.length===1?selectable[0].value:'Non so';
   }
   return [...allowed];
 }
