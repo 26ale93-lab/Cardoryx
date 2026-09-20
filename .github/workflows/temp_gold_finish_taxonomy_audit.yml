@@ -1,0 +1,47 @@
+name: TEMP Gold Finish Taxonomy Audit
+on:
+  push:
+    branches: [diagnostic/gold-finish-taxonomy-20260920]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - name: Audit all Gold physical rows
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json,collections
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location("v","scripts/test_variant_finish_audit.py")
+          v=importlib.util.module_from_spec(spec); spec.loader.exec_module(v)
+          cards,errs,sha=v.load_official_database(Path("tcgdex-cards-database"))
+          report=json.load(open("artifacts/report.json"))
+          issues={x["tcgdexId"]:x for x in report["issuesByPriority"]}
+          rows=[]; cards_with=set(); sig=collections.Counter(); sets=collections.Counter()
+          mixed=[]; gold_only=[]
+          for c in cards:
+            cid=c["id"]; det=c.get("variants_detailed") or []
+            grows=[r for r in det if v.canonical_finish_foil_label(r.get("foil"))=="gold"]
+            if not grows: continue
+            cards_with.add(cid); sets[str((c.get("set") or {}).get("id"))]+=1
+            nongold=[r for r in det if v.canonical_finish_foil_label(r.get("foil"))!="gold"]
+            (mixed if nongold else gold_only).append(cid)
+            for r in grows:
+              item={"id":cid,"localId":c.get("localId"),"name":c.get("name"),"set":c.get("set"),
+                "rarity":c.get("rarity"),"type":r.get("type"),"canonicalType":v.canonical_finish_type_label(r.get("type")),
+                "foil":r.get("foil"),"stamp":r.get("stamp"),"size":r.get("size"),"subtype":r.get("subtype"),
+                "canonicalRowFinish":v.canonical_row_finish(r),"audit":issues.get(cid)}
+              rows.append(item)
+              sig[(item["canonicalType"],str(item["stamp"]),str(item["size"]),str(item["subtype"]))]+=1
+          out={"dbSha":sha,"summary":report["summary"],"goldCards":len(cards_with),"goldRows":len(rows),
+               "goldOnlyCount":len(gold_only),"mixedCount":len(mixed),"sets":sets,"signatures":{str(k):n for k,n in sig.items()},
+               "goldOnlyIds":gold_only,"mixedIds":mixed,"rows":rows}
+          print(json.dumps(out,ensure_ascii=False,indent=2,default=dict))
+          PY
