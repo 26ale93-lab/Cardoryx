@@ -401,11 +401,13 @@ def run_ditto_production_runtime(source):
 function normalizedPlaySeries(v){const s=String(v??'').trim();return /^[1-9]$/.test(s)?s:'';}
 function isMee30CelebrationEnergy(){return false;}
 function isVerifiedMcdonalds2021AnniversarySet(){return false;}
+function verifiedCelebrationsClassic25thRule(){return null;}
 function isMeePrizePackEnergy(){return false;}
 function isModernParallelEra(){return false;}
 function verifiedSpecialStampFinishes(){return [];}
 function verifiedMcdonaldsStampFinishes(){return [];}
 function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
+function verifiedCelebrationsClassic25thFinishes(){return [];}
 function verifiedSwshp25thStandardFinishes(){return [];}
 function verifiedSwshpSetLogoFinishes(){return [];}
 function verifiedMepStampFinishes(){return [];}
