@@ -736,6 +736,118 @@ process.stdout.write(JSON.stringify({testedCards:cards.length,testedPrices:price
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
 
+def audit_celebrations_classic_25th(cards, source):
+    expected = {
+        "cel25cc-CC020": {"localId": "CC020", "name": "Reshiram", "sourceProductId": 576747, "productId": 576790},
+        "cel25cc-CC021": {"localId": "CC021", "name": "Zekrom", "sourceProductId": 576755, "productId": 576791},
+    }
+    by_id = {c["id"]: c for c in cards}
+    registry = extract_js_object(source, "VERIFIED_CELEBRATIONS_CLASSIC_25TH_PRODUCTS")
+    overrides = extract_js_object(source, "VERIFIED_BASE_CARDMARKET_PRODUCT_OVERRIDES")
+    guides = extract_js_object(source, "VERIFIED_EXACT_CARDMARKET_PRICE_GUIDES")
+    if set(registry) != set(expected):
+        raise AssertionError("Celebrations Classic 25th registry must contain exactly CC020/CC021")
+
+    rows = []
+    for cid, rule in expected.items():
+        card = by_id.get(cid)
+        if not card:
+            raise AssertionError(f"Celebrations Classic source identity missing: {cid}")
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if str(card.get("localId")) != rule["localId"] or str(source_name) != rule["name"]:
+            raise AssertionError(f"Celebrations Classic identity mismatch: {cid}")
+
+        detailed = card.get("variants_detailed") or []
+        exact = [
+            row for row in detailed
+            if [norm(x) for x in (row.get("stamp") or [])] == ["25thcelebration"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() == "standard"
+            and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == rule["sourceProductId"]
+        ]
+        if len(detailed) != 1 or len(exact) != 1:
+            raise AssertionError(f"Celebrations Classic exact stamped Holo row changed: {cid}")
+
+        reg = registry[cid]
+        if int(reg["sourceProductId"]) != rule["sourceProductId"] or int(reg["productId"]) != rule["productId"]:
+            raise AssertionError(f"Celebrations Classic production registry mismatch: {cid}")
+        override = overrides[cid.lower()]
+        if int(override["conflictingProduct"]) != rule["sourceProductId"] or int(override["baseProduct"]) != rule["productId"]:
+            raise AssertionError(f"Celebrations Classic Cardmarket override mismatch: {cid}")
+        guide = guides[cid.lower()]
+        if int(guide["productId"]) != rule["productId"]:
+            raise AssertionError(f"Celebrations Classic Price Guide mismatch: {cid}")
+        if not any(float((guide.get("pricing") or {}).get(k) or 0) > 0 for k in ("trend","avg7","avg30","avg","low")):
+            raise AssertionError(f"Celebrations Classic verified guide has no usable price: {cid}")
+
+        rows.append({
+            "tcgdexId": cid,
+            "sourceProductId": rule["sourceProductId"],
+            "productId": rule["productId"],
+            "finish": "Holo",
+            "stamp": "25° Anniversario",
+        })
+
+    runtime = run_celebrations_classic_25th_runtime(source, [by_id[x] for x in expected])
+    if runtime.get("tested") != 2 or not runtime.get("wrongSetRejected") or not runtime.get("wrongFinishRejected"):
+        raise AssertionError("Celebrations Classic 25th runtime regression failed")
+
+    return {
+        "verifiedIdentities": 2,
+        "finish": "Holo",
+        "stamp": "25° Anniversario",
+        "sourceProductConflicts": 2,
+        "runtime": runtime,
+        "identities": rows,
+        "scope": "only cel25cc-CC020 and cel25cc-CC021; TCGdex physical rows must retain the known conflicting products",
+    }
+
+
+def run_celebrations_classic_25th_runtime(source, cards):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "canonicalPrintedLocalId", "printedLocalIdParts",
+        "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
+        "verifiedCelebrationsClassic25thRule",
+        "tcgdexExactCelebrationsClassic25thRow",
+        "verifiedCelebrationsClassic25thFinishes",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    registry = extract_js_object(source, "VERIFIED_CELEBRATIONS_CLASSIC_25TH_PRODUCTS")
+    fixtures = []
+    for card in cards:
+        fixtures.append({
+            "id": card["id"], "tcgdexId": card["id"],
+            "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "cel25cc"},
+            "variants_detailed": card.get("variants_detailed") or [],
+        })
+    js = (
+        "const VERIFIED_CELEBRATIONS_CLASSIC_25TH_PRODUCTS="
+        + json.dumps(registry, ensure_ascii=False) + ";\n"
+        + functions + "\n"
+        + r'''
+const cards=__FIXTURES__;
+function fail(msg){throw new Error(msg);}
+for(const card of cards){
+  if(!tcgdexExactCelebrationsClassic25thRow(card))fail('row missing '+card.id);
+  const finishes=verifiedCelebrationsClassic25thFinishes(card,'25° Anniversario');
+  if(finishes.length!==1||finishes[0]!=='Holo')fail('finish mismatch '+card.id);
+  if(verifiedCelebrationsClassic25thFinishes(card,'30° Anniversario').length)fail('wrong stamp leaked '+card.id);
+  const wrong={...card,set:{id:'wrong-set'}};
+  if(tcgdexExactCelebrationsClassic25thRow(wrong)!==null)fail('wrong set leaked '+card.id);
+  const bad={...card,variants_detailed:card.variants_detailed.map(r=>({...r,type:'normal'}))};
+  if(tcgdexExactCelebrationsClassic25thRow(bad)!==null)fail('wrong finish leaked '+card.id);
+}
+process.stdout.write(JSON.stringify({tested:cards.length,wrongSetRejected:true,wrongStampRejected:true,wrongFinishRejected:true}));
+'''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
+    )
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
 def audit_swshp_25th_standard_promos(cards, source):
     supported = {
         "swshp-SWSH062": ("SWSH062", "Pikachu VMAX", 576730),
@@ -1197,6 +1309,25 @@ def verified_stamped_identity_truth(card):
         return {"Normal", "Holo"} if sorted(exact) == ["holo", "normal"] else set()
 
     card_id = str(card.get("id") or card.get("tcgdexId") or "")
+    celebrations_classic = {
+        "cel25cc-CC020": ("CC020", "Reshiram", 576747, 576790),
+        "cel25cc-CC021": ("CC021", "Zekrom", 576755, 576791),
+    }
+    if card_id in celebrations_classic:
+        local_id, name, source_pid, product_id = celebrations_classic[card_id]
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if set_id != "cel25cc" or str(card.get("localId")) != local_id or str(source_name) != name:
+            return set()
+        exact = [
+            row for row in rows
+            if [norm(x) for x in (row.get("stamp") or [])] == ["25thcelebration"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() == "standard"
+            and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == source_pid
+        ]
+        return {"Holo"} if len(rows) == 1 and len(exact) == 1 else set()
+
     swshp_25th = {
         "swshp-SWSH062": 576730,
         "swshp-SWSH135": 576734,
@@ -1741,6 +1872,10 @@ def main():
         "status": "not-run",
         "reason": "full cards-database snapshot required",
     }
+    celebrations_classic_25th_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     mep_exact_stamp_audit = {
         "status": "not-run",
         "reason": "full cards-database snapshot required",
@@ -1757,6 +1892,7 @@ def main():
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
         mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
         mcdonalds_2021_25th_audit = audit_mcdonalds_2021_25th_source(all_cards, source)
+        celebrations_classic_25th_audit = audit_celebrations_classic_25th(all_cards, source)
         mep_exact_stamp_audit = audit_mep_exact_stamps(all_cards, source)
         swshp_25th_standard_audit = audit_swshp_25th_standard_promos(all_cards, source)
         swshp_set_logo_168_171_audit = audit_swshp_set_logo_168_171(all_cards, source)
@@ -2170,6 +2306,7 @@ def main():
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
         "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
+        "celebrationsClassic25thAudit": celebrations_classic_25th_audit,
         "mepExactStampAudit": mep_exact_stamp_audit,
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
         "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
