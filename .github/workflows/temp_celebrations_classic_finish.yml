@@ -1,0 +1,41 @@
+name: TEMP Celebrations Classic Finish Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/celebrations-classic-finish-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect exact live TCGdex rows
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          ids=["cel25cc-CC020","cel25cc-CC021"]
+          expected={"cel25cc-CC020":576790,"cel25cc-CC021":576791}
+          out={}
+          for cid in ids:
+            with urllib.request.urlopen("https://api.tcgdex.net/v2/en/cards/"+cid,timeout=30) as r:
+              c=json.load(r)
+            out[cid]={
+              "name":c.get("name"),"localId":c.get("localId"),"set":c.get("set"),
+              "topPricing":c.get("pricing",{}).get("cardmarket"),
+              "rows":[{
+                "type":v.get("type"),"foil":v.get("foil"),"subtype":v.get("subtype"),
+                "stamp":v.get("stamp"),"size":v.get("size"),
+                "thirdPartyPid":(v.get("thirdParty") or {}).get("cardmarket"),
+                "pricingPid":((v.get("pricing") or {}).get("cardmarket") or {}).get("idProduct")
+              } for v in (c.get("variants_detailed") or [])]
+            }
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          open("classic_finish_rows.json","w").write(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: celebrations-classic-finish-rows
+          path: classic_finish_rows.json
