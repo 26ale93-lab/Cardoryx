@@ -1456,6 +1456,38 @@ def verified_residual_exact_finish_truth(card):
 
 
 
+VERIFIED_NP_WINNER_STANDARD_JUMBO = {"np-4","np-9","np-11"}
+
+def verified_np_winner_standard_jumbo_truth(card):
+    """Exact Normal finish evidence for three Winner-stamped Nintendo promos with Standard+Jumbo rows."""
+    cid=str(card.get("id") or card.get("tcgdexId") or "")
+    if cid not in VERIFIED_NP_WINNER_STANDARD_JUMBO:
+        return set()
+    set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
+    if set_id!="np":
+        return set()
+    rows=card.get("variants_detailed") or []
+    if len(rows)!=2:
+        return set()
+    sizes=[]
+    for row in rows:
+        if canonical_finish_type_label(row.get("type"))!="normal":
+            return set()
+        if row.get("foil"):
+            return set()
+        stamps=[norm(x) for x in (row.get("stamp") or [])]
+        if stamps!=["winner"]:
+            return set()
+        size=str(row.get("size") or "standard").strip().lower()
+        if size not in {"standard","jumbo"}:
+            return set()
+        sizes.append(size)
+    if sorted(sizes)!=["jumbo","standard"]:
+        return set()
+    return {"Normal"}
+
+
+
 def verified_unanimous_special_finish_truth(card):
     """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
     set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2166,7 +2198,8 @@ def main():
         celebrations_classic_truth = verified_celebrations_classic_holo_truth(en)
         unanimous_special_truth = verified_unanimous_special_finish_truth(en)
         residual_exact_truth = verified_residual_exact_finish_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth
+        np_winner_truth = verified_np_winner_standard_jumbo_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2182,6 +2215,8 @@ def main():
                 "all explicit physical variant rows agree on one finish within exact MFB/SWSHP/SVP scope"
                 if unanimous_special_truth else
                 "exact residual identity has unanimous explicit physical finish evidence"
+                if residual_exact_truth else
+                "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2228,6 +2263,7 @@ def main():
             "verifiedCelebrationsClassicFinishes": sorted(celebrations_classic_truth),
             "verifiedUnanimousSpecialFinishes": sorted(unanimous_special_truth),
             "verifiedResidualExactFinishes": sorted(residual_exact_truth),
+            "verifiedNpWinnerStandardJumboFinishes": sorted(np_winner_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2553,6 +2589,20 @@ def main():
             ),
             "excludedMep028": "mep-028",
             "mixedIdentitiesRemainAmbiguous": ["ex5-98","svp-225"],
+            "productionModified": False,
+        },
+        "npWinnerStandardJumboClassification": {
+            "expectedIds": sorted(VERIFIED_NP_WINNER_STANDARD_JUMBO),
+            "classifiedIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in VERIFIED_NP_WINNER_STANDARD_JUMBO
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedNpWinnerStandardJumboFinishes") == ["Normal"]
+                and c.get("reason") == "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
+            ),
+            "finish": "Normal",
+            "stamp": "winner",
+            "requiresStandardAndJumbo": True,
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
