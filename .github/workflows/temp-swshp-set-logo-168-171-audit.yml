@@ -1,0 +1,113 @@
+name: TEMP SWSH Set Logo 168 171 Audit
+
+on:
+  push:
+    branches:
+      - audit/swshp-set-logo-168-171-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Audit exact set-logo rows
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json,time,urllib.request
+          from pathlib import Path
+
+          targets={
+            "swshp-SWSH168":("SWSH168","Oricorio",580165),
+            "swshp-SWSH169":("SWSH169","Pyukumuku",580166),
+            "swshp-SWSH170":("SWSH170","Deoxys",580167),
+            "swshp-SWSH171":("SWSH171","Latias",580168),
+          }
+
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards,errors,sha=mod.load_official_database(Path("../tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+          assert set(targets)<=set(by_id), set(targets)-set(by_id)
+
+          def live(cid):
+              data=None
+              err=None
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(
+                          f"https://api.tcgdex.net/v2/en/cards/{cid}",
+                          headers={"User-Agent":"Cardoryx-SWSH-SetLogo-Audit/1.0"},
+                      )
+                      with urllib.request.urlopen(req,timeout=60) as r:
+                          data=json.load(r)
+                      return data
+                  except Exception as exc:
+                      err=repr(exc);time.sleep(1+attempt)
+              raise AssertionError(f"Live TCGdex unavailable for {cid}: {err}")
+
+          rows=[]
+          for cid,(local_id,name,pid) in targets.items():
+              card=by_id[cid]
+              source_name=(card.get("name") or {}).get("en") if isinstance(card.get("name"),dict) else card.get("name")
+              assert str(card.get("localId"))==local_id,(cid,card.get("localId"))
+              assert source_name==name,(cid,source_name)
+
+              detailed=[
+                  r for r in (card.get("variants_detailed") or [])
+                  if [str(x).lower() for x in (r.get("stamp") or [])]==["set-logo"]
+              ]
+              assert len(detailed)==1,(cid,detailed)
+              row=detailed[0]
+              assert str(row.get("type") or "").lower()=="holo",(cid,row)
+              assert str(row.get("size") or "standard").lower()!="jumbo",(cid,row)
+              assert int((row.get("thirdParty") or {}).get("cardmarket") or 0)==pid,(cid,row)
+
+              data=live(cid)
+              live_rows=[
+                  r for r in (data.get("variants_detailed") or [])
+                  if [str(x).lower() for x in (r.get("stamp") or [])]==["set-logo"]
+              ]
+              assert len(live_rows)==1,(cid,live_rows)
+              lr=live_rows[0]
+              assert str(lr.get("type") or "").lower()=="holo",(cid,lr)
+              assert str(lr.get("size") or "standard").lower()!="jumbo",(cid,lr)
+              lpid=int((lr.get("thirdParty") or {}).get("cardmarket") or 0)
+              cm=(lr.get("pricing") or {}).get("cardmarket") or {}
+              ppid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+              assert lpid==pid and ppid==pid,(cid,lpid,ppid,pid)
+              assert any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low")),(cid,cm)
+              top=(data.get("pricing") or {}).get("cardmarket") or {}
+              top_pid=int(top.get("idProduct") or top.get("id_product") or 0)
+              rows.append({
+                  "tcgdexId":cid,"localId":local_id,"name":name,"productId":pid,
+                  "liveTrend":cm.get("trend"),"topLevelProductId":top_pid,
+                  "topLevelMatches":top_pid==pid,
+              })
+
+          out={"tcgdexSha":sha,"verified":len(rows),"rows":rows}
+          Path("temp_swshp_set_logo_168_171.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False))
+          assert len(rows)==4
+          assert all(x["topLevelMatches"] for x in rows),rows
+          PY
+
+      - name: Record audit
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_swshp_set_logo_168_171.json
+          git commit -m "TEMP record SWSH set-logo 168-171 audit"
+          git push
