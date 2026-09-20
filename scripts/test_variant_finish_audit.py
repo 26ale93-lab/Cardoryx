@@ -1070,6 +1070,43 @@ def verified_stamped_identity_truth(card):
                 exact.append(typ)
         return {"Normal", "Holo"} if sorted(exact) == ["holo", "normal"] else set()
 
+    card_id = str(card.get("id") or card.get("tcgdexId") or "")
+    swshp_25th = {
+        "swshp-SWSH062": 576730,
+        "swshp-SWSH135": 576734,
+        "swshp-SWSH143": 576742,
+        "swshp-SWSH144": 576743,
+        "swshp-SWSH145": 576744,
+        "swshp-SWSH146": 576745,
+    }
+    if card_id in swshp_25th:
+        exact = [
+            row for row in rows
+            if [norm(x) for x in (row.get("stamp") or [])] == ["25thcelebration"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() != "jumbo"
+            and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == swshp_25th[card_id]
+        ]
+        return {"Holo"} if len(exact) == 1 else set()
+
+    swshp_set_logo = {
+        "swshp-SWSH168": 580165,
+        "swshp-SWSH169": 580166,
+        "swshp-SWSH170": 580167,
+        "swshp-SWSH171": 580168,
+    }
+    if card_id in swshp_set_logo:
+        exact = [
+            row for row in rows
+            if [norm(x) for x in (row.get("stamp") or [])] == ["setlogo"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() != "jumbo"
+            and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == swshp_set_logo[card_id]
+        ]
+        return {"Holo"} if len(exact) == 1 else set()
+
     return set()
 
 
