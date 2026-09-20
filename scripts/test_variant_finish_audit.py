@@ -1345,6 +1345,42 @@ def verified_legacy_checklist_truth(card, legacy_registry):
     finish = str(rule.get("finish") or "")
     return {finish} if finish in {"Normal", "Holo"} else set()
 
+def verified_exact_primary_special_truth(card):
+    """Exact physical finish evidence already enforced by production for ex5-98 only."""
+    card_id = str(card.get("id") or card.get("tcgdexId") or "").strip().lower()
+    set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
+    if not (
+        card_id == "ex5-98"
+        and set_id == "ex5"
+        and str(card.get("localId") or "") == "98"
+        and norm(card.get("name") or "") == norm("Regirock ex")
+    ):
+        return set()
+    exact = []
+    for row in card.get("variants_detailed") or []:
+        stamps = row.get("stamp") or []
+        pid = int(
+            ((row.get("thirdParty") or {}).get("cardmarket"))
+            or (((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct"))
+            or (((row.get("pricing") or {}).get("cardmarket") or {}).get("id_product"))
+            or 0
+        )
+        pricing_pid = int(
+            (((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct"))
+            or (((row.get("pricing") or {}).get("cardmarket") or {}).get("id_product"))
+            or 0
+        )
+        if (
+            canonical_finish_type_label(row.get("type")) == "holo"
+            and norm(row.get("foil") or "") == "crackedice"
+            and not stamps
+            and str(row.get("size") or "standard").lower() == "standard"
+            and pid == 276172
+            and pricing_pid == 276172
+        ):
+            exact.append(row)
+    return {"Holo"} if len(exact) == 1 else set()
+
 
 def simulate_italian_rest_payload(card):
     """Apply live-verified IT enum translations used by the REST endpoint."""
@@ -2027,7 +2063,8 @@ def main():
             en, mep_stamp_registry, mfb_pokeball_registry, worlds_stamp_registry
         )
         legacy_truth = verified_legacy_checklist_truth(en, fossil_checklist_registry)
-        specialized_truth = stamped_truth | legacy_truth
+        primary_special_truth = verified_exact_primary_special_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | primary_special_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2035,6 +2072,8 @@ def main():
                 "exact stamped edition handled by dedicated verified stamp path"
                 if stamped_truth else
                 "exact Fossil Holo/Normal identity handled by verified checklist path"
+                if legacy_truth else
+                "exact Regirock ex Cracked Ice Holo identity handled by production-verified primary special path"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2077,6 +2116,7 @@ def main():
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
             "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
+            "verifiedPrimarySpecialFinishes": sorted(primary_special_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2342,6 +2382,21 @@ def main():
                 "worldsRegistry": len(worlds_stamp_registry),
                 "fossilChecklistRegistry": len(fossil_checklist_registry),
             },
+            "productionModified": False,
+        },
+        "exactPrimarySpecialFinishClassification": {
+            "tcgdexId": "ex5-98",
+            "classifiedCorrect": any(
+                c.get("tcgdexId") == "ex5-98"
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedPrimarySpecialFinishes") == ["Holo"]
+                and c.get("reason") == "exact Regirock ex Cracked Ice Holo identity handled by production-verified primary special path"
+                for c in cards_out
+            ),
+            "finish": "Holo",
+            "foil": "cracked-ice",
+            "productId": 276172,
+            "scope": "ex5-98 only",
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
