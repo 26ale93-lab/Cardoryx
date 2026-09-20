@@ -1038,6 +1038,41 @@ def source_semantic_details(card):
             if (f := canonical_row_finish(row, translate_localized=True))}
 
 
+def verified_stamped_identity_truth(card):
+    """Return exact stamped-edition truth handled outside the unstamped matrix."""
+    set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
+    rows = card.get("variants_detailed") or []
+
+    if set_id in {"2012bw", "2014xy"}:
+        exact = []
+        for row in rows:
+            stamps = [norm(x) for x in (row.get("stamp") or [])]
+            typ = canonical_finish_type_label(row.get("type"))
+            pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+            if (
+                stamps == ["mcdonalds"] and typ == "holo" and not row.get("foil")
+                and str(row.get("size") or "standard").lower() == "standard"
+                and pid > 0
+            ):
+                exact.append(row)
+        return {"Holo"} if len(rows) == 1 and len(exact) == 1 else set()
+
+    if set_id == "2021swsh":
+        exact = []
+        for row in rows:
+            stamps = [norm(x) for x in (row.get("stamp") or [])]
+            typ = canonical_finish_type_label(row.get("type"))
+            if (
+                stamps == ["25thcelebration"] and typ in {"normal", "holo"}
+                and not row.get("foil")
+                and str(row.get("size") or "standard").lower() == "standard"
+            ):
+                exact.append(typ)
+        return {"Normal", "Holo"} if sorted(exact) == ["holo", "normal"] else set()
+
+    return set()
+
+
 def simulate_italian_rest_payload(card):
     """Apply live-verified IT enum translations used by the REST endpoint."""
     out = dict(card)
@@ -1694,6 +1729,11 @@ def main():
         locale_conflict = bool(it and truth != it_truth)
         proposed, reasons = proposed_standard(card, registries)
         classification, missing, extra, why = classify(card, truth, proposed, truth, locale_conflict)
+        stamped_truth = verified_stamped_identity_truth(en)
+        if classification == "AMBIGUA" and stamped_truth:
+            classification = "CORRETTA"
+            missing, extra = [], []
+            why = "exact stamped edition handled by dedicated verified stamp path"
         class_counts[classification] += 1
         era = era_by_id[cid]
         rarity = en.get("rarity") or "(missing)"
@@ -1733,7 +1773,8 @@ def main():
             "languages": sorted({x for r in en.get("variants_detailed") or [] for x in (r.get("languages") or [])}),
             "cardmarketIdProduct": base_pid,
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
-            "documentedFinishes": sorted(truth), "cardoryxProposedFinishes": sorted(proposed),
+            "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
+            "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
             "excludedFinishes": sorted(set(FINISHES) - proposed), "manualSafetyChoices": list(MANUAL_FINISHES),
