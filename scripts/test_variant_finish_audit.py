@@ -1413,14 +1413,12 @@ def verified_celebrations_classic_holo_truth(card):
     for row in card.get("variants_detailed") or []:
         stamps=[norm(x) for x in (row.get("stamp") or [])]
         source_pid=int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
-        pricing_pid=int((((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct")) or 0)
         if (
             canonical_finish_type_label(row.get("type"))=="holo"
             and not row.get("foil")
             and stamps==["25thcelebration"]
             and str(row.get("size") or "standard").lower()=="standard"
             and source_pid==rule["sourceConflictProductId"]
-            and pricing_pid==rule["sourceConflictProductId"]
         ):
             rows.append(row)
     return {"Holo"} if len(rows)==1 else set()
