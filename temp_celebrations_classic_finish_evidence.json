@@ -1,0 +1,340 @@
+{
+  "cards": {
+    "cel25cc-CC020": {
+      "category": "Pokemon",
+      "id": "cel25cc-CC020",
+      "illustrator": "5ban Graphics",
+      "localId": "CC020",
+      "name": "Reshiram",
+      "rarity": "Classic Collection",
+      "set": {
+        "cardCount": {
+          "official": 25,
+          "total": 25
+        },
+        "id": "cel25cc",
+        "name": "Celebrations Classic Collection"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "thirdParty": {
+            "cardmarket": 576747,
+            "tcgplayer": 250301
+          },
+          "variantId": "1jz5lzkp5cepu3arxr74ehuwlerveb",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-19T22:54:33.075Z",
+              "unit": "EUR",
+              "idProduct": 576747,
+              "avg": 0.15,
+              "low": 0.02,
+              "trend": 0.21,
+              "avg1": 0.12,
+              "avg7": 0.24,
+              "avg30": 0.18,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-19T22:54:51.999Z",
+              "holofoil": {
+                "productId": 250301,
+                "lowPrice": 0.04,
+                "midPrice": 0.34,
+                "highPrice": 7.2,
+                "marketPrice": 0.31,
+                "directLowPrice": 0.1
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        643
+      ],
+      "hp": 130,
+      "types": [
+        "Fire"
+      ],
+      "description": "This Pokémon appears in legends. It sends flames into the air from its tail, burning up everything around it.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Outrage",
+          "effect": "Does 10 more damage for each damage counter on this Pokémon.",
+          "damage": "20+"
+        },
+        {
+          "cost": [
+            "Fire",
+            "Fire",
+            "Colorless"
+          ],
+          "name": "Blue Flare",
+          "effect": "Discard 2 Fire Energy attached to this Pokémon.",
+          "damage": 120
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Water",
+          "value": "×2"
+        }
+      ],
+      "retreat": 2,
+      "legal": {
+        "standard": false,
+        "expanded": true
+      },
+      "updated": "2026-07-11T09:55:22+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-19T22:54:33.075Z",
+          "unit": "EUR",
+          "idProduct": 576747,
+          "avg": 0.15,
+          "low": 0.02,
+          "trend": 0.21,
+          "avg1": 0.12,
+          "avg7": 0.24,
+          "avg30": 0.18,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-19T22:54:51.999Z",
+          "holofoil": {
+            "productId": 250301,
+            "lowPrice": 0.04,
+            "midPrice": 0.34,
+            "highPrice": 7.2,
+            "marketPrice": 0.31,
+            "directLowPrice": 0.1
+          }
+        }
+      }
+    },
+    "cel25cc-CC021": {
+      "category": "Pokemon",
+      "id": "cel25cc-CC021",
+      "illustrator": "5ban Graphics",
+      "localId": "CC021",
+      "name": "Zekrom",
+      "rarity": "Classic Collection",
+      "set": {
+        "cardCount": {
+          "official": 25,
+          "total": 25
+        },
+        "id": "cel25cc",
+        "name": "Celebrations Classic Collection"
+      },
+      "variants": {
+        "firstEdition": false,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+      },
+      "variants_detailed": [
+        {
+          "type": "holo",
+          "size": "standard",
+          "stamp": [
+            "25th-celebration"
+          ],
+          "thirdParty": {
+            "cardmarket": 576755,
+            "tcgplayer": 250308
+          },
+          "variantId": "1jz5lzkp5cepu3arxr74ehuwlerveb",
+          "pricing": {
+            "cardmarket": {
+              "updated": "2026-09-19T22:54:33.074Z",
+              "unit": "EUR",
+              "idProduct": 576755,
+              "avg": 0.16,
+              "low": 0.02,
+              "trend": 0.18,
+              "avg1": 0.13,
+              "avg7": 0.24,
+              "avg30": 0.18,
+              "avg-holo": null,
+              "low-holo": null,
+              "trend-holo": 0,
+              "avg1-holo": null,
+              "avg7-holo": null,
+              "avg30-holo": null
+            },
+            "tcgplayer": {
+              "unit": "USD",
+              "updated": "2026-09-19T22:54:51.999Z",
+              "holofoil": {
+                "productId": 250308,
+                "lowPrice": 0.05,
+                "midPrice": 0.39,
+                "highPrice": 14.99,
+                "marketPrice": 0.33,
+                "directLowPrice": 0.24
+              }
+            }
+          }
+        }
+      ],
+      "dexId": [
+        644
+      ],
+      "hp": 130,
+      "types": [
+        "Lightning"
+      ],
+      "description": "This Pokémon appears in legends. In its tail, it has a giant generator that creates electricity.",
+      "stage": "Basic",
+      "attacks": [
+        {
+          "cost": [
+            "Colorless",
+            "Colorless"
+          ],
+          "name": "Outrage",
+          "effect": "Does 10 more damage for each damage counter on this Pokémon.",
+          "damage": "20+"
+        },
+        {
+          "cost": [
+            "Lightning",
+            "Lightning",
+            "Colorless"
+          ],
+          "name": "Bolt Strike",
+          "effect": "This Pokémon does 40 damage to itself.",
+          "damage": 120
+        }
+      ],
+      "weaknesses": [
+        {
+          "type": "Fighting",
+          "value": "×2"
+        }
+      ],
+      "retreat": 2,
+      "legal": {
+        "standard": false,
+        "expanded": true
+      },
+      "updated": "2026-07-11T09:55:22+01:00",
+      "pricing": {
+        "cardmarket": {
+          "updated": "2026-09-19T22:54:33.074Z",
+          "unit": "EUR",
+          "idProduct": 576755,
+          "avg": 0.16,
+          "low": 0.02,
+          "trend": 0.18,
+          "avg1": 0.13,
+          "avg7": 0.24,
+          "avg30": 0.18,
+          "avg-holo": null,
+          "low-holo": null,
+          "trend-holo": 0,
+          "avg1-holo": null,
+          "avg7-holo": null,
+          "avg30-holo": null
+        },
+        "tcgplayer": {
+          "unit": "USD",
+          "updated": "2026-09-19T22:54:51.999Z",
+          "holofoil": {
+            "productId": 250308,
+            "lowPrice": 0.05,
+            "midPrice": 0.39,
+            "highPrice": 14.99,
+            "marketPrice": 0.33,
+            "directLowPrice": 0.24
+          }
+        }
+      }
+    }
+  },
+  "products": {
+    "576790": {
+      "idProduct": 576790,
+      "name": "Reshiram [Outrage | Blue Flare]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 4347,
+      "idMetacard": 339816,
+      "dateAdded": "2021-10-01 16:25:12"
+    },
+    "576791": {
+      "idProduct": 576791,
+      "name": "Zekrom [Outrage | Bolt Strike]",
+      "idCategory": 51,
+      "categoryName": "Pokémon Single",
+      "idExpansion": 4347,
+      "idMetacard": 339817,
+      "dateAdded": "2021-10-01 16:26:23"
+    }
+  },
+  "prices": {
+    "576790": {
+      "idProduct": 576790,
+      "idCategory": 51,
+      "avg": 20.94,
+      "low": 13,
+      "trend": 25.05,
+      "avg1": 20,
+      "avg7": 29.35,
+      "avg30": 22.33,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    },
+    "576791": {
+      "idProduct": 576791,
+      "idCategory": 51,
+      "avg": 23.19,
+      "low": 9.99,
+      "trend": 25.64,
+      "avg1": 18,
+      "avg7": 27.37,
+      "avg30": 25.8,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 0,
+      "avg1-holo": null,
+      "avg7-holo": null,
+      "avg30-holo": null
+    }
+  }
+}
