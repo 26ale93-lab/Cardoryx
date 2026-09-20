@@ -1,0 +1,42 @@
+name: TEMP Inspect Residual Detailed Identities
+
+on:
+  push:
+    branches:
+      - diagnostic/residual-detailed-12-20260920
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Inspect exact source rows
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location("vfa","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          cards, errors, sha=mod.load_official_database(Path("tcgdex-cards-database"))
+          by={c["id"]:c for c in cards}
+          ids=["bog-8","bog-9","np-4","np-9","np-11","mep-028",
+               "sv08.5-176","sv08.5-177","sv08.5-178","sv08.5-179","sv08.5-180","sv09-190"]
+          out={}
+          for cid in ids:
+              c=by[cid]
+              out[cid]={
+                  "name":c.get("name"),"set":c.get("set"),
+                  "rows":[{
+                      "type":r.get("type"),"foil":r.get("foil"),"stamp":r.get("stamp"),
+                      "size":r.get("size"),"subtype":r.get("subtype"),
+                      "cardmarket":(r.get("thirdParty") or {}).get("cardmarket"),
+                      "pricingCardmarket":((r.get("pricing") or {}).get("cardmarket") or {}).get("idProduct"),
+                  } for r in (c.get("variants_detailed") or [])]
+              }
+          print(json.dumps({"tcgdexSha":sha,"cards":out},ensure_ascii=False,indent=2))
+          PY
