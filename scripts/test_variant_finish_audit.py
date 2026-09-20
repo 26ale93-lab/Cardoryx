@@ -1541,6 +1541,9 @@ VERIFIED_OFFICIAL_CHECKLIST_HOLO_IDS = {
     "sm1-35","sm1-80",
     "sm12-1","sm12-157",
     "swsh1-64","swsh1-76","swsh1-99","swsh1-110",
+    # Official Pokémon checklists explicitly mark these sampled identities as Holo / Holo EX-GX.
+    "bw1-5","bw1-26","bw1-31",
+    "bw11-RC24",
 }
 
 def verified_official_checklist_holo_truth(audit_id):
