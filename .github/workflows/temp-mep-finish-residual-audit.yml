@@ -1,0 +1,123 @@
+name: TEMP MEP Finish Residual Audit
+
+on:
+  push:
+    branches:
+      - audit/mep-finish-residuals-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Run current full finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/mep_finish_full.json             --workers 24
+
+      - name: Build targeted MEP evidence
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, subprocess
+          from pathlib import Path
+
+          source=Path("index.html").read_text()
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards, errors, sha = mod.load_official_database(Path("../tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+
+          report=json.loads(Path("/tmp/mep_finish_full.json").read_text())
+          issues=[
+            x for x in report.get("issuesByPriority",[])
+            if x.get("classification")=="AMBIGUA" and x.get("set")=="MEP Black Star Promos"
+          ]
+
+          # Read exact existing manual promo registry through Node so JS object syntax stays authoritative.
+          marker="const VERIFIED_MANUAL_PROMO_IDENTITIES ="
+          at=source.find(marker)
+          registry={}
+          if at>=0:
+              start=source.find("{",at+len(marker))
+              depth=0; quote=None; esc=False; end=None
+              i=start
+              while i<len(source):
+                  ch=source[i]
+                  if quote:
+                      if esc: esc=False
+                      elif ch=="\\": esc=True
+                      elif ch==quote: quote=None
+                  else:
+                      if ch in "'\"": quote=ch
+                      elif ch=="{": depth+=1
+                      elif ch=="}":
+                          depth-=1
+                          if depth==0:
+                              end=i+1; break
+                  i+=1
+              literal=source[start:end]
+              registry=json.loads(subprocess.check_output(
+                  ["node","-e","const v=("+literal+");process.stdout.write(JSON.stringify(v));"],
+                  text=True
+              ))
+
+          rows=[]
+          for issue in issues:
+              cid=issue["tcgdexId"]
+              card=by_id.get(cid) or {}
+              detailed=card.get("variants_detailed") or []
+              physical=[]
+              for row in detailed:
+                  physical.append({
+                    "type":row.get("type"),
+                    "foil":row.get("foil"),
+                    "stamp":row.get("stamp"),
+                    "size":row.get("size"),
+                    "languages":row.get("languages"),
+                    "cardmarketProductId":((row.get("thirdParty") or {}).get("cardmarket")),
+                  })
+              local=str(card.get("localId") or issue.get("localId") or "")
+              manual=registry.get(f"MEP {local.zfill(3)}")
+              rows.append({
+                "tcgdexId":cid,
+                "name":(card.get("name") or {}).get("en") if isinstance(card.get("name"),dict) else card.get("name"),
+                "localId":local,
+                "rarity":card.get("rarity"),
+                "variants":card.get("variants"),
+                "physicalRows":physical,
+                "manualRegistry":manual,
+                "issueReason":issue.get("reason"),
+              })
+
+          out={
+            "tcgdexSha":sha,
+            "ambiguousMEP":len(rows),
+            "rows":rows,
+            "withDetailedRows":sum(bool(x["physicalRows"]) for x in rows),
+            "withManualRegistry":sum(bool(x["manualRegistry"]) for x in rows),
+          }
+          Path("temp_mep_finish_residual_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False))
+          PY
+
+      - name: Record evidence
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_mep_finish_residual_evidence.json
+          git commit -m "TEMP record MEP finish residual evidence"
+          git push
