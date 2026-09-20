@@ -1,0 +1,82 @@
+name: TEMP Verified Stamped Ambiguity Regression
+
+on:
+  push:
+    branches:
+      - audit/fix-verified-stamped-ambiguities-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/stamped_ambiguity_report.json             --workers 24
+
+      - name: Verify exact count reduction only
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/stamped_ambiguity_report.json").read_text())
+          c=r["summary"]["classifications"]
+          assert c["FALSO POSITIVO"] == 0, c
+          assert c["FALSO NEGATIVO"] == 0, c
+          assert c["SOURCE CONFLICT"] == 8, c
+          assert c["AMBIGUA"] == 355, c
+          assert c["CORRETTA"] == 3891, c
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+
+          cards=r.get("cards") or []
+          verified=[
+            x for x in cards
+            if x.get("verifiedStampedFinishes")
+          ]
+          assert len(verified)==49, len(verified)
+          ids={x["tcgdexId"] for x in verified}
+          assert sum(x.startswith("2012bw-") for x in ids)==12
+          assert sum(x.startswith("2014xy-") for x in ids)==12
+          assert sum(x.startswith("2021swsh-") for x in ids)==25
+          assert all(x.get("classification")=="CORRETTA" for x in verified)
+          print(json.dumps({
+            "classifications":c,
+            "verifiedStampedIdentities":len(verified),
+            "pricingP0":r["summary"]["pricingP0"],
+          }))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          cat > temp_verified_stamped_ambiguity_validation.txt <<'EOF'
+          PASS
+          verifiedStampedIdentities=49
+          ambiguous=355
+          falsePositive=0
+          falseNegative=0
+          pricingP0=0
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_verified_stamped_ambiguity_validation.txt
+          git commit -m "TEMP record stamped ambiguity validation"
+          git push
