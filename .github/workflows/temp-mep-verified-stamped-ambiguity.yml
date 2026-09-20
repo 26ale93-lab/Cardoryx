@@ -1,0 +1,79 @@
+name: TEMP MEP Verified Stamped Ambiguity Regression
+
+on:
+  push:
+    branches:
+      - audit/fix-mep-verified-stamped-ambiguities-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Run full audit
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/mep_ambiguity_report.json             --workers 24
+
+      - name: Verify exact MEP reduction
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/mep_ambiguity_report.json").read_text())
+          c=r["summary"]["classifications"]
+          assert c["FALSO POSITIVO"] == 0, c
+          assert c["FALSO NEGATIVO"] == 0, c
+          assert c["SOURCE CONFLICT"] == 8, c
+          assert c["AMBIGUA"] == 326, c
+          assert c["CORRETTA"] == 3920, c
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+
+          a=r["mepExactStampAudit"]
+          assert a["verifiedCards"] == 19, a
+          exact_ids={x["tcgdexId"] for x in a["variants"]}
+          assert len(exact_ids)==19, exact_ids
+
+          issues={x.get("tcgdexId") for x in r.get("issuesByPriority",[]) if isinstance(x,dict)}
+          assert not (exact_ids & issues), sorted(exact_ids & issues)
+          assert "mep-028" in issues, "mep-028 must remain ambiguous"
+
+          print(json.dumps({
+            "classifications":c,
+            "verifiedMEP":len(exact_ids),
+            "mep028StillAmbiguous":True,
+            "pricingP0":r["summary"]["pricingP0"],
+          }))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          cat > temp_mep_verified_stamped_ambiguity_validation.txt <<'EOF'
+          PASS
+          verifiedMEP=19
+          ambiguous=326
+          mep028StillAmbiguous=true
+          falsePositive=0
+          falseNegative=0
+          pricingP0=0
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_mep_verified_stamped_ambiguity_validation.txt
+          git commit -m "TEMP record MEP stamped ambiguity validation"
+          git push
