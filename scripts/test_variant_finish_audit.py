@@ -91,6 +91,7 @@ VERIFIED_REVERSE_TARGETS = {
     "sm12-54": {"setId": "sm12", "localId": "054", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm12_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-cosmic-eclipse/piplup-reverse-holo-54"},
     "sm10-13": {"setId": "sm10", "localId": "013", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm10_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-unbroken-bonds/bellsprout-reverse-holo-13"},
     "sm7-18": {"setId": "sm7", "localId": "018", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm7_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-celestial-storm/illumise-reverse-holo-18"},
+    "sv08.5-059": {"setId": "sv08.5", "localId": "059", "officialChecklist": "Prismatic Evolutions physical print structure", "independentCatalog": "TCGplayer/Pokector exact Umbreon 059/131 Reverse Holofoil"},
 }
 
 REAL_WORLD_REGRESSION = {
@@ -1791,7 +1792,7 @@ def main():
         for card_id, row in VERIFIED_REVERSE_TARGETS.items()
     }
     if registries["reverse"] != expected_reverse_registry:
-        raise AssertionError("VERIFIED_REVERSE_FINISHES differs from the five independently verified identities")
+        raise AssertionError("VERIFIED_REVERSE_FINISHES differs from the independently verified exact identities")
     if "if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');" not in source:
         raise AssertionError("Verified Reverse finish must remain restricted to the unstamped path")
     reverse_identity_checks = []
@@ -2368,7 +2369,7 @@ def main():
             "stampedAndPlayPathsUnchanged": True,
             "evidence": VERIFIED_REVERSE_TARGETS,
             "identityChecks": reverse_identity_checks,
-            "assessment": "Five exact identities gain only Reverse Holo through tcgdexId + setId + normalized localId matching on stamp=None.",
+            "assessment": f"{len(VERIFIED_REVERSE_TARGETS)} exact identities gain only Reverse Holo through tcgdexId + setId + normalized localId matching on stamp=None.",
         },
         "realWorldRegression": real_world_regression,
         "dittoPeelableRuntimeAudit": ditto_runtime,
