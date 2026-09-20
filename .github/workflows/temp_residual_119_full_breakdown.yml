@@ -1,0 +1,37 @@
+name: TEMP Residual 119 Full Breakdown
+on:
+  push:
+    branches: [diagnostic/residual-119-full-breakdown-20260920]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - name: Full residual breakdown
+        run: |
+          python3 - <<'PY'
+          import json,collections
+          r=json.load(open("artifacts/report.json"))
+          print("SUMMARY",r["summary"])
+          print("TOP_KEYS",list(r))
+          for key,val in r.items():
+            if isinstance(val,dict) and "exceptions" in val:
+              ex=val.get("exceptions") or []
+              amb=[x for x in ex if x.get("classification")=="AMBIGUA"]
+              if amb:
+                print("SECTION",key,"AMB",len(amb))
+                reasons=collections.Counter(x.get("reason") for x in amb)
+                print("REASONS",reasons)
+                groups=collections.defaultdict(list)
+                for x in amb:
+                  cid=x.get("tcgdexId") or "?"
+                  groups[cid.split("-")[0]].append(cid)
+                for g,ids in sorted(groups.items()): print("GROUP",key,g,len(ids),ids)
+          PY
