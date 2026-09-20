@@ -34,14 +34,19 @@ jobs:
           c=r["summary"]["classifications"]
           rev=r["verifiedReverseFinishAudit"]
           assert r["summary"]["totalIdentitiesTested"] == 4254, r["summary"]
-          assert c["CORRETTA"] == 3944, c
-          assert c["AMBIGUA"] == 302, c
+          assert c["CORRETTA"] == 3943, c
+          assert c["AMBIGUA"] == 303, c
           assert c["FALSO POSITIVO"] == 0, c
           assert c["FALSO NEGATIVO"] == 0, c
           assert c["SOURCE CONFLICT"] == 8, c
           assert r["summary"]["pricingP0"] == 0, r["summary"]
           assert "sv08.5-059" in rev["integratedIds"], rev
           assert rev["expectedIdentities"] == 6, rev
+          checks={x["tcgdexId"]:x for x in rev["identityChecks"]}
+          assert checks["sv08.5-059"]["exactMatch"] is True, checks["sv08.5-059"]
+          assert checks["sv08.5-059"]["wrongIdRejected"] is True, checks["sv08.5-059"]
+          assert checks["sv08.5-059"]["wrongSetRejected"] is True, checks["sv08.5-059"]
+          assert checks["sv08.5-059"]["wrongLocalIdRejected"] is True, checks["sv08.5-059"]
           assert "#scanView select{color-scheme:light;background:#fff;color:#111827}" in source
           print(json.dumps({"summary":r["summary"],"reverse":rev},ensure_ascii=False,indent=2))
           PY
