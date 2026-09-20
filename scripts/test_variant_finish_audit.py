@@ -408,6 +408,7 @@ function verifiedMcdonaldsStampFinishes(){return [];}
 function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
 function verifiedSwshp25thStandardFinishes(){return [];}
 function verifiedSwshpSetLogoFinishes(){return [];}
+function verifiedMepStampFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
@@ -991,6 +992,131 @@ for(const card of cards){
 const outsider={...cards[0],id:'swshp-SWSH999',tcgdexId:'swshp-SWSH999',localId:'SWSH999'};
 if(tcgdexExactSwshpSetLogoRow(outsider)!==null)fail('outside identity inherited rule');
 process.stdout.write(JSON.stringify({tested:cards.length,allExact:true,wrongSetRejected:true,wrongStampRejected:true,wrongFinishRejected:true,outsideIdentityRejected:true}));
+'''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
+    )
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
+def audit_mep_exact_stamps(cards, source):
+    registry = extract_js_object(source, "VERIFIED_MEP_STAMP_PRODUCTS")
+    if len(registry) != 19:
+        raise AssertionError(f"MEP exact stamp registry expected 19 cards, found {len(registry)}")
+
+    by_id = {c["id"]: c for c in cards}
+    variants = []
+    product_ids = set()
+    for cid, rule in registry.items():
+        card = by_id.get(cid)
+        if not card:
+            raise AssertionError(f"MEP exact stamp source identity missing: {cid}")
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if str(card.get("localId")) != str(rule.get("localId")) or str(source_name) != str(rule.get("name")):
+            raise AssertionError(f"MEP exact stamp identity mismatch: {cid}")
+
+        expected = []
+        if int(rule.get("setStampProductId") or 0) > 0:
+            expected.append(("Set Stamp", ["setlogo"], int(rule["setStampProductId"])))
+        if int(rule.get("staffProductId") or 0) > 0:
+            expected.append(("Staff", ["setlogo", "staff"], int(rule["staffProductId"])))
+
+        for kind, stamps_expected, product_id in expected:
+            rows = []
+            for row in card.get("variants_detailed") or []:
+                stamps = sorted(norm(x) for x in (row.get("stamp") or []))
+                pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+                if (
+                    stamps == stamps_expected
+                    and canonical_finish_type_label(row.get("type")) == "holo"
+                    and not row.get("foil")
+                    and str(row.get("size") or "standard").lower() == "standard"
+                    and pid == product_id
+                ):
+                    rows.append(row)
+            if len(rows) != 1:
+                raise AssertionError(f"MEP exact {kind} row mismatch: {cid}")
+            product_ids.add(product_id)
+            variants.append({"tcgdexId": cid, "stamp": kind, "productId": product_id})
+
+    if len(variants) != 34 or len(product_ids) != 34:
+        raise AssertionError("MEP exact stamp registry must resolve 34 unique physical products")
+
+    runtime = run_mep_exact_stamp_runtime(source, by_id, registry)
+    if runtime.get("testedVariants") != 34 or runtime.get("testedCards") != 19:
+        raise AssertionError("MEP exact stamp runtime regression failed")
+
+    return {
+        "verifiedCards": 19,
+        "verifiedVariants": 34,
+        "distinctProductIds": 34,
+        "setStampVariants": sum(x["stamp"] == "Set Stamp" for x in variants),
+        "staffVariants": sum(x["stamp"] == "Staff" for x in variants),
+        "excludedAceTrainerIdentity": "mep-028",
+        "runtime": runtime,
+        "variants": variants,
+        "scope": "explicit 19-card registry only; mep-028 ace-trainer remains unsupported",
+    }
+
+
+def run_mep_exact_stamp_runtime(source, by_id, registry):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "canonicalPrintedLocalId", "printedLocalIdParts",
+        "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
+        "verifiedMepStampRule", "tcgdexExactMepStampRow",
+        "verifiedMepStampFinishes", "tcgdexExactMepStampPrice",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    fixtures = []
+    for cid, rule in registry.items():
+        card = by_id[cid]
+        detailed = json.loads(json.dumps(card.get("variants_detailed") or []))
+        for row in detailed:
+            stamps = sorted(norm(x) for x in (row.get("stamp") or []))
+            pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+            if stamps in (["setlogo"], ["setlogo", "staff"]) and pid > 0:
+                row["pricing"] = {"cardmarket": {
+                    "idProduct": pid, "trend": 1.23, "low": 0.5,
+                    "updated": "runtime-fixture",
+                }}
+        fixtures.append({
+            "id": cid, "tcgdexId": cid, "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "mep"}, "variants_detailed": detailed,
+        })
+
+    js = (
+        "const VERIFIED_MEP_STAMP_PRODUCTS="
+        + json.dumps(registry, ensure_ascii=False) + ";\n"
+        + functions + "\n"
+        + r'''
+const cards=__FIXTURES__;
+function fail(msg){throw new Error(msg);}
+let variants=0;
+for(const card of cards){
+  const rule=VERIFIED_MEP_STAMP_PRODUCTS[card.id];
+  for(const stamp of ['Set Stamp','Staff']){
+    const expected=Number(stamp==='Set Stamp'?rule.setStampProductId:rule.staffProductId||0);
+    const row=tcgdexExactMepStampRow(card,stamp);
+    if(!expected){
+      if(row!==null||verifiedMepStampFinishes(card,stamp).length!==0||
+         tcgdexExactMepStampPrice(card,'Holo',stamp)!==null)fail('unsupported stamp leaked '+card.id+' '+stamp);
+      continue;
+    }
+    if(!row)fail('exact row missing '+card.id+' '+stamp);
+    const finishes=verifiedMepStampFinishes(card,stamp);
+    if(finishes.length!==1||finishes[0]!=='Holo')fail('finish mismatch '+card.id+' '+stamp);
+    const price=tcgdexExactMepStampPrice(card,'Holo',stamp);
+    if(!price||Number(price.idProduct)!==expected||Number(price.trend)!==1.23)fail('price mismatch '+card.id+' '+stamp);
+    if(tcgdexExactMepStampPrice(card,'Normal',stamp)!==null)fail('Normal leaked '+card.id+' '+stamp);
+    variants++;
+  }
+  const wrongSet={...card,set:{id:'wrong-set'}};
+  if(tcgdexExactMepStampRow(wrongSet,'Set Stamp')!==null||tcgdexExactMepStampRow(wrongSet,'Staff')!==null)fail('set guard leaked '+card.id);
+}
+const outsider={...cards[0],id:'mep-999',tcgdexId:'mep-999',localId:'999'};
+if(tcgdexExactMepStampRow(outsider,'Set Stamp')!==null)fail('outside identity inherited MEP rule');
+process.stdout.write(JSON.stringify({testedCards:cards.length,testedVariants:variants,wrongSetRejected:true,wrongFinishRejected:true,outsideIdentityRejected:true}));
 '''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
     )
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
@@ -1615,6 +1741,10 @@ def main():
         "status": "not-run",
         "reason": "full cards-database snapshot required",
     }
+    mep_exact_stamp_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     swshp_25th_standard_audit = {
         "status": "not-run",
         "reason": "full cards-database snapshot required",
@@ -1627,6 +1757,7 @@ def main():
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
         mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
         mcdonalds_2021_25th_audit = audit_mcdonalds_2021_25th_source(all_cards, source)
+        mep_exact_stamp_audit = audit_mep_exact_stamps(all_cards, source)
         swshp_25th_standard_audit = audit_swshp_25th_standard_promos(all_cards, source)
         swshp_set_logo_168_171_audit = audit_swshp_set_logo_168_171(all_cards, source)
         grouped = defaultdict(list)
@@ -2039,6 +2170,7 @@ def main():
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
         "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
+        "mepExactStampAudit": mep_exact_stamp_audit,
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
         "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
         "verifiedNormalResidualAudit": {
