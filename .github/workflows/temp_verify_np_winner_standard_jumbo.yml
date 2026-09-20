@@ -1,0 +1,44 @@
+name: TEMP Verify NP Winner Standard Jumbo
+
+on:
+  push:
+    branches:
+      - audit/classify-np-winner-standard-jumbo-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run full audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+      - name: Enforce exact impact
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          c=r["summary"]["classifications"]
+          x=r["npWinnerStandardJumboClassification"]
+          assert r["summary"]["totalIdentitiesTested"] == 4254, r["summary"]
+          assert c["CORRETTA"] == 4091, c
+          assert c["AMBIGUA"] == 155, c
+          assert c["FALSO POSITIVO"] == 0, c
+          assert c["FALSO NEGATIVO"] == 0, c
+          assert c["SOURCE CONFLICT"] == 8, c
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+          assert x["expectedIds"] == ["np-11","np-4","np-9"], x
+          assert x["classifiedIds"] == ["np-11","np-4","np-9"], x
+          assert x["productionModified"] is False, x
+          print(json.dumps({"summary":r["summary"],"npWinner":x},ensure_ascii=False,indent=2))
+          PY
