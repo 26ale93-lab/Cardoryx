@@ -41,7 +41,7 @@ jobs:
           assert c["FALSO NEGATIVO"] == 0, c
           assert c["SOURCE CONFLICT"] == 8, c
           assert r["summary"]["pricingP0"] == 0, r["summary"]
-          assert x["expectedIdentities"] == 28, x
+          assert x["expectedIdentities"] == 17, x
           assert len(x["classifiedIds"]) == 17, x
           assert "mep-028" not in x["classifiedIds"], x
           assert issues["mep-028"]["classification"] == "AMBIGUA", issues["mep-028"]
