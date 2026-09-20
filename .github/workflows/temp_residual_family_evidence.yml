@@ -1,0 +1,47 @@
+name: TEMP Residual Family Evidence
+on:
+  push:
+    branches: [diagnostic/residual-family-evidence-20260920]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - name: Inspect exact residual families against upstream database
+        run: |
+          python3 - <<'PY'
+          import json,glob,os,collections
+          r=json.load(open("artifacts/report.json"))
+          ex=(r.get("normalHoloReverseAudit") or {}).get("exceptions") or []
+          amb=[x for x in ex if x.get("classification")=="AMBIGUA"]
+          ids=[x["tcgdexId"] for x in amb]
+          print("AMB_EXCEPTIONS",len(ids),ids)
+          files=glob.glob("tcgdex-cards-database/**/*.json",recursive=True)
+          db={}
+          for p in files:
+            try:
+              d=json.load(open(p))
+            except: continue
+            if isinstance(d,dict) and d.get("id"): db[d["id"]]=d
+          fam=collections.defaultdict(list)
+          for cid in ids:
+            d=db.get(cid,{})
+            prefix=cid.split("-")[0]
+            fam[prefix].append((cid,d.get("rarity"),d.get("variants"),d.get("variants_detailed")))
+          for k,v in sorted(fam.items()):
+            print("FAMILY",k,"COUNT",len(v))
+            for row in v: print("CARD",json.dumps(row,ensure_ascii=False))
+          # Examine all same-set cards for physical detailed evidence.
+          for k in sorted(fam):
+            same=[d for cid,d in db.items() if cid.startswith(k+"-")]
+            det=[(d.get("id"),d.get("rarity"),d.get("variants"),d.get("variants_detailed")) for d in same if d.get("variants_detailed")]
+            print("SET_EVIDENCE",k,"cards",len(same),"detailed",len(det))
+            for row in det[:40]: print("SET_DETAIL",json.dumps(row,ensure_ascii=False))
+          PY
