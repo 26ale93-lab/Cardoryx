@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout Cardoryx
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Checkout TCGdex cards database
         uses: actions/checkout@v4
