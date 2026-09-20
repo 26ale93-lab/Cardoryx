@@ -1536,6 +1536,18 @@ def verified_hidden_fates_shiny_vault_truth(card, audit_id=None):
     return {"Holo"}
 
 
+VERIFIED_OFFICIAL_CHECKLIST_HOLO_IDS = {
+    "xy1-1","xy1-29",
+    "sm1-35","sm1-80",
+    "sm12-1","sm12-157",
+    "swsh1-64","swsh1-76","swsh1-99","swsh1-110",
+}
+
+def verified_official_checklist_holo_truth(audit_id):
+    """Exact identities explicitly marked Holo/Holo EX/GX by official Pokémon set checklists."""
+    return {"Holo"} if str(audit_id or "") in VERIFIED_OFFICIAL_CHECKLIST_HOLO_IDS else set()
+
+
 def verified_unanimous_special_finish_truth(card):
     """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
     set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2250,7 +2262,8 @@ def main():
         np_winner_truth = verified_np_winner_standard_jumbo_truth(en)
         bog_cosmos_truth = verified_bog_cosmos_standard_jumbo_truth(en)
         hidden_fates_sv_truth = verified_hidden_fates_shiny_vault_truth(en, cid)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth
+        official_checklist_holo_truth = verified_official_checklist_holo_truth(cid)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
