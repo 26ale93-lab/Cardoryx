@@ -1530,7 +1530,7 @@ def verified_hidden_fates_shiny_vault_truth(card, audit_id=None):
     if set_id != "sma" and not cid.startswith("sma-"):
         return set()
     local=str(card.get("localId") or (cid.split("-",1)[1] if cid.startswith("sma-") else "")).strip().upper()
-    m=re.fullmatch(r"SV0*(\\d+)", local)
+    m=re.fullmatch(r"SV0*(\d+)", local)
     if not m or not (1 <= int(m.group(1)) <= 94):
         return set()
     return {"Holo"}
