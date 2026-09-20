@@ -1523,6 +1523,17 @@ def verified_bog_cosmos_standard_jumbo_truth(card):
     return {"Cosmos Holo"} if sorted(sizes)==["jumbo","standard"] else set()
 
 
+def verified_hidden_fates_shiny_vault_truth(card):
+    """Official Hidden Fates checklist marks every SV1-SV94 Shiny Vault card as Shiny Vault foil."""
+    if str((card.get("set") or {}).get("id") or "").strip().lower() != "sma":
+        return set()
+    local=str(card.get("localId") or "").strip().upper()
+    m=re.fullmatch(r"SV0*(\\d+)", local)
+    if not m or not (1 <= int(m.group(1)) <= 94):
+        return set()
+    return {"Holo"}
+
+
 def verified_unanimous_special_finish_truth(card):
     """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
     set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2236,7 +2247,8 @@ def main():
         residual_exact_truth = verified_residual_exact_finish_truth(en)
         np_winner_truth = verified_np_winner_standard_jumbo_truth(en)
         bog_cosmos_truth = verified_bog_cosmos_standard_jumbo_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth
+        hidden_fates_sv_truth = verified_hidden_fates_shiny_vault_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
