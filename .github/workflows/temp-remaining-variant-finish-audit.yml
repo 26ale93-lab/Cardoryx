@@ -67,6 +67,55 @@ jobs:
           },ensure_ascii=False))
           PY
 
+      - name: Verify Celebrations Classic finish evidence
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+
+          def load(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-Celebrations-Finish-Audit/1.0"})
+              with urllib.request.urlopen(req,timeout=120) as r:
+                  return json.load(r)
+
+          cards={}
+          for cid in ("cel25cc-CC020","cel25cc-CC021"):
+              cards[cid]=load(f"https://api.tcgdex.net/v2/en/cards/{cid}")
+
+          pr=load("https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json")
+          pg=load("https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json")
+          products=pr if isinstance(pr,list) else pr.get("products",[])
+          prices=pg if isinstance(pg,list) else (pg.get("priceGuides") or pg.get("priceGuide") or [])
+          wanted={576790,576791}
+          out={
+              "cards":cards,
+              "products":{str(x["idProduct"]):x for x in products if x.get("idProduct") in wanted},
+              "prices":{str(x["idProduct"]):x for x in prices if x.get("idProduct") in wanted},
+          }
+          Path("temp_celebrations_classic_finish_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              "cards":{
+                  cid:{
+                      "name":card.get("name"),
+                      "localId":card.get("localId"),
+                      "variants":card.get("variants"),
+                      "variants_detailed":card.get("variants_detailed"),
+                  } for cid,card in cards.items()
+              },
+              "products":out["products"],
+              "prices":out["prices"],
+          },ensure_ascii=False))
+          PY
+
+      - name: Record Celebrations finish evidence
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_celebrations_classic_finish_evidence.json
+          git commit -m "TEMP record Celebrations Classic finish evidence"
+          git push
+
       - name: Record summary
         if: github.event_name == 'push'
         run: |
