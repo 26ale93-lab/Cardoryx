@@ -1,0 +1,2539 @@
+{
+  "summary": {
+    "totalIdentitiesTested": 4254,
+    "italianRecordsUnavailable": 2546,
+    "classifications": {
+      "CORRETTA": 3901,
+      "FALSO POSITIVO": 0,
+      "FALSO NEGATIVO": 0,
+      "AMBIGUA": 345,
+      "SOURCE CONFLICT": 8
+    },
+    "pricingP0": 0,
+    "playVariantRowsSeen": 261,
+    "unavailableExplicitTargets": [
+      "mee-009",
+      "mee-010",
+      "mee-011",
+      "mee-012",
+      "mee-013",
+      "mee-014",
+      "mee-015",
+      "mee-016"
+    ]
+  },
+  "ambiguousCount": 345,
+  "topSets": [
+    [
+      "SWSH Black Star Promos",
+      55
+    ],
+    [
+      "SVP Black Star Promos",
+      47
+    ],
+    [
+      "My First Battle",
+      34
+    ],
+    [
+      "MEP Black Star Promos",
+      20
+    ],
+    [
+      "Black & White",
+      18
+    ],
+    [
+      "Legendary Treasures",
+      18
+    ],
+    [
+      "Generations",
+      18
+    ],
+    [
+      "Sun & Moon",
+      18
+    ],
+    [
+      "Cosmic Eclipse",
+      18
+    ],
+    [
+      "Hidden Fates Shiny Vault",
+      18
+    ],
+    [
+      "Sword & Shield",
+      18
+    ],
+    [
+      "XY",
+      18
+    ],
+    [
+      "Fossil",
+      14
+    ],
+    [
+      "Nintendo Black Star Promos",
+      10
+    ],
+    [
+      "Wizards Black Star Promos",
+      6
+    ],
+    [
+      "Prismatic Evolutions",
+      5
+    ],
+    [
+      "DP Black Star Promos",
+      3
+    ],
+    [
+      "Best of game",
+      2
+    ],
+    [
+      "Celebrations Classic Collection",
+      2
+    ],
+    [
+      "Hidden Legends",
+      1
+    ],
+    [
+      "HGSS Black Star Promos",
+      1
+    ],
+    [
+      "Journey Together",
+      1
+    ]
+  ],
+  "topReasons": [
+    [
+      "no explicit finish evidence",
+      345
+    ]
+  ],
+  "rows": [
+    {
+      "tcgdexId": "base3-1",
+      "set": "Fossil",
+      "localId": "1",
+      "name": "Aerodactyl",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-10",
+      "set": "Fossil",
+      "localId": "10",
+      "name": "Lapras",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-11",
+      "set": "Fossil",
+      "localId": "11",
+      "name": "Magneton",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-12",
+      "set": "Fossil",
+      "localId": "12",
+      "name": "Moltres",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-13",
+      "set": "Fossil",
+      "localId": "13",
+      "name": "Muk",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-14",
+      "set": "Fossil",
+      "localId": "14",
+      "name": "Raichu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-2",
+      "set": "Fossil",
+      "localId": "2",
+      "name": "Articuno",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-3",
+      "set": "Fossil",
+      "localId": "3",
+      "name": "Ditto",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-4",
+      "set": "Fossil",
+      "localId": "4",
+      "name": "Dragonite",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-5",
+      "set": "Fossil",
+      "localId": "5",
+      "name": "Gengar",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-6",
+      "set": "Fossil",
+      "localId": "6",
+      "name": "Haunter",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-7",
+      "set": "Fossil",
+      "localId": "7",
+      "name": "Hitmonlee",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-8",
+      "set": "Fossil",
+      "localId": "8",
+      "name": "Hypno",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "base3-9",
+      "set": "Fossil",
+      "localId": "9",
+      "name": "Kabutops",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "basep-2",
+      "set": "Wizards Black Star Promos",
+      "localId": "2",
+      "name": "Electabuzz",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "basep-3",
+      "set": "Wizards Black Star Promos",
+      "localId": "3",
+      "name": "Mewtwo",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "basep-4",
+      "set": "Wizards Black Star Promos",
+      "localId": "4",
+      "name": "Pikachu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "basep-5",
+      "set": "Wizards Black Star Promos",
+      "localId": "5",
+      "name": "Dragonite",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "basep-50",
+      "set": "Wizards Black Star Promos",
+      "localId": "50",
+      "name": "Celebi",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "basep-53",
+      "set": "Wizards Black Star Promos",
+      "localId": "53",
+      "name": "Suicune",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bog-8",
+      "set": "Best of game",
+      "localId": "8",
+      "name": "Rocket’s Mewtwo",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bog-9",
+      "set": "Best of game",
+      "localId": "9",
+      "name": "Rocket’s Hitmonchan",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-1",
+      "set": "Black & White",
+      "localId": "1",
+      "name": "Snivy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-105",
+      "set": "Black & White",
+      "localId": "105",
+      "name": "Grass Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-110",
+      "set": "Black & White",
+      "localId": "110",
+      "name": "Fighting Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-13",
+      "set": "Black & White",
+      "localId": "13",
+      "name": "Deerling",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-2",
+      "set": "Black & White",
+      "localId": "2",
+      "name": "Snivy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-26",
+      "set": "Black & White",
+      "localId": "26",
+      "name": "Reshiram",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-31",
+      "set": "Black & White",
+      "localId": "31",
+      "name": "Samurott",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-38",
+      "set": "Black & White",
+      "localId": "38",
+      "name": "Alomomola",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-44",
+      "set": "Black & White",
+      "localId": "44",
+      "name": "Joltik",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-5",
+      "set": "Black & White",
+      "localId": "5",
+      "name": "Serperior",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-56",
+      "set": "Black & White",
+      "localId": "56",
+      "name": "Duosion",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-62",
+      "set": "Black & White",
+      "localId": "62",
+      "name": "Sawk",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-68",
+      "set": "Black & White",
+      "localId": "68",
+      "name": "Scraggy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-74",
+      "set": "Black & White",
+      "localId": "74",
+      "name": "Klink",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-80",
+      "set": "Black & White",
+      "localId": "80",
+      "name": "Lillipup",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-87",
+      "set": "Black & White",
+      "localId": "87",
+      "name": "Audino",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-92",
+      "set": "Black & White",
+      "localId": "92",
+      "name": "Energy Retrieval",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw1-99",
+      "set": "Black & White",
+      "localId": "99",
+      "name": "Pokémon Communication",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-1",
+      "set": "Legendary Treasures",
+      "localId": "1",
+      "name": "Tangela",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-106",
+      "set": "Legendary Treasures",
+      "localId": "106",
+      "name": "Druddigon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-113",
+      "set": "Legendary Treasures",
+      "localId": "113",
+      "name": "Double Colorless Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-18",
+      "set": "Legendary Treasures",
+      "localId": "18",
+      "name": "Charmeleon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-25",
+      "set": "Legendary Treasures",
+      "localId": "25",
+      "name": "Tepig",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-32",
+      "set": "Legendary Treasures",
+      "localId": "32",
+      "name": "Articuno",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-4",
+      "set": "Legendary Treasures",
+      "localId": "4",
+      "name": "Cherubi",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-47",
+      "set": "Legendary Treasures",
+      "localId": "47",
+      "name": "Plusle",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-54",
+      "set": "Legendary Treasures",
+      "localId": "54",
+      "name": "Mewtwo-EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-62",
+      "set": "Legendary Treasures",
+      "localId": "62",
+      "name": "Croagunk",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-7",
+      "set": "Legendary Treasures",
+      "localId": "7",
+      "name": "Servine",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-77",
+      "set": "Legendary Treasures",
+      "localId": "77",
+      "name": "Chandelure-EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-84",
+      "set": "Legendary Treasures",
+      "localId": "84",
+      "name": "Terrakion",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-91",
+      "set": "Legendary Treasures",
+      "localId": "91",
+      "name": "Cobalion",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-99",
+      "set": "Legendary Treasures",
+      "localId": "99",
+      "name": "Hydreigon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-RC17",
+      "set": "Legendary Treasures",
+      "localId": "RC17",
+      "name": "Audino",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-RC24",
+      "set": "Legendary Treasures",
+      "localId": "RC24",
+      "name": "Mew-EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "bw11-RC9",
+      "set": "Legendary Treasures",
+      "localId": "RC9",
+      "name": "Kirlia",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "cel25cc-CC020",
+      "set": "Celebrations Classic Collection",
+      "localId": "CC020",
+      "name": "Reshiram",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "cel25cc-CC021",
+      "set": "Celebrations Classic Collection",
+      "localId": "CC021",
+      "name": "Zekrom",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "dpp-DP05",
+      "set": "DP Black Star Promos",
+      "localId": "DP05",
+      "name": "Tropical Wind",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "dpp-DP25",
+      "set": "DP Black Star Promos",
+      "localId": "DP25",
+      "name": "Tropical Wind",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "dpp-DP48",
+      "set": "DP Black Star Promos",
+      "localId": "DP48",
+      "name": "Tropical Wind",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "ex5-98",
+      "set": "Hidden Legends",
+      "localId": "98",
+      "name": "Regirock ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-1",
+      "set": "Generations",
+      "localId": "1",
+      "name": "Venusaur EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-16",
+      "set": "Generations",
+      "localId": "16",
+      "name": "Magmar",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-22",
+      "set": "Generations",
+      "localId": "22",
+      "name": "Magikarp",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-28",
+      "set": "Generations",
+      "localId": "28",
+      "name": "Jolteon EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-33",
+      "set": "Generations",
+      "localId": "33",
+      "name": "Gastly",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-4",
+      "set": "Generations",
+      "localId": "4",
+      "name": "Metapod",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-46",
+      "set": "Generations",
+      "localId": "46",
+      "name": "Golem EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-52",
+      "set": "Generations",
+      "localId": "52",
+      "name": "Mr. Mime",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-59",
+      "set": "Generations",
+      "localId": "59",
+      "name": "Clemont",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-64",
+      "set": "Generations",
+      "localId": "64",
+      "name": "Maintenance",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-70",
+      "set": "Generations",
+      "localId": "70",
+      "name": "Revitalizer",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-76",
+      "set": "Generations",
+      "localId": "76",
+      "name": "Fire Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-82",
+      "set": "Generations",
+      "localId": "82",
+      "name": "Metal Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-RC13",
+      "set": "Generations",
+      "localId": "RC13",
+      "name": "Jirachi",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-RC2",
+      "set": "Generations",
+      "localId": "RC2",
+      "name": "Shroomish",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-RC25",
+      "set": "Generations",
+      "localId": "RC25",
+      "name": "Fletchling",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-RC31",
+      "set": "Generations",
+      "localId": "RC31",
+      "name": "M Gardevoir EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "g1-RC9",
+      "set": "Generations",
+      "localId": "RC9",
+      "name": "Raichu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "hgssp-HGSS18",
+      "set": "HGSS Black Star Promos",
+      "localId": "HGSS18",
+      "name": "Tropical Tidal Wave",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-001",
+      "set": "MEP Black Star Promos",
+      "localId": "001",
+      "name": "Meganium",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-002",
+      "set": "MEP Black Star Promos",
+      "localId": "002",
+      "name": "Inteleon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-003",
+      "set": "MEP Black Star Promos",
+      "localId": "003",
+      "name": "Alakazam",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-004",
+      "set": "MEP Black Star Promos",
+      "localId": "004",
+      "name": "Lunatone",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-014",
+      "set": "MEP Black Star Promos",
+      "localId": "014",
+      "name": "Ceruledge",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-015",
+      "set": "MEP Black Star Promos",
+      "localId": "015",
+      "name": "Zacian",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-016",
+      "set": "MEP Black Star Promos",
+      "localId": "016",
+      "name": "Flygon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-017",
+      "set": "MEP Black Star Promos",
+      "localId": "017",
+      "name": "Toxtricity",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-028",
+      "set": "MEP Black Star Promos",
+      "localId": "028",
+      "name": "Celebratory Fanfare",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-065",
+      "set": "MEP Black Star Promos",
+      "localId": "065",
+      "name": "Barbaracle",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-066",
+      "set": "MEP Black Star Promos",
+      "localId": "066",
+      "name": "Tyrantrum",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-067",
+      "set": "MEP Black Star Promos",
+      "localId": "067",
+      "name": "Doublade",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-074",
+      "set": "MEP Black Star Promos",
+      "localId": "074",
+      "name": "Delphox",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-075",
+      "set": "MEP Black Star Promos",
+      "localId": "075",
+      "name": "Ampharos",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-076",
+      "set": "MEP Black Star Promos",
+      "localId": "076",
+      "name": "Crobat",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-077",
+      "set": "MEP Black Star Promos",
+      "localId": "077",
+      "name": "Goodra",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-082",
+      "set": "MEP Black Star Promos",
+      "localId": "082",
+      "name": "Miraidon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-083",
+      "set": "MEP Black Star Promos",
+      "localId": "083",
+      "name": "Slowbro",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-084",
+      "set": "MEP Black Star Promos",
+      "localId": "084",
+      "name": "Dhelmise",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-085",
+      "set": "MEP Black Star Promos",
+      "localId": "085",
+      "name": "Bastiodon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-1",
+      "set": "My First Battle",
+      "localId": "1",
+      "name": "Bulbasaur",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-10",
+      "set": "My First Battle",
+      "localId": "10",
+      "name": "Charmeleon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-11",
+      "set": "My First Battle",
+      "localId": "11",
+      "name": "Vulpix",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-12",
+      "set": "My First Battle",
+      "localId": "12",
+      "name": "Ninetales",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-13",
+      "set": "My First Battle",
+      "localId": "13",
+      "name": "Growlithe",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-14",
+      "set": "My First Battle",
+      "localId": "14",
+      "name": "Arcanine",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-15",
+      "set": "My First Battle",
+      "localId": "15",
+      "name": "Magmar",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-16",
+      "set": "My First Battle",
+      "localId": "16",
+      "name": "Fire Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-17",
+      "set": "My First Battle",
+      "localId": "17",
+      "name": "Pikachu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-18",
+      "set": "My First Battle",
+      "localId": "18",
+      "name": "Raichu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-19",
+      "set": "My First Battle",
+      "localId": "19",
+      "name": "Magnemite",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-2",
+      "set": "My First Battle",
+      "localId": "2",
+      "name": "Ivysaur",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-20",
+      "set": "My First Battle",
+      "localId": "20",
+      "name": "Magneton",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-21",
+      "set": "My First Battle",
+      "localId": "21",
+      "name": "Voltorb",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-22",
+      "set": "My First Battle",
+      "localId": "22",
+      "name": "Electrode",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-23",
+      "set": "My First Battle",
+      "localId": "23",
+      "name": "Electabuzz",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-24",
+      "set": "My First Battle",
+      "localId": "24",
+      "name": "Lightning Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-25",
+      "set": "My First Battle",
+      "localId": "25",
+      "name": "Squirtle",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-26",
+      "set": "My First Battle",
+      "localId": "26",
+      "name": "Wartortle",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-27",
+      "set": "My First Battle",
+      "localId": "27",
+      "name": "Poliwag",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-28",
+      "set": "My First Battle",
+      "localId": "28",
+      "name": "Poliwhirl",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-29",
+      "set": "My First Battle",
+      "localId": "29",
+      "name": "Magikarp",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-3",
+      "set": "My First Battle",
+      "localId": "3",
+      "name": "Oddish",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-30",
+      "set": "My First Battle",
+      "localId": "30",
+      "name": "Gyarados",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-31",
+      "set": "My First Battle",
+      "localId": "31",
+      "name": "Lapras",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-32",
+      "set": "My First Battle",
+      "localId": "32",
+      "name": "Water Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-33",
+      "set": "My First Battle",
+      "localId": "33",
+      "name": "Potion",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-34",
+      "set": "My First Battle",
+      "localId": "34",
+      "name": "Switch",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-4",
+      "set": "My First Battle",
+      "localId": "4",
+      "name": "Gloom",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-5",
+      "set": "My First Battle",
+      "localId": "5",
+      "name": "Exeggcute",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-6",
+      "set": "My First Battle",
+      "localId": "6",
+      "name": "Exeggutor",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-7",
+      "set": "My First Battle",
+      "localId": "7",
+      "name": "Scyther",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-8",
+      "set": "My First Battle",
+      "localId": "8",
+      "name": "Grass Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mfb-9",
+      "set": "My First Battle",
+      "localId": "9",
+      "name": "Charmander",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-11",
+      "set": "Nintendo Black Star Promos",
+      "localId": "11",
+      "name": "Marshtomp",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-23",
+      "set": "Nintendo Black Star Promos",
+      "localId": "23",
+      "name": "Metang",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-26",
+      "set": "Nintendo Black Star Promos",
+      "localId": "26",
+      "name": "Tropical Wind",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-27",
+      "set": "Nintendo Black Star Promos",
+      "localId": "27",
+      "name": "Tropical Tidal Wave",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-36",
+      "set": "Nintendo Black Star Promos",
+      "localId": "36",
+      "name": "Tropical Tidal Wave",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-4",
+      "set": "Nintendo Black Star Promos",
+      "localId": "4",
+      "name": "Grovyle",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-5",
+      "set": "Nintendo Black Star Promos",
+      "localId": "5",
+      "name": "Mudkip",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-6",
+      "set": "Nintendo Black Star Promos",
+      "localId": "6",
+      "name": "Torchic",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-7",
+      "set": "Nintendo Black Star Promos",
+      "localId": "7",
+      "name": "Treecko",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "np-9",
+      "set": "Nintendo Black Star Promos",
+      "localId": "9",
+      "name": "Combusken",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-1",
+      "set": "Sun & Moon",
+      "localId": "1",
+      "name": "Caterpie",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-108",
+      "set": "Sun & Moon",
+      "localId": "108",
+      "name": "Toucannon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-117",
+      "set": "Sun & Moon",
+      "localId": "117",
+      "name": "Energy Switch",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-126",
+      "set": "Sun & Moon",
+      "localId": "126",
+      "name": "Pokémon Catcher",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-135",
+      "set": "Sun & Moon",
+      "localId": "135",
+      "name": "Ultra Ball",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-144",
+      "set": "Sun & Moon",
+      "localId": "144",
+      "name": "Tauros GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-153",
+      "set": "Sun & Moon",
+      "localId": "153",
+      "name": "Lunala GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-162",
+      "set": "Sun & Moon",
+      "localId": "162",
+      "name": "Psychic Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-171",
+      "set": "Sun & Moon",
+      "localId": "171",
+      "name": "Metal Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-26",
+      "set": "Sun & Moon",
+      "localId": "26",
+      "name": "Incineroar",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-35",
+      "set": "Sun & Moon",
+      "localId": "35",
+      "name": "Lapras GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-44",
+      "set": "Sun & Moon",
+      "localId": "44",
+      "name": "Wishiwashi",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-53",
+      "set": "Sun & Moon",
+      "localId": "53",
+      "name": "Togedemaru",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-62",
+      "set": "Sun & Moon",
+      "localId": "62",
+      "name": "Mareanie",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-71",
+      "set": "Sun & Moon",
+      "localId": "71",
+      "name": "Gigalith",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-80",
+      "set": "Sun & Moon",
+      "localId": "80",
+      "name": "Umbreon GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-9",
+      "set": "Sun & Moon",
+      "localId": "9",
+      "name": "Rowlet",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm1-99",
+      "set": "Sun & Moon",
+      "localId": "99",
+      "name": "Kangaskhan",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-1",
+      "set": "Cosmic Eclipse",
+      "localId": "1",
+      "name": "Venusaur & Snivy GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-113",
+      "set": "Cosmic Eclipse",
+      "localId": "113",
+      "name": "Groudon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-128",
+      "set": "Cosmic Eclipse",
+      "localId": "128",
+      "name": "Alolan Meowth",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-142",
+      "set": "Cosmic Eclipse",
+      "localId": "142",
+      "name": "Solgaleo",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-157",
+      "set": "Cosmic Eclipse",
+      "localId": "157",
+      "name": "Reshiram & Zekrom GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-170",
+      "set": "Cosmic Eclipse",
+      "localId": "170",
+      "name": "Ambipom",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-185",
+      "set": "Cosmic Eclipse",
+      "localId": "185",
+      "name": "Beastite",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-2",
+      "set": "Cosmic Eclipse",
+      "localId": "2",
+      "name": "Oddish",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-213",
+      "set": "Cosmic Eclipse",
+      "localId": "213",
+      "name": "Volcarona GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-228",
+      "set": "Cosmic Eclipse",
+      "localId": "228",
+      "name": "Cynthia & Caitlin",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-242",
+      "set": "Cosmic Eclipse",
+      "localId": "242",
+      "name": "Magnemite",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-257",
+      "set": "Cosmic Eclipse",
+      "localId": "257",
+      "name": "Alolan Persian GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-271",
+      "set": "Cosmic Eclipse",
+      "localId": "271",
+      "name": "Draw Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-40",
+      "set": "Cosmic Eclipse",
+      "localId": "40",
+      "name": "Psyduck",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-55",
+      "set": "Cosmic Eclipse",
+      "localId": "55",
+      "name": "Prinplup",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-7",
+      "set": "Cosmic Eclipse",
+      "localId": "7",
+      "name": "Sunkern",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-84",
+      "set": "Cosmic Eclipse",
+      "localId": "84",
+      "name": "Dusclops",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sm12-99",
+      "set": "Cosmic Eclipse",
+      "localId": "99",
+      "name": "Cosmog",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV1",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV1",
+      "name": "Scyther",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV14",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV14",
+      "name": "Xurkitree",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV2",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV2",
+      "name": "Rowlet",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV24",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV24",
+      "name": "Buzzwole",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV3",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV3",
+      "name": "Dartrix",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV34",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV34",
+      "name": "Ralts",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV4",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV4",
+      "name": "Wimpod",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV44",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV44",
+      "name": "Oranguru",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV5",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV5",
+      "name": "Pheromosa",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV54",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV54",
+      "name": "Articuno-GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV6",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV6",
+      "name": "Charmander",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV64",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV64",
+      "name": "Lucario-GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV7",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV7",
+      "name": "Charmeleon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV74",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV74",
+      "name": "Stakataka-GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV8",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV8",
+      "name": "Alolan Vulpix",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV84",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV84",
+      "name": "Guzma",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV9",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV9",
+      "name": "Wooper",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sma-SV94",
+      "set": "Hidden Fates Shiny Vault",
+      "localId": "SV94",
+      "name": "Tapu Lele-GX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sv08.5-176",
+      "set": "Prismatic Evolutions",
+      "localId": "176",
+      "name": "Iron Leaves ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sv08.5-177",
+      "set": "Prismatic Evolutions",
+      "localId": "177",
+      "name": "Teal Mask Ogerpon ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sv08.5-178",
+      "set": "Prismatic Evolutions",
+      "localId": "178",
+      "name": "Walking Wake ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sv08.5-179",
+      "set": "Prismatic Evolutions",
+      "localId": "179",
+      "name": "Pikachu ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sv08.5-180",
+      "set": "Prismatic Evolutions",
+      "localId": "180",
+      "name": "Terapagos ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "sv09-190",
+      "set": "Journey Together",
+      "localId": "190",
+      "name": "Spiky Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-005",
+      "set": "SVP Black Star Promos",
+      "localId": "005",
+      "name": "Quaquaval",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-006",
+      "set": "SVP Black Star Promos",
+      "localId": "006",
+      "name": "Pawmot",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-007",
+      "set": "SVP Black Star Promos",
+      "localId": "007",
+      "name": "Hawlucha",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-008",
+      "set": "SVP Black Star Promos",
+      "localId": "008",
+      "name": "Revavroom",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-019",
+      "set": "SVP Black Star Promos",
+      "localId": "019",
+      "name": "Baxcalibur",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-020",
+      "set": "SVP Black Star Promos",
+      "localId": "020",
+      "name": "Tinkaton",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-021",
+      "set": "SVP Black Star Promos",
+      "localId": "021",
+      "name": "Murkrow",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-022",
+      "set": "SVP Black Star Promos",
+      "localId": "022",
+      "name": "Pelipper",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-036",
+      "set": "SVP Black Star Promos",
+      "localId": "036",
+      "name": "Palafin",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-037",
+      "set": "SVP Black Star Promos",
+      "localId": "037",
+      "name": "Cleffa",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-038",
+      "set": "SVP Black Star Promos",
+      "localId": "038",
+      "name": "Togekiss",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-039",
+      "set": "SVP Black Star Promos",
+      "localId": "039",
+      "name": "Mawile",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-045",
+      "set": "SVP Black Star Promos",
+      "localId": "045",
+      "name": "Paradise Resort",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-057",
+      "set": "SVP Black Star Promos",
+      "localId": "057",
+      "name": "Chi-Yu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-058",
+      "set": "SVP Black Star Promos",
+      "localId": "058",
+      "name": "Iron Bundle",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-059",
+      "set": "SVP Black Star Promos",
+      "localId": "059",
+      "name": "Xatu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-060",
+      "set": "SVP Black Star Promos",
+      "localId": "060",
+      "name": "Aegislash",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-089",
+      "set": "SVP Black Star Promos",
+      "localId": "089",
+      "name": "Feraligatr",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-090",
+      "set": "SVP Black Star Promos",
+      "localId": "090",
+      "name": "Metang",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-091",
+      "set": "SVP Black Star Promos",
+      "localId": "091",
+      "name": "Koraidon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-092",
+      "set": "SVP Black Star Promos",
+      "localId": "092",
+      "name": "Miraidon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-101",
+      "set": "SVP Black Star Promos",
+      "localId": "101",
+      "name": "Pikachu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-115",
+      "set": "SVP Black Star Promos",
+      "localId": "115",
+      "name": "Thwackey",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-116",
+      "set": "SVP Black Star Promos",
+      "localId": "116",
+      "name": "Infernape",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-117",
+      "set": "SVP Black Star Promos",
+      "localId": "117",
+      "name": "Froslass",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-118",
+      "set": "SVP Black Star Promos",
+      "localId": "118",
+      "name": "Tatsugiri",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-133",
+      "set": "SVP Black Star Promos",
+      "localId": "133",
+      "name": "Ledian",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-134",
+      "set": "SVP Black Star Promos",
+      "localId": "134",
+      "name": "Crabominable",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-135",
+      "set": "SVP Black Star Promos",
+      "localId": "135",
+      "name": "Drifblim",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-136",
+      "set": "SVP Black Star Promos",
+      "localId": "136",
+      "name": "Bouffalant",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-150",
+      "set": "SVP Black Star Promos",
+      "localId": "150",
+      "name": "Paradise Resort",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-151",
+      "set": "SVP Black Star Promos",
+      "localId": "151",
+      "name": "Gouging Fire",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-152",
+      "set": "SVP Black Star Promos",
+      "localId": "152",
+      "name": "Chien-Pao",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-153",
+      "set": "SVP Black Star Promos",
+      "localId": "153",
+      "name": "Magneton",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-154",
+      "set": "SVP Black Star Promos",
+      "localId": "154",
+      "name": "Indeedee",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-181",
+      "set": "SVP Black Star Promos",
+      "localId": "181",
+      "name": "N's Darmanitan",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-182",
+      "set": "SVP Black Star Promos",
+      "localId": "182",
+      "name": "Iono's Kilowattrel",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-183",
+      "set": "SVP Black Star Promos",
+      "localId": "183",
+      "name": "Lillie's Ribombee",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-184",
+      "set": "SVP Black Star Promos",
+      "localId": "184",
+      "name": "Hop's Snorlax",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-191",
+      "set": "SVP Black Star Promos",
+      "localId": "191",
+      "name": "Sprigatito",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-192",
+      "set": "SVP Black Star Promos",
+      "localId": "192",
+      "name": "Fuecoco",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-213",
+      "set": "SVP Black Star Promos",
+      "localId": "213",
+      "name": "Feraligatr",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-214",
+      "set": "SVP Black Star Promos",
+      "localId": "214",
+      "name": "Pikachu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-215",
+      "set": "SVP Black Star Promos",
+      "localId": "215",
+      "name": "Toxtricity ex",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-224",
+      "set": "SVP Black Star Promos",
+      "localId": "224",
+      "name": "Paradise Resort",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-225",
+      "set": "SVP Black Star Promos",
+      "localId": "225",
+      "name": "Pikachu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "svp-500",
+      "set": "SVP Black Star Promos",
+      "localId": "500",
+      "name": "Terapagos & Friends",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-1",
+      "set": "Sword & Shield",
+      "localId": "1",
+      "name": "Celebi V",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-110",
+      "set": "Sword & Shield",
+      "localId": "110",
+      "name": "Sandaconda",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-121",
+      "set": "Sword & Shield",
+      "localId": "121",
+      "name": "Skorupi",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-133",
+      "set": "Sword & Shield",
+      "localId": "133",
+      "name": "Pawniard",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-145",
+      "set": "Sword & Shield",
+      "localId": "145",
+      "name": "Minccino",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-156",
+      "set": "Sword & Shield",
+      "localId": "156",
+      "name": "Air Balloon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-168",
+      "set": "Sword & Shield",
+      "localId": "168",
+      "name": "Lum Berry",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-18",
+      "set": "Sword & Shield",
+      "localId": "18",
+      "name": "Dottler",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-190",
+      "set": "Sword & Shield",
+      "localId": "190",
+      "name": "Morpeko V",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-201",
+      "set": "Sword & Shield",
+      "localId": "201",
+      "name": "Professor's Research (Professor Magnolia)",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-212",
+      "set": "Sword & Shield",
+      "localId": "212",
+      "name": "Zamazenta V",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-3",
+      "set": "Sword & Shield",
+      "localId": "3",
+      "name": "Roselia",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-41",
+      "set": "Sword & Shield",
+      "localId": "41",
+      "name": "Cloyster",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-52",
+      "set": "Sword & Shield",
+      "localId": "52",
+      "name": "Mantine",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-64",
+      "set": "Sword & Shield",
+      "localId": "64",
+      "name": "Frosmoth",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-76",
+      "set": "Sword & Shield",
+      "localId": "76",
+      "name": "Boltund",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-87",
+      "set": "Sword & Shield",
+      "localId": "87",
+      "name": "Munna",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swsh1-99",
+      "set": "Sword & Shield",
+      "localId": "99",
+      "name": "Rhyperior",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH006",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH006",
+      "name": "Rillaboom",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH007",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH007",
+      "name": "Frosmoth",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH008",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH008",
+      "name": "Galarian Perrserker",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH009",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH009",
+      "name": "Cinccino",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH022",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH022",
+      "name": "Flapple",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH023",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH023",
+      "name": "Luxray",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH024",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH024",
+      "name": "Coalossal",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH025",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH025",
+      "name": "Garbodor",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH035",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH035",
+      "name": "Decidueye",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH036",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH036",
+      "name": "Arctozolt",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH037",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH037",
+      "name": "Hydreigon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH038",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH038",
+      "name": "Kangaskhan",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH066",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH066",
+      "name": "Charizard",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH067",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH067",
+      "name": "Donphan",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH068",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH068",
+      "name": "Snorlax",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH069",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH069",
+      "name": "Lugia",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH088",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH088",
+      "name": "Cherrim",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH089",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH089",
+      "name": "Octillery",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH090",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH090",
+      "name": "Houndoom",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH091",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH091",
+      "name": "Bronzong",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH112",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH112",
+      "name": "Cinderace",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH113",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH113",
+      "name": "Inteleon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH114",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH114",
+      "name": "Cresselia",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH115",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH115",
+      "name": "Passimian",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH122",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH122",
+      "name": "Flaaffy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH123",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH123",
+      "name": "Galarian Articuno",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH124",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH124",
+      "name": "Galarian Zapdos",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH125",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH125",
+      "name": "Galarian Moltres",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH132",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH132",
+      "name": "Dragapult",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH133",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH133",
+      "name": "Lance's Charizard V",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH134",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH134",
+      "name": "Dark Sylveon V",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH136",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH136",
+      "name": "Mimikyu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH137",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH137",
+      "name": "Light Toxtricity",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH138",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH138",
+      "name": "Hydreigon C",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH153",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH153",
+      "name": "Pikachu",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH185",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH185",
+      "name": "Moltres",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH186",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH186",
+      "name": "Lucario",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH187",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH187",
+      "name": "Liepard",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH188",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH188",
+      "name": "Bibarel",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH205",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH205",
+      "name": "Hisuian Basculegion",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH206",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH206",
+      "name": "Wyrdeer",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH207",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH207",
+      "name": "Hisuian Samurott",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH208",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH208",
+      "name": "Magnezone",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH240",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH240",
+      "name": "Finneon",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH241",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH241",
+      "name": "Gengar",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH242",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH242",
+      "name": "Comfey",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH243",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH243",
+      "name": "Machamp",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH269",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH269",
+      "name": "Sunflora",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH270",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH270",
+      "name": "Rapidash",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH271",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH271",
+      "name": "Kirlia",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH272",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH272",
+      "name": "Archeops",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH296",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH296",
+      "name": "Champions Festival",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH303",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH303",
+      "name": "Bulbasaur",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH304",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH304",
+      "name": "Arcanine",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "swshp-SWSH305",
+      "set": "SWSH Black Star Promos",
+      "localId": "SWSH305",
+      "name": "Greninja",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-1",
+      "set": "XY",
+      "localId": "1",
+      "name": "Venusaur EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-107",
+      "set": "XY",
+      "localId": "107",
+      "name": "Bibarel",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-114",
+      "set": "XY",
+      "localId": "114",
+      "name": "Furfrou",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-122",
+      "set": "XY",
+      "localId": "122",
+      "name": "Professor Sycamore",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-13",
+      "set": "XY",
+      "localId": "13",
+      "name": "Quilladin",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-138",
+      "set": "XY",
+      "localId": "138",
+      "name": "Darkness Energy",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-145",
+      "set": "XY",
+      "localId": "145",
+      "name": "Skarmory EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-21",
+      "set": "XY",
+      "localId": "21",
+      "name": "Magcargo",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-29",
+      "set": "XY",
+      "localId": "29",
+      "name": "Blastoise EX",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-37",
+      "set": "XY",
+      "localId": "37",
+      "name": "Panpour",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-44",
+      "set": "XY",
+      "localId": "44",
+      "name": "Voltorb",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-52",
+      "set": "XY",
+      "localId": "52",
+      "name": "Whirlipede",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-6",
+      "set": "XY",
+      "localId": "6",
+      "name": "Ledyba",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-68",
+      "set": "XY",
+      "localId": "68",
+      "name": "Sableye",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-75",
+      "set": "XY",
+      "localId": "75",
+      "name": "Inkay",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-83",
+      "set": "XY",
+      "localId": "83",
+      "name": "Honedge",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-90",
+      "set": "XY",
+      "localId": "90",
+      "name": "Wigglytuff",
+      "reason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "xy1-99",
+      "set": "XY",
+      "localId": "99",
+      "name": "Dodrio",
+      "reason": "no explicit finish evidence"
+    }
+  ]
+}
