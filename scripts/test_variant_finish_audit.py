@@ -1164,7 +1164,7 @@ def source_semantic_details(card):
             if (f := canonical_row_finish(row, translate_localized=True))}
 
 
-def verified_stamped_identity_truth(card):
+def verified_stamped_identity_truth(card, mep_registry=None):
     """Return exact stamped-edition truth handled outside the unstamped matrix."""
     set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
     rows = card.get("variants_detailed") or []
@@ -1232,6 +1232,41 @@ def verified_stamped_identity_truth(card):
             and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == swshp_set_logo[card_id]
         ]
         return {"Holo"} if len(exact) == 1 else set()
+
+
+    if set_id == "mep" and isinstance(mep_registry, dict):
+        card_id = str(card.get("id") or card.get("tcgdexId") or "")
+        rule = mep_registry.get(card_id)
+        if not isinstance(rule, dict):
+            return set()
+        source_name = card.get("name")
+        if (
+            str(card.get("localId") or "") != str(rule.get("localId") or "")
+            or str(source_name or "") != str(rule.get("name") or "")
+        ):
+            return set()
+        expected = []
+        set_stamp_pid = int(rule.get("setStampProductId") or 0)
+        staff_pid = int(rule.get("staffProductId") or 0)
+        if set_stamp_pid:
+            expected.append((["setlogo"], set_stamp_pid))
+        if staff_pid:
+            expected.append((["setlogo", "staff"], staff_pid))
+        if not expected:
+            return set()
+        rows = card.get("variants_detailed") or []
+        for expected_stamps, expected_pid in expected:
+            exact = [
+                row for row in rows
+                if sorted(norm(x) for x in (row.get("stamp") or [])) == expected_stamps
+                and canonical_finish_type_label(row.get("type")) == "holo"
+                and not row.get("foil")
+                and str(row.get("size") or "standard").lower() == "standard"
+                and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == expected_pid
+            ]
+            if len(exact) != 1:
+                return set()
+        return {"Holo"}
 
     return set()
 
@@ -1624,6 +1659,9 @@ def main():
                     help="Run exact Quilava Play Series 9 finish checks plus the binding 39-card regression set only")
     args = ap.parse_args()
     source = INDEX.read_text()
+    mep_stamp_registry = extract_js_object(source, "VERIFIED_MEP_STAMP_PRODUCTS")
+    if len(mep_stamp_registry) != 19 or "mep-028" in mep_stamp_registry:
+        raise AssertionError("MEP stamped audit registry must contain exactly the 19 verified identities and exclude mep-028")
     required = [
         "documentedVariantsForCard", "addDetailedFinishes", "addModernStandardStructure",
         "addCoarseStandardFinishes", "addMarketplaceStandardFinishes", "syncVariantAvailability",
@@ -1897,7 +1935,7 @@ def main():
         locale_conflict = bool(it and truth != it_truth)
         proposed, reasons = proposed_standard(card, registries)
         classification, missing, extra, why = classify(card, truth, proposed, truth, locale_conflict)
-        stamped_truth = verified_stamped_identity_truth(en)
+        stamped_truth = verified_stamped_identity_truth(en, mep_stamp_registry)
         if classification == "AMBIGUA" and stamped_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2171,6 +2209,17 @@ def main():
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
         "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
         "mepExactStampAudit": mep_exact_stamp_audit,
+        "mepGenericAmbiguityClassification": {
+            "verifiedRegistryIdentities": len(mep_stamp_registry),
+            "classifiedCorrectIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in mep_stamp_registry
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedStampedFinishes") == ["Holo"]
+            ),
+            "excludedAceTrainerIdentity": "mep-028",
+            "productionModified": False,
+        },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
         "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
         "verifiedNormalResidualAudit": {
