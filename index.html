@@ -4096,6 +4096,69 @@ function verifiedSwshp25thStandardFinishes(card,stamp){
   return tcgdexExactSwshp25thStandardRow(card)?['Holo']:[];
 }
 
+const VERIFIED_MEP_STAMP_PRODUCTS={
+  'mep-001':{localId:'001',name:'Meganium',setStampProductId:851043,staffProductId:851044},
+  'mep-002':{localId:'002',name:'Inteleon',setStampProductId:851045,staffProductId:851046},
+  'mep-003':{localId:'003',name:'Alakazam',setStampProductId:851047,staffProductId:851048},
+  'mep-004':{localId:'004',name:'Lunatone',setStampProductId:851049,staffProductId:851050},
+  'mep-014':{localId:'014',name:'Ceruledge',setStampProductId:857390,staffProductId:859014},
+  'mep-015':{localId:'015',name:'Zacian',setStampProductId:857393,staffProductId:859015},
+  'mep-016':{localId:'016',name:'Flygon',setStampProductId:857396,staffProductId:859016},
+  'mep-017':{localId:'017',name:'Toxtricity',setStampProductId:857400,staffProductId:859018},
+  'mep-065':{localId:'065',name:'Barbaracle',setStampProductId:877544,staffProductId:879305},
+  'mep-066':{localId:'066',name:'Tyrantrum',setStampProductId:877545,staffProductId:879315},
+  'mep-067':{localId:'067',name:'Doublade',setStampProductId:877546,staffProductId:879312},
+  'mep-074':{localId:'074',name:'Delphox',setStampProductId:884752,staffProductId:884753},
+  'mep-075':{localId:'075',name:'Ampharos',setStampProductId:884754,staffProductId:884755},
+  'mep-076':{localId:'076',name:'Crobat',setStampProductId:884756,staffProductId:884757},
+  'mep-077':{localId:'077',name:'Goodra',setStampProductId:884758,staffProductId:884759},
+  'mep-082':{localId:'082',name:'Miraidon',setStampProductId:894261},
+  'mep-083':{localId:'083',name:'Slowbro',setStampProductId:894262},
+  'mep-084':{localId:'084',name:'Dhelmise',setStampProductId:894263},
+  'mep-085':{localId:'085',name:'Bastiodon',setStampProductId:894264}
+};
+function verifiedMepStampRule(card,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_MEP_STAMP_PRODUCTS[id];
+  if(!rule||cardSetId(card)!=='mep'||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||
+     normText(card?.name||'')!==normText(rule.name))return null;
+  const st=canonicalStamp(stamp);
+  if(st==='Set Stamp'&&Number(rule.setStampProductId)>0)return {...rule,stamp:'Set Stamp',productId:Number(rule.setStampProductId)};
+  if(st==='Staff'&&Number(rule.staffProductId)>0)return {...rule,stamp:'Staff',productId:Number(rule.staffProductId)};
+  return null;
+}
+function tcgdexExactMepStampRow(card,stamp){
+  const rule=verifiedMepStampRule(card,stamp);if(!rule)return null;
+  const expected=rule.stamp==='Set Stamp'?['setlogo']:['setlogo','staff'];
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText).sort();
+    const pid=Number(row?.thirdParty?.cardmarket||0);
+    return stamps.length===expected.length&&stamps.every((v,i)=>v===expected[i])&&
+      canonicalFinishTypeLabel(row?.type)==='holo'&&
+      !canonicalFinishFoilLabel(row?.foil)&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard'&&
+      pid===rule.productId;
+  });
+  return rows.length===1?rows[0]:null;
+}
+function verifiedMepStampFinishes(card,stamp){
+  return tcgdexExactMepStampRow(card,stamp)?['Holo']:[];
+}
+function tcgdexExactMepStampPrice(card,variant,stamp){
+  if(canonicalVariant(variant||'Normal')!=='Holo')return null;
+  const rule=verifiedMepStampRule(card,stamp);if(!rule)return null;
+  const row=tcgdexExactMepStampRow(card,stamp);if(!row)return null;
+  const cm=row?.pricing?.cardmarket;
+  const pid=Number(row?.thirdParty?.cardmarket||0);
+  const ppid=Number(cm?.idProduct||cm?.id_product||0);
+  if(!cm||pid!==rule.productId||ppid!==rule.productId)return null;
+  const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k]||0)>0);
+  if(!usable)return null;
+  return {...cm,idProduct:rule.productId,
+    source:`TCGdex · Cardmarket · MEP ${rule.localId} · ${rule.stamp} · prodotto esatto ${rule.productId}`};
+}
+
 const VERIFIED_SWSHP_SET_LOGO_PRODUCTS={
   'swshp-SWSH168':{localId:'SWSH168',name:'Oricorio',productId:580165},
   'swshp-SWSH169':{localId:'SWSH169',name:'Pyukumuku',productId:580166},
@@ -4231,6 +4294,7 @@ function stampExistsForCard(card,stamp){
   if(st==='MFB Poké Ball')return !!tcgdexExactMfbPokeballRow(card);
   if(st==="McDonald's")return !!tcgdexExactMcdonaldsStampRow(card);
   if(st==='25° Anniversario')return !!tcgdexMcdonalds2021AnniversaryRows(card)||!!tcgdexExactSwshp25thStandardRow(card);
+  if((st==='Set Stamp'||st==='Staff')&&verifiedMepStampRule(card,st))return !!tcgdexExactMepStampRow(card,st);
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
 }
@@ -4942,6 +5006,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   for(const finish of verifiedMcdonalds2021AnniversaryFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshp25thStandardFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshpSetLogoFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedMepStampFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
@@ -5772,6 +5837,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(swshp25Exact)return swshp25Exact;
   const swshpSetLogo=tcgdexExactSwshpSetLogoPrice(card,variant,stamp);
   if(swshpSetLogo)return swshpSetLogo;
+  const mepExact=tcgdexExactMepStampPrice(card,variant,stamp);
+  if(mepExact)return mepExact;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
