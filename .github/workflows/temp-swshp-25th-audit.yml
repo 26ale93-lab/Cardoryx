@@ -1,0 +1,132 @@
+name: TEMP SWSH Promo 25th Audit
+
+on:
+  push:
+    branches:
+      - audit/swshp-25th-promos-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Build exact SWSH 25th evidence
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          from pathlib import Path
+
+          targets={
+            "swshp-SWSH062","swshp-SWSH132","swshp-SWSH133","swshp-SWSH134",
+            "swshp-SWSH135","swshp-SWSH136","swshp-SWSH137","swshp-SWSH138",
+            "swshp-SWSH143","swshp-SWSH144","swshp-SWSH145","swshp-SWSH146",
+          }
+
+          found={}
+          root=Path("../tcgdex-cards-database")
+          for path in root.rglob("*.json"):
+            try:
+              data=json.loads(path.read_text())
+            except Exception:
+              continue
+            objs=[data] if isinstance(data,dict) else (data if isinstance(data,list) else [])
+            for card in objs:
+              if isinstance(card,dict) and card.get("id") in targets:
+                found[card["id"]]={"path":str(path.relative_to(root)),"card":card}
+          assert set(found)==targets, (targets-set(found))
+
+          def load(url):
+            req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-SWSH25-Audit/1.0"})
+            with urllib.request.urlopen(req,timeout=300) as r:
+              return json.load(r)
+
+          prod_raw=load("https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json")
+          price_raw=load("https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json")
+          products=prod_raw if isinstance(prod_raw,list) else prod_raw.get("products",[])
+          prices=price_raw if isinstance(price_raw,list) else (price_raw.get("priceGuides") or price_raw.get("priceGuide") or [])
+
+          pids=set()
+          rows=[]
+          for cid in sorted(targets):
+            card=found[cid]["card"]
+            detailed=[]
+            for row in card.get("variants_detailed") or []:
+              stamps=row.get("stamp") or []
+              typ=str(row.get("type") or "")
+              pid=int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+              cm=(row.get("pricing") or {}).get("cardmarket") or {}
+              if [str(x).lower() for x in stamps]==["25th-celebration"]:
+                detailed.append({
+                  "type":typ,
+                  "stamp":stamps,
+                  "languages":row.get("languages"),
+                  "size":row.get("size"),
+                  "thirdPartyProductId":pid,
+                  "pricingProductId":int(cm.get("idProduct") or cm.get("id_product") or 0),
+                  "pricing":cm,
+                  "raw":row,
+                })
+                if pid: pids.add(pid)
+            rows.append({
+              "tcgdexId":cid,
+              "name":(card.get("name") or {}).get("en") if isinstance(card.get("name"),dict) else card.get("name"),
+              "localId":card.get("localId"),
+              "rarity":card.get("rarity"),
+              "detailed":detailed,
+            })
+
+          bypid={int(x["idProduct"]):x for x in products if x.get("idProduct") in pids}
+          priceby={int(x["idProduct"]):x for x in prices if x.get("idProduct") in pids}
+
+          for row in rows:
+            for d in row["detailed"]:
+              pid=d["thirdPartyProductId"]
+              d["cardmarketProduct"]=bypid.get(pid)
+              d["officialPriceGuide"]=priceby.get(pid)
+
+          out={
+            "targets":len(targets),
+            "rows":rows,
+            "distinctSourceProductIds":len(pids),
+            "allSourceProductIds":sorted(pids),
+          }
+          Path("temp_swshp_25th_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+            "targets":out["targets"],
+            "distinctSourceProductIds":out["distinctSourceProductIds"],
+            "rows":[
+              {
+                "id":x["tcgdexId"],"name":x["name"],
+                "variants":[
+                  {
+                    "type":d["type"],
+                    "languages":d["languages"],
+                    "pid":d["thirdPartyProductId"],
+                    "pricingPid":d["pricingProductId"],
+                    "catalog":d["cardmarketProduct"],
+                  } for d in x["detailed"]
+                ],
+              } for x in rows
+            ]
+          },ensure_ascii=False))
+          PY
+
+      - name: Record audit
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_swshp_25th_evidence.json
+          git commit -m "TEMP record SWSH promo 25th evidence"
+          git push
