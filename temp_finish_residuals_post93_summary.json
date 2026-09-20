@@ -1,0 +1,678 @@
+{
+  "summary": {
+    "totalIdentitiesTested": 4254,
+    "italianRecordsUnavailable": 2546,
+    "classifications": {
+      "CORRETTA": 3842,
+      "FALSO POSITIVO": 0,
+      "FALSO NEGATIVO": 0,
+      "AMBIGUA": 404,
+      "SOURCE CONFLICT": 8
+    },
+    "pricingP0": 0,
+    "playVariantRowsSeen": 261,
+    "unavailableExplicitTargets": [
+      "mee-009",
+      "mee-010",
+      "mee-011",
+      "mee-012",
+      "mee-013",
+      "mee-014",
+      "mee-015",
+      "mee-016"
+    ]
+  },
+  "ambiguousCount": 404,
+  "topAmbiguousSets": [
+    [
+      "SWSH Black Star Promos",
+      65
+    ],
+    [
+      "SVP Black Star Promos",
+      47
+    ],
+    [
+      "My First Battle",
+      34
+    ],
+    [
+      "McDonald's Collection 2021",
+      25
+    ],
+    [
+      "MEP Black Star Promos",
+      20
+    ],
+    [
+      "Black & White",
+      18
+    ],
+    [
+      "Legendary Treasures",
+      18
+    ],
+    [
+      "Generations",
+      18
+    ],
+    [
+      "Sun & Moon",
+      18
+    ],
+    [
+      "Cosmic Eclipse",
+      18
+    ],
+    [
+      "Hidden Fates Shiny Vault",
+      18
+    ],
+    [
+      "Sword & Shield",
+      18
+    ],
+    [
+      "XY",
+      18
+    ],
+    [
+      "Fossil",
+      14
+    ],
+    [
+      "McDonald's Collection 2012",
+      12
+    ],
+    [
+      "McDonald's Collection 2014",
+      12
+    ],
+    [
+      "Nintendo Black Star Promos",
+      10
+    ],
+    [
+      "Wizards Black Star Promos",
+      6
+    ],
+    [
+      "Prismatic Evolutions",
+      5
+    ],
+    [
+      "DP Black Star Promos",
+      3
+    ],
+    [
+      "Best of game",
+      2
+    ],
+    [
+      "Celebrations Classic Collection",
+      2
+    ],
+    [
+      "Hidden Legends",
+      1
+    ],
+    [
+      "HGSS Black Star Promos",
+      1
+    ],
+    [
+      "Journey Together",
+      1
+    ]
+  ],
+  "topReasons": [
+    [
+      "no explicit finish evidence",
+      404
+    ]
+  ],
+  "mcd2012_2014": {
+    "expectedIdentities": 24,
+    "verifiedIdentities": 24,
+    "sets": {
+      "2012bw": 12,
+      "2014xy": 12
+    },
+    "finish": "Holo",
+    "stamp": "McDonald's",
+    "oneExactPhysicalRowPerIdentity": true,
+    "uniqueProductIds": 24,
+    "runtime": {
+      "tested": 24,
+      "allExact": true,
+      "wrongSetRejected": true,
+      "wrongStampRejected": true,
+      "wrongFinishRejected": true
+    },
+    "identities": [
+      {
+        "tcgdexId": "2012bw-1",
+        "setId": "2012bw",
+        "localId": "1",
+        "productId": 281778,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-10",
+        "setId": "2012bw",
+        "localId": "10",
+        "productId": 281787,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-11",
+        "setId": "2012bw",
+        "localId": "11",
+        "productId": 281788,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-12",
+        "setId": "2012bw",
+        "localId": "12",
+        "productId": 281789,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-2",
+        "setId": "2012bw",
+        "localId": "2",
+        "productId": 281779,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-3",
+        "setId": "2012bw",
+        "localId": "3",
+        "productId": 281780,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-4",
+        "setId": "2012bw",
+        "localId": "4",
+        "productId": 281781,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-5",
+        "setId": "2012bw",
+        "localId": "5",
+        "productId": 281782,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-6",
+        "setId": "2012bw",
+        "localId": "6",
+        "productId": 281783,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-7",
+        "setId": "2012bw",
+        "localId": "7",
+        "productId": 281784,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-8",
+        "setId": "2012bw",
+        "localId": "8",
+        "productId": 281785,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2012bw-9",
+        "setId": "2012bw",
+        "localId": "9",
+        "productId": 281786,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-1",
+        "setId": "2014xy",
+        "localId": "1",
+        "productId": 281653,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-10",
+        "setId": "2014xy",
+        "localId": "10",
+        "productId": 281662,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-11",
+        "setId": "2014xy",
+        "localId": "11",
+        "productId": 281663,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-12",
+        "setId": "2014xy",
+        "localId": "12",
+        "productId": 281664,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-2",
+        "setId": "2014xy",
+        "localId": "2",
+        "productId": 281654,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-3",
+        "setId": "2014xy",
+        "localId": "3",
+        "productId": 281655,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-4",
+        "setId": "2014xy",
+        "localId": "4",
+        "productId": 281656,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-5",
+        "setId": "2014xy",
+        "localId": "5",
+        "productId": 281657,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-6",
+        "setId": "2014xy",
+        "localId": "6",
+        "productId": 281658,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-7",
+        "setId": "2014xy",
+        "localId": "7",
+        "productId": 281659,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-8",
+        "setId": "2014xy",
+        "localId": "8",
+        "productId": 281660,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      },
+      {
+        "tcgdexId": "2014xy-9",
+        "setId": "2014xy",
+        "localId": "9",
+        "productId": 281661,
+        "finish": "Holo",
+        "stamp": "McDonald's"
+      }
+    ],
+    "scope": "only 2012bw and 2014xy; no rule for other McDonald's releases"
+  },
+  "mcd2021": {
+    "expectedCards": 25,
+    "verifiedCards": 25,
+    "physicalRows": 50,
+    "registryProducts": 50,
+    "finishPair": [
+      "Normal",
+      "Holo"
+    ],
+    "stamp": "25° Anniversario",
+    "sourceProductConflicts": [
+      {
+        "tcgdexId": "2021swsh-5",
+        "finish": "Normal",
+        "sourceProductId": 538808,
+        "registryProductId": 538818
+      },
+      {
+        "tcgdexId": "2021swsh-16",
+        "finish": "Normal",
+        "sourceProductId": 538918,
+        "registryProductId": 538928
+      },
+      {
+        "tcgdexId": "2021swsh-21",
+        "finish": "Normal",
+        "sourceProductId": 538968,
+        "registryProductId": 538978
+      },
+      {
+        "tcgdexId": "2021swsh-21",
+        "finish": "Holo",
+        "sourceProductId": 538978,
+        "registryProductId": 538983
+      }
+    ],
+    "runtime": {
+      "testedCards": 25,
+      "testedPrices": 50,
+      "wrongSetRejected": true,
+      "wrongStampRejected": true,
+      "reverseRejected": true,
+      "priceParity": true,
+      "migrationPreservesFinish": true
+    },
+    "identities": [
+      {
+        "tcgdexId": "2021swsh-1",
+        "setId": "2021swsh",
+        "localId": "1",
+        "name": "Bulbasaur",
+        "normalProductId": 538778,
+        "holoProductId": 538783
+      },
+      {
+        "tcgdexId": "2021swsh-2",
+        "setId": "2021swsh",
+        "localId": "2",
+        "name": "Chikorita",
+        "normalProductId": 538788,
+        "holoProductId": 538793
+      },
+      {
+        "tcgdexId": "2021swsh-3",
+        "setId": "2021swsh",
+        "localId": "3",
+        "name": "Treecko",
+        "normalProductId": 538798,
+        "holoProductId": 538803
+      },
+      {
+        "tcgdexId": "2021swsh-4",
+        "setId": "2021swsh",
+        "localId": "4",
+        "name": "Turtwig",
+        "normalProductId": 538808,
+        "holoProductId": 538813
+      },
+      {
+        "tcgdexId": "2021swsh-5",
+        "setId": "2021swsh",
+        "localId": "5",
+        "name": "Snivy",
+        "normalProductId": 538818,
+        "holoProductId": 538823
+      },
+      {
+        "tcgdexId": "2021swsh-6",
+        "setId": "2021swsh",
+        "localId": "6",
+        "name": "Chespin",
+        "normalProductId": 538828,
+        "holoProductId": 538833
+      },
+      {
+        "tcgdexId": "2021swsh-7",
+        "setId": "2021swsh",
+        "localId": "7",
+        "name": "Rowlet",
+        "normalProductId": 538838,
+        "holoProductId": 538843
+      },
+      {
+        "tcgdexId": "2021swsh-8",
+        "setId": "2021swsh",
+        "localId": "8",
+        "name": "Grookey",
+        "normalProductId": 538848,
+        "holoProductId": 538853
+      },
+      {
+        "tcgdexId": "2021swsh-9",
+        "setId": "2021swsh",
+        "localId": "9",
+        "name": "Charmander",
+        "normalProductId": 538858,
+        "holoProductId": 538863
+      },
+      {
+        "tcgdexId": "2021swsh-10",
+        "setId": "2021swsh",
+        "localId": "10",
+        "name": "Cyndaquil",
+        "normalProductId": 538868,
+        "holoProductId": 538873
+      },
+      {
+        "tcgdexId": "2021swsh-11",
+        "setId": "2021swsh",
+        "localId": "11",
+        "name": "Torchic",
+        "normalProductId": 538878,
+        "holoProductId": 538883
+      },
+      {
+        "tcgdexId": "2021swsh-12",
+        "setId": "2021swsh",
+        "localId": "12",
+        "name": "Chimchar",
+        "normalProductId": 538888,
+        "holoProductId": 538893
+      },
+      {
+        "tcgdexId": "2021swsh-13",
+        "setId": "2021swsh",
+        "localId": "13",
+        "name": "Tepig",
+        "normalProductId": 538898,
+        "holoProductId": 538903
+      },
+      {
+        "tcgdexId": "2021swsh-14",
+        "setId": "2021swsh",
+        "localId": "14",
+        "name": "Fennekin",
+        "normalProductId": 538908,
+        "holoProductId": 538913
+      },
+      {
+        "tcgdexId": "2021swsh-15",
+        "setId": "2021swsh",
+        "localId": "15",
+        "name": "Litten",
+        "normalProductId": 538918,
+        "holoProductId": 538923
+      },
+      {
+        "tcgdexId": "2021swsh-16",
+        "setId": "2021swsh",
+        "localId": "16",
+        "name": "Scorbunny",
+        "normalProductId": 538928,
+        "holoProductId": 538933
+      },
+      {
+        "tcgdexId": "2021swsh-17",
+        "setId": "2021swsh",
+        "localId": "17",
+        "name": "Squirtle",
+        "normalProductId": 538938,
+        "holoProductId": 538943
+      },
+      {
+        "tcgdexId": "2021swsh-18",
+        "setId": "2021swsh",
+        "localId": "18",
+        "name": "Totodile",
+        "normalProductId": 538948,
+        "holoProductId": 538953
+      },
+      {
+        "tcgdexId": "2021swsh-19",
+        "setId": "2021swsh",
+        "localId": "19",
+        "name": "Mudkip",
+        "normalProductId": 538958,
+        "holoProductId": 538963
+      },
+      {
+        "tcgdexId": "2021swsh-20",
+        "setId": "2021swsh",
+        "localId": "20",
+        "name": "Piplup",
+        "normalProductId": 538968,
+        "holoProductId": 538973
+      },
+      {
+        "tcgdexId": "2021swsh-21",
+        "setId": "2021swsh",
+        "localId": "21",
+        "name": "Oshawott",
+        "normalProductId": 538978,
+        "holoProductId": 538983
+      },
+      {
+        "tcgdexId": "2021swsh-22",
+        "setId": "2021swsh",
+        "localId": "22",
+        "name": "Froakie",
+        "normalProductId": 538988,
+        "holoProductId": 538993
+      },
+      {
+        "tcgdexId": "2021swsh-23",
+        "setId": "2021swsh",
+        "localId": "23",
+        "name": "Popplio",
+        "normalProductId": 538998,
+        "holoProductId": 539003
+      },
+      {
+        "tcgdexId": "2021swsh-24",
+        "setId": "2021swsh",
+        "localId": "24",
+        "name": "Sobble",
+        "normalProductId": 539008,
+        "holoProductId": 539013
+      },
+      {
+        "tcgdexId": "2021swsh-25",
+        "setId": "2021swsh",
+        "localId": "25",
+        "name": "Pikachu",
+        "normalProductId": 539018,
+        "holoProductId": 539023
+      }
+    ],
+    "scope": "only setId 2021swsh; TCGdex proves physical stamp/finish, Cardmarket registry proves product/price"
+  },
+  "pricing": {
+    "proposedFinishRoutes": {
+      "numeric": 4,
+      "failClosed": 0,
+      "noSnapshotPrice": 5806
+    },
+    "wrongPhysicalProductRisks": [],
+    "resolvedExactReverseProductConflicts": [
+      {
+        "tcgdexId": "pl2-102",
+        "name": "Upper Energy",
+        "set": "Rising Rivals",
+        "finish": "Reverse Holo",
+        "usedProduct": 278676,
+        "documentedProducts": [
+          450453
+        ],
+        "value": 0.79,
+        "reason": "generic base-product *-holo slot conflicts with exact Reverse product identity",
+        "failClosed": true,
+        "guardKind": "exact-identity-current-product"
+      },
+      {
+        "tcgdexId": "pl3-26",
+        "name": "Dusknoir FB",
+        "set": "Supreme Victors",
+        "finish": "Reverse Holo",
+        "usedProduct": 371552,
+        "documentedProducts": [
+          278717
+        ],
+        "value": 0.61,
+        "reason": "generic base-product *-holo slot conflicts with exact Reverse product identity",
+        "failClosed": true,
+        "guardKind": "exact-identity-current-product"
+      },
+      {
+        "tcgdexId": "pl3-5",
+        "name": "Garchomp",
+        "set": "Supreme Victors",
+        "finish": "Reverse Holo",
+        "usedProduct": 449568,
+        "documentedProducts": [
+          278696
+        ],
+        "value": 6.09,
+        "reason": "generic base-product *-holo slot conflicts with exact Reverse product identity",
+        "failClosed": true,
+        "guardKind": "exact-identity-current-product"
+      },
+      {
+        "tcgdexId": "pl3-59",
+        "name": "Gabite",
+        "set": "Supreme Victors",
+        "finish": "Reverse Holo",
+        "usedProduct": 449558,
+        "documentedProducts": [
+          278750
+        ],
+        "value": 1.17,
+        "reason": "generic base-product *-holo slot conflicts with exact Reverse product identity",
+        "failClosed": true,
+        "guardKind": "exact-identity-current-product"
+      },
+      {
+        "tcgdexId": "pl3-83",
+        "name": "Skarmory FB",
+        "set": "Supreme Victors",
+        "finish": "Reverse Holo",
+        "usedProduct": 371550,
+        "documentedProducts": [
+          278774
+        ],
+        "value": 0.5,
+        "reason": "generic base-product *-holo slot conflicts with exact Reverse product identity",
+        "failClosed": true,
+        "guardKind": "exact-identity-current-product"
+      }
+    ],
+    "assessment": "5 confirmed P0 conflicts now fail closed; 0 unresolved P0 risks remain. Numeric current standard Price Guide fields are not stored in the upstream Git snapshot; live access is limited to this exact mismatch candidate set. Local verified registries and the Play index are evaluated numerically where available."
+  }
+}
