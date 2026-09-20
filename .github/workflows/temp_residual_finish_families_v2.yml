@@ -1,0 +1,116 @@
+name: TEMP Residual Finish Families V2
+
+on:
+  push:
+    branches:
+      - diagnostic/residual-finish-families-20260920-v2
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout TCGdex cards database
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+
+      - name: Run full finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+
+      - name: Diagnose residual families
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, re
+          from collections import Counter, defaultdict
+          from pathlib import Path
+
+          report=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          spec=importlib.util.spec_from_file_location("vfa","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          cards, errors, sha=mod.load_official_database(Path("tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+          source=Path("index.html").read_text()
+
+          amb=[x for x in report.get("issuesByPriority",[]) if x.get("classification")=="AMBIGUA"]
+          prefixes=Counter((x.get("tcgdexId") or "").split("-",1)[0] for x in amb)
+
+          registry_names=sorted(set(re.findall(r"\bconst\s+(VERIFIED_[A-Z0-9_]+)\s*=",source)))
+          registries={}
+          for name in registry_names:
+              try:
+                  obj=mod.extract_js_object(source,name)
+              except Exception:
+                  continue
+              if isinstance(obj,dict):
+                  registries[name]=obj
+
+          def compact_row(row):
+              pcm=((row.get("pricing") or {}).get("cardmarket") or {})
+              return {
+                  "type":row.get("type"),
+                  "foil":row.get("foil"),
+                  "subtype":row.get("subtype"),
+                  "stamp":row.get("stamp"),
+                  "size":row.get("size"),
+                  "cm":(row.get("thirdParty") or {}).get("cardmarket"),
+                  "pricingCm":pcm.get("idProduct") or pcm.get("id_product"),
+              }
+
+          target={}
+          for prefix in ("mfb","swshp","svp"):
+              issues=[x for x in amb if (x.get("tcgdexId") or "").split("-",1)[0]==prefix]
+              rows=[]
+              for issue in issues:
+                  cid=issue.get("tcgdexId")
+                  raw=by_id.get(cid,{})
+                  hits=[name for name,obj in registries.items() if cid in obj]
+                  rows.append({
+                      "id":cid,
+                      "name":issue.get("name"),
+                      "set":issue.get("set"),
+                      "localId":issue.get("localId"),
+                      "reason":issue.get("reason"),
+                      "rarity":raw.get("rarity"),
+                      "coarse":raw.get("variants"),
+                      "variantRows":[compact_row(v) for v in (raw.get("variants_detailed") or [])],
+                      "registryHits":hits,
+                  })
+              target[prefix]={
+                  "count":len(issues),
+                  "withDetailed":sum(bool(r["variantRows"]) for r in rows),
+                  "withCoarse":sum(bool(r["coarse"]) for r in rows),
+                  "withRegistryHits":sum(bool(r["registryHits"]) for r in rows),
+                  "rarities":dict(Counter(str(r["rarity"]) for r in rows)),
+                  "registryCandidates":[r for r in rows if r["registryHits"]],
+                  "explicitRows":[r for r in rows if r["variantRows"]],
+                  "allMfb":rows if prefix=="mfb" else [],
+              }
+
+          out={
+              "summary":report["summary"],
+              "tcgdexSha":sha,
+              "ambiguousCount":len(amb),
+              "prefixCounts":prefixes.most_common(),
+              "targets":target,
+          }
+          Path("artifacts/residual_finish_families_v2.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-finish-families-v2
+          path: |
+            artifacts/variant_finish_audit_report.json
+            artifacts/residual_finish_families_v2.json
