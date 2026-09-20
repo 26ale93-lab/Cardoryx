@@ -1,0 +1,593 @@
+{
+  "tcgdexSha": "46e7d514d534d38257914a5ffee54c17849f72c3",
+  "ambiguousMEP": 20,
+  "rows": [
+    {
+      "tcgdexId": "mep-001",
+      "name": "Meganium",
+      "localId": "001",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851043
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851044
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-002",
+      "name": "Inteleon",
+      "localId": "002",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851045
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851046
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-003",
+      "name": "Alakazam",
+      "localId": "003",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851047
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851048
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-004",
+      "name": "Lunatone",
+      "localId": "004",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851049
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 851050
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-014",
+      "name": "Ceruledge",
+      "localId": "014",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 857390
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 859014
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-015",
+      "name": "Zacian",
+      "localId": "015",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 857393
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 859015
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-016",
+      "name": "Flygon",
+      "localId": "016",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 857396
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 859016
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-017",
+      "name": "Toxtricity",
+      "localId": "017",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 857400
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 859018
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-028",
+      "name": "Celebratory Fanfare",
+      "localId": "028",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "ace-trainer"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 850977
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-065",
+      "name": "Barbaracle",
+      "localId": "065",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 877544
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 879305
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-066",
+      "name": "Tyrantrum",
+      "localId": "066",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 877545
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 879315
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-067",
+      "name": "Doublade",
+      "localId": "067",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 877546
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 879312
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-074",
+      "name": "Delphox",
+      "localId": "074",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884752
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884753
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-075",
+      "name": "Ampharos",
+      "localId": "075",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884754
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884755
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-076",
+      "name": "Crobat",
+      "localId": "076",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884756
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884757
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-077",
+      "name": "Goodra",
+      "localId": "077",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884758
+        },
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo",
+            "staff"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 884759
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-082",
+      "name": "Miraidon",
+      "localId": "082",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 894261
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-083",
+      "name": "Slowbro",
+      "localId": "083",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 894262
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-084",
+      "name": "Dhelmise",
+      "localId": "084",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 894263
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    },
+    {
+      "tcgdexId": "mep-085",
+      "name": "Bastiodon",
+      "localId": "085",
+      "rarity": "Promo",
+      "variants": {},
+      "physicalRows": [
+        {
+          "type": "holo",
+          "foil": null,
+          "stamp": [
+            "set-logo"
+          ],
+          "size": null,
+          "languages": null,
+          "cardmarketProductId": 894264
+        }
+      ],
+      "manualRegistry": null,
+      "issueReason": "no explicit finish evidence"
+    }
+  ],
+  "withDetailedRows": 20,
+  "withManualRegistry": 0
+}
