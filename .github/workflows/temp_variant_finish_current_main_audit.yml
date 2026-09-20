@@ -40,12 +40,55 @@ jobs:
           if not p.exists():
               raise SystemExit("report missing")
           r = json.loads(p.read_text())
+          from collections import Counter, defaultdict
+          issues = [x for x in (r.get("issuesByPriority") or []) if x.get("classification") == "AMBIGUA"]
+          cards = {x.get("tcgdexId"): x for x in (r.get("cards") or [])}
+          reason_counts = Counter(x.get("reason") or "(none)" for x in issues)
+          set_counts = Counter((cards.get(x.get("tcgdexId")) or {}).get("setId") or "(none)" for x in issues)
+          metadata = Counter()
+          stamp_counts = Counter()
+          examples = defaultdict(list)
+          for issue in issues:
+              c = cards.get(issue.get("tcgdexId")) or {}
+              rows = c.get("variants_detailed") or []
+              coarse = c.get("variants")
+              if rows:
+                  bucket = "with_variants_detailed"
+              elif coarse:
+                  bucket = "coarse_flags_only"
+              else:
+                  bucket = "no_finish_metadata"
+              metadata[bucket] += 1
+              for st in c.get("stamp") or []:
+                  stamp_counts[str(st)] += 1
+              key = issue.get("reason") or "(none)"
+              if len(examples[key]) < 8:
+                  examples[key].append({
+                      "id": issue.get("tcgdexId"),
+                      "setId": c.get("setId"),
+                      "name": issue.get("name"),
+                      "localId": issue.get("localId"),
+                      "stamps": c.get("stamp"),
+                      "rows": len(rows),
+                  })
+          mep_ids = {v.get("tcgdexId") for v in ((r.get("mepExactStampAudit") or {}).get("variants") or [])}
+          ambiguous_mep = sorted(x.get("tcgdexId") for x in issues if x.get("tcgdexId") in mep_ids)
           print(json.dumps({
               "summary": r.get("summary"),
               "mcdonalds2021": r.get("mcdonalds2021AnniversaryAudit"),
               "mep": r.get("mepExactStampAudit"),
               "issuesByPriorityCount": len(r.get("issuesByPriority") or []),
               "mustRemainToVerifyCount": len(r.get("mustRemainToVerify") or []),
+              "ambiguousDiagnostics": {
+                  "count": len(issues),
+                  "metadataBuckets": dict(metadata),
+                  "topReasons": reason_counts.most_common(20),
+                  "topSets": set_counts.most_common(25),
+                  "stampTokens": stamp_counts.most_common(20),
+                  "ambiguousVerifiedMepIds": ambiguous_mep,
+                  "ambiguousVerifiedMepCount": len(ambiguous_mep),
+                  "examplesByReason": dict(examples),
+              }
           }, ensure_ascii=False, indent=2))
           PY
 
