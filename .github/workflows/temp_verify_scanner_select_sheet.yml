@@ -1,0 +1,28 @@
+name: TEMP Verify Scanner Select Sheet
+on:
+  push:
+    branches: [fix/scanner-select-sheet-ios-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Static interaction gates
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("index.html").read_text()
+          assert "function openScannerSelectSheet(select)" in s
+          assert "function installScannerSelectSheets()" in s
+          for x in ["'variant'","'stamp'","'playSeries'","'status'","'condition'"]: assert x in s
+          assert "pointerdown" in s and "pointerType==='touch'" in s
+          assert "select.dispatchEvent(new Event('change',{bubbles:true}))" in s
+          assert "if(!edit && selectable.length===1)" in s
+          assert "scanner-select-sheet" in s
+          print("SCANNER_SELECT_SHEET_OK")
+          PY
+      - name: No protected data files changed
+        run: |
+          git diff --name-only origin/main...HEAD
+          test "$(git diff --name-only origin/main...HEAD)" = "index.html"
