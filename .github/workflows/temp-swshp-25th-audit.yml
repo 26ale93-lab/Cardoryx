@@ -33,17 +33,12 @@ jobs:
             "swshp-SWSH143","swshp-SWSH144","swshp-SWSH145","swshp-SWSH146",
           }
 
-          found={}
-          root=Path("../tcgdex-cards-database")
-          for path in root.rglob("*.json"):
-            try:
-              data=json.loads(path.read_text())
-            except Exception:
-              continue
-            objs=[data] if isinstance(data,dict) else (data if isinstance(data,list) else [])
-            for card in objs:
-              if isinstance(card,dict) and card.get("id") in targets:
-                found[card["id"]]={"path":str(path.relative_to(root)),"card":card}
+          import importlib.util
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards,parse_errors,db_sha=mod.load_official_database(Path("../tcgdex-cards-database"))
+          found={card["id"]:{"path":"normalized","card":card} for card in cards if card.get("id") in targets}
           assert set(found)==targets, (targets-set(found))
 
           def load(url):
