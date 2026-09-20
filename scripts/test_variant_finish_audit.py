@@ -408,6 +408,7 @@ function verifiedMcdonaldsStampFinishes(){return [];}
 function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
 function verifiedSwshp25thStandardFinishes(){return [];}
 function verifiedSwshpSetLogoFinishes(){return [];}
+function verifiedSwshpSetLogoStaffFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
@@ -996,6 +997,146 @@ process.stdout.write(JSON.stringify({tested:cards.length,allExact:true,wrongSetR
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
 
+def audit_swshp_set_logo_staff(cards, source):
+    registry = extract_js_object(source, "VERIFIED_SWSHP_SET_LOGO_STAFF_PRODUCTS")
+    if len(registry) != 44:
+        raise AssertionError(f"SWSH Set Logo + Staff registry expected 44 identities, found {len(registry)}")
+
+    by_id = {card["id"]: card for card in cards}
+    verified = []
+    for cid, rule in registry.items():
+        card = by_id.get(cid)
+        if not card:
+            raise AssertionError(f"SWSH Set Logo + Staff source identity missing: {cid}")
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if ((card.get("set") or {}).get("id") != "swshp" or
+            str(card.get("localId")) != str(rule.get("localId")) or
+            str(source_name) != str(rule.get("name"))):
+            raise AssertionError(f"SWSH Set Logo + Staff identity mismatch: {cid}")
+
+        rows = []
+        for row in card.get("variants_detailed") or []:
+            stamps = sorted(norm(x) for x in (row.get("stamp") or []))
+            if "setlogo" not in stamps:
+                continue
+            if canonical_finish_type_label(row.get("type")) != "holo" or row.get("foil"):
+                continue
+            if str(row.get("size") or "standard").lower() == "jumbo":
+                continue
+            rows.append((stamps, row))
+
+        base = [row for stamps, row in rows if stamps == ["setlogo"]]
+        staff = [row for stamps, row in rows if stamps == ["setlogo", "staff"]]
+        if len(base) != 1 or len(staff) != 1:
+            raise AssertionError(f"SWSH Set Logo + Staff pair changed: {cid}")
+
+        base_pid = int(((base[0].get("thirdParty") or {}).get("cardmarket")) or 0)
+        staff_pid = int(((staff[0].get("thirdParty") or {}).get("cardmarket")) or 0)
+        expected_pid = int(rule.get("productId") or 0)
+        if base_pid != expected_pid or expected_pid <= 0:
+            raise AssertionError(f"SWSH Set Logo exact product mismatch: {cid}")
+        if staff_pid != 0:
+            raise AssertionError(f"SWSH Staff unexpectedly gained a Cardmarket product: {cid}")
+
+        verified.append({
+            "tcgdexId": cid,
+            "localId": rule.get("localId"),
+            "name": rule.get("name"),
+            "setStampProductId": expected_pid,
+            "staffProductId": staff_pid,
+        })
+
+    runtime = run_swshp_set_logo_staff_runtime(source, by_id, registry)
+    if runtime.get("tested") != 44 or runtime.get("setStampPriced") != 44 or runtime.get("staffUnpriced") != 44:
+        raise AssertionError("SWSH Set Logo + Staff production runtime regression failed")
+
+    return {
+        "verifiedIdentities": len(verified),
+        "setStampFinish": "Holo",
+        "staffFinish": "Holo",
+        "setStampPriced": 44,
+        "staffUnpriced": 44,
+        "runtime": runtime,
+        "identities": verified,
+        "scope": "exact 44-card registry only; Set Stamp has exact price, Staff remains physical-only / no automatic price",
+    }
+
+
+def run_swshp_set_logo_staff_runtime(source, by_id, registry):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "canonicalPrintedLocalId", "printedLocalIdParts",
+        "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
+        "verifiedSwshpSetLogoStaffRule", "tcgdexExactSwshpSetLogoStaffRows",
+        "verifiedSwshpSetLogoStaffFinishes", "tcgdexExactSwshpSetLogoStaffPrice",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    fixtures = []
+    for cid, rule in registry.items():
+        card = by_id[cid]
+        detailed = json.loads(json.dumps(card.get("variants_detailed") or []))
+        for row in detailed:
+            stamps = sorted(norm(x) for x in (row.get("stamp") or []))
+            if stamps == ["setlogo"]:
+                row["pricing"] = {"cardmarket": {
+                    "idProduct": int(rule["productId"]),
+                    "trend": 1.23,
+                    "low": 0.5,
+                    "updated": "runtime-fixture",
+                }}
+            elif stamps == ["setlogo", "staff"]:
+                row.pop("pricing", None)
+                if isinstance(row.get("thirdParty"), dict):
+                    row["thirdParty"].pop("cardmarket", None)
+        fixtures.append({
+            "id": cid, "tcgdexId": cid, "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "swshp"},
+            "variants_detailed": detailed,
+        })
+
+    js = (
+        "const VERIFIED_SWSHP_SET_LOGO_STAFF_PRODUCTS="
+        + json.dumps(registry, ensure_ascii=False) + ";\n"
+        + functions + "\n"
+        + r'''
+const cards=__FIXTURES__;
+function fail(msg){throw new Error(msg);}
+let setStampPriced=0,staffUnpriced=0;
+for(const card of cards){
+  const pair=tcgdexExactSwshpSetLogoStaffRows(card);
+  if(!pair||!pair.base||!pair.staff)fail('physical pair missing '+card.id);
+
+  const setFinishes=verifiedSwshpSetLogoStaffFinishes(card,'Set Stamp');
+  const staffFinishes=verifiedSwshpSetLogoStaffFinishes(card,'Staff');
+  if(setFinishes.length!==1||setFinishes[0]!=='Holo')fail('Set Stamp finish mismatch '+card.id);
+  if(staffFinishes.length!==1||staffFinishes[0]!=='Holo')fail('Staff finish mismatch '+card.id);
+
+  const expected=Number(VERIFIED_SWSHP_SET_LOGO_STAFF_PRODUCTS[card.id].productId);
+  const setPrice=tcgdexExactSwshpSetLogoStaffPrice(card,'Holo','Set Stamp');
+  if(!setPrice||Number(setPrice.idProduct)!==expected||Number(setPrice.trend)!==1.23)fail('Set Stamp price mismatch '+card.id);
+  setStampPriced++;
+
+  if(tcgdexExactSwshpSetLogoStaffPrice(card,'Holo','Staff')!==null)fail('Staff inherited Set Stamp price '+card.id);
+  staffUnpriced++;
+
+  if(tcgdexExactSwshpSetLogoStaffPrice(card,'Normal','Set Stamp')!==null)fail('Normal leaked '+card.id);
+  const wrong={...card,set:{id:'wrong-set'}};
+  if(tcgdexExactSwshpSetLogoStaffRows(wrong)!==null)fail('wrong set leaked '+card.id);
+}
+const outsider={...cards[0],id:'swshp-SWSH999',tcgdexId:'swshp-SWSH999',localId:'SWSH999'};
+if(tcgdexExactSwshpSetLogoStaffRows(outsider)!==null)fail('outside identity inherited rule');
+process.stdout.write(JSON.stringify({
+  tested:cards.length,setStampPriced,staffUnpriced,
+  setStampHolo:true,staffHolo:true,
+  staffPriceFailClosed:true,wrongSetRejected:true,wrongFinishRejected:true,outsideIdentityRejected:true
+}));
+'''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
+    )
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
 def stratified(items, count):
     if len(items) <= count:
         return items
@@ -1551,12 +1692,17 @@ def main():
         "status": "not-run",
         "reason": "full cards-database snapshot required",
     }
+    swshp_set_logo_staff_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     if args.tcgdex_db:
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
         mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
         mcdonalds_2021_25th_audit = audit_mcdonalds_2021_25th_source(all_cards, source)
         swshp_25th_standard_audit = audit_swshp_25th_standard_promos(all_cards, source)
         swshp_set_logo_168_171_audit = audit_swshp_set_logo_168_171(all_cards, source)
+        swshp_set_logo_staff_audit = audit_swshp_set_logo_staff(all_cards, source)
         grouped = defaultdict(list)
         for c in all_cards: grouped[(c.get("set") or {}).get("id")].append(c)
         sample, era_by_id = [], {}
@@ -1963,6 +2109,7 @@ def main():
         "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
         "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
+        "swshpSetLogoStaffAudit": swshp_set_logo_staff_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
             "recoveredIdentities": len(normal_registry_applied_ids),
