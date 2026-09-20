@@ -4096,6 +4096,37 @@ function verifiedSwshp25thStandardFinishes(card,stamp){
   return tcgdexExactSwshp25thStandardRow(card)?['Holo']:[];
 }
 
+const VERIFIED_SWSHP_SET_LOGO_PRODUCTS={
+  'swshp-SWSH168':{localId:'SWSH168',name:'Oricorio',productId:580165},
+  'swshp-SWSH169':{localId:'SWSH169',name:'Pyukumuku',productId:580166},
+  'swshp-SWSH170':{localId:'SWSH170',name:'Deoxys',productId:580167},
+  'swshp-SWSH171':{localId:'SWSH171',name:'Latias',productId:580168}
+};
+function verifiedSwshpSetLogoRule(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_SWSHP_SET_LOGO_PRODUCTS[id];
+  if(!rule||cardSetId(card)!=='swshp'||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||
+     normText(card?.name||'')!==normText(rule.name))return null;
+  return rule;
+}
+function tcgdexExactSwshpSetLogoRow(card){
+  const rule=verifiedSwshpSetLogoRule(card);if(!rule)return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.length===1&&stamps[0]==='setlogo'&&
+      canonicalFinishTypeLabel(row?.type)==='holo'&&
+      !canonicalFinishFoilLabel(row?.foil)&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard'&&
+      Number(row?.thirdParty?.cardmarket||0)===rule.productId;
+  });
+  return rows.length===1?rows[0]:null;
+}
+function verifiedSwshpSetLogoFinishes(card,stamp){
+  if(canonicalStamp(stamp)!=='Set Stamp')return [];
+  return tcgdexExactSwshpSetLogoRow(card)?['Holo']:[];
+}
+
 const VERIFIED_MFB_POKEBALL_ROWS={
   'mfb-1':{setId:'mfb',localId:'1',name:'Bulbasaur',deckToken:'bulbasaur',baseProductId:741976,pokeballProductId:741975},
   'mfb-8':{setId:'mfb',localId:'8',name:'Grass Energy',deckToken:'bulbasaur',baseProductId:741986,pokeballProductId:741985},
@@ -4224,6 +4255,11 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
   }
   if(tcgdexExactSwshp25thStandardRow(card) && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
     sel.value='25° Anniversario';
+    const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
+    if(ps)ps.value='';
+  }
+  if(tcgdexExactSwshpSetLogoRow(card) && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
+    sel.value='Set Stamp';
     const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
     if(ps)ps.value='';
   }
@@ -4905,6 +4941,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   for(const finish of verifiedMcdonaldsStampFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMcdonalds2021AnniversaryFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshp25thStandardFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedSwshpSetLogoFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
@@ -5700,6 +5737,20 @@ function tcgdexExactSwshp25thStandardPrice(card,variant,stamp){
     source:`TCGdex · Cardmarket · SWSH Promo 25° Anniversario · prodotto standard esatto ${rule.productId}`};
 }
 
+function tcgdexExactSwshpSetLogoPrice(card,variant,stamp){
+  if(canonicalStamp(stamp)!=='Set Stamp'||canonicalVariant(variant||'Normal')!=='Holo')return null;
+  const rule=verifiedSwshpSetLogoRule(card);if(!rule)return null;
+  const row=tcgdexExactSwshpSetLogoRow(card);if(!row)return null;
+  const cm=row?.pricing?.cardmarket;
+  const pid=Number(row?.thirdParty?.cardmarket||0);
+  const ppid=Number(cm?.idProduct||cm?.id_product||0);
+  if(!cm||pid!==rule.productId||ppid!==rule.productId)return null;
+  const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k]||0)>0);
+  if(!usable)return null;
+  return {...cm,idProduct:rule.productId,
+    source:`TCGdex · Cardmarket · SWSH Promo Set Stamp · prodotto esatto ${rule.productId}`};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
@@ -5719,6 +5770,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(mcd2021Exact)return mcd2021Exact;
   const swshp25Exact=tcgdexExactSwshp25thStandardPrice(card,variant,stamp);
   if(swshp25Exact)return swshp25Exact;
+  const swshpSetLogo=tcgdexExactSwshpSetLogoPrice(card,variant,stamp);
+  if(swshpSetLogo)return swshpSetLogo;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
