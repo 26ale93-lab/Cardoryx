@@ -21,6 +21,15 @@ jobs:
           r=json.load(open("artifacts/report.json"))
           print("SUMMARY",r["summary"])
           print("TOP_KEYS",list(r))
+          mr=r.get("mustRemainToVerify") or []
+          ambmr=[x for x in mr if isinstance(x,dict) and x.get("classification")=="AMBIGUA"]
+          print("MUST_AMBIG",len(ambmr))
+          reasons=collections.Counter(x.get("reason") for x in ambmr); print("MUST_REASONS",reasons)
+          gg=collections.defaultdict(list)
+          for x in ambmr:
+            cid=x.get("tcgdexId") or "?"
+            gg[cid.split("-")[0]].append(cid)
+          for g,ids in sorted(gg.items()): print("MUST_GROUP",g,len(ids),ids)
           for key,val in r.items():
             if isinstance(val,dict) and "exceptions" in val:
               ex=val.get("exceptions") or []
