@@ -113,6 +113,119 @@ jobs:
           print(json.dumps(out,ensure_ascii=False))
           PY
 
+      - name: Verify exact MEP Set Stamp and Staff variants
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request
+          from pathlib import Path
+
+          evidence=json.loads(Path("temp_mep_finish_residual_evidence.json").read_text())
+          exact=[]
+          for card in evidence["rows"]:
+              cid=card["tcgdexId"]
+              for row in card["physicalRows"]:
+                  stamps=sorted(str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or []))
+                  typ=str(row.get("type") or "").lower()
+                  pid=int(row.get("cardmarketProductId") or 0)
+                  if typ!="holo" or row.get("foil") or pid<=0:
+                      continue
+                  if stamps==["setlogo"]:
+                      exact.append({"tcgdexId":cid,"kind":"Set Stamp","productId":pid})
+                  elif stamps==["setlogo","staff"]:
+                      exact.append({"tcgdexId":cid,"kind":"Staff","productId":pid})
+
+          set_rows=[x for x in exact if x["kind"]=="Set Stamp"]
+          staff_rows=[x for x in exact if x["kind"]=="Staff"]
+          assert len(set_rows)==19, len(set_rows)
+          assert len(staff_rows)==15, len(staff_rows)
+          assert len({x["productId"] for x in exact})==34, exact
+
+          def load(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-MEP-Finish-Audit/1.0"})
+              with urllib.request.urlopen(req,timeout=300) as r:
+                  return json.load(r)
+
+          products_raw=load("https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json")
+          prices_raw=load("https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json")
+          products=products_raw if isinstance(products_raw,list) else products_raw.get("products",[])
+          prices=prices_raw if isinstance(prices_raw,list) else (prices_raw.get("priceGuides") or prices_raw.get("priceGuide") or [])
+          wanted={x["productId"] for x in exact}
+          product_map={int(x["idProduct"]):x for x in products if x.get("idProduct") in wanted}
+          price_map={int(x["idProduct"]):x for x in prices if x.get("idProduct") in wanted}
+          assert set(product_map)==wanted, sorted(wanted-set(product_map))
+          assert set(price_map)==wanted, sorted(wanted-set(price_map))
+
+          failures=[]
+          usable=0
+          live_checked=0
+          for item in exact:
+              pid=item["productId"]
+              guide=price_map[pid]
+              if any(isinstance(guide.get(k),(int,float)) and guide.get(k)>0 for k in ("trend","avg7","avg30","avg","low")):
+                  usable+=1
+              else:
+                  failures.append({**item,"reason":"no_cardmarket_price"})
+
+          # Live TCGdex row must still point to the same Cardmarket product and its pricing row.
+          by_card={}
+          for x in exact: by_card.setdefault(x["tcgdexId"],[]).append(x)
+          for cid,items in by_card.items():
+              data=None; err=None
+              for attempt in range(4):
+                  try:
+                      data=load(f"https://api.tcgdex.net/v2/en/cards/{cid}")
+                      break
+                  except Exception as exc:
+                      err=repr(exc); time.sleep(1+attempt)
+              if not data:
+                  failures.append({"tcgdexId":cid,"reason":"live_unavailable","error":err})
+                  continue
+              rows=data.get("variants_detailed") or []
+              for item in items:
+                  expected_stamps=["setlogo"] if item["kind"]=="Set Stamp" else ["setlogo","staff"]
+                  matches=[]
+                  for row in rows:
+                      stamps=sorted(str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or []))
+                      if stamps!=expected_stamps or str(row.get("type") or "").lower()!="holo" or row.get("foil"):
+                          continue
+                      row_pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+                      cm=(row.get("pricing") or {}).get("cardmarket") or {}
+                      pricing_pid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+                      matches.append((row_pid,pricing_pid,cm))
+                  if len(matches)!=1:
+                      failures.append({**item,"reason":"live_row_count","count":len(matches)})
+                      continue
+                  row_pid,pricing_pid,cm=matches[0]
+                  if row_pid!=item["productId"] or pricing_pid!=item["productId"]:
+                      failures.append({**item,"reason":"live_product_mismatch","row":row_pid,"pricing":pricing_pid})
+                      continue
+                  live_checked+=1
+
+          out={
+              "setStampVariants":len(set_rows),
+              "staffVariants":len(staff_rows),
+              "totalExactVariants":len(exact),
+              "distinctProductIds":len(wanted),
+              "cardmarketUsablePriceRows":usable,
+              "liveRowsChecked":live_checked,
+              "failures":failures,
+              "variants":exact,
+          }
+          Path("temp_mep_exact_stamp_variants.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False))
+          assert not failures, failures
+          assert usable==34 and live_checked==34, out
+          PY
+
+      - name: Record exact stamp verification
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_mep_exact_stamp_variants.json
+          git commit -m "TEMP record exact MEP stamp variants"
+          git push
+
       - name: Record evidence
         if: github.event_name == 'push'
         run: |
