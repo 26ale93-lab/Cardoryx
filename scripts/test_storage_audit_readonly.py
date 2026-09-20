@@ -13,6 +13,9 @@ required = [
     "recordDiff:diffRecords",
     "localMatchesMigrationSource",
     "indexedDbMatchesMigrationSource",
+    "compactAnalysis",
+    "Copia riepilogo compatto",
+    "Delta quantità sui record comuni",
 ]
 for token in required:
     assert token in text, f"missing required token: {token}"
