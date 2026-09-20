@@ -13,8 +13,12 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s=Path("index.html").read_text()
-          assert "await refreshOfficialPlayAvailability(selectedCard,false,false);" not in s
-          assert "refreshOfficialPlayAvailability(selectedCard,false);\n  renderScanValue(selectedCard);" in s
+          start=s.index("async function chooseCard")
+          end=s.index("function inferCategory",start)
+          choose=s[start:end]
+          assert "await refreshOfficialPlayAvailability(selectedCard,false,false);" not in choose
+          assert "refreshOfficialPlayAvailability(selectedCard,false);" in choose
+          assert "renderScanValue(selectedCard);" in choose
           assert "if(!edit && physical.length===1)" in s
           assert "sel.value=physical[0].value;" in s
           assert "sel.dispatchEvent(new Event('change'" not in s[s.index("function syncVariantAvailability"):s.index("function syncVariantAvailability")+2200]
