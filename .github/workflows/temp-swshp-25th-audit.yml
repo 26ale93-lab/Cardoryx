@@ -117,6 +117,67 @@ jobs:
           },ensure_ascii=False))
           PY
 
+      - name: Verify live standard-size pricing
+        run: |
+          python3 - <<'PY'
+          import json,time,urllib.request
+          from pathlib import Path
+          evidence=json.loads(Path("temp_swshp_25th_evidence.json").read_text())
+          out=[]
+          failures=[]
+          for item in evidence["rows"]:
+              cid=item["tcgdexId"]
+              standard=[x for x in item["detailed"] if str(x.get("size") or "standard").lower()!="jumbo"]
+              if len(standard)!=1:
+                  failures.append({"id":cid,"reason":"standard_row_count","count":len(standard)})
+                  continue
+              expected=int(standard[0]["thirdPartyProductId"])
+              data=None
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(
+                          f"https://api.tcgdex.net/v2/en/cards/{cid}",
+                          headers={"User-Agent":"Cardoryx-SWSH25-Live/1.0"},
+                      )
+                      with urllib.request.urlopen(req,timeout=60) as r:
+                          data=json.load(r)
+                      break
+                  except Exception:
+                      time.sleep(1+attempt)
+              if not data:
+                  failures.append({"id":cid,"reason":"api_unavailable"});continue
+              rows=[]
+              for row in data.get("variants_detailed") or []:
+                  stamps=[str(x).lower() for x in (row.get("stamp") or [])]
+                  if stamps!=["25th-celebration"] or str(row.get("type") or "").lower()!="holo":
+                      continue
+                  if str(row.get("size") or "standard").lower()=="jumbo":
+                      continue
+                  pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+                  cm=(row.get("pricing") or {}).get("cardmarket") or {}
+                  ppid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+                  rows.append({"pid":pid,"pricingPid":ppid,"pricing":cm})
+              if len(rows)!=1:
+                  failures.append({"id":cid,"reason":"live_standard_row_count","rows":rows});continue
+              row=rows[0]
+              if row["pid"]!=expected:
+                  failures.append({"id":cid,"reason":"live_product_mismatch","expected":expected,"actual":row["pid"]});continue
+              usable=any(isinstance(row["pricing"].get(k),(int,float)) and row["pricing"].get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+              top=(data.get("pricing") or {}).get("cardmarket") or {}
+              out.append({
+                  "id":cid,
+                  "expectedProductId":expected,
+                  "rowPricingProductId":row["pricingPid"],
+                  "rowUsablePrice":usable,
+                  "topLevelProductId":int(top.get("idProduct") or top.get("id_product") or 0),
+                  "topLevelUsablePrice":any(isinstance(top.get(k),(int,float)) and top.get(k)>0 for k in ("trend","avg7","avg30","avg","low")),
+              })
+          summary={"checked":len(out),"failures":failures,"rows":out}
+          Path("temp_swshp_25th_live.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print(json.dumps(summary,ensure_ascii=False))
+          assert len(out)==12 and not failures, summary
+          PY
+
       - name: Record audit
         if: github.event_name == 'push'
         run: |
