@@ -4061,6 +4061,41 @@ function verifiedMcdonalds2021AnniversaryFinishes(card,stamp){
   return tcgdexMcdonalds2021AnniversaryRows(card)?['Normal','Holo']:[];
 }
 
+const VERIFIED_SWSHP_25TH_STANDARD_PRODUCTS={
+  'swshp-SWSH062':{localId:'SWSH062',name:'Pikachu VMAX',productId:576730},
+  'swshp-SWSH135':{localId:'SWSH135',name:'Zacian',productId:576734},
+  'swshp-SWSH143':{localId:'SWSH143',name:'Pikachu V',productId:576742},
+  'swshp-SWSH144':{localId:'SWSH144',name:'Greninja ☆',productId:576743},
+  'swshp-SWSH145':{localId:'SWSH145',name:'Pikachu V',productId:576744},
+  'swshp-SWSH146':{localId:'SWSH146',name:'Poké Ball',productId:576745}
+};
+function verifiedSwshp25thStandardRule(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_SWSHP_25TH_STANDARD_PRODUCTS[id];
+  if(!rule||cardSetId(card)!=='swshp'||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||
+     normText(card?.name||'')!==normText(rule.name))return null;
+  return rule;
+}
+function tcgdexExactSwshp25thStandardRow(card){
+  const rule=verifiedSwshp25thStandardRule(card);if(!rule)return null;
+  const stamped=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.length===1&&stamps[0]==='25thcelebration'&&
+      canonicalFinishTypeLabel(row?.type)==='holo'&&
+      !canonicalFinishFoilLabel(row?.foil);
+  });
+  if(stamped.length!==1)return null;
+  const row=stamped[0];
+  const pid=Number(row?.thirdParty?.cardmarket||0);
+  if(String(row?.size||'standard').trim().toLowerCase()==='jumbo'||pid!==rule.productId)return null;
+  return row;
+}
+function verifiedSwshp25thStandardFinishes(card,stamp){
+  if(canonicalStamp(stamp)!=='25° Anniversario')return [];
+  return tcgdexExactSwshp25thStandardRow(card)?['Holo']:[];
+}
+
 const VERIFIED_MFB_POKEBALL_ROWS={
   'mfb-1':{setId:'mfb',localId:'1',name:'Bulbasaur',deckToken:'bulbasaur',baseProductId:741976,pokeballProductId:741975},
   'mfb-8':{setId:'mfb',localId:'8',name:'Grass Energy',deckToken:'bulbasaur',baseProductId:741986,pokeballProductId:741985},
@@ -4164,7 +4199,7 @@ function stampExistsForCard(card,stamp){
   }
   if(st==='MFB Poké Ball')return !!tcgdexExactMfbPokeballRow(card);
   if(st==="McDonald's")return !!tcgdexExactMcdonaldsStampRow(card);
-  if(st==='25° Anniversario')return !!tcgdexMcdonalds2021AnniversaryRows(card);
+  if(st==='25° Anniversario')return !!tcgdexMcdonalds2021AnniversaryRows(card)||!!tcgdexExactSwshp25thStandardRow(card);
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
 }
@@ -4183,6 +4218,11 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
     if(ps)ps.value='';
   }
   if(tcgdexMcdonalds2021AnniversaryRows(card)){
+    sel.value='25° Anniversario';
+    const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
+    if(ps)ps.value='';
+  }
+  if(tcgdexExactSwshp25thStandardRow(card) && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
     sel.value='25° Anniversario';
     const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
     if(ps)ps.value='';
@@ -4864,6 +4904,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   for(const finish of verifiedSpecialStampFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMcdonaldsStampFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMcdonalds2021AnniversaryFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedSwshp25thStandardFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
@@ -5645,6 +5686,20 @@ function tcgdexExactMcdonalds2021AnniversaryPrice(card,variant,stamp){
     source:`Cardmarket · McDonald's Collection 2021 · 25° Anniversario · ${target} · prodotto esatto ${productId}`};
 }
 
+function tcgdexExactSwshp25thStandardPrice(card,variant,stamp){
+  if(canonicalStamp(stamp)!=='25° Anniversario'||canonicalVariant(variant||'Normal')!=='Holo')return null;
+  const rule=verifiedSwshp25thStandardRule(card);if(!rule)return null;
+  const row=tcgdexExactSwshp25thStandardRow(card);if(!row)return null;
+  const cm=row?.pricing?.cardmarket;
+  const pid=Number(row?.thirdParty?.cardmarket||0);
+  const ppid=Number(cm?.idProduct||cm?.id_product||0);
+  if(!cm||pid!==rule.productId||ppid!==rule.productId)return null;
+  const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k]||0)>0);
+  if(!usable)return null;
+  return {...cm,idProduct:rule.productId,
+    source:`TCGdex · Cardmarket · SWSH Promo 25° Anniversario · prodotto standard esatto ${rule.productId}`};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
@@ -5662,6 +5717,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(mcdExact)return mcdExact;
   const mcd2021Exact=tcgdexExactMcdonalds2021AnniversaryPrice(card,variant,stamp);
   if(mcd2021Exact)return mcd2021Exact;
+  const swshp25Exact=tcgdexExactSwshp25thStandardPrice(card,variant,stamp);
+  if(swshp25Exact)return swshp25Exact;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
