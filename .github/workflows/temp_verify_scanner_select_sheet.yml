@@ -24,5 +24,10 @@ jobs:
           PY
       - name: No protected data files changed
         run: |
-          git diff --name-only origin/main...HEAD
-          test "$(git diff --name-only origin/main...HEAD | grep -v '^.github/workflows/temp_verify_scanner_select_sheet.yml)" = "index.html"
+          python3 - <<'PY'
+          import subprocess
+          files=set(subprocess.check_output(["git","diff","--name-only","origin/main...HEAD"],text=True).splitlines())
+          assert files <= {"index.html",".github/workflows/temp_verify_scanner_select_sheet.yml"}, files
+          assert "index.html" in files
+          print("SCOPE_OK",sorted(files))
+          PY
