@@ -1347,6 +1347,43 @@ def verified_legacy_checklist_truth(card, legacy_registry):
     return {finish} if finish in {"Normal", "Holo"} else set()
 
 
+VERIFIED_CELEBRATIONS_STANDARD_HOLO = {
+    "swshp-SWSH132": {"setId":"swshp","localId":"SWSH132","name":"Dragapult","productId":576731},
+    "swshp-SWSH133": {"setId":"swshp","localId":"SWSH133","name":"Lance's Charizard V","productId":576732},
+    "swshp-SWSH134": {"setId":"swshp","localId":"SWSH134","name":"Dark Sylveon V","productId":576733},
+    "swshp-SWSH136": {"setId":"swshp","localId":"SWSH136","name":"Mimikyu","productId":576735},
+    "swshp-SWSH137": {"setId":"swshp","localId":"SWSH137","name":"Light Toxtricity","productId":576736},
+    "swshp-SWSH138": {"setId":"swshp","localId":"SWSH138","name":"Hydreigon C","productId":576737},
+}
+
+def verified_celebrations_standard_holo_truth(card):
+    """Exact Standard-size 25th Celebration Holo evidence for six verified SWSH promos only."""
+    cid=str(card.get("id") or card.get("tcgdexId") or "")
+    rule=VERIFIED_CELEBRATIONS_STANDARD_HOLO.get(cid)
+    if not isinstance(rule,dict):
+        return set()
+    set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
+    if (
+        set_id!=rule["setId"]
+        or str(card.get("localId") or "")!=rule["localId"]
+        or norm(card.get("name") or "")!=norm(rule["name"])
+    ):
+        return set()
+    rows=[]
+    for row in card.get("variants_detailed") or []:
+        stamps=[norm(x) for x in (row.get("stamp") or [])]
+        pid=int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+        if (
+            canonical_finish_type_label(row.get("type"))=="holo"
+            and not row.get("foil")
+            and stamps==["25thcelebration"]
+            and str(row.get("size") or "standard").lower()=="standard"
+            and pid==rule["productId"]
+        ):
+            rows.append(row)
+    return {"Holo"} if len(rows)==1 else set()
+
+
 def simulate_italian_rest_payload(card):
     """Apply live-verified IT enum translations used by the REST endpoint."""
     out = dict(card)
@@ -2028,7 +2065,8 @@ def main():
             en, mep_stamp_registry, mfb_pokeball_registry, worlds_stamp_registry
         )
         legacy_truth = verified_legacy_checklist_truth(en, fossil_checklist_registry)
-        specialized_truth = stamped_truth | legacy_truth
+        celebrations_standard_truth = verified_celebrations_standard_holo_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2036,6 +2074,8 @@ def main():
                 "exact stamped edition handled by dedicated verified stamp path"
                 if stamped_truth else
                 "exact Fossil Holo/Normal identity handled by verified checklist path"
+                if legacy_truth else
+                "exact Celebrations Standard-size Holo promo handled by verified Standard/Jumbo path"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2078,6 +2118,7 @@ def main():
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
             "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
+            "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2343,6 +2384,19 @@ def main():
                 "worldsRegistry": len(worlds_stamp_registry),
                 "fossilChecklistRegistry": len(fossil_checklist_registry),
             },
+            "productionModified": False,
+        },
+        "celebrationsStandardHoloClassification": {
+            "expectedIdentities": len(VERIFIED_CELEBRATIONS_STANDARD_HOLO),
+            "classifiedCorrectIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in VERIFIED_CELEBRATIONS_STANDARD_HOLO
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedCelebrationsStandardFinishes") == ["Holo"]
+            ),
+            "finish": "Holo",
+            "stamp": "25th-celebration",
+            "size": "standard",
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
