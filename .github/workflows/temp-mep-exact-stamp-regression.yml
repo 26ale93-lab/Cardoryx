@@ -1,0 +1,151 @@
+name: TEMP MEP Exact Stamp Regression
+
+on:
+  push:
+    branches:
+      - feature/mep-exact-set-staff-stamps-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/mep_exact_stamp_report.json             --workers 24
+
+      - name: Verify permanent MEP regression
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/mep_exact_stamp_report.json").read_text())
+          a=r["mepExactStampAudit"]
+          assert a["verifiedCards"] == 19, a
+          assert a["verifiedVariants"] == 34, a
+          assert a["distinctProductIds"] == 34, a
+          assert a["setStampVariants"] == 19, a
+          assert a["staffVariants"] == 15, a
+          assert a["excludedAceTrainerIdentity"] == "mep-028", a
+          assert a["runtime"]["testedCards"] == 19, a
+          assert a["runtime"]["testedVariants"] == 34, a
+          assert a["runtime"]["wrongSetRejected"] is True, a
+          assert a["runtime"]["wrongFinishRejected"] is True, a
+          assert a["runtime"]["outsideIdentityRejected"] is True, a
+          assert r["summary"]["classifications"]["FALSO POSITIVO"] == 0, r["summary"]
+          assert r["summary"]["classifications"]["FALSO NEGATIVO"] == 0, r["summary"]
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+          print(json.dumps({
+            "summary":r["summary"],
+            "mepExactStampAudit":{
+              "verifiedCards":a["verifiedCards"],
+              "verifiedVariants":a["verifiedVariants"],
+              "setStampVariants":a["setStampVariants"],
+              "staffVariants":a["staffVariants"],
+              "runtime":a["runtime"],
+            }
+          },ensure_ascii=False))
+          PY
+
+      - name: Live verify 34 MEP stamped rows
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, time, urllib.request
+          from pathlib import Path
+
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          source=Path("index.html").read_text()
+          registry=mod.extract_js_object(source,"VERIFIED_MEP_STAMP_PRODUCTS")
+
+          expected=[]
+          for cid,rule in registry.items():
+              if int(rule.get("setStampProductId") or 0)>0:
+                  expected.append((cid,"Set Stamp",["setlogo"],int(rule["setStampProductId"])))
+              if int(rule.get("staffProductId") or 0)>0:
+                  expected.append((cid,"Staff",["setlogo","staff"],int(rule["staffProductId"])))
+          assert len(expected)==34
+
+          def load(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-MEP-Stamp-Regression/1.0"})
+              with urllib.request.urlopen(req,timeout=60) as r:
+                  return json.load(r)
+
+          cache={}
+          failures=[]
+          usable=0
+          for cid,kind,stamps_expected,pid_expected in expected:
+              if cid not in cache:
+                  data=None; err=None
+                  for attempt in range(4):
+                      try:
+                          data=load(f"https://api.tcgdex.net/v2/en/cards/{cid}")
+                          break
+                      except Exception as exc:
+                          err=repr(exc); time.sleep(1+attempt)
+                  if not data:
+                      failures.append({"tcgdexId":cid,"reason":"live_unavailable","error":err})
+                      continue
+                  cache[cid]=data
+              data=cache[cid]
+              matches=[]
+              for row in data.get("variants_detailed") or []:
+                  stamps=sorted(str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or []))
+                  if stamps!=stamps_expected or str(row.get("type") or "").lower()!="holo" or row.get("foil"):
+                      continue
+                  row_pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+                  cm=(row.get("pricing") or {}).get("cardmarket") or {}
+                  pricing_pid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+                  matches.append((row_pid,pricing_pid,cm))
+              if len(matches)!=1:
+                  failures.append({"tcgdexId":cid,"stamp":kind,"reason":"row_count","count":len(matches)})
+                  continue
+              row_pid,pricing_pid,cm=matches[0]
+              if row_pid!=pid_expected or pricing_pid!=pid_expected:
+                  failures.append({"tcgdexId":cid,"stamp":kind,"reason":"product_mismatch","row":row_pid,"pricing":pricing_pid,"expected":pid_expected})
+                  continue
+              if any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low")):
+                  usable+=1
+              else:
+                  failures.append({"tcgdexId":cid,"stamp":kind,"reason":"no_usable_price"})
+
+          print(json.dumps({"checked":len(expected),"usablePriceRows":usable,"failures":failures}))
+          assert usable==34 and not failures
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          cat > temp_mep_exact_stamp_validation.txt <<'EOF'
+          PASS
+          cards=19
+          variants=34
+          setStamp=19
+          staff=15
+          livePriceRows=34
+          pricingP0=0
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_mep_exact_stamp_validation.txt
+          git commit -m "TEMP record MEP exact stamp validation"
+          git push
