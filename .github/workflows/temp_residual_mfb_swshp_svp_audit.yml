@@ -1,0 +1,122 @@
+name: TEMP Residual MFB SWSHP SVP Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/residual-mfb-swshp-svp-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout TCGdex cards database
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+
+      - name: Run current full finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+
+      - name: Diagnose target residual families
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, re
+          from collections import Counter, defaultdict
+          from pathlib import Path
+
+          root=Path(".")
+          report=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          spec=importlib.util.spec_from_file_location("vfa","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          cards, errors, sha=mod.load_official_database(Path("tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+          source=Path("index.html").read_text()
+
+          residual=[
+              x for x in report.get("cards",[])
+              if x.get("classification")=="AMBIGUA"
+              and x.get("setId") in {"mfb","swshp","svp"}
+          ]
+          residual_ids={x["tcgdexId"] for x in residual}
+
+          registry_hits=defaultdict(list)
+          names=sorted(set(re.findall(r"\bconst\s+(VERIFIED_[A-Z0-9_]+)\s*=",source)))
+          for name in names:
+              try:
+                  obj=mod.extract_js_object(source,name)
+              except Exception:
+                  continue
+              if not isinstance(obj,dict):
+                  continue
+              for cid in sorted(residual_ids & set(obj.keys())):
+                  registry_hits[cid].append(name)
+
+          def compact_row(row):
+              cm=(row.get("thirdParty") or {}).get("cardmarket")
+              pcm=((row.get("pricing") or {}).get("cardmarket") or {})
+              return {
+                  "type":row.get("type"),
+                  "foil":row.get("foil"),
+                  "subtype":row.get("subtype"),
+                  "stamp":row.get("stamp"),
+                  "size":row.get("size"),
+                  "cm":cm,
+                  "pricingCm":pcm.get("idProduct") or pcm.get("id_product"),
+              }
+
+          sets={}
+          for sid in ("mfb","swshp","svp"):
+              rows=[x for x in residual if x.get("setId")==sid]
+              details=[]
+              for x in rows:
+                  raw=by_id.get(x["tcgdexId"],{})
+                  vr=raw.get("variants_detailed") or []
+                  details.append({
+                      "id":x["tcgdexId"],
+                      "localId":x.get("localId"),
+                      "name":x.get("name"),
+                      "rarity":x.get("rarity"),
+                      "proposed":x.get("proposedFinishes"),
+                      "reason":x.get("reason"),
+                      "coarse":raw.get("variants"),
+                      "variantRows":[compact_row(v) for v in vr],
+                      "registryHits":registry_hits.get(x["tcgdexId"],[]),
+                  })
+              sets[sid]={
+                  "count":len(rows),
+                  "rarities":dict(Counter(str(x.get("rarity")) for x in rows)),
+                  "withDetailed":sum(bool((by_id.get(x["tcgdexId"]) or {}).get("variants_detailed")) for x in rows),
+                  "withCoarse":sum(bool((by_id.get(x["tcgdexId"]) or {}).get("variants")) for x in rows),
+                  "withRegistryHit":sum(bool(registry_hits.get(x["tcgdexId"])) for x in rows),
+                  "registryHitIds":[d for d in details if d["registryHits"]],
+                  "explicitVariantIds":[d for d in details if d["variantRows"]],
+                  "allResiduals": details if sid=="mfb" else [],
+              }
+
+          out={
+              "summary":report["summary"],
+              "tcgdexSha":sha,
+              "targetResidualCount":len(residual),
+              "sets":sets,
+          }
+          Path("artifacts/residual_family_diagnostic.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-mfb-swshp-svp-diagnostic
+          path: |
+            artifacts/variant_finish_audit_report.json
+            artifacts/residual_family_diagnostic.json
