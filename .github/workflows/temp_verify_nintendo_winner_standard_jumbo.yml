@@ -1,0 +1,34 @@
+name: TEMP Verify Nintendo Winner Standard Jumbo
+on:
+  push:
+    branches: [audit/classify-nintendo-winner-standard-jumbo-20260920]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("artifacts/report.json"))
+          c=r["summary"]["classifications"]; x=r["nintendoWinnerStandardJumboClassification"]
+          issues={i["tcgdexId"]:i for i in r.get("issuesByPriority",[])}
+          assert r["summary"]["totalIdentitiesTested"]==4254
+          assert c["CORRETTA"]==4091, c
+          assert c["AMBIGUA"]==155, c
+          assert c["FALSO POSITIVO"]==0 and c["FALSO NEGATIVO"]==0
+          assert c["SOURCE CONFLICT"]==8 and r["summary"]["pricingP0"]==0
+          assert x["classifiedIds"]==["np-11","np-4","np-9"], x
+          for cid in ("mep-028","ex5-98","svp-225","bog-8","bog-9","sv08.5-176","sv08.5-177","sv08.5-178","sv08.5-179","sv08.5-180","sv09-190"):
+              assert issues[cid]["classification"]=="AMBIGUA", (cid,issues[cid])
+          assert x["productionModified"] is False
+          print(json.dumps({"summary":r["summary"],"nintendo":x},indent=2))
+          PY
