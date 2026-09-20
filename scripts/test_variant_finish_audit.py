@@ -2335,6 +2335,7 @@ def main():
                 if c.get("tcgdexId") in fossil_checklist_registry
                 and c.get("classification") == "CORRETTA"
                 and c.get("verifiedLegacyChecklistFinishes")
+                and c.get("reason") == "exact Fossil Holo/Normal identity handled by verified checklist path"
             ),
             "scope": {
                 "mfbPokeballRegistry": len(mfb_pokeball_registry),
