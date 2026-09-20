@@ -1557,6 +1557,7 @@ def cardoryx_add_detailed(allowed, rows, base=True, special=True):
             if peelable_ditto and not foil: allowed.add("Ditto Peelable")
         if special:
             if typ in {"normal", "holo", "reverse"} and foil == "cosmos": allowed.add("Cosmos Holo")
+            if foil == "gold": allowed.add("Gold")
             if typ == "reverse" and foil == "pokeball": allowed.add("Poké Ball Reverse Holo")
             if typ == "reverse" and foil == "masterball": allowed.add("Master Ball Reverse Holo")
 
