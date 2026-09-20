@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - diagnostic/variant-finish-current-main-20260920
+  pull_request:
+    branches:
+      - main
 
 jobs:
   audit:
