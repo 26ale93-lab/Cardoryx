@@ -45,7 +45,7 @@ jobs:
           residual=[
               x for x in report.get("cards",[])
               if x.get("classification")=="AMBIGUA"
-              and x.get("setId") in {"mfb","swshp","svp"}
+              and str((by_id.get(x.get("tcgdexId")) or {}).get("set",{}).get("id") or "") in {"mfb","swshp","svp"}
           ]
           residual_ids={x["tcgdexId"] for x in residual}
 
@@ -76,7 +76,10 @@ jobs:
 
           sets={}
           for sid in ("mfb","swshp","svp"):
-              rows=[x for x in residual if x.get("setId")==sid]
+              rows=[
+                  x for x in residual
+                  if str((by_id.get(x.get("tcgdexId")) or {}).get("set",{}).get("id") or "")==sid
+              ]
               details=[]
               for x in rows:
                   raw=by_id.get(x["tcgdexId"],{})
