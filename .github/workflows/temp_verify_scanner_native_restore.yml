@@ -1,0 +1,35 @@
+name: TEMP Verify Scanner Native Restore
+on:
+  push:
+    branches: [fix/restore-scanner-native-selects-safe-autofinish-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Scanner regression gates
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("index.html").read_text()
+          assert "scanner-select-sheet" not in s
+          assert "scanner-sheet-native" not in s
+          assert "openScannerSelectSheet" not in s
+          assert "installScannerSelectSheets" not in s
+          assert "if(!edit && physical.length===1)" in s
+          block=s[s.index("function syncVariantAvailability"):s.index("// Prezzi Cardmarket",s.index("function syncVariantAvailability"))]
+          assert "dispatchEvent" not in block
+          assert "#scanView select{color-scheme:light;background:#fff;color:#111827}" in s
+          print("SCANNER_NATIVE_RESTORE_OK")
+          PY
+      - name: JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path("index.html").read_text()
+          blocks=re.findall(r"<script[^>]*>(.*?)</script>",s,re.S)
+          Path("/tmp/cardoryx.js").write_text("\n".join(blocks))
+          PY
+          node --check /tmp/cardoryx.js
