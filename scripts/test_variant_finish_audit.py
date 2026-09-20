@@ -1494,6 +1494,35 @@ def verified_np_winner_standard_jumbo_truth(card):
 
 
 
+VERIFIED_BOG_COSMOS_STANDARD_JUMBO = {"bog-8","bog-9"}
+
+def verified_bog_cosmos_standard_jumbo_truth(card):
+    """Exact Cosmos Holo evidence for Winner-stamped Best of Game Standard+Jumbo rows."""
+    cid=str(card.get("id") or card.get("tcgdexId") or "")
+    if cid not in VERIFIED_BOG_COSMOS_STANDARD_JUMBO:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").strip().lower()!="bog":
+        return set()
+    rows=card.get("variants_detailed") or []
+    if len(rows)!=2:
+        return set()
+    sizes=[]
+    for row in rows:
+        if canonical_finish_type_label(row.get("type"))!="reverse":
+            return set()
+        if canonical_finish_foil_label(row.get("foil"))!="cosmos":
+            return set()
+        if [norm(x) for x in (row.get("stamp") or [])]!=["winner"]:
+            return set()
+        if row.get("subtype"):
+            return set()
+        size=str(row.get("size") or "standard").strip().lower()
+        if size not in {"standard","jumbo"}:
+            return set()
+        sizes.append(size)
+    return {"Cosmos Holo"} if sorted(sizes)==["jumbo","standard"] else set()
+
+
 def verified_unanimous_special_finish_truth(card):
     """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
     set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2206,7 +2235,8 @@ def main():
         unanimous_special_truth = verified_unanimous_special_finish_truth(en)
         residual_exact_truth = verified_residual_exact_finish_truth(en)
         np_winner_truth = verified_np_winner_standard_jumbo_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth
+        bog_cosmos_truth = verified_bog_cosmos_standard_jumbo_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
