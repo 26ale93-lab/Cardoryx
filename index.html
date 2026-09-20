@@ -8819,8 +8819,9 @@ async function chooseCard(s){
   // V2.1.1 — aggiorna SEMPRE le Prize Pack Series quando cambia carta.
   // Evita che restino abilitate le serie della carta precedente (es. Series 8).
   applyPlayAutoSeries(selectedCard,false);
-  await refreshOfficialPlayAvailability(selectedCard,false,false);
-  syncVariantAvailability(selectedCard,false);
+  // Keep confirmation interactive while the optional Play! availability index resolves.
+  // refreshOfficialPlayAvailability() performs the finish sync when its evidence is ready.
+  refreshOfficialPlayAvailability(selectedCard,false);
   renderScanValue(selectedCard);
   setTimeout(()=>{
     confirmCard.scrollIntoView({behavior:'smooth',block:'end'});
