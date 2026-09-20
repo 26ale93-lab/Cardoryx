@@ -4096,6 +4096,35 @@ function verifiedSwshp25thStandardFinishes(card,stamp){
   return tcgdexExactSwshp25thStandardRow(card)?['Holo']:[];
 }
 
+const VERIFIED_CELEBRATIONS_CLASSIC_25TH_PRODUCTS={
+  'cel25cc-CC020':{setId:'cel25cc',localId:'CC020',name:'Reshiram',sourceProductId:576747,productId:576790},
+  'cel25cc-CC021':{setId:'cel25cc',localId:'CC021',name:'Zekrom',sourceProductId:576755,productId:576791}
+};
+function verifiedCelebrationsClassic25thRule(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_CELEBRATIONS_CLASSIC_25TH_PRODUCTS[id];
+  if(!rule||cardSetId(card)!==rule.setId||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||
+     normText(card?.name||'')!==normText(rule.name))return null;
+  return rule;
+}
+function tcgdexExactCelebrationsClassic25thRow(card){
+  const rule=verifiedCelebrationsClassic25thRule(card);if(!rule)return null;
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.length===1&&stamps[0]==='25thcelebration'&&
+      canonicalFinishTypeLabel(row?.type)==='holo'&&
+      !canonicalFinishFoilLabel(row?.foil)&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard'&&
+      Number(row?.thirdParty?.cardmarket||0)===rule.sourceProductId;
+  });
+  return rows.length===1?rows[0]:null;
+}
+function verifiedCelebrationsClassic25thFinishes(card,stamp){
+  if(canonicalStamp(stamp)!=='25° Anniversario')return [];
+  return tcgdexExactCelebrationsClassic25thRow(card)?['Holo']:[];
+}
+
 const VERIFIED_MEP_STAMP_PRODUCTS={
   'mep-001':{localId:'001',name:'Meganium',setStampProductId:851043,staffProductId:851044},
   'mep-002':{localId:'002',name:'Inteleon',setStampProductId:851045,staffProductId:851046},
@@ -4293,7 +4322,7 @@ function stampExistsForCard(card,stamp){
   }
   if(st==='MFB Poké Ball')return !!tcgdexExactMfbPokeballRow(card);
   if(st==="McDonald's")return !!tcgdexExactMcdonaldsStampRow(card);
-  if(st==='25° Anniversario')return !!tcgdexMcdonalds2021AnniversaryRows(card)||!!tcgdexExactSwshp25thStandardRow(card);
+  if(st==='25° Anniversario')return !!tcgdexMcdonalds2021AnniversaryRows(card)||!!tcgdexExactSwshp25thStandardRow(card)||!!tcgdexExactCelebrationsClassic25thRow(card);
   if((st==='Set Stamp'||st==='Staff')&&verifiedMepStampRule(card,st))return !!tcgdexExactMepStampRow(card,st);
   if(st==='None'||st==='Altro')return true;
   return stampEvidenceFromTCGdex(card,st)||stampEvidenceVerified(card,st);
@@ -4318,6 +4347,11 @@ function syncStampAvailability(card,edit=false,preserveCurrent=false){
     if(ps)ps.value='';
   }
   if(tcgdexExactSwshp25thStandardRow(card) && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
+    sel.value='25° Anniversario';
+    const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
+    if(ps)ps.value='';
+  }
+  if(tcgdexExactCelebrationsClassic25thRow(card) && canonicalStamp(sel.value||card?.stamp||'None')==='None'){
     sel.value='25° Anniversario';
     const ps=document.getElementById(edit?'editPlaySeries':'playSeries');
     if(ps)ps.value='';
@@ -4367,6 +4401,11 @@ function migrateFinishStamp(c){
   if(isVerifiedMcdonalds2021AnniversarySet(c)){
     c.stamp='25° Anniversario';
     c.variant=canonicalVariant(c.variant||'Normal');
+    return c;
+  }
+  if(verifiedCelebrationsClassic25thRule(c)){
+    c.stamp='25° Anniversario';
+    c.variant='Holo';
     return c;
   }
   const old=String(c.variant||'');
@@ -5004,6 +5043,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   for(const finish of verifiedSpecialStampFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMcdonaldsStampFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMcdonalds2021AnniversaryFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedCelebrationsClassic25thFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshp25thStandardFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshpSetLogoFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMepStampFinishes(card,stamp))allowed.add(finish);
@@ -5788,6 +5828,19 @@ function tcgdexExactMcdonalds2021AnniversaryPrice(card,variant,stamp){
     source:`Cardmarket · McDonald's Collection 2021 · 25° Anniversario · ${target} · prodotto esatto ${productId}`};
 }
 
+function verifiedCelebrationsClassic25thPrice(card,variant,stamp){
+  if(canonicalStamp(stamp)!=='25° Anniversario'||canonicalVariant(variant||'Normal')!=='Holo')return null;
+  const rule=verifiedCelebrationsClassic25thRule(card);if(!rule)return null;
+  if(!tcgdexExactCelebrationsClassic25thRow(card))return null;
+  const exact=verifiedBaseCardmarketProductOverride(card);
+  if(!exact?.matched||!exact?.pricing||Number(exact?.rule?.baseProduct||0)!==rule.productId)return null;
+  const pricing={...exact.pricing,idProduct:rule.productId};
+  const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(pricing?.[k]||0)>0);
+  if(!usable)return null;
+  return {...pricing,
+    source:`Cardmarket · Celebrations Classic Collection · 25° Anniversario · Holo · prodotto esatto ${rule.productId}`};
+}
+
 function tcgdexExactSwshp25thStandardPrice(card,variant,stamp){
   if(canonicalStamp(stamp)!=='25° Anniversario'||canonicalVariant(variant||'Normal')!=='Holo')return null;
   const rule=verifiedSwshp25thStandardRule(card);if(!rule)return null;
@@ -5835,6 +5888,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(mcd2021Exact)return mcd2021Exact;
   const swshp25Exact=tcgdexExactSwshp25thStandardPrice(card,variant,stamp);
   if(swshp25Exact)return swshp25Exact;
+  const celebrationsClassic25=verifiedCelebrationsClassic25thPrice(card,variant,stamp);
+  if(celebrationsClassic25)return celebrationsClassic25;
   const swshpSetLogo=tcgdexExactSwshpSetLogoPrice(card,variant,stamp);
   if(swshpSetLogo)return swshpSetLogo;
   const mepExact=tcgdexExactMepStampPrice(card,variant,stamp);
