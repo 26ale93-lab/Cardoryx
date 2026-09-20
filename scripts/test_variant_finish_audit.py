@@ -1233,6 +1233,38 @@ def verified_stamped_identity_truth(card):
         ]
         return {"Holo"} if len(exact) == 1 else set()
 
+    mep_products = {
+        "mep-001": (851043, 851044), "mep-002": (851045, 851046),
+        "mep-003": (851047, 851048), "mep-004": (851049, 851050),
+        "mep-014": (857390, 859014), "mep-015": (857393, 859015),
+        "mep-016": (857396, 859016), "mep-017": (857400, 859018),
+        "mep-065": (877544, 879305), "mep-066": (877545, 879315),
+        "mep-067": (877546, 879312), "mep-074": (884752, 884753),
+        "mep-075": (884754, 884755), "mep-076": (884756, 884757),
+        "mep-077": (884758, 884759), "mep-082": (894261, None),
+        "mep-083": (894262, None), "mep-084": (894263, None),
+        "mep-085": (894264, None),
+    }
+    if card_id in mep_products:
+        set_pid, staff_pid = mep_products[card_id]
+        expected = [(["setlogo"], set_pid)]
+        if staff_pid:
+            expected.append((["setlogo", "staff"], staff_pid))
+        matched = 0
+        for stamps_expected, product_id in expected:
+            exact = [
+                row for row in rows
+                if sorted(norm(x) for x in (row.get("stamp") or [])) == stamps_expected
+                and canonical_finish_type_label(row.get("type")) == "holo"
+                and not row.get("foil")
+                and str(row.get("size") or "standard").lower() == "standard"
+                and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == product_id
+            ]
+            if len(exact) != 1:
+                return set()
+            matched += 1
+        return {"Holo"} if matched == len(expected) else set()
+
     return set()
 
 
