@@ -1,0 +1,98 @@
+name: TEMP Promo Live Finish Groups
+
+on:
+  push:
+    branches:
+      - diagnostic/promo-live-finish-groups-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inspect residual SWSH/SV promo live rows
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, time
+          from collections import Counter, defaultdict
+          swsh=[
+            "swshp-SWSH006","swshp-SWSH007","swshp-SWSH008","swshp-SWSH009",
+            "swshp-SWSH022","swshp-SWSH023","swshp-SWSH024","swshp-SWSH025",
+            "swshp-SWSH035","swshp-SWSH036","swshp-SWSH037","swshp-SWSH038",
+            "swshp-SWSH066","swshp-SWSH067","swshp-SWSH068","swshp-SWSH069",
+            "swshp-SWSH088","swshp-SWSH089","swshp-SWSH090","swshp-SWSH091",
+            "swshp-SWSH112","swshp-SWSH113","swshp-SWSH114","swshp-SWSH115",
+            "swshp-SWSH122","swshp-SWSH123","swshp-SWSH124","swshp-SWSH125",
+            "swshp-SWSH153",
+            "swshp-SWSH185","swshp-SWSH186","swshp-SWSH187","swshp-SWSH188",
+            "swshp-SWSH205","swshp-SWSH206","swshp-SWSH207","swshp-SWSH208",
+            "swshp-SWSH240","swshp-SWSH241","swshp-SWSH242","swshp-SWSH243",
+            "swshp-SWSH269","swshp-SWSH270","swshp-SWSH271","swshp-SWSH272",
+            "swshp-SWSH303","swshp-SWSH304","swshp-SWSH305"
+          ]
+          sv=[
+            "svp-005","svp-006","svp-007","svp-008",
+            "svp-019","svp-020","svp-021","svp-022",
+            "svp-036","svp-037","svp-038","svp-039",
+            "svp-057","svp-058","svp-059","svp-060",
+            "svp-089","svp-090","svp-091","svp-092",
+            "svp-101",
+            "svp-115","svp-116","svp-117","svp-118",
+            "svp-133","svp-134","svp-135","svp-136",
+            "svp-151","svp-152","svp-153","svp-154",
+            "svp-181","svp-182","svp-183","svp-184",
+            "svp-191","svp-192",
+            "svp-213","svp-214","svp-215",
+            "svp-224","svp-225","svp-500"
+          ]
+          ids=swsh+sv
+          out={}
+          signatures=Counter()
+          groups=defaultdict(list)
+          errors={}
+          for n,cid in enumerate(ids,1):
+            try:
+              with urllib.request.urlopen("https://api.tcgdex.net/v2/en/cards/"+cid,timeout=30) as r:
+                c=json.load(r)
+              rows=[]
+              for v in c.get("variants_detailed") or []:
+                row={
+                  "type":v.get("type"),
+                  "foil":v.get("foil"),
+                  "subtype":v.get("subtype"),
+                  "stamp":v.get("stamp") or [],
+                  "size":v.get("size") or "standard",
+                  "thirdPartyPid":(v.get("thirdParty") or {}).get("cardmarket"),
+                  "pricingPid":((v.get("pricing") or {}).get("cardmarket") or {}).get("idProduct"),
+                }
+                rows.append(row)
+                sig=(row["type"],row["foil"],tuple(row["stamp"]),row["size"])
+                signatures[str(sig)]+=1
+                groups[str(sig)].append(cid)
+              out[cid]={
+                "name":c.get("name"),"localId":c.get("localId"),
+                "topPid":(c.get("pricing") or {}).get("cardmarket",{}).get("idProduct"),
+                "rows":rows
+              }
+            except Exception as e:
+              errors[cid]=str(e)
+            if n%20==0: time.sleep(.3)
+          result={
+            "count":len(ids),"errors":errors,
+            "signatureCounts":dict(signatures),
+            "signatureGroups":dict(groups),
+            "cards":out
+          }
+          print(json.dumps({
+            "count":result["count"],"errors":result["errors"],
+            "signatureCounts":result["signatureCounts"],
+            "signatureGroups":result["signatureGroups"]
+          },ensure_ascii=False,indent=2))
+          open("promo_live_finish_groups.json","w").write(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: promo-live-finish-groups
+          path: promo_live_finish_groups.json
