@@ -1,0 +1,52 @@
+name: TEMP Variant Finish Current Main Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/variant-finish-current-main-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+
+      - name: Checkout TCGdex cards database
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+
+      - name: Run full read-only Variant & Finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+
+      - name: Show compact summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("artifacts/variant_finish_audit_report.json")
+          if not p.exists():
+              raise SystemExit("report missing")
+          r = json.loads(p.read_text())
+          print(json.dumps({
+              "summary": r.get("summary"),
+              "mcdonalds2021": r.get("mcdonalds2021AnniversaryAudit"),
+              "mep": r.get("mepExactStampAudit"),
+              "issuesByPriorityCount": len(r.get("issuesByPriority") or []),
+              "mustRemainToVerifyCount": len(r.get("mustRemainToVerify") or []),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: variant-finish-current-main-audit
+          path: artifacts/variant_finish_audit_report.json
