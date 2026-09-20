@@ -20,7 +20,7 @@ jobs:
           import json, collections
           r=json.load(open("artifacts/report.json"))
           rows=r.get("cards") or []
-          amb=[x for x in (r.get("issues") or []) if x.get("classification")=="AMBIGUA"]
+          amb=(r.get("normalHoloReverseAudit") or {}).get("exceptions") or []
           print("SUMMARY",r["summary"])
           print("AMB_COUNT",len(amb))
           for x in amb: print("AMB",json.dumps(x,ensure_ascii=False))
