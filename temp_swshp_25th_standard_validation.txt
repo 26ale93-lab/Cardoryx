@@ -1,4 +1,0 @@
-PASS
-supportedStandardOnly=6
-excludedStandardPlusJumbo=6
-pricingP0=0
