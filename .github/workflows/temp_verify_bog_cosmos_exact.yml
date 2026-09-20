@@ -1,0 +1,27 @@
+name: TEMP Verify BOG Cosmos Exact Audit
+on:
+  push:
+    branches: [audit/bog-cosmos-standard-jumbo-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - name: Exact gates
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("artifacts/report.json"))
+          c=r["summary"]["classifications"]
+          assert r["summary"]["totalIdentitiesTested"]==4254
+          assert c=={"CORRETTA":4099,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":147,"SOURCE CONFLICT":8},c
+          assert r["summary"]["pricingP0"]==0
+          print("BOG_GATES_OK")
+          PY
