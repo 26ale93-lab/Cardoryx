@@ -1,0 +1,5 @@
+PASS
+verifiedIdentities=44
+setStampPriced=44
+staffUnpriced=44
+pricingP0=0
