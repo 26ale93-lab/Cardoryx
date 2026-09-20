@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cardoryx · Storage Audit read-only</title>
+<style>
+:root{color-scheme:light dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{margin:0;padding:18px;background:#111;color:#eee}
+main{max-width:900px;margin:auto}
+.card{background:#1b1b1d;border:1px solid #343438;border-radius:16px;padding:16px;margin:12px 0}
+h1{font-size:22px;margin:0 0 6px} h2{font-size:17px;margin:0 0 10px}
+small,.muted{color:#aaa}.ok{color:#7ee787}.warn{color:#f2cc60}.bad{color:#ff7b72}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #2a2a2d}
+.kv:last-child{border-bottom:0}
+pre{white-space:pre-wrap;word-break:break-word;background:#0d0d0f;border-radius:12px;padding:12px;max-height:55vh;overflow:auto;font-size:12px}
+button{width:100%;padding:12px;border:0;border-radius:12px;font-weight:700}
+.notice{border-left:4px solid #58a6ff;padding-left:10px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="card">
+  <h1>Storage Audit read-only</h1>
+  <div class="muted">Diagnostica locale. Non scrive, non cancella e non migra dati.</div>
+</div>
+<div id="status" class="card">Avvio diagnostica…</div>
+<div id="summary" class="card" hidden></div>
+<div id="diffs" class="card" hidden></div>
+<div class="card"><button id="copyBtn" type="button" disabled>Copia report JSON</button></div>
+<pre id="raw" hidden></pre>
+<script>
+'use strict';
+const DB_NAME='cardoryx_storage';
+const DB_VERSION=1;
+const STATE_STORE='state';
+const META_STORE='meta';
+const MIGRATION_KEY='localstorage-to-indexeddb';
+const LOCAL_COLLECTION_KEY='cardoryx_db';
+const LOCAL_DECKS_KEY='cardoryx_decks';
+
+const $=id=>document.getElementById(id);
+function storageFingerprint(value){
+  const text=JSON.stringify(value);
+  let hash=2166136261;
+  for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619)}
+  return `${text.length}:${(hash>>>0).toString(16).padStart(8,'0')}`;
+}
+function stable(value){
+  if(Array.isArray(value))return value.map(stable);
+  if(value&&typeof value==='object'){
+    const out={}; Object.keys(value).sort().forEach(k=>out[k]=stable(value[k])); return out;
+  }
+  return value;
+}
+function stableFingerprint(value){return storageFingerprint(stable(value))}
+function totals(records){
+  return {
+    records:Array.isArray(records)?records.length:0,
+    total:Array.isArray(records)?records.reduce((sum,c)=>sum+Math.max(1,Number(c?.qty)||1),0):0
+  };
+}
+function parseLocal(key,fallback){
+  const raw=localStorage.getItem(key);
+  if(raw===null)return {present:false,raw:null,value:fallback,error:null};
+  try{return {present:true,raw,value:JSON.parse(raw),error:null}}
+  catch(error){return {present:true,raw,value:fallback,error:String(error?.message||error)}}
+}
+function idbReq(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('IndexedDB request failed'))})}
+async function ensureExistingDb(){
+  if(!('indexedDB' in window))throw new Error('IndexedDB API non disponibile');
+  if(typeof indexedDB.databases!=='function')throw new Error('indexedDB.databases() non disponibile: audit fermato per evitare di creare un database');
+  const dbs=await indexedDB.databases();
+  if(!dbs.some(x=>x?.name===DB_NAME))throw new Error('Database Cardoryx IndexedDB non trovato: audit fermato senza crearne uno');
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    let upgraded=false;
+    req.onupgradeneeded=()=>{upgraded=true;try{req.transaction.abort()}catch{}};
+    req.onsuccess=()=>{if(upgraded){req.result.close();reject(new Error('Apertura avrebbe richiesto upgrade: audit annullato'))}else resolve(req.result)};
+    req.onerror=()=>reject(req.error||new Error('Apertura IndexedDB non riuscita'));
+    req.onblocked=()=>reject(new Error('IndexedDB bloccato da un’altra scheda'));
+  });
+}
+async function readIdb(db){
+  const tx=db.transaction([STATE_STORE,META_STORE],'readonly');
+  const s=tx.objectStore(STATE_STORE),m=tx.objectStore(META_STORE);
+  const [collectionRow,decksRow,marker]=await Promise.all([
+    idbReq(s.get('collection')),idbReq(s.get('decks')),idbReq(m.get(MIGRATION_KEY))
+  ]);
+  return {collectionRow,decksRow,marker,collection:collectionRow?.value,decks:decksRow?.value};
+}
+function markerMatch(collection,decks,marker){
+  if(!marker)return null;
+  return storageFingerprint(collection)===marker.sourceCollectionFingerprint &&
+         storageFingerprint(decks)===marker.sourceDecksFingerprint;
+}
+function recordLocator(r,index){
+  const parts=[
+    r?.key,r?.identityKey,r?.tcgdexId,r?.id,r?.setId,r?.set?.id,r?.printedCode,r?.number,
+    r?.variant,r?.stamp,r?.language,r?.condition
+  ].filter(v=>v!==undefined&&v!==null&&String(v)!=='').map(v=>String(v));
+  return (parts.join('|')||`index:${index}`);
+}
+function multimap(records){
+  const map=new Map();
+  (Array.isArray(records)?records:[]).forEach((r,i)=>{
+    const k=recordLocator(r,i), fp=stableFingerprint(r);
+    if(!map.has(k))map.set(k,[]);
+    map.get(k).push({fp,record:r});
+  });
+  return map;
+}
+function diffRecords(a,b){
+  const A=multimap(a),B=multimap(b),keys=[...new Set([...A.keys(),...B.keys()])].sort();
+  const onlyLocal=[],onlyIndexed=[],changed=[];
+  for(const k of keys){
+    const aa=A.get(k)||[],bb=B.get(k)||[];
+    if(!aa.length){onlyIndexed.push({locator:k,records:bb.map(x=>x.record)});continue}
+    if(!bb.length){onlyLocal.push({locator:k,records:aa.map(x=>x.record)});continue}
+    const af=aa.map(x=>x.fp).sort(),bf=bb.map(x=>x.fp).sort();
+    if(JSON.stringify(af)!==JSON.stringify(bf))changed.push({locator:k,local:aa.map(x=>x.record),indexeddb:bb.map(x=>x.record)});
+  }
+  return {onlyLocal,onlyIndexed,changed};
+}
+function deckDiff(a,b){return stableFingerprint(a)===stableFingerprint(b)?{same:true}:{same:false,local:a,indexeddb:b}}
+function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+(async()=>{
+  const localCollection=parseLocal(LOCAL_COLLECTION_KEY,[]);
+  const localDecks=parseLocal(LOCAL_DECKS_KEY,[]);
+  const db=await ensureExistingDb();
+  const idb=await readIdb(db); db.close();
+
+  const report={
+    generatedAt:new Date().toISOString(),
+    mode:'READ_ONLY',
+    writesPerformed:false,
+    localStorage:{
+      collectionPresent:localCollection.present,
+      decksPresent:localDecks.present,
+      collectionParseError:localCollection.error,
+      decksParseError:localDecks.error,
+      collectionTotals:totals(localCollection.value),
+      deckCount:Array.isArray(localDecks.value)?localDecks.value.length:0,
+      collectionFingerprint:storageFingerprint(localCollection.value),
+      decksFingerprint:storageFingerprint(localDecks.value),
+      collectionStableFingerprint:stableFingerprint(localCollection.value),
+      decksStableFingerprint:stableFingerprint(localDecks.value)
+    },
+    indexedDB:{
+      collectionTotals:totals(idb.collection),
+      deckCount:Array.isArray(idb.decks)?idb.decks.length:0,
+      collectionFingerprint:storageFingerprint(idb.collection),
+      decksFingerprint:storageFingerprint(idb.decks),
+      collectionStableFingerprint:stableFingerprint(idb.collection),
+      decksStableFingerprint:stableFingerprint(idb.decks),
+      collectionRowFingerprint:idb.collectionRow?.fingerprint??null,
+      decksRowFingerprint:idb.decksRow?.fingerprint??null,
+      collectionUpdatedAt:idb.collectionRow?.updatedAt??null,
+      decksUpdatedAt:idb.decksRow?.updatedAt??null
+    },
+    marker:idb.marker??null,
+    markerComparison:{
+      localMatchesMigrationSource:markerMatch(localCollection.value,localDecks.value,idb.marker),
+      indexedDbMatchesMigrationSource:markerMatch(idb.collection,idb.decks,idb.marker)
+    },
+    recordDiff:diffRecords(localCollection.value,idb.collection),
+    decksDiff:deckDiff(localDecks.value,idb.decks)
+  };
+  report.classification =
+    report.localStorage.collectionFingerprint===report.indexedDB.collectionFingerprint &&
+    report.localStorage.decksFingerprint===report.indexedDB.decksFingerprint ? 'same' :
+    report.markerComparison.localMatchesMigrationSource===false && report.markerComparison.indexedDbMatchesMigrationSource===true ? 'local-only-changed' :
+    report.markerComparison.localMatchesMigrationSource===true && report.markerComparison.indexedDbMatchesMigrationSource===false ? 'indexeddb-only-changed' :
+    report.markerComparison.localMatchesMigrationSource===false && report.markerComparison.indexedDbMatchesMigrationSource===false ? 'both-changed' :
+    'unclassified';
+
+  $('status').innerHTML=`<h2>Esito</h2><div class="notice"><strong>${esc(report.classification)}</strong><br><span class="muted">Nessun dato è stato modificato.</span></div>`;
+  $('summary').hidden=false;
+  $('summary').innerHTML=`<h2>Confronto</h2>
+    <div class="grid">
+      <div><strong>localStorage</strong>
+        <div class="kv"><span>Record</span><span>${report.localStorage.collectionTotals.records}</span></div>
+        <div class="kv"><span>Carte</span><span>${report.localStorage.collectionTotals.total}</span></div>
+        <div class="kv"><span>Mazzi</span><span>${report.localStorage.deckCount}</span></div>
+        <div class="kv"><span>Match marker</span><span>${String(report.markerComparison.localMatchesMigrationSource)}</span></div>
+      </div>
+      <div><strong>IndexedDB</strong>
+        <div class="kv"><span>Record</span><span>${report.indexedDB.collectionTotals.records}</span></div>
+        <div class="kv"><span>Carte</span><span>${report.indexedDB.collectionTotals.total}</span></div>
+        <div class="kv"><span>Mazzi</span><span>${report.indexedDB.deckCount}</span></div>
+        <div class="kv"><span>Match marker</span><span>${String(report.markerComparison.indexedDbMatchesMigrationSource)}</span></div>
+      </div>
+    </div>`;
+  $('diffs').hidden=false;
+  $('diffs').innerHTML=`<h2>Differenze record</h2>
+    <div class="kv"><span>Solo localStorage</span><strong>${report.recordDiff.onlyLocal.length}</strong></div>
+    <div class="kv"><span>Solo IndexedDB</span><strong>${report.recordDiff.onlyIndexed.length}</strong></div>
+    <div class="kv"><span>Stessa identità, contenuto diverso</span><strong>${report.recordDiff.changed.length}</strong></div>
+    <div class="kv"><span>Mazzi identici</span><strong>${report.decksDiff.same?'Sì':'No'}</strong></div>
+    <div class="muted" style="margin-top:10px">Usa “Copia report JSON” e incollalo in chat. Il report resta sul dispositivo finché non lo copi.</div>`;
+  const json=JSON.stringify(report,null,2);
+  $('raw').textContent=json;
+  $('copyBtn').disabled=false;
+  $('copyBtn').onclick=async()=>{await navigator.clipboard.writeText(json);$('copyBtn').textContent='Report copiato'};
+})().catch(error=>{
+  $('status').innerHTML=`<h2>Audit fermato in sicurezza</h2><div class="bad">${esc(error?.message||error)}</div><div class="muted">Nessuna scrittura eseguita.</div>`;
+});
+</script></main></body></html>
