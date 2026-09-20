@@ -1426,13 +1426,10 @@ def verified_celebrations_classic_holo_truth(card):
 
 VERIFIED_RESIDUAL_EXACT_FINISHES = {
     "basep-2":"Normal","basep-3":"Normal","basep-4":"Normal","basep-5":"Normal","basep-50":"Normal","basep-53":"Normal",
-    "bog-8":"Reverse Holo","bog-9":"Reverse Holo",
     "dpp-DP05":"Normal","dpp-DP25":"Normal","dpp-DP48":"Normal",
     "hgssp-HGSS18":"Normal",
-    "np-11":"Normal","np-23":"Normal","np-26":"Normal","np-27":"Normal","np-36":"Normal","np-4":"Normal",
-    "np-5":"Holo","np-6":"Holo","np-7":"Holo","np-9":"Normal",
-    "sv08.5-176":"Holo","sv08.5-177":"Holo","sv08.5-178":"Holo","sv08.5-179":"Holo","sv08.5-180":"Holo",
-    "sv09-190":"Holo",
+    "np-23":"Normal","np-26":"Normal","np-27":"Normal","np-36":"Normal",
+    "np-5":"Holo","np-6":"Holo","np-7":"Holo",
 }
 
 def verified_residual_exact_finish_truth(card):
@@ -1452,15 +1449,8 @@ def verified_residual_exact_finish_truth(card):
             return set()
         if str(row.get("size") or "standard").lower() != "standard":
             return set()
-    # Historical promo identities in this whitelist are stamped by construction;
-    # the six modern set cards are the only deliberate unstamped single-row cases.
-    modern_unstamped = cid in {
-        "sv08.5-176","sv08.5-177","sv08.5-178","sv08.5-179","sv08.5-180","sv09-190"
-    }
-    if modern_unstamped:
-        if len(rows) != 1 or (rows[0].get("stamp") or []):
-            return set()
-    elif not all(bool(row.get("stamp") or []) for row in rows):
+    # All identities in this final whitelist are historical/special stamped prints.
+    if not all(bool(row.get("stamp") or []) for row in rows):
         return set()
     return {expected}
 
