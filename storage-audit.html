@@ -28,7 +28,8 @@ button{width:100%;padding:12px;border:0;border-radius:12px;font-weight:700}
 <div id="status" class="card">Avvio diagnostica…</div>
 <div id="summary" class="card" hidden></div>
 <div id="diffs" class="card" hidden></div>
-<div class="card"><button id="copyBtn" type="button" disabled>Copia report JSON</button></div>
+<div id="compact" class="card" hidden></div>
+<div class="card"><button id="copyBtn" type="button" disabled>Copia riepilogo compatto</button></div>
 <pre id="raw" hidden></pre>
 <script>
 'use strict';
@@ -124,6 +125,40 @@ function diffRecords(a,b){
   return {onlyLocal,onlyIndexed,changed};
 }
 function deckDiff(a,b){return stableFingerprint(a)===stableFingerprint(b)?{same:true}:{same:false,local:a,indexeddb:b}}
+function qtyOf(r){return Math.max(1,Number(r?.qty)||1)}
+function labelOf(r){
+  return [r?.name,r?.setId||r?.set?.id,r?.number||r?.localId||r?.printedCode,r?.variant,r?.stamp]
+    .filter(v=>v!==undefined&&v!==null&&String(v)!=='').map(String).join(' · ')||'Record senza etichetta';
+}
+function shallowChangedKeys(a,b){
+  const keys=[...new Set([...Object.keys(a||{}),...Object.keys(b||{})])].sort();
+  return keys.filter(k=>stableFingerprint(a?.[k])!==stableFingerprint(b?.[k]));
+}
+function compactAnalysis(diff){
+  const onlyLocalQty=diff.onlyLocal.reduce((sum,g)=>sum+g.records.reduce((s,r)=>s+qtyOf(r),0),0);
+  const onlyIndexedQty=diff.onlyIndexed.reduce((sum,g)=>sum+g.records.reduce((s,r)=>s+qtyOf(r),0),0);
+  let changedQtyRows=0,qtyDelta=0;
+  const fieldCounts={};
+  const examples=[];
+  for(const g of diff.changed){
+    const a=g.local?.[0],b=g.indexeddb?.[0];
+    if(!a||!b)continue;
+    const dq=qtyOf(b)-qtyOf(a);
+    if(dq!==0){changedQtyRows++;qtyDelta+=dq}
+    for(const k of shallowChangedKeys(a,b))fieldCounts[k]=(fieldCounts[k]||0)+1;
+    if(examples.length<12)examples.push({
+      label:labelOf(b||a),localQty:qtyOf(a),indexedQty:qtyOf(b),
+      changedFields:shallowChangedKeys(a,b).slice(0,8)
+    });
+  }
+  return {
+    onlyLocalQty,onlyIndexedQty,changedQtyRows,qtyDelta,
+    topChangedFields:Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1]).slice(0,12),
+    onlyLocalExamples:diff.onlyLocal.slice(0,8).map(g=>labelOf(g.records?.[0])),
+    onlyIndexedExamples:diff.onlyIndexed.slice(0,8).map(g=>labelOf(g.records?.[0])),
+    changedExamples:examples
+  };
+}
 function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 (async()=>{
   const localCollection=parseLocal(LOCAL_COLLECTION_KEY,[]);
@@ -165,8 +200,10 @@ function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;',
       indexedDbMatchesMigrationSource:markerMatch(idb.collection,idb.decks,idb.marker)
     },
     recordDiff:diffRecords(localCollection.value,idb.collection),
-    decksDiff:deckDiff(localDecks.value,idb.decks)
+    decksDiff:deckDiff(localDecks.value,idb.decks),
+    compact:null
   };
+  report.compact=compactAnalysis(report.recordDiff);
   report.classification =
     report.localStorage.collectionFingerprint===report.indexedDB.collectionFingerprint &&
     report.localStorage.decksFingerprint===report.indexedDB.decksFingerprint ? 'same' :
@@ -197,12 +234,45 @@ function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;',
     <div class="kv"><span>Solo localStorage</span><strong>${report.recordDiff.onlyLocal.length}</strong></div>
     <div class="kv"><span>Solo IndexedDB</span><strong>${report.recordDiff.onlyIndexed.length}</strong></div>
     <div class="kv"><span>Stessa identità, contenuto diverso</span><strong>${report.recordDiff.changed.length}</strong></div>
-    <div class="kv"><span>Mazzi identici</span><strong>${report.decksDiff.same?'Sì':'No'}</strong></div>
-    <div class="muted" style="margin-top:10px">Usa “Copia report JSON” e incollalo in chat. Il report resta sul dispositivo finché non lo copi.</div>`;
-  const json=JSON.stringify(report,null,2);
+    <div class="kv"><span>Mazzi identici</span><strong>${report.decksDiff.same?'Sì':'No'}</strong></div>`;
+
+  const c=report.compact;
+  const fields=c.topChangedFields.map(([k,n])=>`<div class="kv"><span>${esc(k)}</span><strong>${n}</strong></div>`).join('');
+  const changed=c.changedExamples.map(x=>`<div class="muted" style="margin:8px 0"><strong>${esc(x.label)}</strong><br>qty ${x.localQty} → ${x.indexedQty}<br>campi: ${esc(x.changedFields.join(', ')||'—')}</div>`).join('');
+  $('compact').hidden=false;
+  $('compact').innerHTML=`<h2>Riepilogo compatto</h2>
+    <div class="kv"><span>Carte nei record solo localStorage</span><strong>${c.onlyLocalQty}</strong></div>
+    <div class="kv"><span>Carte nei record solo IndexedDB</span><strong>${c.onlyIndexedQty}</strong></div>
+    <div class="kv"><span>Record comuni con quantità diversa</span><strong>${c.changedQtyRows}</strong></div>
+    <div class="kv"><span>Delta quantità sui record comuni</span><strong>${c.qtyDelta>=0?'+':''}${c.qtyDelta}</strong></div>
+    <div class="kv"><span>Marker verificato</span><strong>${esc(report.marker?.verifiedAt||'—')}</strong></div>
+    <div class="kv"><span>IndexedDB collection updatedAt</span><strong>${esc(report.indexedDB.collectionUpdatedAt||'—')}</strong></div>
+    <div class="kv"><span>IndexedDB decks updatedAt</span><strong>${esc(report.indexedDB.decksUpdatedAt||'—')}</strong></div>
+    <h2 style="margin-top:18px">Campi cambiati più spesso</h2>${fields||'<div class="muted">Nessuno</div>'}
+    <h2 style="margin-top:18px">Esempi solo localStorage</h2><div class="muted">${c.onlyLocalExamples.map(esc).join('<br>')||'Nessuno'}</div>
+    <h2 style="margin-top:18px">Esempi solo IndexedDB</h2><div class="muted">${c.onlyIndexedExamples.map(esc).join('<br>')||'Nessuno'}</div>
+    <h2 style="margin-top:18px">Esempi record modificati</h2>${changed||'<div class="muted">Nessuno</div>'}
+    <div class="muted" style="margin-top:12px">Puoi mandare screenshot di questa sezione; non serve incollare il report completo.</div>`;
+
+  const compactReport={
+    generatedAt:report.generatedAt,
+    classification:report.classification,
+    localStorage:report.localStorage,
+    indexedDB:report.indexedDB,
+    marker:report.marker,
+    markerComparison:report.markerComparison,
+    counts:{
+      onlyLocal:report.recordDiff.onlyLocal.length,
+      onlyIndexed:report.recordDiff.onlyIndexed.length,
+      changed:report.recordDiff.changed.length,
+      decksSame:report.decksDiff.same
+    },
+    compact:report.compact
+  };
+  const json=JSON.stringify(compactReport,null,2);
   $('raw').textContent=json;
   $('copyBtn').disabled=false;
-  $('copyBtn').onclick=async()=>{await navigator.clipboard.writeText(json);$('copyBtn').textContent='Report copiato'};
+  $('copyBtn').onclick=async()=>{await navigator.clipboard.writeText(json);$('copyBtn').textContent='Riepilogo copiato'};
 })().catch(error=>{
   $('status').innerHTML=`<h2>Audit fermato in sicurezza</h2><div class="bad">${esc(error?.message||error)}</div><div class="muted">Nessuna scrittura eseguita.</div>`;
 });
