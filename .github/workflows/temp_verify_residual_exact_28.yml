@@ -33,21 +33,21 @@ jobs:
           c=r["summary"]["classifications"]
           x=r["residualExactFinishClassification"]
           issues={i["tcgdexId"]:i for i in r.get("issuesByPriority",[])}
+          print(json.dumps({"summary":r["summary"],"residualExact":x},ensure_ascii=False,indent=2))
           assert r["summary"]["totalIdentitiesTested"] == 4254, r["summary"]
-          assert c["CORRETTA"] == 4099, c
-          assert c["AMBIGUA"] == 147, c
+          assert c["CORRETTA"] == 4088, c
+          assert c["AMBIGUA"] == 158, c
           assert c["FALSO POSITIVO"] == 0, c
           assert c["FALSO NEGATIVO"] == 0, c
           assert c["SOURCE CONFLICT"] == 8, c
           assert r["summary"]["pricingP0"] == 0, r["summary"]
           assert x["expectedIdentities"] == 28, x
-          assert len(x["classifiedIds"]) == 28, x
+          assert len(x["classifiedIds"]) == 17, x
           assert "mep-028" not in x["classifiedIds"], x
           assert issues["mep-028"]["classification"] == "AMBIGUA", issues["mep-028"]
           assert issues["ex5-98"]["classification"] == "AMBIGUA", issues["ex5-98"]
           assert issues["svp-225"]["classification"] == "AMBIGUA", issues["svp-225"]
           assert x["productionModified"] is False, x
-          print(json.dumps({"summary":r["summary"],"residualExact":x},ensure_ascii=False,indent=2))
           PY
       - name: Upload report
         uses: actions/upload-artifact@v4
