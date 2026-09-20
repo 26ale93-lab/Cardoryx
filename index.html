@@ -4863,6 +4863,7 @@ function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
     }
     if(special){
       if(['normal','holo','reverse'].includes(type) && foil==='cosmos')allowed.add('Cosmos Holo');
+      if(foil==='gold')allowed.add('Gold');
       if(type==='reverse'&&foil==='pokeball')allowed.add('Poké Ball Reverse Holo');
       if(type==='reverse'&&foil==='masterball')allowed.add('Master Ball Reverse Holo');
     }
