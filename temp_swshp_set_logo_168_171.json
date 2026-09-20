@@ -1,0 +1,42 @@
+{
+  "tcgdexSha": "46e7d514d534d38257914a5ffee54c17849f72c3",
+  "verified": 4,
+  "rows": [
+    {
+      "tcgdexId": "swshp-SWSH168",
+      "localId": "SWSH168",
+      "name": "Oricorio",
+      "productId": 580165,
+      "liveTrend": 2.7,
+      "topLevelProductId": 580165,
+      "topLevelMatches": true
+    },
+    {
+      "tcgdexId": "swshp-SWSH169",
+      "localId": "SWSH169",
+      "name": "Pyukumuku",
+      "productId": 580166,
+      "liveTrend": 6,
+      "topLevelProductId": 580166,
+      "topLevelMatches": true
+    },
+    {
+      "tcgdexId": "swshp-SWSH170",
+      "localId": "SWSH170",
+      "name": "Deoxys",
+      "productId": 580167,
+      "liveTrend": 6.86,
+      "topLevelProductId": 580167,
+      "topLevelMatches": true
+    },
+    {
+      "tcgdexId": "swshp-SWSH171",
+      "localId": "SWSH171",
+      "name": "Latias",
+      "productId": 580168,
+      "liveTrend": 14,
+      "topLevelProductId": 580168,
+      "topLevelMatches": true
+    }
+  ]
+}
