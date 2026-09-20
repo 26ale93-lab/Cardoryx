@@ -1,0 +1,68 @@
+name: TEMP Finish Residuals Post93 Audit
+
+on:
+  push:
+    branches:
+      - audit/finish-residuals-post93-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Full variant finish audit
+        run: |
+          git diff --check origin/main...HEAD
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/post93_variant_finish_report.json             --workers 24
+
+      - name: Build residual summary
+        run: |
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          r=json.loads(Path("/tmp/post93_variant_finish_report.json").read_text())
+          issues=r.get("issuesByPriority") or []
+          if isinstance(issues,dict):
+              flat=[]
+              for k,v in issues.items():
+                  for x in (v or []):
+                      if isinstance(x,dict): flat.append({"priority":k,**x})
+              issues=flat
+          ambiguous=[x for x in issues if x.get("classification")=="AMBIGUA"]
+          by_set=Counter(x.get("set") or "NONE" for x in ambiguous)
+          by_reason=Counter(x.get("reason") or "NONE" for x in ambiguous)
+          out={
+            "summary":r.get("summary"),
+            "ambiguousCount":len(ambiguous),
+            "topAmbiguousSets":by_set.most_common(40),
+            "topReasons":by_reason.most_common(20),
+            "mcd2012_2014":r.get("mcdonaldsStampAudit"),
+            "mcd2021":r.get("mcdonalds2021AnniversaryAudit"),
+            "pricing":r.get("cardmarketPricingAudit"),
+          }
+          Path("temp_finish_residuals_post93_summary.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False))
+          PY
+
+      - name: Record summary
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_finish_residuals_post93_summary.json
+          git commit -m "TEMP record finish residuals after PR93"
+          git push
