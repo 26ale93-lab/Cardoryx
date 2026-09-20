@@ -1,0 +1,87 @@
+name: TEMP SWSH Verified Stamped Ambiguity Regression
+
+on:
+  push:
+    branches:
+      - audit/fix-swsh-verified-stamped-ambiguities-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/swsh_stamped_ambiguity_report.json             --workers 24
+
+      - name: Verify exact count reduction
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/swsh_stamped_ambiguity_report.json").read_text())
+          c=r["summary"]["classifications"]
+          assert c["FALSO POSITIVO"] == 0, c
+          assert c["FALSO NEGATIVO"] == 0, c
+          assert c["SOURCE CONFLICT"] == 8, c
+          assert c["AMBIGUA"] == 345, c
+          assert c["CORRETTA"] == 3901, c
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+
+          a=r["swshp25thStandardPromoAudit"]
+          b=r["swshpSetLogo168To171Audit"]
+          assert a["supportedStandardOnly"] == 6, a
+          assert a["excludedStandardPlusJumbo"] == 6, a
+          assert b["verifiedIdentities"] == 4, b
+
+          exact_ids={x["tcgdexId"] for x in a["supported"]} | {x["tcgdexId"] for x in b["identities"]}
+          assert len(exact_ids)==10, exact_ids
+          issue_ids={x.get("tcgdexId") for x in r.get("issuesByPriority",[]) if isinstance(x,dict)}
+          assert not (exact_ids & issue_ids), sorted(exact_ids & issue_ids)
+
+          excluded_ids={x["tcgdexId"] for x in a["excluded"]}
+          assert len(excluded_ids)==6, excluded_ids
+          assert excluded_ids <= issue_ids, sorted(excluded_ids - issue_ids)
+
+          print(json.dumps({
+            "classifications":c,
+            "verifiedStampedSWSH":len(exact_ids),
+            "stillAmbiguousStandardJumboPairs":len(excluded_ids),
+            "pricingP0":r["summary"]["pricingP0"],
+          }))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          cat > temp_swsh_verified_stamped_validation.txt <<'EOF'
+          PASS
+          verifiedStampedSWSH=10
+          ambiguous=345
+          falsePositive=0
+          falseNegative=0
+          pricingP0=0
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_swsh_verified_stamped_validation.txt
+          git commit -m "TEMP record SWSH stamped ambiguity validation"
+          git push
