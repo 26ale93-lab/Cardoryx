@@ -1,0 +1,52 @@
+name: TEMP Verify Existing Exact Finish Paths
+
+on:
+  push:
+    branches:
+      - audit/classify-existing-exact-finish-paths-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout TCGdex cards database
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run full audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+      - name: Enforce exact-only impact
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          c=r["summary"]["classifications"]
+          x=r["existingExactFinishPathClassification"]
+          assert r["summary"]["totalIdentitiesTested"] == 4254, r["summary"]
+          assert c["CORRETTA"] == 3943, c
+          assert c["AMBIGUA"] == 303, c
+          assert c["FALSO POSITIVO"] == 0, c
+          assert c["FALSO NEGATIVO"] == 0, c
+          assert c["SOURCE CONFLICT"] == 8, c
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+          assert len(x["mfbPokeballIds"]) == 6, x
+          assert len(x["worldsIds"]) == 3, x
+          assert len(x["fossilChecklistIds"]) == 14, x
+          assert x["productionModified"] is False, x
+          print(json.dumps({"summary":r["summary"],"exactPaths":x},ensure_ascii=False,indent=2))
+          PY
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-finish-paths-audit
+          path: artifacts/variant_finish_audit_report.json
