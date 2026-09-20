@@ -46,20 +46,17 @@ jobs:
           assert c["CORRETTA"] == 3891, c
           assert r["summary"]["pricingP0"] == 0, r["summary"]
 
-          cards=r.get("cards") or []
-          verified=[
-            x for x in cards
-            if x.get("verifiedStampedFinishes")
-          ]
-          assert len(verified)==49, len(verified)
-          ids={x["tcgdexId"] for x in verified}
-          assert sum(x.startswith("2012bw-") for x in ids)==12
-          assert sum(x.startswith("2014xy-") for x in ids)==12
-          assert sum(x.startswith("2021swsh-") for x in ids)==25
-          assert all(x.get("classification")=="CORRETTA" for x in verified)
+          mcd=r["mcdonaldsStampAudit"]
+          mcd2021=r["mcdonalds2021AnniversaryAudit"]
+          assert mcd["verifiedIdentities"] == 24, mcd
+          assert mcd2021["verifiedCards"] == 25, mcd2021
+          verified_ids={x["tcgdexId"] for x in mcd["identities"]} | {x["tcgdexId"] for x in mcd2021["identities"]}
+          assert len(verified_ids)==49, len(verified_ids)
+          issue_ids={x.get("tcgdexId") for x in r.get("issuesByPriority",[]) if isinstance(x,dict)}
+          assert not (verified_ids & issue_ids), sorted(verified_ids & issue_ids)
           print(json.dumps({
             "classifications":c,
-            "verifiedStampedIdentities":len(verified),
+            "verifiedStampedIdentities":len(verified_ids),
             "pricingP0":r["summary"]["pricingP0"],
           }))
           PY
