@@ -1525,9 +1525,11 @@ def verified_bog_cosmos_standard_jumbo_truth(card):
 
 def verified_hidden_fates_shiny_vault_truth(card):
     """Official Hidden Fates checklist marks every SV1-SV94 Shiny Vault card as Shiny Vault foil."""
-    if str((card.get("set") or {}).get("id") or "").strip().lower() != "sma":
+    cid=str(card.get("id") or card.get("tcgdexId") or "").strip().lower()
+    set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
+    if set_id != "sma" and not cid.startswith("sma-"):
         return set()
-    local=str(card.get("localId") or "").strip().upper()
+    local=str(card.get("localId") or (cid.split("-",1)[1] if cid.startswith("sma-") else "")).strip().upper()
     m=re.fullmatch(r"SV0*(\\d+)", local)
     if not m or not (1 <= int(m.group(1)) <= 94):
         return set()
