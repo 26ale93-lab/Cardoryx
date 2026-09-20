@@ -22,7 +22,7 @@ jobs:
           c=r["summary"]["classifications"]
           print(r["summary"])
           assert r["summary"]["totalIdentitiesTested"]==4254
-          assert c=={"CORRETTA":4116,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":130,"SOURCE CONFLICT":8},c
+          assert c=={"CORRETTA":4117,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":129,"SOURCE CONFLICT":8},c
           assert r["summary"]["pricingP0"]==0
           print("HIDDEN_FATES_GATES_OK")
           PY
