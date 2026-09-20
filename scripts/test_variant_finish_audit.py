@@ -1424,6 +1424,48 @@ def verified_celebrations_classic_holo_truth(card):
     return {"Holo"} if len(rows)==1 else set()
 
 
+VERIFIED_RESIDUAL_EXACT_FINISHES = {
+    "basep-2":"Normal","basep-3":"Normal","basep-4":"Normal","basep-5":"Normal","basep-50":"Normal","basep-53":"Normal",
+    "bog-8":"Reverse Holo","bog-9":"Reverse Holo",
+    "dpp-DP05":"Normal","dpp-DP25":"Normal","dpp-DP48":"Normal",
+    "hgssp-HGSS18":"Normal",
+    "np-11":"Normal","np-23":"Normal","np-26":"Normal","np-27":"Normal","np-36":"Normal","np-4":"Normal",
+    "np-5":"Holo","np-6":"Holo","np-7":"Holo","np-9":"Normal",
+    "sv08.5-176":"Holo","sv08.5-177":"Holo","sv08.5-178":"Holo","sv08.5-179":"Holo","sv08.5-180":"Holo",
+    "sv09-190":"Holo",
+}
+
+def verified_residual_exact_finish_truth(card):
+    """Exact whitelist from the residual audit; no family-level inference."""
+    cid=str(card.get("id") or card.get("tcgdexId") or "")
+    expected=VERIFIED_RESIDUAL_EXACT_FINISHES.get(cid)
+    if not expected:
+        return set()
+    rows=card.get("variants_detailed") or []
+    if not rows:
+        return set()
+    expected_type={"Normal":"normal","Holo":"holo","Reverse Holo":"reverse"}[expected]
+    for row in rows:
+        if canonical_finish_type_label(row.get("type")) != expected_type:
+            return set()
+        if row.get("foil"):
+            return set()
+        if str(row.get("size") or "standard").lower() != "standard":
+            return set()
+    # Historical promo identities in this whitelist are stamped by construction;
+    # the six modern set cards are the only deliberate unstamped single-row cases.
+    modern_unstamped = cid in {
+        "sv08.5-176","sv08.5-177","sv08.5-178","sv08.5-179","sv08.5-180","sv09-190"
+    }
+    if modern_unstamped:
+        if len(rows) != 1 or (rows[0].get("stamp") or []):
+            return set()
+    elif not all(bool(row.get("stamp") or []) for row in rows):
+        return set()
+    return {expected}
+
+
+
 def verified_unanimous_special_finish_truth(card):
     """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
     set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2133,7 +2175,8 @@ def main():
         celebrations_standard_truth = verified_celebrations_standard_holo_truth(en)
         celebrations_classic_truth = verified_celebrations_classic_holo_truth(en)
         unanimous_special_truth = verified_unanimous_special_finish_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth
+        residual_exact_truth = verified_residual_exact_finish_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2147,6 +2190,8 @@ def main():
                 "exact Celebrations Classic Holo physical row handled separately from known Cardmarket product-id source conflict"
                 if celebrations_classic_truth else
                 "all explicit physical variant rows agree on one finish within exact MFB/SWSHP/SVP scope"
+                if unanimous_special_truth else
+                "exact residual identity has unanimous explicit physical finish evidence"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2192,6 +2237,7 @@ def main():
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
             "verifiedCelebrationsClassicFinishes": sorted(celebrations_classic_truth),
             "verifiedUnanimousSpecialFinishes": sorted(unanimous_special_truth),
+            "verifiedResidualExactFinishes": sorted(residual_exact_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2504,6 +2550,19 @@ def main():
             "mfbFailClosedPricingIdsPreserved": ["mfb-33","mfb-34"],
             "svpFailClosedPricingIdPreserved": "svp-101",
             "mixedFinishIdentityExcluded": "svp-225",
+            "productionModified": False,
+        },
+        "residualExactFinishClassification": {
+            "expectedIdentities": len(VERIFIED_RESIDUAL_EXACT_FINISHES),
+            "classifiedIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in VERIFIED_RESIDUAL_EXACT_FINISHES
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedResidualExactFinishes")
+                and c.get("reason") == "exact residual identity has unanimous explicit physical finish evidence"
+            ),
+            "excludedMep028": "mep-028",
+            "mixedIdentitiesRemainAmbiguous": ["ex5-98","svp-225"],
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
