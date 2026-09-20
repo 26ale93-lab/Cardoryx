@@ -116,6 +116,37 @@ jobs:
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
 
+      - name: Verify exact live Celebrations Standard/Jumbo finish types
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          ids=["swshp-SWSH132","swshp-SWSH133","swshp-SWSH134","swshp-SWSH136","swshp-SWSH137","swshp-SWSH138"]
+          expected={
+            "swshp-SWSH132":(576731,576905),
+            "swshp-SWSH133":(576732,576906),
+            "swshp-SWSH134":(576733,576907),
+            "swshp-SWSH136":(576735,576908),
+            "swshp-SWSH137":(576736,576909),
+            "swshp-SWSH138":(576737,576910),
+          }
+          out={}
+          for cid in ids:
+            with urllib.request.urlopen("https://api.tcgdex.net/v2/en/cards/"+cid,timeout=30) as r:
+              c=json.load(r)
+            rows=[]
+            for row in c.get("variants_detailed") or []:
+              pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+              if pid in expected[cid]:
+                rows.append({
+                  "pid":pid,"type":row.get("type"),"foil":row.get("foil"),
+                  "stamp":row.get("stamp"),"size":row.get("size"),
+                  "pricingPid":((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct")
+                })
+            out[cid]=rows
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          open("artifacts/celebrations_standard_jumbo_finish_rows.json","w").write(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+
       - name: Upload diagnostics
         uses: actions/upload-artifact@v4
         with:
@@ -123,3 +154,4 @@ jobs:
           path: |
             artifacts/variant_finish_audit_report.json
             artifacts/residual_family_diagnostic.json
+            artifacts/celebrations_standard_jumbo_finish_rows.json
