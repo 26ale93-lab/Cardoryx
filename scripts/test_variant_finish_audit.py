@@ -2248,6 +2248,8 @@ def main():
                 "exact residual identity has unanimous explicit physical finish evidence"
                 if residual_exact_truth else
                 "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
+                if np_winner_truth else
+                "exact BOG identity has verified Cosmos Holo Standard/Jumbo physical rows"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
