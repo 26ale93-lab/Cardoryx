@@ -1,0 +1,82 @@
+name: TEMP Variant Finish Post101 Audit
+
+on:
+  push:
+    branches:
+      - audit/variant-finish-post101-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Run full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/variant_finish_post101.json             --workers 24
+
+      - name: Build compact result
+        run: |
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          r=json.loads(Path("/tmp/variant_finish_post101.json").read_text())
+          issues=r.get("issuesByPriority") or []
+          if isinstance(issues,dict):
+              flat=[]
+              for k,v in issues.items():
+                  if isinstance(v,list):
+                      for x in v:
+                          if isinstance(x,dict):
+                              flat.append({"priority":k,**x})
+              issues=flat
+          amb=[x for x in issues if x.get("classification")=="AMBIGUA"]
+          by_set=Counter(x.get("set") or x.get("setId") or "NONE" for x in amb)
+          by_reason=Counter(x.get("reason") or "NONE" for x in amb)
+          out={
+            "summary":r.get("summary"),
+            "totalsByFinish":r.get("totalsByFinish"),
+            "pricing":r.get("cardmarketPricingAudit"),
+            "registryAudit":r.get("registryAudit"),
+            "mcdonaldsStampAudit":r.get("mcdonaldsStampAudit"),
+            "mcdonalds2021AnniversaryAudit":r.get("mcdonalds2021AnniversaryAudit"),
+            "realWorldRegression":r.get("realWorldRegression"),
+            "ambiguousCount":len(amb),
+            "ambiguousBySet":by_set.most_common(40),
+            "ambiguousByReason":by_reason.most_common(20),
+            "ambiguous":amb,
+          }
+          Path("temp_variant_finish_post101_summary.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+            "summary":out["summary"],
+            "ambiguousCount":out["ambiguousCount"],
+            "ambiguousBySet":out["ambiguousBySet"][:20],
+          },ensure_ascii=False))
+          PY
+
+      - name: Record result
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_variant_finish_post101_summary.json
+          git commit -m "TEMP record post101 finish audit"
+          git push
