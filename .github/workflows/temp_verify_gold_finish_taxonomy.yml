@@ -1,0 +1,44 @@
+name: TEMP Verify Gold Finish Taxonomy
+on:
+  push:
+    branches: [feature/gold-finish-taxonomy-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Full variant finish audit
+        run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - name: Gold regression gates
+        run: |
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          r=json.load(open("artifacts/report.json"))
+          print(json.dumps(r["summary"],indent=2))
+          assert r["summary"]["totalCards"]==4254, r["summary"]
+          c=r["summary"]["classificationCounts"]
+          assert c["FALSO POSITIVO"]==0 and c["FALSO NEGATIVO"]==0 and c["SOURCE CONFLICT"]==8, c
+          assert c["CORRETTA"]==4097 and c["AMBIGUA"]==149, c
+          issues={x["tcgdexId"]:x for x in r["issuesByPriority"]}
+          gold=["sv08.5-176","sv08.5-177","sv08.5-178","sv08.5-179","sv08.5-180","sv09-190"]
+          for cid in gold:
+            x=issues.get(cid)
+            assert not x or x.get("classification")=="CORRETTA",(cid,x)
+          for cid in ["mep-028","ex5-98","svp-225","bog-8","bog-9"]:
+            assert issues[cid]["classification"]=="AMBIGUA",(cid,issues.get(cid))
+          s=Path("index.html").read_text()
+          assert s.count('<option value="Gold">Gold</option>')==2
+          assert "if(foil==='gold')out.add('Gold');" in s
+          assert "else if(target==='Gold') matches=pool.filter" in s
+          # Gold must not be routed through generic Holo matching.
+          gold_block=s[s.index("function tcgdexMarketplaceVariant"):s.index("function applyDetectedVariant")]
+          assert "target==='Gold'" in gold_block
+          print("GOLD_GATES_OK")
+          PY
