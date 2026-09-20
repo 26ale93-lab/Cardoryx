@@ -16,6 +16,7 @@ required = [
     "compactAnalysis",
     "Copia riepilogo compatto",
     "Delta quantità sui record comuni",
+    "serialized===undefined?\'__CARDORYX_UNDEFINED__\':serialized",
 ]
 for token in required:
     assert token in text, f"missing required token: {token}"
