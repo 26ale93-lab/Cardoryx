@@ -1488,6 +1488,38 @@ def verified_np_winner_standard_jumbo_truth(card):
 
 
 
+VERIFIED_BOG_WINNER_COSMOS = {"bog-8","bog-9"}
+
+def verified_bog_winner_cosmos_truth(card):
+    """Exact Cosmos Holo evidence for two Best of Game Winner Standard+Jumbo promos."""
+    cid=str(card.get("id") or card.get("tcgdexId") or "")
+    if cid not in VERIFIED_BOG_WINNER_COSMOS:
+        return set()
+    set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
+    if set_id!="bog":
+        return set()
+    rows=card.get("variants_detailed") or []
+    if len(rows)!=2:
+        return set()
+    sizes=[]
+    for row in rows:
+        if canonical_finish_type_label(row.get("type"))!="reverse":
+            return set()
+        if canonical_finish_foil_label(row.get("foil"))!="cosmos":
+            return set()
+        stamps=[norm(x) for x in (row.get("stamp") or [])]
+        if stamps!=["winner"]:
+            return set()
+        size=str(row.get("size") or "standard").strip().lower()
+        if size not in {"standard","jumbo"}:
+            return set()
+        sizes.append(size)
+    if sorted(sizes)!=["jumbo","standard"]:
+        return set()
+    return {"Cosmos Holo"}
+
+
+
 def verified_unanimous_special_finish_truth(card):
     """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
     set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2199,7 +2231,8 @@ def main():
         unanimous_special_truth = verified_unanimous_special_finish_truth(en)
         residual_exact_truth = verified_residual_exact_finish_truth(en)
         np_winner_truth = verified_np_winner_standard_jumbo_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth
+        bog_winner_cosmos_truth = verified_bog_winner_cosmos_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_winner_cosmos_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2217,6 +2250,8 @@ def main():
                 "exact residual identity has unanimous explicit physical finish evidence"
                 if residual_exact_truth else
                 "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
+                if np_winner_truth else
+                "exact Best of Game Winner promo has verified Reverse+Cosmos Standard/Jumbo physical rows"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2264,6 +2299,7 @@ def main():
             "verifiedUnanimousSpecialFinishes": sorted(unanimous_special_truth),
             "verifiedResidualExactFinishes": sorted(residual_exact_truth),
             "verifiedNpWinnerStandardJumboFinishes": sorted(np_winner_truth),
+            "verifiedBogWinnerCosmosFinishes": sorted(bog_winner_cosmos_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2601,6 +2637,22 @@ def main():
                 and c.get("reason") == "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
             ),
             "finish": "Normal",
+            "stamp": "winner",
+            "requiresStandardAndJumbo": True,
+            "productionModified": False,
+        },
+        "bogWinnerCosmosClassification": {
+            "expectedIds": sorted(VERIFIED_BOG_WINNER_COSMOS),
+            "classifiedIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in VERIFIED_BOG_WINNER_COSMOS
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedBogWinnerCosmosFinishes") == ["Cosmos Holo"]
+                and c.get("reason") == "exact Best of Game Winner promo has verified Reverse+Cosmos Standard/Jumbo physical rows"
+            ),
+            "finish": "Cosmos Holo",
+            "sourceType": "reverse",
+            "foil": "cosmos",
             "stamp": "winner",
             "requiresStandardAndJumbo": True,
             "productionModified": False,
