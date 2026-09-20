@@ -4127,6 +4127,89 @@ function verifiedSwshpSetLogoFinishes(card,stamp){
   return tcgdexExactSwshpSetLogoRow(card)?['Holo']:[];
 }
 
+const VERIFIED_SWSHP_SET_LOGO_STAFF_PRODUCTS={
+  "swshp-SWSH006":{localId:"SWSH006",name:"Rillaboom",productId:437154},
+  "swshp-SWSH007":{localId:"SWSH007",name:"Frosmoth",productId:437159},
+  "swshp-SWSH008":{localId:"SWSH008",name:"Galarian Perrserker",productId:437164},
+  "swshp-SWSH009":{localId:"SWSH009",name:"Cinccino",productId:437169},
+  "swshp-SWSH022":{localId:"SWSH022",name:"Flapple",productId:453448},
+  "swshp-SWSH023":{localId:"SWSH023",name:"Luxray",productId:453453},
+  "swshp-SWSH024":{localId:"SWSH024",name:"Coalossal",productId:453458},
+  "swshp-SWSH025":{localId:"SWSH025",name:"Garbodor",productId:453463},
+  "swshp-SWSH035":{localId:"SWSH035",name:"Decidueye",productId:487069},
+  "swshp-SWSH036":{localId:"SWSH036",name:"Arctozolt",productId:487074},
+  "swshp-SWSH037":{localId:"SWSH037",name:"Hydreigon",productId:487079},
+  "swshp-SWSH038":{localId:"SWSH038",name:"Kangaskhan",productId:487084},
+  "swshp-SWSH066":{localId:"SWSH066",name:"Charizard",productId:516329},
+  "swshp-SWSH067":{localId:"SWSH067",name:"Donphan",productId:516334},
+  "swshp-SWSH068":{localId:"SWSH068",name:"Snorlax",productId:516339},
+  "swshp-SWSH069":{localId:"SWSH069",name:"Lugia",productId:516344},
+  "swshp-SWSH088":{localId:"SWSH088",name:"Cherrim",productId:546936},
+  "swshp-SWSH089":{localId:"SWSH089",name:"Octillery",productId:546941},
+  "swshp-SWSH090":{localId:"SWSH090",name:"Houndoom",productId:546961},
+  "swshp-SWSH091":{localId:"SWSH091",name:"Bronzong",productId:546966},
+  "swshp-SWSH112":{localId:"SWSH112",name:"Cinderace",productId:566760},
+  "swshp-SWSH113":{localId:"SWSH113",name:"Inteleon",productId:566761},
+  "swshp-SWSH114":{localId:"SWSH114",name:"Cresselia",productId:566762},
+  "swshp-SWSH115":{localId:"SWSH115",name:"Passimian",productId:566763},
+  "swshp-SWSH122":{localId:"SWSH122",name:"Flaaffy",productId:573857},
+  "swshp-SWSH123":{localId:"SWSH123",name:"Galarian Articuno",productId:573858},
+  "swshp-SWSH124":{localId:"SWSH124",name:"Galarian Zapdos",productId:573859},
+  "swshp-SWSH125":{localId:"SWSH125",name:"Galarian Moltres",productId:573860},
+  "swshp-SWSH185":{localId:"SWSH185",name:"Moltres",productId:606599},
+  "swshp-SWSH186":{localId:"SWSH186",name:"Lucario",productId:606600},
+  "swshp-SWSH187":{localId:"SWSH187",name:"Liepard",productId:606601},
+  "swshp-SWSH188":{localId:"SWSH188",name:"Bibarel",productId:606602},
+  "swshp-SWSH205":{localId:"SWSH205",name:"Hisuian Basculegion",productId:611336},
+  "swshp-SWSH206":{localId:"SWSH206",name:"Wyrdeer",productId:611337},
+  "swshp-SWSH207":{localId:"SWSH207",name:"Hisuian Samurott",productId:611338},
+  "swshp-SWSH208":{localId:"SWSH208",name:"Magnezone",productId:611339},
+  "swshp-SWSH240":{localId:"SWSH240",name:"Finneon",productId:665983},
+  "swshp-SWSH241":{localId:"SWSH241",name:"Gengar",productId:665984},
+  "swshp-SWSH242":{localId:"SWSH242",name:"Comfey",productId:665985},
+  "swshp-SWSH243":{localId:"SWSH243",name:"Machamp",productId:665986},
+  "swshp-SWSH269":{localId:"SWSH269",name:"Sunflora",productId:681798},
+  "swshp-SWSH270":{localId:"SWSH270",name:"Rapidash",productId:681799},
+  "swshp-SWSH271":{localId:"SWSH271",name:"Kirlia",productId:681800},
+  "swshp-SWSH272":{localId:"SWSH272",name:"Archeops",productId:681801},
+};
+function verifiedSwshpSetLogoStaffRule(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim();
+  const rule=VERIFIED_SWSHP_SET_LOGO_STAFF_PRODUCTS[id];
+  if(!rule||cardSetId(card)!=='swshp'||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId)||
+     normText(card?.name||'')!==normText(rule.name))return null;
+  return rule;
+}
+function tcgdexExactSwshpSetLogoStaffRows(card){
+  const rule=verifiedSwshpSetLogoStaffRule(card);if(!rule)return null;
+  const stamped=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.includes('setlogo')&&
+      canonicalFinishTypeLabel(row?.type)==='holo'&&
+      !canonicalFinishFoilLabel(row?.foil)&&
+      String(row?.size||'standard').trim().toLowerCase()==='standard';
+  });
+  const base=stamped.filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    return stamps.length===1&&stamps[0]==='setlogo';
+  });
+  const staff=stamped.filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText).sort();
+    return stamps.length===2&&stamps[0]==='setlogo'&&stamps[1]==='staff';
+  });
+  if(base.length!==1||staff.length!==1)return null;
+  const basePid=Number(base[0]?.thirdParty?.cardmarket||0);
+  const staffPid=Number(staff[0]?.thirdParty?.cardmarket||0);
+  if(basePid!==rule.productId||staffPid!==0)return null;
+  return {base:base[0],staff:staff[0]};
+}
+function verifiedSwshpSetLogoStaffFinishes(card,stamp){
+  const st=canonicalStamp(stamp);
+  if(st!=='Set Stamp'&&st!=='Staff')return [];
+  return tcgdexExactSwshpSetLogoStaffRows(card)?['Holo']:[];
+}
+
 const VERIFIED_MFB_POKEBALL_ROWS={
   'mfb-1':{setId:'mfb',localId:'1',name:'Bulbasaur',deckToken:'bulbasaur',baseProductId:741976,pokeballProductId:741975},
   'mfb-8':{setId:'mfb',localId:'8',name:'Grass Energy',deckToken:'bulbasaur',baseProductId:741986,pokeballProductId:741985},
@@ -4942,6 +5025,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   for(const finish of verifiedMcdonalds2021AnniversaryFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshp25thStandardFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshpSetLogoFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedSwshpSetLogoStaffFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
@@ -5751,6 +5835,20 @@ function tcgdexExactSwshpSetLogoPrice(card,variant,stamp){
     source:`TCGdex · Cardmarket · SWSH Promo Set Stamp · prodotto esatto ${rule.productId}`};
 }
 
+function tcgdexExactSwshpSetLogoStaffPrice(card,variant,stamp){
+  if(canonicalStamp(stamp)!=='Set Stamp'||canonicalVariant(variant||'Normal')!=='Holo')return null;
+  const rule=verifiedSwshpSetLogoStaffRule(card);if(!rule)return null;
+  const rows=tcgdexExactSwshpSetLogoStaffRows(card);if(!rows)return null;
+  const row=rows.base,cm=row?.pricing?.cardmarket;
+  const pid=Number(row?.thirdParty?.cardmarket||0);
+  const ppid=Number(cm?.idProduct||cm?.id_product||0);
+  if(!cm||pid!==rule.productId||ppid!==rule.productId)return null;
+  const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(cm?.[k]||0)>0);
+  if(!usable)return null;
+  return {...cm,idProduct:rule.productId,
+    source:`TCGdex · Cardmarket · SWSH Promo Set Stamp · prodotto esatto ${rule.productId}`};
+}
+
 function verifiedStampPrice(card,variant,stamp){
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
@@ -5772,6 +5870,8 @@ function verifiedStampPrice(card,variant,stamp){
   if(swshp25Exact)return swshp25Exact;
   const swshpSetLogo=tcgdexExactSwshpSetLogoPrice(card,variant,stamp);
   if(swshpSetLogo)return swshpSetLogo;
+  const swshpSetLogoStaff=tcgdexExactSwshpSetLogoStaffPrice(card,variant,stamp);
+  if(swshpSetLogoStaff)return swshpSetLogoStaff;
   const setName=normText(card?.set?.name||card?.set||'');
   const num=(String(card?.localId||'').replace(/^0+/,'')||String(card?.localId||''));
   const finish=canonicalVariant(variant||'Normal');
