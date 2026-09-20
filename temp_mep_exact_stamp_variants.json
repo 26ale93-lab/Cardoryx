@@ -1,0 +1,181 @@
+{
+  "setStampVariants": 19,
+  "staffVariants": 15,
+  "totalExactVariants": 34,
+  "distinctProductIds": 34,
+  "cardmarketUsablePriceRows": 34,
+  "liveRowsChecked": 34,
+  "failures": [],
+  "variants": [
+    {
+      "tcgdexId": "mep-001",
+      "kind": "Set Stamp",
+      "productId": 851043
+    },
+    {
+      "tcgdexId": "mep-001",
+      "kind": "Staff",
+      "productId": 851044
+    },
+    {
+      "tcgdexId": "mep-002",
+      "kind": "Set Stamp",
+      "productId": 851045
+    },
+    {
+      "tcgdexId": "mep-002",
+      "kind": "Staff",
+      "productId": 851046
+    },
+    {
+      "tcgdexId": "mep-003",
+      "kind": "Set Stamp",
+      "productId": 851047
+    },
+    {
+      "tcgdexId": "mep-003",
+      "kind": "Staff",
+      "productId": 851048
+    },
+    {
+      "tcgdexId": "mep-004",
+      "kind": "Set Stamp",
+      "productId": 851049
+    },
+    {
+      "tcgdexId": "mep-004",
+      "kind": "Staff",
+      "productId": 851050
+    },
+    {
+      "tcgdexId": "mep-014",
+      "kind": "Set Stamp",
+      "productId": 857390
+    },
+    {
+      "tcgdexId": "mep-014",
+      "kind": "Staff",
+      "productId": 859014
+    },
+    {
+      "tcgdexId": "mep-015",
+      "kind": "Set Stamp",
+      "productId": 857393
+    },
+    {
+      "tcgdexId": "mep-015",
+      "kind": "Staff",
+      "productId": 859015
+    },
+    {
+      "tcgdexId": "mep-016",
+      "kind": "Set Stamp",
+      "productId": 857396
+    },
+    {
+      "tcgdexId": "mep-016",
+      "kind": "Staff",
+      "productId": 859016
+    },
+    {
+      "tcgdexId": "mep-017",
+      "kind": "Set Stamp",
+      "productId": 857400
+    },
+    {
+      "tcgdexId": "mep-017",
+      "kind": "Staff",
+      "productId": 859018
+    },
+    {
+      "tcgdexId": "mep-065",
+      "kind": "Set Stamp",
+      "productId": 877544
+    },
+    {
+      "tcgdexId": "mep-065",
+      "kind": "Staff",
+      "productId": 879305
+    },
+    {
+      "tcgdexId": "mep-066",
+      "kind": "Set Stamp",
+      "productId": 877545
+    },
+    {
+      "tcgdexId": "mep-066",
+      "kind": "Staff",
+      "productId": 879315
+    },
+    {
+      "tcgdexId": "mep-067",
+      "kind": "Set Stamp",
+      "productId": 877546
+    },
+    {
+      "tcgdexId": "mep-067",
+      "kind": "Staff",
+      "productId": 879312
+    },
+    {
+      "tcgdexId": "mep-074",
+      "kind": "Set Stamp",
+      "productId": 884752
+    },
+    {
+      "tcgdexId": "mep-074",
+      "kind": "Staff",
+      "productId": 884753
+    },
+    {
+      "tcgdexId": "mep-075",
+      "kind": "Set Stamp",
+      "productId": 884754
+    },
+    {
+      "tcgdexId": "mep-075",
+      "kind": "Staff",
+      "productId": 884755
+    },
+    {
+      "tcgdexId": "mep-076",
+      "kind": "Set Stamp",
+      "productId": 884756
+    },
+    {
+      "tcgdexId": "mep-076",
+      "kind": "Staff",
+      "productId": 884757
+    },
+    {
+      "tcgdexId": "mep-077",
+      "kind": "Set Stamp",
+      "productId": 884758
+    },
+    {
+      "tcgdexId": "mep-077",
+      "kind": "Staff",
+      "productId": 884759
+    },
+    {
+      "tcgdexId": "mep-082",
+      "kind": "Set Stamp",
+      "productId": 894261
+    },
+    {
+      "tcgdexId": "mep-083",
+      "kind": "Set Stamp",
+      "productId": 894262
+    },
+    {
+      "tcgdexId": "mep-084",
+      "kind": "Set Stamp",
+      "productId": 894263
+    },
+    {
+      "tcgdexId": "mep-085",
+      "kind": "Set Stamp",
+      "productId": 894264
+    }
+  ]
+}
