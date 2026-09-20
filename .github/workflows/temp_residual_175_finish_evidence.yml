@@ -1,0 +1,111 @@
+name: TEMP Residual 175 Finish Evidence
+
+on:
+  push:
+    branches:
+      - diagnostic/residual-175-finish-evidence-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout TCGdex cards database
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run full finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db tcgdex-cards-database \
+            --output artifacts/variant_finish_audit_report.json
+      - name: Summarize residual evidence
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json
+          from collections import Counter, defaultdict
+          from pathlib import Path
+
+          report=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          spec=importlib.util.spec_from_file_location("vfa","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          cards, errors, sha=mod.load_official_database(Path("tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+          amb=[x for x in report.get("issuesByPriority",[]) if x.get("classification")=="AMBIGUA"]
+
+          buckets=Counter()
+          by_prefix=defaultdict(Counter)
+          examples=defaultdict(list)
+          candidates=[]
+          for issue in amb:
+              cid=issue.get("tcgdexId")
+              prefix=(cid or "").split("-",1)[0]
+              raw=by_id.get(cid,{})
+              rows=raw.get("variants_detailed") or []
+              if not rows:
+                  bucket="no_detailed_rows"
+              else:
+                  finishes=[]
+                  valid=True
+                  for row in rows:
+                      f=mod.canonical_finish_type_label(row.get("type"))
+                      if f not in {"normal","holo","reverse"}:
+                          valid=False
+                          break
+                      finishes.append(f)
+                  if not valid:
+                      bucket="unsupported_row_type"
+                  else:
+                      unique=set(finishes)
+                      if len(unique)==1:
+                          bucket="unanimous_"+next(iter(unique))
+                      else:
+                          bucket="mixed_finishes"
+              buckets[bucket]+=1
+              by_prefix[prefix][bucket]+=1
+              if len(examples[bucket])<12:
+                  examples[bucket].append({
+                      "id":cid,"set":issue.get("set"),"name":issue.get("name"),
+                      "rows":[{"type":r.get("type"),"foil":r.get("foil"),"stamp":r.get("stamp"),"size":r.get("size"),
+                               "cm":(r.get("thirdParty") or {}).get("cardmarket")} for r in rows[:8]]
+                  })
+              if bucket.startswith("unanimous_"):
+                  candidates.append({
+                      "id":cid,"prefix":prefix,"set":issue.get("set"),"name":issue.get("name"),
+                      "finish":bucket.replace("unanimous_",""),
+                      "rowCount":len(rows),
+                      "stamps":sorted({str(s) for r in rows for s in (r.get("stamp") or [])}),
+                      "allRowsStamped":all(bool(r.get("stamp") or []) for r in rows),
+                  })
+
+          out={
+              "summary":report["summary"],
+              "tcgdexSha":sha,
+              "ambiguousCount":len(amb),
+              "buckets":dict(buckets),
+              "byPrefix":{k:dict(v) for k,v in sorted(by_prefix.items())},
+              "unanimousCandidates":candidates,
+              "examples":dict(examples),
+          }
+          Path("artifacts/residual_175_finish_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              "summary":out["summary"],
+              "ambiguousCount":out["ambiguousCount"],
+              "buckets":out["buckets"],
+              "byPrefix":out["byPrefix"],
+              "candidateCount":len(candidates),
+              "candidatePreview":candidates[:80],
+          },ensure_ascii=False,indent=2))
+          PY
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-175-finish-evidence
+          path: |
+            artifacts/variant_finish_audit_report.json
+            artifacts/residual_175_finish_evidence.json
