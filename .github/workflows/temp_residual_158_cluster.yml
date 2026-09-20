@@ -1,0 +1,53 @@
+name: TEMP Residual 158 Cluster Audit
+
+on:
+  push:
+    branches:
+      - diagnostic/residual-158-cluster-audit-20260920
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json
+      - name: Cluster residual 158
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json
+          from collections import Counter,defaultdict
+          from pathlib import Path
+          r=json.loads(Path("artifacts/variant_finish_audit_report.json").read_text())
+          spec=importlib.util.spec_from_file_location("vfa","scripts/test_variant_finish_audit.py")
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          cards,errs,sha=m.load_official_database(Path("tcgdex-cards-database"))
+          by={c["id"]:c for c in cards}
+          amb=[x for x in r.get("issuesByPriority",[]) if x.get("classification")=="AMBIGUA"]
+          prefixes=Counter((x.get("tcgdexId") or "").split("-",1)[0] for x in amb)
+          rows=[]
+          for x in amb:
+            cid=x.get("tcgdexId"); c=by.get(cid,{})
+            vd=c.get("variants_detailed") or []
+            rows.append({
+              "id":cid,"name":x.get("name"),"set":x.get("set"),"reason":x.get("reason"),
+              "rarity":c.get("rarity"),"variants":c.get("variants"),
+              "detailed":[{"type":v.get("type"),"foil":v.get("foil"),"stamp":v.get("stamp"),"size":v.get("size"),
+                           "cm":(v.get("thirdParty") or {}).get("cardmarket")} for v in vd],
+              "pricing":((c.get("pricing") or {}).get("cardmarket") or {}),
+            })
+          out={"summary":r["summary"],"tcgdexSha":sha,"count":len(rows),"prefixCounts":prefixes.most_common(),"rows":rows}
+          Path("artifacts/residual_158_cluster.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({"summary":r["summary"],"count":len(rows),"prefixCounts":prefixes.most_common()},ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: residual-158-cluster
+          path: artifacts/residual_158_cluster.json
