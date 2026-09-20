@@ -407,6 +407,7 @@ function verifiedSpecialStampFinishes(){return [];}
 function verifiedMcdonaldsStampFinishes(){return [];}
 function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
 function verifiedSwshp25thStandardFinishes(){return [];}
+function verifiedSwshpSetLogoFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
@@ -884,6 +885,113 @@ process.stdout.write(JSON.stringify({supported:supported.length,excludedJumboPai
 '''
         .replace("__SUPPORTED__", json.dumps(fixtures, ensure_ascii=False))
         .replace("__EXCLUDED__", json.dumps(excluded, ensure_ascii=False))
+    )
+    return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
+def audit_swshp_set_logo_168_171(cards, source):
+    expected = {
+        "swshp-SWSH168": ("SWSH168", "Oricorio", 580165),
+        "swshp-SWSH169": ("SWSH169", "Pyukumuku", 580166),
+        "swshp-SWSH170": ("SWSH170", "Deoxys", 580167),
+        "swshp-SWSH171": ("SWSH171", "Latias", 580168),
+    }
+    by_id = {c["id"]: c for c in cards}
+    if set(expected) - set(by_id):
+        raise AssertionError("SWSH set-logo source identities missing")
+
+    registry = extract_js_object(source, "VERIFIED_SWSHP_SET_LOGO_PRODUCTS")
+    if set(registry) != set(expected):
+        raise AssertionError("SWSH set-logo registry must contain exactly four identities")
+
+    verified = []
+    for cid, (local_id, name, product_id) in expected.items():
+        card = by_id[cid]
+        source_name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+        if str(card.get("localId")) != local_id or str(source_name) != name:
+            raise AssertionError(f"SWSH set-logo identity mismatch: {cid}")
+        rows = [
+            row for row in (card.get("variants_detailed") or [])
+            if [norm(x) for x in (row.get("stamp") or [])] == ["setlogo"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() != "jumbo"
+        ]
+        if len(rows) != 1:
+            raise AssertionError(f"SWSH set-logo expected one exact row: {cid}")
+        pid = int(((rows[0].get("thirdParty") or {}).get("cardmarket")) or 0)
+        if pid != product_id:
+            raise AssertionError(f"SWSH set-logo product mismatch: {cid}")
+        if int(registry[cid].get("productId") or 0) != product_id:
+            raise AssertionError(f"SWSH set-logo registry mismatch: {cid}")
+        verified.append({"tcgdexId": cid, "productId": product_id})
+
+    runtime = run_swshp_set_logo_168_171_runtime(source, by_id, expected)
+    if runtime.get("tested") != 4 or not runtime.get("allExact"):
+        raise AssertionError("SWSH set-logo runtime regression failed")
+
+    return {
+        "verifiedIdentities": len(verified),
+        "stamp": "Set Stamp",
+        "finish": "Holo",
+        "runtime": runtime,
+        "identities": verified,
+        "scope": "only swshp SWSH168-171 exact identities; no generic SWSH set-logo rule",
+    }
+
+
+def run_swshp_set_logo_168_171_runtime(source, by_id, expected):
+    names = (
+        "normText", "canonicalStamp", "canonicalVariant",
+        "canonicalFinishTypeLabel", "canonicalFinishFoilLabel",
+        "canonicalPrintedLocalId", "printedLocalIdParts",
+        "cardSetId", "exactLocalIdKey", "tcgdexVariantDetails",
+        "verifiedSwshpSetLogoRule", "tcgdexExactSwshpSetLogoRow",
+        "verifiedSwshpSetLogoFinishes", "tcgdexExactSwshpSetLogoPrice",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    registry = extract_js_object(source, "VERIFIED_SWSHP_SET_LOGO_PRODUCTS")
+    fixtures = []
+    for cid, (_, _, product_id) in expected.items():
+        card = by_id[cid]
+        detailed = json.loads(json.dumps(card.get("variants_detailed") or []))
+        for row in detailed:
+            if [norm(x) for x in (row.get("stamp") or [])] == ["setlogo"]:
+                row["pricing"] = {"cardmarket": {
+                    "idProduct": product_id, "trend": 1.23, "low": 0.5,
+                    "updated": "runtime-fixture",
+                }}
+        fixtures.append({
+            "id": cid, "tcgdexId": cid, "localId": card.get("localId"),
+            "name": (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"),
+            "set": {"id": "swshp"},
+            "variants_detailed": detailed,
+        })
+
+    js = (
+        "const VERIFIED_SWSHP_SET_LOGO_PRODUCTS="
+        + json.dumps(registry, ensure_ascii=False) + ";\n"
+        + functions + "\n"
+        + r'''
+const cards=__FIXTURES__;
+function fail(msg){throw new Error(msg);}
+for(const card of cards){
+  const row=tcgdexExactSwshpSetLogoRow(card);
+  if(!row)fail('row missing '+card.id);
+  const finishes=verifiedSwshpSetLogoFinishes(card,'Set Stamp');
+  if(finishes.length!==1||finishes[0]!=='Holo')fail('finish mismatch '+card.id);
+  const price=tcgdexExactSwshpSetLogoPrice(card,'Holo','Set Stamp');
+  const expected=Number(VERIFIED_SWSHP_SET_LOGO_PRODUCTS[card.id].productId);
+  if(!price||Number(price.idProduct)!==expected||Number(price.trend)!==1.23)fail('price mismatch '+card.id);
+  if(tcgdexExactSwshpSetLogoPrice(card,'Normal','Set Stamp')!==null)fail('Normal leaked '+card.id);
+  if(tcgdexExactSwshpSetLogoPrice(card,'Holo','Staff')!==null)fail('wrong stamp leaked '+card.id);
+  const wrongSet={...card,set:{id:'wrong-set'}};
+  if(tcgdexExactSwshpSetLogoRow(wrongSet)!==null)fail('set leaked '+card.id);
+}
+const outsider={...cards[0],id:'swshp-SWSH999',tcgdexId:'swshp-SWSH999',localId:'SWSH999'};
+if(tcgdexExactSwshpSetLogoRow(outsider)!==null)fail('outside identity inherited rule');
+process.stdout.write(JSON.stringify({tested:cards.length,allExact:true,wrongSetRejected:true,wrongStampRejected:true,wrongFinishRejected:true,outsideIdentityRejected:true}));
+'''.replace("__FIXTURES__", json.dumps(fixtures, ensure_ascii=False))
     )
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
 
@@ -1439,11 +1547,16 @@ def main():
         "status": "not-run",
         "reason": "full cards-database snapshot required",
     }
+    swshp_set_logo_168_171_audit = {
+        "status": "not-run",
+        "reason": "full cards-database snapshot required",
+    }
     if args.tcgdex_db:
         all_cards, upstream_parse_errors, upstream_sha = load_official_database(Path(args.tcgdex_db))
         mcdonalds_stamp_audit = audit_mcdonalds_2012_2014_source(all_cards, source)
         mcdonalds_2021_25th_audit = audit_mcdonalds_2021_25th_source(all_cards, source)
         swshp_25th_standard_audit = audit_swshp_25th_standard_promos(all_cards, source)
+        swshp_set_logo_168_171_audit = audit_swshp_set_logo_168_171(all_cards, source)
         grouped = defaultdict(list)
         for c in all_cards: grouped[(c.get("set") or {}).get("id")].append(c)
         sample, era_by_id = [], {}
@@ -1849,6 +1962,7 @@ def main():
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
         "mcdonalds2021AnniversaryAudit": mcdonalds_2021_25th_audit,
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
+        "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
             "recoveredIdentities": len(normal_registry_applied_ids),
