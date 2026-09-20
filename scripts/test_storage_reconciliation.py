@@ -121,5 +121,8 @@ assert "const promotedMarker=migrationMarkerFor(localCollection,localDecks);" in
 assert "Fallback recuperato e verificato · IndexedDB riattivato" in SOURCE
 assert "Conflitto reale tra localStorage e IndexedDB" in SOURCE
 assert "sameMigrationPayload(localCollection,localDecks,promoted.collection,promoted.decks)" in SOURCE
-assert "const localCollection=loadDB();" in SOURCE\nassert "localStorage.getItem(DECK_KEY)" in SOURCE\nassert "const localCollection=db,localDecks=decks;" not in SOURCE\n
+assert "const localCollection=loadDB();" in SOURCE
+assert "localStorage.getItem(DECK_KEY)" in SOURCE
+assert "const localCollection=db,localDecks=decks;" not in SOURCE
+
 print(json.dumps({"status":"PASS","scenarios":result},ensure_ascii=False))
