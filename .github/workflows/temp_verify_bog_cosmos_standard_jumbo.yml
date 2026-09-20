@@ -1,0 +1,30 @@
+name: TEMP Verify BOG Cosmos Standard Jumbo
+on:
+  push:
+    branches: [audit/classify-bog-cosmos-standard-jumbo-20260920]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - run: python3 scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/report.json
+      - run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("artifacts/report.json")); s=r["summary"]
+          assert s["totalIdentitiesTested"]==4254,s
+          assert s["classifications"]=={"CORRETTA":4093,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":153,"SOURCE CONFLICT":8},s
+          assert s["pricingP0"]==0,s
+          issues={x["tcgdexId"]:x for x in r["issuesByPriority"]}
+          for cid in ["bog-8","bog-9"]:
+              assert cid not in issues or issues[cid]["classification"]=="CORRETTA",(cid,issues.get(cid))
+          for cid in ["mep-028","ex5-98","svp-225","sv08.5-176","sv08.5-177","sv08.5-178","sv08.5-179","sv08.5-180","sv09-190"]:
+              assert issues[cid]["classification"]=="AMBIGUA",(cid,issues.get(cid))
+          print("BOG COSMOS GATE PASS",s)
+          PY
