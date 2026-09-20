@@ -1,0 +1,91 @@
+name: TEMP SWSH Set Logo Staff Regression
+
+on:
+  push:
+    branches:
+      - feature/swshp-set-logo-staff-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Static checks
+        run: |
+          git diff --check origin/main...HEAD
+          python3 -m py_compile scripts/test_variant_finish_audit.py
+
+      - name: Full variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py \
+            --tcgdex-db ../tcgdex-cards-database \
+            --output /tmp/temp_swshp_set_logo_staff_report.json \
+            --workers 24
+
+      - name: Verify exact Set Stamp / Staff split
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/temp_swshp_set_logo_staff_report.json").read_text())
+          a=r["swshpSetLogoStaffAudit"]
+          assert a["verifiedIdentities"] == 44, a
+          assert a["setStampPriced"] == 44, a
+          assert a["staffUnpriced"] == 44, a
+          assert a["runtime"]["tested"] == 44, a
+          assert a["runtime"]["setStampPriced"] == 44, a
+          assert a["runtime"]["staffUnpriced"] == 44, a
+          assert a["runtime"]["staffPriceFailClosed"] is True, a
+          assert a["runtime"]["outsideIdentityRejected"] is True, a
+          assert r["summary"]["classifications"]["FALSO POSITIVO"] == 0, r["summary"]
+          assert r["summary"]["classifications"]["FALSO NEGATIVO"] == 0, r["summary"]
+          assert r["summary"]["pricingP0"] == 0, r["summary"]
+          print(json.dumps({"summary":r["summary"],"audit":a},ensure_ascii=False))
+          PY
+
+      - name: Cardmarket identity regression
+        run: |
+          rm -rf scripts/__pycache__
+          python3 scripts/test_card_identity_cardmarket_audit.py \
+            --tcgdex-db ../tcgdex-cards-database \
+            --workers 24
+
+      - name: Verify Cardmarket P0 remains zero
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("artifacts/card_identity_cardmarket_audit_report.json").read_text())
+          assert r["classificationTotals"]["P0_WRONG_PRODUCT"] == 0, r["classificationTotals"]
+          print(json.dumps(r["classificationTotals"],ensure_ascii=False))
+          PY
+
+      - name: Record successful validation
+        if: github.event_name == 'push'
+        run: |
+          cat > temp_swshp_set_logo_staff_validation.txt <<'EOF'
+          PASS
+          verifiedIdentities=44
+          setStampPriced=44
+          staffUnpriced=44
+          pricingP0=0
+          EOF
+          git checkout -- artifacts/card_identity_cardmarket_audit_report.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_swshp_set_logo_staff_validation.txt
+          git commit -m "TEMP record SWSH Set Logo Staff validation"
+          git push
