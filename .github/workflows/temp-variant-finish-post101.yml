@@ -72,6 +72,79 @@ jobs:
           },ensure_ascii=False))
           PY
 
+      - name: Build residual family evidence
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json
+          from collections import Counter
+          from pathlib import Path
+
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards,errors,sha=mod.load_official_database(Path("../tcgdex-cards-database"))
+          by_id={c["id"]:c for c in cards}
+          summary=json.loads(Path("temp_variant_finish_post101_summary.json").read_text())
+          amb=summary["ambiguous"]
+
+          families={}
+          for set_name,count in summary["ambiguousBySet"][:20]:
+              rows=[]
+              for issue in amb:
+                  if issue.get("set")!=set_name:
+                      continue
+                  card=by_id.get(issue["tcgdexId"]) or {}
+                  detailed=card.get("variants_detailed") or []
+                  variants=card.get("variants") or {}
+                  products=sorted({
+                      int((r.get("thirdParty") or {}).get("cardmarket") or 0)
+                      for r in detailed
+                      if int((r.get("thirdParty") or {}).get("cardmarket") or 0)>0
+                  })
+                  rows.append({
+                      "id":issue["tcgdexId"],
+                      "name":issue.get("name"),
+                      "localId":issue.get("localId"),
+                      "rarity":card.get("rarity"),
+                      "category":card.get("category"),
+                      "coarseTrue":sorted(k for k,v in variants.items() if v is True),
+                      "detailedCount":len(detailed),
+                      "detailedTypes":dict(Counter(str(r.get("type") or "") for r in detailed)),
+                      "stamps":dict(Counter(
+                          str(s)
+                          for r in detailed
+                          for s in ((r.get("stamp") or []) if isinstance(r.get("stamp"),list) else [])
+                      )),
+                      "foils":dict(Counter(str(r.get("foil") or "") for r in detailed if r.get("foil"))),
+                      "productIds":products,
+                  })
+              families[set_name]={
+                  "count":len(rows),
+                  "detailedRows":sum(x["detailedCount"] for x in rows),
+                  "cardsWithDetailed":sum(x["detailedCount"]>0 for x in rows),
+                  "cardsWithProducts":sum(bool(x["productIds"]) for x in rows),
+                  "rarities":dict(Counter(x["rarity"] or "NONE" for x in rows)),
+                  "coarsePatterns":dict(Counter("+".join(x["coarseTrue"]) if x["coarseTrue"] else "NONE" for x in rows)),
+                  "rows":rows,
+              }
+
+          out={"tcgdexSha":sha,"families":families}
+          Path("temp_variant_finish_post101_evidence.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              k:{kk:v[kk] for kk in ("count","detailedRows","cardsWithDetailed","cardsWithProducts","rarities","coarsePatterns")}
+              for k,v in families.items()
+          },ensure_ascii=False))
+          PY
+
+      - name: Record residual evidence
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_variant_finish_post101_evidence.json
+          git commit -m "TEMP record post101 residual finish evidence"
+          git push
+
       - name: Record result
         if: github.event_name == 'push'
         run: |
