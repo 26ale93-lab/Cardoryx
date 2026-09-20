@@ -1384,6 +1384,48 @@ def verified_celebrations_standard_holo_truth(card):
     return {"Holo"} if len(rows)==1 else set()
 
 
+VERIFIED_CELEBRATIONS_CLASSIC_HOLO = {
+    "cel25cc-CC020": {
+        "setId":"cel25cc","localId":"CC020","name":"Reshiram",
+        "sourceConflictProductId":576747,"verifiedCardmarketProductId":576790,
+    },
+    "cel25cc-CC021": {
+        "setId":"cel25cc","localId":"CC021","name":"Zekrom",
+        "sourceConflictProductId":576755,"verifiedCardmarketProductId":576791,
+    },
+}
+
+def verified_celebrations_classic_holo_truth(card):
+    """Use TCGdex only as exact physical Holo evidence for two known product-id conflicts."""
+    cid=str(card.get("id") or card.get("tcgdexId") or "")
+    rule=VERIFIED_CELEBRATIONS_CLASSIC_HOLO.get(cid)
+    if not isinstance(rule,dict):
+        return set()
+    set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
+    if (
+        set_id!=rule["setId"]
+        or str(card.get("localId") or "")!=rule["localId"]
+        or norm(card.get("name") or "")!=norm(rule["name"])
+        or rule["sourceConflictProductId"]==rule["verifiedCardmarketProductId"]
+    ):
+        return set()
+    rows=[]
+    for row in card.get("variants_detailed") or []:
+        stamps=[norm(x) for x in (row.get("stamp") or [])]
+        source_pid=int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+        pricing_pid=int((((row.get("pricing") or {}).get("cardmarket") or {}).get("idProduct")) or 0)
+        if (
+            canonical_finish_type_label(row.get("type"))=="holo"
+            and not row.get("foil")
+            and stamps==["25thcelebration"]
+            and str(row.get("size") or "standard").lower()=="standard"
+            and source_pid==rule["sourceConflictProductId"]
+            and pricing_pid==rule["sourceConflictProductId"]
+        ):
+            rows.append(row)
+    return {"Holo"} if len(rows)==1 else set()
+
+
 def simulate_italian_rest_payload(card):
     """Apply live-verified IT enum translations used by the REST endpoint."""
     out = dict(card)
@@ -2066,7 +2108,8 @@ def main():
         )
         legacy_truth = verified_legacy_checklist_truth(en, fossil_checklist_registry)
         celebrations_standard_truth = verified_celebrations_standard_holo_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth
+        celebrations_classic_truth = verified_celebrations_classic_holo_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2076,6 +2119,8 @@ def main():
                 "exact Fossil Holo/Normal identity handled by verified checklist path"
                 if legacy_truth else
                 "exact Celebrations Standard-size Holo promo handled by verified Standard/Jumbo path"
+                if celebrations_standard_truth else
+                "exact Celebrations Classic Holo physical row handled separately from known Cardmarket product-id source conflict"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2119,6 +2164,7 @@ def main():
             "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
+            "verifiedCelebrationsClassicFinishes": sorted(celebrations_classic_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2397,6 +2443,20 @@ def main():
             "finish": "Holo",
             "stamp": "25th-celebration",
             "size": "standard",
+            "productionModified": False,
+        },
+        "celebrationsClassicHoloClassification": {
+            "expectedIdentities": len(VERIFIED_CELEBRATIONS_CLASSIC_HOLO),
+            "classifiedCorrectIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in VERIFIED_CELEBRATIONS_CLASSIC_HOLO
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedCelebrationsClassicFinishes") == ["Holo"]
+            ),
+            "finish": "Holo",
+            "stamp": "25th-celebration",
+            "tcgdexRole": "physical evidence only",
+            "cardmarketRole": "verified Cardoryx product registry only",
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
