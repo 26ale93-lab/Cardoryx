@@ -1164,7 +1164,7 @@ def source_semantic_details(card):
             if (f := canonical_row_finish(row, translate_localized=True))}
 
 
-def verified_stamped_identity_truth(card, mep_registry=None):
+def verified_stamped_identity_truth(card, mep_registry=None, mfb_registry=None, worlds_registry=None):
     """Return exact stamped-edition truth handled outside the unstamped matrix."""
     set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
     rows = card.get("variants_detailed") or []
@@ -1234,6 +1234,61 @@ def verified_stamped_identity_truth(card, mep_registry=None):
         return {"Holo"} if len(exact) == 1 else set()
 
 
+    if set_id == "mfb" and isinstance(mfb_registry, dict):
+        rule = mfb_registry.get(card_id)
+        if isinstance(rule, dict):
+            if (
+                str(card.get("localId") or "") == str(rule.get("localId") or "")
+                and norm(card.get("name") or "") == norm(rule.get("name") or "")
+            ):
+                expected = [
+                    ([norm(rule.get("deckToken") or "")], int(rule.get("baseProductId") or 0)),
+                    (sorted([norm(rule.get("deckToken") or ""), "pokeball"]), int(rule.get("pokeballProductId") or 0)),
+                ]
+                for expected_stamps, expected_pid in expected:
+                    if not expected_pid or not all(expected_stamps):
+                        return set()
+                    exact = [
+                        row for row in rows
+                        if sorted(norm(x) for x in (row.get("stamp") or [])) == sorted(expected_stamps)
+                        and canonical_finish_type_label(row.get("type")) == "normal"
+                        and not row.get("foil")
+                        and str(row.get("size") or "standard").lower() == "standard"
+                        and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == expected_pid
+                    ]
+                    if len(exact) != 1:
+                        return set()
+                return {"Normal"}
+
+    if isinstance(worlds_registry, dict):
+        rule = worlds_registry.get(card_id)
+        if isinstance(rule, dict) and set_id == str(rule.get("setId") or "").lower():
+            if (
+                str(card.get("localId") or "") == str(rule.get("localId") or "")
+                and norm(card.get("name") or "") == norm(rule.get("name") or "")
+            ):
+                token = norm(rule.get("token") or "")
+                primary_pid = int(rule.get("productId") or 0)
+                staff_pid = int(rule.get("staffProductId") or 0)
+                expected = [
+                    ([token], primary_pid),
+                    (sorted([token, "staff"]), staff_pid),
+                ]
+                for expected_stamps, expected_pid in expected:
+                    if not expected_pid or not all(expected_stamps):
+                        return set()
+                    exact = [
+                        row for row in rows
+                        if sorted(norm(x) for x in (row.get("stamp") or [])) == sorted(expected_stamps)
+                        and canonical_finish_type_label(row.get("type")) == "normal"
+                        and not row.get("foil")
+                        and str(row.get("size") or "standard").lower() == "standard"
+                        and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == expected_pid
+                    ]
+                    if len(exact) != 1:
+                        return set()
+                return {"Normal"}
+
     if set_id == "mep" and isinstance(mep_registry, dict):
         card_id = str(card.get("id") or card.get("tcgdexId") or "")
         rule = mep_registry.get(card_id)
@@ -1269,6 +1324,26 @@ def verified_stamped_identity_truth(card, mep_registry=None):
         return {"Holo"}
 
     return set()
+
+
+def verified_legacy_checklist_truth(card, legacy_registry):
+    """Return exact finish truth from the already-verified Fossil checklist registry only."""
+    if not isinstance(legacy_registry, dict):
+        return set()
+    card_id = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = legacy_registry.get(card_id)
+    if not isinstance(rule, dict) or str(rule.get("setId") or "").lower() != "base3":
+        return set()
+    set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
+    if (
+        set_id != "base3"
+        or str(card.get("localId") or "") != str(rule.get("localId") or "")
+        or norm(card.get("name") or "") != norm(rule.get("name") or "")
+        or int(rule.get("productId") or 0) <= 0
+    ):
+        return set()
+    finish = str(rule.get("finish") or "")
+    return {finish} if finish in {"Normal", "Holo"} else set()
 
 
 def simulate_italian_rest_payload(card):
@@ -1662,6 +1737,19 @@ def main():
     mep_stamp_registry = extract_js_object(source, "VERIFIED_MEP_STAMP_PRODUCTS")
     if len(mep_stamp_registry) != 19 or "mep-028" in mep_stamp_registry:
         raise AssertionError("MEP stamped audit registry must contain exactly the 19 verified identities and exclude mep-028")
+    mfb_pokeball_registry = extract_js_object(source, "VERIFIED_MFB_POKEBALL_ROWS")
+    worlds_stamp_registry = extract_js_object(source, "VERIFIED_PRIMARY_WORLDS_STAMPS")
+    legacy_checklist_registry = extract_js_object(source, "VERIFIED_LEGACY_CHECKLIST_PRODUCTS")
+    if len(mfb_pokeball_registry) != 6:
+        raise AssertionError("MFB Poké Ball audit registry must contain exactly 6 verified identities")
+    if len(worlds_stamp_registry) != 3:
+        raise AssertionError("Worlds audit registry must contain exactly 3 verified identities")
+    fossil_checklist_registry = {
+        k: v for k, v in legacy_checklist_registry.items()
+        if isinstance(v, dict) and str(v.get("setId") or "").lower() == "base3"
+    }
+    if len(fossil_checklist_registry) != 30:
+        raise AssertionError("Fossil checklist registry must contain exactly 30 verified Holo/Normal identities")
     required = [
         "documentedVariantsForCard", "addDetailedFinishes", "addModernStandardStructure",
         "addCoarseStandardFinishes", "addMarketplaceStandardFinishes", "syncVariantAvailability",
@@ -1935,11 +2023,19 @@ def main():
         locale_conflict = bool(it and truth != it_truth)
         proposed, reasons = proposed_standard(card, registries)
         classification, missing, extra, why = classify(card, truth, proposed, truth, locale_conflict)
-        stamped_truth = verified_stamped_identity_truth(en, mep_stamp_registry)
-        if classification == "AMBIGUA" and stamped_truth:
+        stamped_truth = verified_stamped_identity_truth(
+            en, mep_stamp_registry, mfb_pokeball_registry, worlds_stamp_registry
+        )
+        legacy_truth = verified_legacy_checklist_truth(en, fossil_checklist_registry)
+        specialized_truth = stamped_truth | legacy_truth
+        if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
-            why = "exact stamped edition handled by dedicated verified stamp path"
+            why = (
+                "exact stamped edition handled by dedicated verified stamp path"
+                if stamped_truth else
+                "exact Fossil Holo/Normal identity handled by verified checklist path"
+            )
         class_counts[classification] += 1
         era = era_by_id[cid]
         rarity = en.get("rarity") or "(missing)"
@@ -1980,6 +2076,7 @@ def main():
             "cardmarketIdProduct": base_pid,
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
             "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
+            "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2218,6 +2315,33 @@ def main():
                 and c.get("verifiedStampedFinishes") == ["Holo"]
             ),
             "excludedAceTrainerIdentity": "mep-028",
+            "productionModified": False,
+        },
+        "existingExactFinishPathClassification": {
+            "mfbPokeballIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in mfb_pokeball_registry
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedStampedFinishes") == ["Normal"]
+            ),
+            "worldsIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in worlds_stamp_registry
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedStampedFinishes") == ["Normal"]
+            ),
+            "fossilChecklistIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("tcgdexId") in fossil_checklist_registry
+                and c.get("classification") == "CORRETTA"
+                and c.get("verifiedLegacyChecklistFinishes")
+                and c.get("reason") == "exact Fossil Holo/Normal identity handled by verified checklist path"
+            ),
+            "scope": {
+                "mfbPokeballRegistry": len(mfb_pokeball_registry),
+                "worldsRegistry": len(worlds_stamp_registry),
+                "fossilChecklistRegistry": len(fossil_checklist_registry),
+            },
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
