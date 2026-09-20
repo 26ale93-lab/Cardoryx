@@ -1,0 +1,77 @@
+name: TEMP Remaining Variant Finish Audit
+
+on:
+  push:
+    branches:
+      - audit/variant-finish-remaining-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Run full current variant finish audit
+        run: |
+          python3 scripts/test_variant_finish_audit.py             --tcgdex-db ../tcgdex-cards-database             --output /tmp/remaining_variant_finish_report.json             --workers 24
+
+      - name: Extract remaining ambiguity families
+        run: |
+          python3 - <<'PY'
+          import json
+          from collections import Counter, defaultdict
+          from pathlib import Path
+
+          r=json.loads(Path("/tmp/remaining_variant_finish_report.json").read_text())
+          issues=[x for x in r.get("issuesByPriority",[]) if x.get("classification")=="AMBIGUA"]
+
+          by_set=Counter()
+          by_reason=Counter()
+          rows=[]
+          for x in issues:
+              by_set[x.get("set") or "NONE"]+=1
+              by_reason[x.get("reason") or "NONE"]+=1
+              rows.append({
+                  "tcgdexId":x.get("tcgdexId"),
+                  "set":x.get("set"),
+                  "localId":x.get("localId"),
+                  "name":x.get("name"),
+                  "reason":x.get("reason"),
+              })
+
+          out={
+            "summary":r.get("summary"),
+            "ambiguousCount":len(issues),
+            "topSets":by_set.most_common(40),
+            "topReasons":by_reason.most_common(40),
+            "rows":rows,
+          }
+          Path("temp_remaining_variant_finish_summary.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+            "summary":out["summary"],
+            "ambiguousCount":out["ambiguousCount"],
+            "topSets":out["topSets"][:25],
+            "topReasons":out["topReasons"][:15],
+          },ensure_ascii=False))
+          PY
+
+      - name: Record summary
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_remaining_variant_finish_summary.json
+          git commit -m "TEMP record remaining variant finish audit"
+          git push
