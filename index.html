@@ -5099,8 +5099,13 @@ function syncVariantAvailability(card,edit=false){
     o.disabled=!ok;
     o.setAttribute('aria-disabled',ok?'false':'true');
   }
-  if(sel.selectedOptions[0]?.disabled){
-    const preferred=[...sel.options].find(o=>!o.disabled && !['Speciale / Altro','Non so'].includes(canonicalVariant(o.value)));
+  const selectable=[...sel.options].filter(o=>!o.disabled && !['Speciale / Altro','Non so'].includes(canonicalVariant(o.value)));
+  // Search/confirm UX: when the evidence leaves exactly one physical finish,
+  // select it automatically. Multiple finishes and unknown/manual cases remain user choices.
+  if(!edit && selectable.length===1){
+    sel.value=selectable[0].value;
+  }else if(sel.selectedOptions[0]?.disabled){
+    const preferred=selectable[0];
     sel.value=preferred?.value||'Non so';
   }
   return [...allowed];
@@ -8813,7 +8818,10 @@ async function chooseCard(s){
   // V2.1.1 — aggiorna SEMPRE le Prize Pack Series quando cambia carta.
   // Evita che restino abilitate le serie della carta precedente (es. Series 8).
   applyPlayAutoSeries(selectedCard,false);
-  refreshOfficialPlayAvailability(selectedCard,false);
+  await refreshOfficialPlayAvailability(selectedCard,false);
+  // Re-evaluate after asynchronous stamp/Prize Pack evidence is available so
+  // a sole documented finish is selected deterministically.
+  syncVariantAvailability(selectedCard,false);
   renderScanValue(selectedCard);
   setTimeout(()=>{
     confirmCard.scrollIntoView({behavior:'smooth',block:'end'});
