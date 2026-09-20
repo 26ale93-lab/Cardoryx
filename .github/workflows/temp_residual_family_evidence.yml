@@ -26,13 +26,36 @@ jobs:
           files=glob.glob("tcgdex-cards-database/**/*.json",recursive=True)
           db={}
           for p in files:
-            try:
-              d=json.load(open(p))
+            try: d=json.load(open(p))
             except: continue
-            if isinstance(d,dict) and d.get("id"): db[d["id"]]=d
+            objs=d if isinstance(d,list) else [d]
+            for o in objs:
+              if not isinstance(o,dict): continue
+              cid=o.get("id")
+              if not cid:
+                base=os.path.basename(p)[:-5]
+                # card files are commonly named by local id; derive set from parent folder only for diagnostics
+                parts=p.replace("\\\\","/").split("/")
+                if base and len(parts)>1: cid=base
+              if cid: db[cid]=o
+          # Fallback locate exact IDs by filename/content text when schema doesn't store id.
+          def find_card(cid):
+            if cid in db:return db[cid]
+            suffix=cid.split("-",1)[1]
+            cand=[]
+            for p in files:
+              if os.path.basename(p)[:-5] in (cid,suffix):
+                try:
+                  d=json.load(open(p))
+                  if isinstance(d,dict): cand.append((p,d))
+                except: pass
+            for p,d in cand:
+              txt=json.dumps(d,ensure_ascii=False)
+              if cid.split("-",1)[0] in p or cid in txt:return d
+            return {}
           fam=collections.defaultdict(list)
           for cid in ids:
-            d=db.get(cid,{})
+            d=find_card(cid)
             prefix=cid.split("-")[0]
             fam[prefix].append((cid,d.get("rarity"),d.get("variants"),d.get("variants_detailed")))
           for k,v in sorted(fam.items()):
@@ -40,7 +63,13 @@ jobs:
             for row in v: print("CARD",json.dumps(row,ensure_ascii=False))
           # Examine all same-set cards for physical detailed evidence.
           for k in sorted(fam):
-            same=[d for cid,d in db.items() if cid.startswith(k+"-")]
+            same=[]
+            for p in files:
+              if ("/"+k+"/" in p.replace("\\\\","/")):
+                try:
+                  d=json.load(open(p))
+                  if isinstance(d,dict): same.append(d)
+                except: pass
             det=[(d.get("id"),d.get("rarity"),d.get("variants"),d.get("variants_detailed")) for d in same if d.get("variants_detailed")]
             print("SET_EVIDENCE",k,"cards",len(same),"detailed",len(det))
             for row in det[:40]: print("SET_DETAIL",json.dumps(row,ensure_ascii=False))
