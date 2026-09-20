@@ -1128,6 +1128,20 @@ function migrationMarkerFor(collectionValue,decksValue){
     verifiedAt:new Date().toISOString()
   };
 }
+function migrationPayloadMatchesMarker(collectionValue,decksValue,marker){
+  if(!verifiedMigrationMarker(marker))return false;
+  return storageFingerprint(collectionValue)===marker.sourceCollectionFingerprint &&
+    storageFingerprint(decksValue)===marker.sourceDecksFingerprint;
+}
+function storageMigrationReconciliation(localCollection,localDecks,state){
+  if(!verifiedMigrationMarker(state?.marker)||!verifiedIndexedState(state))return 'invalid';
+  if(sameMigrationPayload(localCollection,localDecks,state.collection,state.decks))return 'same';
+  const localMatchesSource=migrationPayloadMatchesMarker(localCollection,localDecks,state.marker);
+  const indexedMatchesSource=migrationPayloadMatchesMarker(state.collection,state.decks,state.marker);
+  if(!localMatchesSource&&indexedMatchesSource)return 'promote-local';
+  if(localMatchesSource&&!indexedMatchesSource)return 'use-indexeddb';
+  return 'conflict';
+}
 function collectionStorageErrorMessage(error){
   const quota=error?.name==='QuotaExceededError'||error?.name==='NS_ERROR_DOM_QUOTA_REACHED'||error?.code===22||error?.code===1014;
   if(quota)return 'Spazio di archiviazione esaurito. La modifica non è stata applicata e la collezione precedente è rimasta intatta. Il backup JSON già esportato resta utilizzabile.';
@@ -1261,13 +1275,28 @@ async function initializeCardoryxStorage(){
     storageDb=await openCardoryxIndexedDb();
     let state=await readIndexedDbState();
     if(state.marker){
-      if(!verifiedMigrationMarker(state.marker)||!verifiedIndexedState(state))throw new Error('IndexedDB contiene dati o marker non verificabili');
-      const localChangedAfterMigration=
-        (storageFingerprint(localCollection)!==state.marker.sourceCollectionFingerprint||
-         storageFingerprint(localDecks)!==state.marker.sourceDecksFingerprint)&&
-        !sameMigrationPayload(localCollection,localDecks,state.collection,state.decks);
-      if(localChangedAfterMigration)throw new Error('Conflitto tra fallback localStorage e IndexedDB: nessun dato è stato sovrascritto');
-      storageMigrationState=`Migrazione verificata · backend IndexedDB attivo · ${collectionTotals(state.collection).records} record`;
+      const reconciliation=storageMigrationReconciliation(localCollection,localDecks,state);
+      if(reconciliation==='invalid')throw new Error('IndexedDB contiene dati o marker non verificabili');
+      if(reconciliation==='conflict')throw new Error('Conflitto reale tra localStorage e IndexedDB: entrambi contengono modifiche diverse, nessun dato è stato sovrascritto');
+      if(reconciliation==='promote-local'){
+        await idbWriteState(localCollection,localDecks);
+        let promoted=await readIndexedDbState();
+        if(!verifiedIndexedState(promoted)||!sameMigrationPayload(localCollection,localDecks,promoted.collection,promoted.decks)){
+          throw new Error('Riconciliazione fallback → IndexedDB non verificabile');
+        }
+        const promotedMarker=migrationMarkerFor(localCollection,localDecks);
+        await idbWriteMigrationMarker(promotedMarker);
+        promoted=await readIndexedDbState();
+        if(!verifiedMigrationMarker(promoted.marker)||!verifiedIndexedState(promoted)||
+           !migrationPayloadMatchesMarker(promoted.collection,promoted.decks,promoted.marker)||
+           !sameMigrationPayload(localCollection,localDecks,promoted.collection,promoted.decks)){
+          throw new Error('Riconciliazione fallback → IndexedDB incompleta');
+        }
+        state=promoted;
+        storageMigrationState=`Fallback recuperato e verificato · IndexedDB riattivato · ${collectionTotals(state.collection).records} record`;
+      }else{
+        storageMigrationState=`Migrazione verificata · backend IndexedDB attivo · ${collectionTotals(state.collection).records} record`;
+      }
     }else{
       const hasPartial=state.collectionRow!==undefined||state.decksRow!==undefined;
       if(hasPartial){
