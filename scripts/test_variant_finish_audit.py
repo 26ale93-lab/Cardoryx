@@ -1424,6 +1424,31 @@ def verified_celebrations_classic_holo_truth(card):
     return {"Holo"} if len(rows)==1 else set()
 
 
+def verified_unanimous_special_finish_truth(card):
+    """Exact finish-only evidence for MFB/SWSHP/SVP when every physical row agrees."""
+    set_id=str((card.get("set") or {}).get("id") or "").strip().lower()
+    if set_id not in {"mfb","swshp","svp"}:
+        return set()
+    rows=card.get("variants_detailed") or []
+    if not rows:
+        return set()
+    finishes=[]
+    for row in rows:
+        finish=canonical_finish_type_label(row.get("type"))
+        if finish not in {"normal","holo"}:
+            return set()
+        # These families are special-print/stamped paths; finish evidence is
+        # accepted only from explicit physical rows, never inferred from rarity.
+        if not (row.get("stamp") or []):
+            return set()
+        finishes.append(finish)
+    unique=set(finishes)
+    if len(unique)!=1:
+        return set()
+    return {"Normal"} if unique=={"normal"} else {"Holo"}
+
+
+
 def simulate_italian_rest_payload(card):
     """Apply live-verified IT enum translations used by the REST endpoint."""
     out = dict(card)
@@ -2107,7 +2132,8 @@ def main():
         legacy_truth = verified_legacy_checklist_truth(en, fossil_checklist_registry)
         celebrations_standard_truth = verified_celebrations_standard_holo_truth(en)
         celebrations_classic_truth = verified_celebrations_classic_holo_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth
+        unanimous_special_truth = verified_unanimous_special_finish_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2119,6 +2145,8 @@ def main():
                 "exact Celebrations Standard-size Holo promo handled by verified Standard/Jumbo path"
                 if celebrations_standard_truth else
                 "exact Celebrations Classic Holo physical row handled separately from known Cardmarket product-id source conflict"
+                if celebrations_classic_truth else
+                "all explicit physical variant rows agree on one finish within exact MFB/SWSHP/SVP scope"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2163,6 +2191,7 @@ def main():
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
             "verifiedCelebrationsClassicFinishes": sorted(celebrations_classic_truth),
+            "verifiedUnanimousSpecialFinishes": sorted(unanimous_special_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -2455,6 +2484,26 @@ def main():
             "stamp": "25th-celebration",
             "tcgdexRole": "physical evidence only",
             "cardmarketRole": "verified Cardoryx product registry only",
+            "productionModified": False,
+        },
+        "unanimousSpecialFinishClassification": {
+            "classifiedIds": sorted(
+                c["tcgdexId"] for c in cards_out
+                if c.get("verifiedUnanimousSpecialFinishes")
+                and c.get("reason") == "all explicit physical variant rows agree on one finish within exact MFB/SWSHP/SVP scope"
+            ),
+            "bySet": {
+                sid: sorted(
+                    c["tcgdexId"] for c in cards_out
+                    if c.get("setId") == sid
+                    and c.get("verifiedUnanimousSpecialFinishes")
+                    and c.get("reason") == "all explicit physical variant rows agree on one finish within exact MFB/SWSHP/SVP scope"
+                )
+                for sid in ("mfb","swshp","svp")
+            },
+            "mfbFailClosedPricingIdsPreserved": ["mfb-33","mfb-34"],
+            "svpFailClosedPricingIdPreserved": "svp-101",
+            "mixedFinishIdentityExcluded": "svp-225",
             "productionModified": False,
         },
         "swshp25thStandardPromoAudit": swshp_25th_standard_audit,
