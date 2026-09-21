@@ -466,7 +466,7 @@ process.stdout.write(JSON.stringify({documented,standardReverseProduct:665657,di
 
 
 def run_gold_marketplace_runtime(source):
-    """Binding production regression: foil=gold is Gold only on an unstamped Holo row."""
+    """Binding production regression: Gold must be one exact unstamped standard-size Holo row."""
     names = (
         "normText", "canonicalVariant", "canonicalFinishTypeLabel",
         "canonicalFinishFoilLabel", "tcgdexMarketplaceVariant",
@@ -475,29 +475,48 @@ def run_gold_marketplace_runtime(source):
     js = functions + "\n" + r'''
 function fail(msg){throw new Error(msg);}
 const metalGold={variants_detailed:[
-  {type:'metal',foil:'gold',thirdParty:{cardmarket:900001}},
-  {type:'holo',thirdParty:{cardmarket:900002}}
+  {type:'metal',foil:'gold',size:'standard',thirdParty:{cardmarket:900001}},
+  {type:'holo',size:'standard',thirdParty:{cardmarket:900002}}
 ]};
 const holoGold={variants_detailed:[
-  {type:'holo',foil:'gold',thirdParty:{cardmarket:900003}}
+  {type:'holo',foil:'gold',size:'standard',thirdParty:{cardmarket:900003}}
+]};
+const jumboGold={variants_detailed:[
+  {type:'holo',foil:'gold',size:'jumbo',thirdParty:{cardmarket:900005}}
+]};
+const mixedStandardAndJumbo={variants_detailed:[
+  {type:'holo',foil:'gold',size:'jumbo',thirdParty:{cardmarket:900006}},
+  {type:'holo',foil:'gold',size:'standard',thirdParty:{cardmarket:900007}}
 ]};
 const stampedHoloGold={variants_detailed:[
-  {type:'holo',foil:'gold',stamp:['promo'],thirdParty:{cardmarket:900004}}
+  {type:'holo',foil:'gold',size:'standard',stamp:['promo'],thirdParty:{cardmarket:900004}}
 ]};
 if(tcgdexMarketplaceVariant(metalGold,'Gold')!==null)fail('type=metal + foil=gold leaked into Gold marketplace route');
 const exact=tcgdexMarketplaceVariant(holoGold,'Gold');
-if(Number(exact?.thirdParty?.cardmarket||0)!==900003)fail('exact Holo Gold row not selected');
+if(Number(exact?.thirdParty?.cardmarket||0)!==900003)fail('exact standard Holo Gold row not selected');
+if(tcgdexMarketplaceVariant(jumboGold,'Gold')!==null)fail('jumbo Holo Gold leaked into standard Gold route');
+const mixed=tcgdexMarketplaceVariant(mixedStandardAndJumbo,'Gold');
+if(Number(mixed?.thirdParty?.cardmarket||0)!==900007)fail('jumbo row outranked exact standard Gold row');
 if(tcgdexMarketplaceVariant(stampedHoloGold,'Gold')!==null)fail('stamped Holo Gold leaked into standard Gold route');
 process.stdout.write(JSON.stringify({
   metalGoldRejected:true,
   holoGoldAccepted:true,
+  jumboGoldRejected:true,
+  standardPreferredOverJumbo:true,
   stampedGoldRejected:true,
-  productId:900003
+  productId:900003,
+  mixedProductId:900007
 }));
 '''
     runtime = json.loads(subprocess.check_output(["node", "-e", js], text=True))
-    if "canonicalFinishTypeLabel(x?.type)==='holo'&&canonicalFinishFoilLabel(x?.foil)==='gold'" not in source:
-        raise AssertionError("Gold marketplace route must require exact Holo + gold physical row")
+    required = (
+        "canonicalFinishTypeLabel(x?.type)==='holo'",
+        "canonicalFinishFoilLabel(x?.foil)==='gold'",
+        "String(x?.size||'standard').trim().toLowerCase()==='standard'",
+        "!x?.stamp?.length",
+    )
+    if not all(token in source for token in required):
+        raise AssertionError("Gold marketplace route must require exact Holo + gold + standard size + unstamped row")
     return runtime
 
 
