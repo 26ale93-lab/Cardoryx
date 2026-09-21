@@ -2158,14 +2158,24 @@ def main():
         card_id: {"setId": set_id, "localId": local_id}
         for card_id, (set_id, local_id) in VERIFIED_NORMAL_TARGETS.items()
     }
+    expected_normal_registry.update({
+        card_id: {"setId": "bw1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
-        raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the audited 26-identity dataset")
+        raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
         raise AssertionError("Verified Normal finish must remain restricted to the unstamped path")
     expected_reverse_registry = {
         card_id: {"setId": row["setId"], "localId": row["localId"]}
         for card_id, row in VERIFIED_REVERSE_TARGETS.items()
     }
+    expected_reverse_registry.update({
+        card_id: {"setId": "bw1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
     if registries["reverse"] != expected_reverse_registry:
         raise AssertionError("VERIFIED_REVERSE_FINISHES differs from the independently verified exact identities")
     if "if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');" not in source:
