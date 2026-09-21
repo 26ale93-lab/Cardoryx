@@ -64,7 +64,7 @@ assert "verifiedNormalFinish(card)" in doc
 assert "verifiedReverseFinish(card)" in doc
 
 funcs="\n".join(extract_function(x) for x in (
-    "normText","canonicalPrintedLocalId","exactLocalIdKey","cardSetId",
+    "normText","canonicalPrintedLocalId","printedLocalIdParts","exactLocalIdKey","cardSetId",
     "verifiedNormalFinish","verifiedReverseFinish"
 ))
 js=f"""
