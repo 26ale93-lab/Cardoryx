@@ -73,9 +73,9 @@ jobs:
           import json
           r=json.load(open("artifacts/variant_finish_audit_report.json"))
           s=r["summary"]; c=s["classifications"]
+          expected={"CORRETTA":4145,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":101,"SOURCE CONFLICT":8}
           assert s["totalIdentitiesTested"]==4254,s
-          assert c.get("FALSO POSITIVO")==0,c
-          assert c.get("FALSO NEGATIVO")==0,c
+          assert c==expected,c
           assert s["pricingP0"]==0,s
           print("CANDIDATE_SUMMARY",s)
           PY
