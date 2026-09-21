@@ -1,0 +1,20 @@
+name: TEMP Scanner Status Audit
+
+on:
+  push:
+    branches:
+      - fix/scanner-status-current-allocations-20260921
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test catalog allocation and Scanner status model
+        run: python scripts/test_catalog_filters.py
