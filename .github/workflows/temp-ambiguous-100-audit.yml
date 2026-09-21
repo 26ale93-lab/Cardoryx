@@ -24,6 +24,11 @@ jobs:
           repository: tcgdex/cards-database
           path: tcgdex-cards-database
           fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: PokemonTCG/pokemon-tcg-data
+          path: pokemon-tcg-data
+          fetch-depth: 1
       - name: Run deterministic variant finish audit
         run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
       - name: Build residual ambiguous inventory
@@ -88,6 +93,49 @@ jobs:
           print("DETAILED",json.dumps([{k:r.get(k) for k in ("tcgdexId","setName","localId","name","detailedVariants")} for r in detailed],ensure_ascii=False))
           print("COARSE",json.dumps([{k:r.get(k) for k in ("tcgdexId","setName","localId","name","coarseVariants")} for r in coarse],ensure_ascii=False))
           PY
+      - name: Compare independent finish keys
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inv=json.load(open("artifacts/ambiguous_100_inventory.json"))
+          byset={}
+          for r in inv["rows"]:
+              if r["shape"]!="NONE": continue
+              byset.setdefault(str(r["tcgdexId"]).split("-",1)[0],[]).append(r["tcgdexId"])
+          rows=[]
+          for sid, ids in sorted(byset.items()):
+              path=Path("pokemon-tcg-data/cards/en")/f"{sid}.json"
+              if not path.exists():
+                  for cid in ids:
+                      rows.append({"id":cid,"status":"SET_FILE_MISSING","priceKeys":[]})
+                  continue
+              cards={c["id"]:c for c in json.load(open(path,encoding="utf-8"))}
+              for cid in ids:
+                  c=cards.get(cid)
+                  if not c:
+                      rows.append({"id":cid,"status":"CARD_MISSING","priceKeys":[]})
+                      continue
+                  prices=((c.get("tcgplayer") or {}).get("prices") or {})
+                  keys=sorted(prices.keys())
+                  finish=[]
+                  if "normal" in prices: finish.append("Normal")
+                  if "holofoil" in prices: finish.append("Holo")
+                  if "reverseHolofoil" in prices: finish.append("Reverse Holo")
+                  rows.append({
+                      "id":cid,"name":c.get("name"),"number":c.get("number"),
+                      "rarity":c.get("rarity"),"priceKeys":keys,
+                      "independentFinishes":finish,"status":"OK"
+                  })
+          summary={}
+          for r in rows:
+              key="+".join(r["independentFinishes"]) if r.get("independentFinishes") else r["status"]
+              summary[key]=summary.get(key,0)+1
+          out={"count":len(rows),"summary":summary,"rows":rows}
+          Path("artifacts/ambiguous_100_independent_finishes.json").write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          print("INDEPENDENT_FINISH_SUMMARY",json.dumps(summary,ensure_ascii=False,sort_keys=True))
+          print("INDEPENDENT_MISSING",json.dumps([r for r in rows if r["status"]!="OK"],ensure_ascii=False))
+          PY
       - name: Verify residual baseline
         run: |
           python - <<'PY'
@@ -108,4 +156,5 @@ jobs:
           path: |
             artifacts/variant_finish_audit_report.json
             artifacts/ambiguous_100_inventory.json
+            artifacts/ambiguous_100_independent_finishes.json
           if-no-files-found: error
