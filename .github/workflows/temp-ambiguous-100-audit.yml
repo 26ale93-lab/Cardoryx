@@ -1,0 +1,107 @@
+name: TEMP Ambiguous 100 Audit
+
+on:
+  push:
+    branches:
+      - audit/ambiguous-100-20260921
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run deterministic variant finish audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Build residual ambiguous inventory
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter,defaultdict
+          from pathlib import Path
+          from scripts.test_variant_finish_audit import load_official_database
+
+          report=json.load(open("artifacts/variant_finish_audit_report.json"))
+          issues=[x for x in report["issuesByPriority"] if x.get("classification")=="AMBIGUA"]
+          ids={x["tcgdexId"] for x in issues}
+          cards, parse_errors, upstream_sha=load_official_database(Path("tcgdex-cards-database"))
+          byid={c.get("id"):c for c in cards}
+
+          rows=[]
+          for issue in issues:
+              cid=issue["tcgdexId"]
+              c=byid.get(cid) or {}
+              vd=c.get("variants_detailed") or []
+              coarse=c.get("variants") if isinstance(c.get("variants"),dict) else None
+              shape="DETAILED" if vd else ("COARSE" if coarse else "NONE")
+              rows.append({
+                  **issue,
+                  "setId":(c.get("set") or {}).get("id") or issue.get("setId"),
+                  "setName":(c.get("set") or {}).get("name") or issue.get("set"),
+                  "localId":c.get("localId") or issue.get("localId"),
+                  "name":((c.get("name") or {}).get("en") if isinstance(c.get("name"),dict) else c.get("name")) or issue.get("name"),
+                  "rarity":c.get("rarity"),
+                  "shape":shape,
+                  "coarseVariants":coarse,
+                  "detailedVariants":vd,
+                  "thirdParty":c.get("thirdParty"),
+              })
+
+          by_set=Counter(r["setName"] or "(missing)" for r in rows)
+          by_shape=Counter(r["shape"] for r in rows)
+          by_rarity=Counter(r["rarity"] or "(missing)" for r in rows)
+          detailed=[r for r in rows if r["shape"]=="DETAILED"]
+          coarse=[r for r in rows if r["shape"]=="COARSE"]
+
+          out={
+              "upstreamSha":upstream_sha,
+              "parseErrors":len(parse_errors),
+              "count":len(rows),
+              "bySet":dict(by_set.most_common()),
+              "byShape":dict(by_shape),
+              "byRarity":dict(by_rarity.most_common()),
+              "detailed":detailed,
+              "coarse":coarse,
+              "rows":rows,
+          }
+          Path("artifacts/ambiguous_100_inventory.json").write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          print("AMBIGUOUS_COUNT",len(rows))
+          print("BY_SET",json.dumps(out["bySet"],ensure_ascii=False,sort_keys=True))
+          print("BY_SHAPE",json.dumps(out["byShape"],sort_keys=True))
+          print("DETAILED",json.dumps([{k:r.get(k) for k in ("tcgdexId","setName","localId","name","detailedVariants")} for r in detailed],ensure_ascii=False))
+          print("COARSE",json.dumps([{k:r.get(k) for k in ("tcgdexId","setName","localId","name","coarseVariants")} for r in coarse],ensure_ascii=False))
+          PY
+      - name: Verify residual baseline
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("artifacts/variant_finish_audit_report.json"))
+          s=r["summary"]; c=s["classifications"]
+          expected={"CORRETTA":4146,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":100,"SOURCE CONFLICT":8}
+          assert s["totalIdentitiesTested"]==4254,s
+          assert c==expected,c
+          assert s["pricingP0"]==0,s
+          inv=json.load(open("artifacts/ambiguous_100_inventory.json"))
+          assert inv["count"]==100,inv
+          print("BASELINE_OK",s)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ambiguous-100-audit
+          path: |
+            artifacts/variant_finish_audit_report.json
+            artifacts/ambiguous_100_inventory.json
+          if-no-files-found: error
