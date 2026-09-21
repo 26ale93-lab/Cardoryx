@@ -4564,7 +4564,7 @@ function tcgdexMarketplaceVariant(card,variant){
   else if(target==='Pokémon Day Stamp') matches=pool.filter(x=>hasStamp(x,'pokemon-day'));
   else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='pokeball');
   else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='masterball');
-  else if(target==='Gold') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&canonicalFinishFoilLabel(x?.foil)==='gold'&&!x?.stamp?.length);
+  else if(target==='Gold') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&canonicalFinishFoilLabel(x?.foil)==='gold'&&String(x?.size||'standard').trim().toLowerCase()==='standard'&&!x?.stamp?.length);
   else if(target==='Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
   else if(target==='Ditto Peelable') matches=pool.filter(x=>isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
   else if(target==='Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&!isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
