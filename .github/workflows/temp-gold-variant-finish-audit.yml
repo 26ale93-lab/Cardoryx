@@ -17,8 +17,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Checkout TCGdex cards database snapshot
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git /tmp/tcgdex-cards-database
       - name: Run full variant finish audit
-        run: python scripts/test_variant_finish_audit.py --output artifacts/variant_finish_audit_report.json --workers 28
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db /tmp/tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
       - name: Verify Cardoryx gates
         run: |
           python - <<'PY'
