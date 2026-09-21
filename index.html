@@ -4679,7 +4679,21 @@ const VERIFIED_NORMAL_FINISHES = {
   'bw1-92':{setId:'bw1',localId:'92'},
   'bw1-99':{setId:'bw1',localId:'99'},
   'bw1-105':{setId:'bw1',localId:'105'},
-  'bw1-110':{setId:'bw1',localId:'110'}
+  'bw1-110':{setId:'bw1',localId:'110'},
+  'xy1-6':{setId:'xy1',localId:'6'},
+  'xy1-13':{setId:'xy1',localId:'13'},
+  'xy1-21':{setId:'xy1',localId:'21'},
+  'xy1-37':{setId:'xy1',localId:'37'},
+  'xy1-44':{setId:'xy1',localId:'44'},
+  'xy1-52':{setId:'xy1',localId:'52'},
+  'xy1-68':{setId:'xy1',localId:'68'},
+  'xy1-75':{setId:'xy1',localId:'75'},
+  'xy1-83':{setId:'xy1',localId:'83'},
+  'xy1-90':{setId:'xy1',localId:'90'},
+  'xy1-99':{setId:'xy1',localId:'99'},
+  'xy1-107':{setId:'xy1',localId:'107'},
+  'xy1-122':{setId:'xy1',localId:'122'},
+  'xy1-138':{setId:'xy1',localId:'138'}
 };
 function verifiedNormalFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
@@ -4737,8 +4751,35 @@ const VERIFIED_REVERSE_FINISHES = {
   'bw1-80':{setId:'bw1',localId:'80'},
   'bw1-87':{setId:'bw1',localId:'87'},
   'bw1-92':{setId:'bw1',localId:'92'},
-  'bw1-99':{setId:'bw1',localId:'99'}
+  'bw1-99':{setId:'bw1',localId:'99'},
+  'xy1-6':{setId:'xy1',localId:'6'},
+  'xy1-13':{setId:'xy1',localId:'13'},
+  'xy1-21':{setId:'xy1',localId:'21'},
+  'xy1-37':{setId:'xy1',localId:'37'},
+  'xy1-44':{setId:'xy1',localId:'44'},
+  'xy1-52':{setId:'xy1',localId:'52'},
+  'xy1-68':{setId:'xy1',localId:'68'},
+  'xy1-75':{setId:'xy1',localId:'75'},
+  'xy1-83':{setId:'xy1',localId:'83'},
+  'xy1-90':{setId:'xy1',localId:'90'},
+  'xy1-99':{setId:'xy1',localId:'99'},
+  'xy1-107':{setId:'xy1',localId:'107'},
+  'xy1-114':{setId:'xy1',localId:'114'},
+  'xy1-122':{setId:'xy1',localId:'122'}
 };
+// Exact Holo finish-only evidence. No marketplace price is stored here.
+const VERIFIED_HOLO_FINISHES = {
+  'xy1-114':{setId:'xy1',localId:'114'},
+  'xy1-145':{setId:'xy1',localId:'145'}
+};
+function verifiedHoloFinish(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_HOLO_FINISHES[id];
+  if(!rule)return false;
+  return cardSetId(card)===rule.setId &&
+         exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
+}
+
 function verifiedReverseFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const rule=VERIFIED_REVERSE_FINISHES[id];
@@ -5103,6 +5144,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
 
   // Exact finish-only evidence. Stamped/Play! editions remain on their own path.
   if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');
+  if(stamp==='None' && verifiedHoloFinish(card))allowed.add('Holo');
   if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');
 
   // Exact verified registries may add a finish for the exact edition.
