@@ -1259,6 +1259,30 @@ def verified_swsh1_checklist_truth(card):
     return set(rule["finishes"])
 
 
+def verified_regirock_hidden_legends_truth(card):
+    """Mirror the exact production exception for Regirock ex 98/101 Cracked Ice Holo."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "").lower()
+    if cid != "ex5-98":
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "ex5":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != "98":
+        return set()
+    name = norm((card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"))
+    if name != "regirockex":
+        return set()
+    exact = []
+    for row in card.get("variants_detailed") or []:
+        stamps = row.get("stamp") or []
+        typ = canonical_finish_type_label(row.get("type"))
+        foil = norm(row.get("foil"))
+        pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+        size = str(row.get("size") or "standard").lower()
+        if typ == "holo" and foil == "crackedice" and not stamps and size == "standard" and pid == 276172:
+            exact.append(row)
+    return {"Holo"} if len(exact) == 1 else set()
+
+
 def verified_stamped_identity_truth(card, mep_registry=None, mfb_registry=None, worlds_registry=None):
     """Return exact stamped-edition truth handled outside the unstamped matrix."""
     set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2356,7 +2380,8 @@ def main():
         hidden_fates_sv_truth = verified_hidden_fates_shiny_vault_truth(en, cid)
         official_checklist_holo_truth = verified_official_checklist_holo_truth(cid)
         swsh1_checklist_truth = verified_swsh1_checklist_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth | swsh1_checklist_truth
+        regirock_hidden_legends_truth = verified_regirock_hidden_legends_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth | swsh1_checklist_truth | regirock_hidden_legends_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2377,6 +2402,8 @@ def main():
                 if np_winner_truth else
                 "exact Sword & Shield identity verified against official Pokémon checklist/card database"
                 if swsh1_checklist_truth else
+                "exact Hidden Legends Regirock ex Cracked Ice Holo row matches production exception"
+                if regirock_hidden_legends_truth else
                 "verified specialized finish evidence"
             )
         class_counts[classification] += 1
@@ -2426,6 +2453,7 @@ def main():
             "verifiedResidualExactFinishes": sorted(residual_exact_truth),
             "verifiedNpWinnerStandardJumboFinishes": sorted(np_winner_truth),
             "verifiedSwsh1ChecklistFinishes": sorted(swsh1_checklist_truth),
+            "verifiedRegirockHiddenLegendsFinishes": sorted(regirock_hidden_legends_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
