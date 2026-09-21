@@ -85,6 +85,25 @@ VERIFIED_NORMAL_TARGETS = {
     "sv05-121": ("sv05", "121"),
     "sv06-100": ("sv06", "100"),
 }
+VERIFIED_BW1_CHECKLIST_FINISHES = {
+    "bw1-1": {"localId": "1", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-2": {"localId": "2", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-13": {"localId": "13", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-38": {"localId": "38", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-44": {"localId": "44", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-56": {"localId": "56", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-62": {"localId": "62", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-68": {"localId": "68", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-74": {"localId": "74", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-80": {"localId": "80", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-87": {"localId": "87", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-92": {"localId": "92", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-99": {"localId": "99", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-105": {"localId": "105", "finishes": ["Normal"]},
+    "bw1-110": {"localId": "110", "finishes": ["Normal"]},
+}
+BW1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms/pdf/tcg/checklists/BW1_Cardlist_EN.pdf"
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1246,6 +1265,19 @@ def source_semantic_details(card):
             if (f := canonical_row_finish(row, translate_localized=True))}
 
 
+def verified_bw1_checklist_truth(card):
+    """Exact Black & White identities verified against the official Pokemon checklist."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_BW1_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "bw1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -2126,14 +2158,24 @@ def main():
         card_id: {"setId": set_id, "localId": local_id}
         for card_id, (set_id, local_id) in VERIFIED_NORMAL_TARGETS.items()
     }
+    expected_normal_registry.update({
+        card_id: {"setId": "bw1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
-        raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the audited 26-identity dataset")
+        raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
         raise AssertionError("Verified Normal finish must remain restricted to the unstamped path")
     expected_reverse_registry = {
         card_id: {"setId": row["setId"], "localId": row["localId"]}
         for card_id, row in VERIFIED_REVERSE_TARGETS.items()
     }
+    expected_reverse_registry.update({
+        card_id: {"setId": "bw1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
     if registries["reverse"] != expected_reverse_registry:
         raise AssertionError("VERIFIED_REVERSE_FINISHES differs from the independently verified exact identities")
     if "if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');" not in source:
@@ -2358,9 +2400,13 @@ def main():
         card = dict(it or en)
         card["_englishSetName"] = (en.get("set") or {}).get("name")
         truth = source_semantic_details(en)
-        it_truth = source_semantic_details(it) if it else truth
+        it_truth = source_semantic_details(it) if it else set(truth)
         # Exact independently verified checklist evidence supplements missing
         # TCGdex rows without broadening the historical truth model.
+        bw1_checklist_truth = verified_bw1_checklist_truth(en)
+        if bw1_checklist_truth:
+            truth.update(bw1_checklist_truth)
+            it_truth.update(bw1_checklist_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2445,7 +2491,8 @@ def main():
             "languages": sorted({x for r in en.get("variants_detailed") or [] for x in (r.get("languages") or [])}),
             "cardmarketIdProduct": base_pid,
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
-            "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
+            "documentedFinishes": sorted(truth), "verifiedBw1ChecklistFinishes": sorted(bw1_checklist_truth),
+            "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
             "verifiedCelebrationsClassicFinishes": sorted(celebrations_classic_truth),
@@ -2569,11 +2616,23 @@ def main():
         c["tcgdexId"] for c in cards_out
         if "verified-normal-finish-registry" in c.get("resolverEvidence", [])
     )
-    if normal_registry_applied_ids != sorted(VERIFIED_NORMAL_TARGETS):
-        raise AssertionError("Verified Normal registry did not apply to exactly the 26 audited identities")
+    bw1_normal_ids = {
+        card_id for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    }
+    bw1_reverse_ids = {
+        card_id for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    }
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids
+    if normal_registry_applied_ids != sorted(expected_normal_applied):
+        raise AssertionError("Verified Normal registry did not apply to the exact audited identities")
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
-           if c["tcgdexId"] in VERIFIED_NORMAL_TARGETS):
+           if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
+    if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
+           if c["tcgdexId"] in bw1_reverse_ids):
+        raise AssertionError("At least one verified BW1 Reverse target is still not selectable")
     normal_registry_has_price_fields = any(
         set(rule) - {"setId", "localId"} for rule in normal_registry.values()
     )
@@ -2799,8 +2858,9 @@ def main():
         "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
-            "recoveredIdentities": len(normal_registry_applied_ids),
-            "appliedIds": normal_registry_applied_ids,
+            "recoveredIdentities": len(VERIFIED_NORMAL_TARGETS),
+            "appliedIds": sorted(VERIFIED_NORMAL_TARGETS),
+            "registryTotalIdentities": len(normal_registry_applied_ids),
             "outsideListInheritedRule": False,
             "unstampedOnly": True,
             "priceFieldsPresent": False,
@@ -2808,11 +2868,24 @@ def main():
             "energyRuleGeneralized": False,
             "otherFinishesAddedByRegistry": [],
             "identityChecks": normal_identity_checks,
-            "assessment": "All 26 audited identities gain only Normal through exact tcgdexId + setId + normalized localId matching.",
+            "assessment": f"The original {len(VERIFIED_NORMAL_TARGETS)} audited identities remain exact; newer exact registries are reported separately.",
+        },
+        "verifiedBw1ChecklistFinishAudit": {
+            "expectedIdentities": len(VERIFIED_BW1_CHECKLIST_FINISHES),
+            "normalIdentities": sorted(bw1_normal_ids),
+            "reverseIdentities": sorted(bw1_reverse_ids),
+            "normalOnlyIdentities": sorted(bw1_normal_ids - bw1_reverse_ids),
+            "officialChecklist": BW1_OFFICIAL_CHECKLIST_SOURCE,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "assessment": "Exact Black & White identities only; no set-wide rarity or era rule introduced.",
         },
         "verifiedReverseFinishAudit": {
             "expectedIdentities": len(VERIFIED_REVERSE_TARGETS),
             "integratedIds": sorted(VERIFIED_REVERSE_TARGETS),
+            "registryTotalIdentities": len(registries["reverse"]),
             "classification": "VERIFIED_REVERSE_STANDARD",
             "unstampedOnly": True, "priceFieldsPresent": False,
             "outsideListInheritedRule": False,
@@ -2860,7 +2933,7 @@ def main():
         "normalDocumentedNotSelectableAudit": {
             "before": ((baseline or {}).get("totalsByFinish", {}).get("Normal", {}).get("falseNegative")),
             "after": finish_counts["Normal"].get("falseNegative", 0),
-            "scope": "No general Normal rule was added; only the 26 audited tcgdexId + setId + normalized localId identities gain Normal.",
+            "scope": "No general Normal rule was added; only exact tcgdexId + setId + normalized localId registries gain Normal.",
             "remainingCases": [x for x in issues if "Normal" in x.get("missing", [])],
         },
         "mustRemainToVerify": [x for x in issues if x["severity"] == "P3"] + [{"targets": unavailable_targets, "reason": "not present in current TCGdex API"}],
