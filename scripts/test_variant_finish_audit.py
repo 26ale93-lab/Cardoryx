@@ -228,7 +228,7 @@ def canonical_row_finish(row, translate_localized=True):
         return "Ditto Peelable"
     if foil in {"cosmos", "cosmo"}:
         return "Cosmos Holo"
-    if foil == "gold":
+    if typ == "holo" and foil == "gold":
         return "Gold"
     if typ == "reverse" and foil == "pokeball":
         return "Poké Ball Reverse Holo"
@@ -462,6 +462,43 @@ if(canonicalStamp('Play! Pokémon')!=='Play! Pokémon'||canonicalStamp('Pokémon
 process.stdout.write(JSON.stringify({documented,standardReverseProduct:665657,dittoMarketplace:null,dittoPrice:exactPrice.kind,persistedVariant:reopened.variant,specials:[...specials]}));
 '''.replace('__FIXTURE__', json.dumps(fixture, ensure_ascii=False))
     return json.loads(subprocess.check_output(["node", "-e", js], text=True))
+
+
+
+def run_gold_marketplace_runtime(source):
+    """Binding production regression: foil=gold is Gold only on an unstamped Holo row."""
+    names = (
+        "normText", "canonicalVariant", "canonicalFinishTypeLabel",
+        "canonicalFinishFoilLabel", "tcgdexMarketplaceVariant",
+    )
+    functions = "\n".join(extract_js_function(source, name) for name in names)
+    js = functions + "\n" + r'''
+function fail(msg){throw new Error(msg);}
+const metalGold={variants_detailed:[
+  {type:'metal',foil:'gold',thirdParty:{cardmarket:900001}},
+  {type:'holo',thirdParty:{cardmarket:900002}}
+]};
+const holoGold={variants_detailed:[
+  {type:'holo',foil:'gold',thirdParty:{cardmarket:900003}}
+]};
+const stampedHoloGold={variants_detailed:[
+  {type:'holo',foil:'gold',stamp:['promo'],thirdParty:{cardmarket:900004}}
+]};
+if(tcgdexMarketplaceVariant(metalGold,'Gold')!==null)fail('type=metal + foil=gold leaked into Gold marketplace route');
+const exact=tcgdexMarketplaceVariant(holoGold,'Gold');
+if(Number(exact?.thirdParty?.cardmarket||0)!==900003)fail('exact Holo Gold row not selected');
+if(tcgdexMarketplaceVariant(stampedHoloGold,'Gold')!==null)fail('stamped Holo Gold leaked into standard Gold route');
+process.stdout.write(JSON.stringify({
+  metalGoldRejected:true,
+  holoGoldAccepted:true,
+  stampedGoldRejected:true,
+  productId:900003
+}));
+'''
+    runtime = json.loads(subprocess.check_output(["node", "-e", js], text=True))
+    if "canonicalFinishTypeLabel(x?.type)==='holo'&&canonicalFinishFoilLabel(x?.foil)==='gold'" not in source:
+        raise AssertionError("Gold marketplace route must require exact Holo + gold physical row")
+    return runtime
 
 
 def audit_mcdonalds_2012_2014_source(cards, source):
@@ -1998,6 +2035,7 @@ def main():
     if missing_logic:
         raise SystemExit(f"Required production logic missing: {missing_logic}")
     ditto_runtime = run_ditto_production_runtime(source)
+    gold_runtime = run_gold_marketplace_runtime(source)
     registries = {
         "normal": extract_js_object(source, "VERIFIED_NORMAL_FINISHES"),
         "reverse": extract_js_object(source, "VERIFIED_REVERSE_FINISHES"),
@@ -2700,6 +2738,7 @@ def main():
         },
         "realWorldRegression": real_world_regression,
         "dittoPeelableRuntimeAudit": ditto_runtime,
+        "goldMarketplaceRuntimeAudit": gold_runtime,
         "cardmarketPricingAudit": {
             "proposedFinishRoutes": dict(pricing_counts), "wrongPhysicalProductRisks": pricing_risks,
             "resolvedExactReverseProductConflicts": resolved_pricing_conflicts,
