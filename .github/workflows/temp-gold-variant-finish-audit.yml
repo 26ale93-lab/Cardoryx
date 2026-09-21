@@ -1,0 +1,48 @@
+name: TEMP Gold + Variant Finish Audit
+
+on:
+  push:
+    branches:
+      - fix/gold-marketplace-type-guard-20260921
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run full variant finish audit
+        run: python scripts/test_variant_finish_audit.py --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Verify Cardoryx gates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("artifacts/variant_finish_audit_report.json")
+          r=json.loads(p.read_text())
+          s=r["summary"]
+          expected={"total":4254,"CORRETTA":4131,"AMBIGUA":115,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"SOURCE CONFLICT":8}
+          for k,v in expected.items():
+              if s.get(k)!=v:
+                  raise SystemExit(f"gate {k}: {s.get(k)} != {v}")
+          pricing=r.get("cardmarketPricingAudit",{}).get("wrongPhysicalProductRisks",[])
+          if len(pricing)!=0:
+              raise SystemExit(f"pricing P0 risks: {len(pricing)}")
+          gold=r.get("goldMarketplaceRuntimeAudit",{})
+          required={"metalGoldRejected":True,"holoGoldAccepted":True,"stampedGoldRejected":True}
+          for k,v in required.items():
+              if gold.get(k) is not v:
+                  raise SystemExit(f"gold gate {k}: {gold.get(k)!r}")
+          print("GATES_OK",s,gold)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: temp-gold-variant-finish-audit
+          path: artifacts/variant_finish_audit_report.json
+          if-no-files-found: error
