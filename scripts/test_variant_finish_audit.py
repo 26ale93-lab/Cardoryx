@@ -85,6 +85,25 @@ VERIFIED_NORMAL_TARGETS = {
     "sv05-121": ("sv05", "121"),
     "sv06-100": ("sv06", "100"),
 }
+VERIFIED_SWSH1_CHECKLIST_FINISHES = {
+    "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
+    "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-18": {"localId": "18", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-41": {"localId": "41", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-52": {"localId": "52", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-87": {"localId": "87", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-121": {"localId": "121", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-133": {"localId": "133", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-145": {"localId": "145", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-156": {"localId": "156", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-168": {"localId": "168", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-190": {"localId": "190", "finishes": ["Holo"]},
+    "swsh1-201": {"localId": "201", "finishes": ["Holo"]},
+    "swsh1-212": {"localId": "212", "finishes": ["Holo"]},
+}
+SWSH1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/swsh1_web_cardlist_en.pdf"
+SWSH1_212_OFFICIAL_CARD_SOURCE = "https://www.pokemon.com/br/pokemon-estampas-ilustradas/cartas-de-pokemon/series/swsh1/212/"
+
 VERIFIED_REVERSE_TARGETS = {
     "sm2-10": {"setId": "sm2", "localId": "010", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm2_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-guardians-rising/victini-reverse-holo-10"},
     "sm1-46": {"setId": "sm1", "localId": "046", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm1_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-sun-%26-moon/araquanid-reverse-holo-46"},
@@ -1223,23 +1242,21 @@ def mee_number(card):
 
 def source_semantic_details(card):
     rows = card.get("variants_detailed") or []
-    detailed = {f for row in rows if not (row.get("stamp") or []) and not is_play_row(row)
-                if (f := canonical_row_finish(row, translate_localized=True))}
-    if rows:
-        return detailed
+    return {f for row in rows if not (row.get("stamp") or []) and not is_play_row(row)
+            if (f := canonical_row_finish(row, translate_localized=True))}
 
-    # Mirror production's legacy fallback exactly: coarse variants are evidence
-    # only when variants_detailed is completely absent. Never let coarse flags
-    # override or supplement explicit detailed/stamped rows.
-    coarse = card.get("variants") if isinstance(card.get("variants"), dict) else {}
-    out = set()
-    if coarse.get("normal") is True:
-        out.add("Normal")
-    if coarse.get("holo") is True:
-        out.add("Holo")
-    if coarse.get("reverse") is True:
-        out.add("Reverse Holo")
-    return out
+
+def verified_swsh1_checklist_truth(card):
+    """Exact Sword & Shield identities verified against official Pokémon sources."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_SWSH1_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "swsh1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
 
 
 def verified_stamped_identity_truth(card, mep_registry=None, mfb_registry=None, worlds_registry=None):
@@ -2338,7 +2355,8 @@ def main():
         bog_cosmos_truth = verified_bog_cosmos_standard_jumbo_truth(en)
         hidden_fates_sv_truth = verified_hidden_fates_shiny_vault_truth(en, cid)
         official_checklist_holo_truth = verified_official_checklist_holo_truth(cid)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth
+        swsh1_checklist_truth = verified_swsh1_checklist_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth | swsh1_checklist_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2356,6 +2374,10 @@ def main():
                 "exact residual identity has unanimous explicit physical finish evidence"
                 if residual_exact_truth else
                 "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
+                if np_winner_truth else
+                "exact Sword & Shield identity verified against official Pokémon checklist/card database"
+                if swsh1_checklist_truth else
+                "verified specialized finish evidence"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2403,6 +2425,7 @@ def main():
             "verifiedUnanimousSpecialFinishes": sorted(unanimous_special_truth),
             "verifiedResidualExactFinishes": sorted(residual_exact_truth),
             "verifiedNpWinnerStandardJumboFinishes": sorted(np_winner_truth),
+            "verifiedSwsh1ChecklistFinishes": sorted(swsh1_checklist_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
