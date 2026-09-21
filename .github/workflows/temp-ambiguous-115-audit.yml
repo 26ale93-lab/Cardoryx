@@ -26,6 +26,47 @@ jobs:
           fetch-depth: 1
       - name: Run deterministic variant finish audit
         run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Build ambiguous source-shape inventory
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.test_variant_finish_audit import load_official_database
+
+          report=json.load(open("artifacts/variant_finish_audit_report.json"))
+          ids={x["tcgdexId"] for x in report["issuesByPriority"] if x.get("classification")=="AMBIGUA"}
+          cards, parse_errors, upstream_sha=load_official_database(Path("tcgdex-cards-database"))
+          byid={c.get("id"):c for c in cards}
+          rows=[]
+          for cid in sorted(ids):
+              c=byid.get(cid) or {}
+              vd=c.get("variants_detailed") or []
+              coarse=c.get("variants") if isinstance(c.get("variants"),dict) else None
+              if vd:
+                  shape="DETAILED"
+              elif coarse:
+                  shape="COARSE"
+              else:
+                  shape="NONE"
+              rows.append({
+                  "tcgdexId":cid,
+                  "setId":(c.get("set") or {}).get("id"),
+                  "setName":(c.get("set") or {}).get("name"),
+                  "localId":c.get("localId"),
+                  "name":((c.get("name") or {}).get("en") if isinstance(c.get("name"),dict) else c.get("name")),
+                  "rarity":c.get("rarity"),
+                  "shape":shape,
+                  "coarseVariants":coarse,
+                  "detailedVariants":vd,
+                  "thirdParty":c.get("thirdParty"),
+              })
+          summary={}
+          for r in rows:
+              summary[r["shape"]]=summary.get(r["shape"],0)+1
+          out={"upstreamSha":upstream_sha,"parseErrors":len(parse_errors),"count":len(rows),"summary":summary,"rows":rows}
+          Path("artifacts/ambiguous_source_inventory.json").write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          print("SOURCE_SHAPES",json.dumps(summary,sort_keys=True))
+          PY
       - name: Verify baseline
         run: |
           python - <<'PY'
@@ -36,10 +77,15 @@ jobs:
           assert s["totalIdentitiesTested"]==4254,s
           assert c==expected,c
           assert s["pricingP0"]==0,s
+          inv=json.load(open("artifacts/ambiguous_source_inventory.json"))
+          assert inv["count"]==115,inv
           print("BASELINE_OK",s)
+          print("SOURCE_SHAPES",inv["summary"])
           PY
       - uses: actions/upload-artifact@v4
         with:
           name: ambiguous-115-audit
-          path: artifacts/variant_finish_audit_report.json
+          path: |
+            artifacts/variant_finish_audit_report.json
+            artifacts/ambiguous_source_inventory.json
           if-no-files-found: error
