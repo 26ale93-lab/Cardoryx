@@ -8834,8 +8834,11 @@ async function chooseCard(s){
   // V2.1.1 — aggiorna SEMPRE le Prize Pack Series quando cambia carta.
   // Evita che restino abilitate le serie della carta precedente (es. Series 8).
   applyPlayAutoSeries(selectedCard,false);
+  // Apply already documented finish evidence immediately. This keeps single-finish
+  // autoselection independent from the optional Play! availability lookup.
+  syncVariantAvailability(selectedCard,false);
   // Keep confirmation interactive while the optional Play! availability index resolves.
-  // refreshOfficialPlayAvailability() performs the finish sync when its evidence is ready.
+  // The async refresh may refine availability later, but must never gate the initial UI.
   refreshOfficialPlayAvailability(selectedCard,false);
   renderScanValue(selectedCard);
   setTimeout(()=>{
