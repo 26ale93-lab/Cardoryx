@@ -14,33 +14,32 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Checkout TCGdex cards database snapshot
-        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git /tmp/tcgdex-cards-database
       - name: Run full variant finish audit
-        run: python scripts/test_variant_finish_audit.py --tcgdex-db /tmp/tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
       - name: Verify Cardoryx gates
         run: |
           python - <<'PY'
           import json
-          from pathlib import Path
-          p=Path("artifacts/variant_finish_audit_report.json")
-          r=json.loads(p.read_text())
-          s=r["summary"]
-          expected={"total":4254,"CORRETTA":4131,"AMBIGUA":115,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"SOURCE CONFLICT":8}
-          for k,v in expected.items():
-              if s.get(k)!=v:
-                  raise SystemExit(f"gate {k}: {s.get(k)} != {v}")
-          pricing=r.get("cardmarketPricingAudit",{}).get("wrongPhysicalProductRisks",[])
-          if len(pricing)!=0:
-              raise SystemExit(f"pricing P0 risks: {len(pricing)}")
+          r=json.load(open("artifacts/variant_finish_audit_report.json"))
+          s=r["summary"]; c=s["classifications"]
+          expected={"CORRETTA":4131,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":115,"SOURCE CONFLICT":8}
+          assert s["totalIdentitiesTested"]==4254,s
+          assert c==expected,c
+          assert s["pricingP0"]==0,s
           gold=r.get("goldMarketplaceRuntimeAudit",{})
-          required={"metalGoldRejected":True,"holoGoldAccepted":True,"stampedGoldRejected":True}
-          for k,v in required.items():
-              if gold.get(k) is not v:
-                  raise SystemExit(f"gold gate {k}: {gold.get(k)!r}")
+          assert gold.get("metalGoldRejected") is True,gold
+          assert gold.get("holoGoldAccepted") is True,gold
+          assert gold.get("stampedGoldRejected") is True,gold
           print("GATES_OK",s,gold)
           PY
       - uses: actions/upload-artifact@v4
