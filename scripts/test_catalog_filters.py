@@ -15,6 +15,7 @@ canonical_variant=section("function canonicalVariant(","function canonicalFinish
 canonical_stamp=section("function canonicalStamp(","function stampBadgeHTML(")
 alloc=section("const CARDORYX_ALLOCATION_STATUSES=","function allocationInputsHtml(")
 catalog=section("function syncCatalogAllocationFilterOptions(","function renderCatalog(")
+status_model=section("const CARDORYX_PRIMARY_STATUSES=","// Storage V1")
 
 catalog_html=source.split('<section id="catalogView"',1)[1].split('<section id="statsView"',1)[0]
 for item in [
@@ -28,17 +29,41 @@ for item in [
 assert '<option>Pokémon Day Stamp</option>' not in catalog_html
 assert '<option>Play! Pokémon Stamp</option>' not in catalog_html
 
+
+scanner_html=source.split('<div class="label">Stato</div><select id="status"',1)[1].split('</select>',1)[0]
+quick_status_html=source.split('<select id="quickStatus">',1)[1].split('</select>',1)[0]
+edit_status_html=source.split('<select id="editStatus">',1)[1].split('</select>',1)[0]
+for block in [scanner_html,quick_status_html,edit_status_html]:
+    assert 'Disponibile' in block
+    assert 'Protetta' in block
+    assert 'Vendita' in block
+    assert 'Mazzo 1' not in block
+    assert 'Mazzo 2' not in block
+assert "const CARDORYX_ALLOCATION_STATUSES=[...CARDORYX_PRIMARY_STATUSES];" in source
+assert "p.status=canonicalPrimaryStatus(p.status);" in source
+
 js=f"""
 const assert=require('assert');
 let decks=[];
 function esc(v){{return String(v??'')}}
+const fakeSelect={{value:'',innerHTML:''}};
+function ui(id){{return id==='status'?fakeStatus:id==='editStatus'?fakeEditStatus:null}}
+const fakeStatus={{value:'Disponibile'}};
+const fakeEditStatus={{
+  value:'',innerHTML:'',children:[],
+  appendChild(el){{this.children.push(el);this.value=el.value}}
+}};
+const document={{
+  createElement(){{return {{value:'',textContent:'',disabled:false}}}},
+  getElementById(id){{return id==='statusFilter'?fakeSelect:ui(id)}}
+}};
+
 function deckTypeLabel(d){{return d?.type==='sale'?'Vendita':'Gioco'}}
 function deckRecordKey(c){{return [c.id||'',c.variant||'Normale',c.status||'Disponibile',c.condition||'NM'].join('|||')}}
-const fakeSelect={{value:'',innerHTML:''}};
-const document={{getElementById(id){{return id==='statusFilter'?fakeSelect:null}}}};
 function normText(v){{return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}}
 {canonical_variant}
 {canonical_stamp}
+{status_model}
 {alloc}
 {catalog}
 
@@ -49,6 +74,19 @@ assert.strictEqual(canonicalVariant('Master Ball Reverse Holo'),'Master Ball Rev
 assert.strictEqual(canonicalVariant('Ditto rimovibile'),'Ditto Peelable');
 assert.strictEqual(canonicalStamp('Pokémon Day'),'Pokémon Day');
 assert.strictEqual(canonicalStamp('Worlds 2024'),'Worlds 2024');
+
+assert.deepStrictEqual(CARDORYX_PRIMARY_STATUSES,['Disponibile','Protetta','Vendita']);
+fakeStatus.value='Mazzo 1';
+assert.strictEqual(selectedStatus(),'Disponibile');
+fakeStatus.value='Protetta';
+assert.strictEqual(selectedStatus(),'Protetta');
+syncEditStatusOptions('Mazzo 2');
+assert.strictEqual(fakeEditStatus.value,'Mazzo 2');
+assert.strictEqual(fakeEditStatus.children.length,1);
+assert.strictEqual(fakeEditStatus.children[0].disabled,true);
+assert.strictEqual(fakeEditStatus.children[0].textContent,'Mazzo 2 (legacy)');
+syncEditStatusOptions('Vendita');
+assert.strictEqual(fakeEditStatus.value,'Vendita');
 
 const available={{id:'c1',variant:'Normal',status:'Disponibile',condition:'NM',qty:3}};
 const full={{id:'c2',variant:'Poké Ball Reverse Holo',status:'Disponibile',condition:'NM',qty:2}};
@@ -95,7 +133,9 @@ console.log(JSON.stringify({{
   partialDeckAvailable:true,
   fullDeckUnavailable:true,
   dynamicDeckFilter:true,
-  legacyDeckCompatible:true
+  legacyDeckCompatible:true,
+  scannerUsesCurrentStatuses:true,
+  legacyQuickStatusFallsBackSafely:true
 }}));
 """
 out=subprocess.check_output(["node"],input=js,text=True)
