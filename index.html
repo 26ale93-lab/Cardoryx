@@ -469,8 +469,6 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
             <option>Disponibile</option>
             <option>Protetta</option>
             <option>Vendita</option>
-            <option>Mazzo 1</option>
-            <option>Mazzo 2</option>
           </select>
           <button class="btn alt" type="button" onclick="applyQuickDefaults()">Usa come predefiniti</button>
         </div>
@@ -588,7 +586,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
             <option value="9">Series 9</option>
           </select><div class="small" style="margin-top:5px">Non è obbligatoria: il logo Play! Pokémon sulla carta non indica da solo il numero della serie.</div>
         </div>
-      <div class="label">Stato</div><select id="status"><option value="Disponibile">Disponibile</option><option value="Mazzo 1">Mazzo 1</option><option value="Mazzo 2">Mazzo 2</option><option value="Protetta">Protetta</option><option value="Vendita">Vendita</option></select>
+      <div class="label">Stato</div><select id="status"><option value="Disponibile">Disponibile</option><option value="Protetta">Protetta</option><option value="Vendita">Vendita</option></select>
       <div class="label">Condizione</div><select id="condition">
       <option value="NM">NM — Near Mint</option>
       <option value="EX">EX — Excellent</option>
@@ -884,7 +882,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
             <div class="small">Il logo Play! Pokémon sulla carta non indica da solo il numero della serie.</div>
           </div>
           <label class="edit-field-row"><span>Stato</span>
-            <select id="editStatus"><option>Disponibile</option><option>Protetta</option><option>Mazzo 1</option><option>Mazzo 2</option><option>Vendita</option></select>
+            <select id="editStatus"><option>Disponibile</option><option>Protetta</option><option>Vendita</option></select>
           </label>
           <label class="edit-field-row"><span>Condizione</span>
             <select id="editCondition">
@@ -977,8 +975,24 @@ db.forEach(c=>{
 if(trainerSubtypeMigrationChanged){/* Preserve the untouched localStorage fallback during automatic migration. */}
 let scanQueue=[]; let queueIndex=-1; let lastOCR={name:'',number:'',total:''};
 function ui(id){return document.getElementById(id)}
+const CARDORYX_PRIMARY_STATUSES=['Disponibile','Protetta','Vendita'];
+function canonicalPrimaryStatus(value){
+  const status=String(value||'').trim();
+  return CARDORYX_PRIMARY_STATUSES.includes(status)?status:'Disponibile';
+}
+function syncEditStatusOptions(value){
+  const el=ui('editStatus');if(!el)return;
+  const status=String(value||'Disponibile').trim()||'Disponibile';
+  el.innerHTML=CARDORYX_PRIMARY_STATUSES.map(x=>`<option value="${x}">${x}</option>`).join('');
+  if(!CARDORYX_PRIMARY_STATUSES.includes(status)){
+    const legacy=document.createElement('option');
+    legacy.value=status;legacy.textContent=`${status} (legacy)`;legacy.disabled=true;
+    el.appendChild(legacy);
+  }
+  el.value=status;
+}
 function selectedVariant(){return ui('variant')?.value||'Normale'}
-function selectedStatus(){return ui('status')?.value||'Disponibile'}
+function selectedStatus(){return canonicalPrimaryStatus(ui('status')?.value)}
 function selectedCondition(){return ui('condition')?.value||'NM'}
 // Storage V1 — IndexedDB primary with verified localStorage migration and safe fallback.
 const CARDORYX_IDB_NAME='cardoryx_storage';
@@ -2622,6 +2636,7 @@ function saveQuickPrefs(){
 function loadQuickPrefs(){
   let p={enabled:false,continuous:false,variant:'Normale',condition:'NM',status:'Disponibile'};
   try{p={...p,...JSON.parse(localStorage.getItem('cardoryx_quickscan')||'{}')}}catch(e){}
+  p.status=canonicalPrimaryStatus(p.status);
   const t=document.getElementById('quickScanToggle');
   const v=document.getElementById('quickVariant');
   const c=document.getElementById('quickCondition');
@@ -9095,7 +9110,7 @@ async function hydrateEditCardEvidence(card){
 }
 
 let editingGroupKey=null;
-const CARDORYX_ALLOCATION_STATUSES=['Disponibile','Protetta','Vendita'];
+const CARDORYX_ALLOCATION_STATUSES=[...CARDORYX_PRIMARY_STATUSES];
 function groupDeckAllocations(g){
   const keys=new Set((g?.records||[]).map(deckRecordKey));
   const out={};
@@ -9160,7 +9175,7 @@ function openGroupEditModal(encodedGroupKey){
   if(document.getElementById('editStamp'))document.getElementById('editStamp').value=canonicalStamp(c.stamp||'None');
   if(document.getElementById('editPlaySeries'))document.getElementById('editPlaySeries').value=normalizedPlaySeries(c.playSeries||'');
   syncEditPlaySeriesVisibility();
-  document.getElementById('editStatus').value=c.status||'Disponibile';
+  syncEditStatusOptions(c.status||'Disponibile');
   document.getElementById('editStatus').disabled=true;
   document.getElementById('editCondition').value=c.condition||'NM';
   const wrap=document.getElementById('editAllocationWrap');wrap?.classList.remove('hidden');
@@ -9191,7 +9206,7 @@ async function openEditModal(key){
   document.getElementById('editStatus').disabled=false;
   document.getElementById('editAllocationWrap')?.classList.add('hidden');
   document.getElementById('editVariant').value=canonicalVariant(c.variant||'Normal');if(document.getElementById('editStamp'))document.getElementById('editStamp').value=canonicalStamp(c.stamp||'None');if(document.getElementById('editPlaySeries'))document.getElementById('editPlaySeries').value=normalizedPlaySeries(c.playSeries||'');syncEditPlaySeriesVisibility();
-  document.getElementById('editStatus').value=c.status||'Disponibile';
+  syncEditStatusOptions(c.status||'Disponibile');
   document.getElementById('editCondition').value=c.condition||'NM';
   const modal=document.getElementById('editModal');
   modal.classList.add('open');modal.setAttribute('aria-hidden','false');
