@@ -85,6 +85,25 @@ VERIFIED_NORMAL_TARGETS = {
     "sv05-121": ("sv05", "121"),
     "sv06-100": ("sv06", "100"),
 }
+VERIFIED_BW1_CHECKLIST_FINISHES = {
+    "bw1-1": {"localId": "1", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-2": {"localId": "2", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-13": {"localId": "13", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-38": {"localId": "38", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-44": {"localId": "44", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-56": {"localId": "56", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-62": {"localId": "62", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-68": {"localId": "68", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-74": {"localId": "74", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-80": {"localId": "80", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-87": {"localId": "87", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-92": {"localId": "92", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-99": {"localId": "99", "finishes": ["Normal", "Reverse Holo"]},
+    "bw1-105": {"localId": "105", "finishes": ["Normal"]},
+    "bw1-110": {"localId": "110", "finishes": ["Normal"]},
+}
+BW1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms/pdf/tcg/checklists/BW1_Cardlist_EN.pdf"
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1246,6 +1265,19 @@ def source_semantic_details(card):
             if (f := canonical_row_finish(row, translate_localized=True))}
 
 
+def verified_bw1_checklist_truth(card):
+    """Exact Black & White identities verified against the official Pokemon checklist."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_BW1_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "bw1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -2358,9 +2390,13 @@ def main():
         card = dict(it or en)
         card["_englishSetName"] = (en.get("set") or {}).get("name")
         truth = source_semantic_details(en)
-        it_truth = source_semantic_details(it) if it else truth
+        it_truth = source_semantic_details(it) if it else set(truth)
         # Exact independently verified checklist evidence supplements missing
         # TCGdex rows without broadening the historical truth model.
+        bw1_checklist_truth = verified_bw1_checklist_truth(en)
+        if bw1_checklist_truth:
+            truth.update(bw1_checklist_truth)
+            it_truth.update(bw1_checklist_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2445,7 +2481,8 @@ def main():
             "languages": sorted({x for r in en.get("variants_detailed") or [] for x in (r.get("languages") or [])}),
             "cardmarketIdProduct": base_pid,
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
-            "documentedFinishes": sorted(truth), "verifiedStampedFinishes": sorted(stamped_truth),
+            "documentedFinishes": sorted(truth), "verifiedBw1ChecklistFinishes": sorted(bw1_checklist_truth),
+            "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
             "verifiedCelebrationsClassicFinishes": sorted(celebrations_classic_truth),
