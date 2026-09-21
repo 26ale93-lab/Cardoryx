@@ -5115,14 +5115,26 @@ function syncVariantAvailability(card,edit=false){
     o.setAttribute('aria-disabled',ok?'false':'true');
   }
   const physical=[...sel.options].filter(o=>!o.disabled && !['Speciale / Altro','Non so'].includes(canonicalVariant(o.value)));
+  const selectNativeOption=option=>{
+    if(!option)return false;
+    const index=[...sel.options].indexOf(option);
+    if(index<0)return false;
+    // iOS Safari can keep the native select visually blank when options were
+    // disabled in the same pass and only .value is assigned. Commit the native
+    // selection explicitly without dispatching synthetic events.
+    sel.selectedIndex=index;
+    option.selected=true;
+    sel.value=option.value;
+    return sel.selectedIndex===index && sel.value===option.value;
+  };
   // Scanner/search only: if the evidence leaves one physical finish, preselect it.
   // Do not dispatch change here: the caller already refreshes dependent UI and
   // synthetic change events can start duplicate pricing work on iOS Safari.
   if(!edit && physical.length===1){
-    sel.value=physical[0].value;
+    selectNativeOption(physical[0]);
   }else if(sel.selectedOptions[0]?.disabled){
-    const preferred=physical[0];
-    sel.value=preferred?.value||'Non so';
+    const preferred=physical[0]||[...sel.options].find(o=>canonicalVariant(o.value)==='Non so'&&!o.disabled);
+    selectNativeOption(preferred);
   }
   return [...allowed];
 }

@@ -75,6 +75,7 @@ function makeOption(value){{
 }}
 const variant={{
   value:'Non so',
+  selectedIndex:4,
   options:[
     makeOption('Normal'),makeOption('Holo'),makeOption('Reverse Holo'),
     makeOption('Speciale / Altro'),makeOption('Non so')
@@ -87,6 +88,7 @@ const stamp={{value:'None'}};
 const playSeries={{value:''}};
 const editVariant={{
   value:'Holo',
+  selectedIndex:1,
   options:[
     makeOption('Normal'),makeOption('Holo'),makeOption('Reverse Holo'),
     makeOption('Speciale / Altro'),makeOption('Non so')
@@ -130,6 +132,7 @@ console.log(JSON.stringify({{
   immediateSyncBeforePlayLookup:true,
   noBlockingPlayAwait:true,
   soleNormalAutoselected:true,
+  nativeSelectedIndexCommitted:true,
   multiplePhysicalRemainManual:true,
   editValidFinishPreserved:true
 }}));
