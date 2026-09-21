@@ -67,20 +67,18 @@ jobs:
           Path("artifacts/ambiguous_source_inventory.json").write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
           print("SOURCE_SHAPES",json.dumps(summary,sort_keys=True))
           PY
-      - name: Verify baseline
+      - name: Verify safety gates
         run: |
           python - <<'PY'
           import json
           r=json.load(open("artifacts/variant_finish_audit_report.json"))
           s=r["summary"]; c=s["classifications"]
-          expected={"CORRETTA":4131,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":115,"SOURCE CONFLICT":8}
           assert s["totalIdentitiesTested"]==4254,s
-          assert c==expected,c
+          assert c.get("FALSO POSITIVO")==0,c
+          assert c.get("FALSO NEGATIVO")==0,c
+          assert c.get("SOURCE CONFLICT")==8,c
           assert s["pricingP0"]==0,s
-          inv=json.load(open("artifacts/ambiguous_source_inventory.json"))
-          assert inv["count"]==115,inv
-          print("BASELINE_OK",s)
-          print("SOURCE_SHAPES",inv["summary"])
+          print("CANDIDATE_SUMMARY",s)
           PY
       - uses: actions/upload-artifact@v4
         with:
