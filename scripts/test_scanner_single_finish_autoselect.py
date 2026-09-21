@@ -36,7 +36,10 @@ def extract_function(name):
     raise AssertionError(f"Unclosed function: {name}")
 
 choose=extract_function("chooseCard")
+native_select=extract_function("nativeSelectOption")
+stabilize=extract_function("stabilizeScannerSingleFinishSelection")
 sync=extract_function("syncVariantAvailability")
+render_scan=extract_function("renderScanValue")
 
 # Binding timing gate: local finish evidence must be applied before the optional
 # Play! lookup. Awaiting the lookup or relying on it for the first sync caused
@@ -51,6 +54,9 @@ assert needle_refresh in choose
 regular_tail=choose[choose.rfind("applyPlayAutoSeries(selectedCard,false);"):]
 assert regular_tail.index(needle_sync) < regular_tail.index(needle_refresh)
 assert "await refreshOfficialPlayAvailability(selectedCard,false" not in regular_tail
+assert "stabilizeScannerSingleFinishSelection();" in render_scan
+assert source.count("if(v)v.value=canonicalVariant(document.getElementById('quickVariant')?.value||'Normal');")==2
+assert "if(v)v.value=document.getElementById('quickVariant')?.value||'Normale';" not in source
 
 js=f"""
 const assert=require('assert');
@@ -105,6 +111,8 @@ const document={{
   }}
 }};
 
+{native_select}
+{stabilize}
 {sync}
 
 allowed=new Set(['Normal','Speciale / Altro','Non so']);
@@ -133,6 +141,9 @@ console.log(JSON.stringify({{
   noBlockingPlayAwait:true,
   soleNormalAutoselected:true,
   nativeSelectedIndexCommitted:true,
+  postAsyncBlankRecovered:true,
+  manualChoicePreservedByFinalizer:true,
+  quickVariantCanonicalized:true,
   multiplePhysicalRemainManual:true,
   editValidFinishPreserved:true
 }}));
