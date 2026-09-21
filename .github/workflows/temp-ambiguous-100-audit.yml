@@ -60,13 +60,13 @@ jobs:
                   "thirdParty":c.get("thirdParty"),
               })
 
-          by_set=Counter(r["setName"] or "(missing)" for r in rows)
-          by_shape=Counter(r["shape"] for r in rows)
-          def rarity_label(v):
+          def text_label(v):
               if isinstance(v,dict):
                   return str(v.get("en") or v.get("it") or next(iter(v.values()),"(missing)"))
               return str(v or "(missing)")
-          by_rarity=Counter(rarity_label(r["rarity"]) for r in rows)
+          by_set=Counter(text_label(r["setName"]) for r in rows)
+          by_shape=Counter(r["shape"] for r in rows)
+          by_rarity=Counter(text_label(r["rarity"]) for r in rows)
           detailed=[r for r in rows if r["shape"]=="DETAILED"]
           coarse=[r for r in rows if r["shape"]=="COARSE"]
 
