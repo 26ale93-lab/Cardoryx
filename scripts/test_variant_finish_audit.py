@@ -2616,11 +2616,23 @@ def main():
         c["tcgdexId"] for c in cards_out
         if "verified-normal-finish-registry" in c.get("resolverEvidence", [])
     )
-    if normal_registry_applied_ids != sorted(VERIFIED_NORMAL_TARGETS):
-        raise AssertionError("Verified Normal registry did not apply to exactly the 26 audited identities")
+    bw1_normal_ids = {
+        card_id for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    }
+    bw1_reverse_ids = {
+        card_id for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    }
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids
+    if normal_registry_applied_ids != sorted(expected_normal_applied):
+        raise AssertionError("Verified Normal registry did not apply to the exact audited identities")
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
-           if c["tcgdexId"] in VERIFIED_NORMAL_TARGETS):
+           if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
+    if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
+           if c["tcgdexId"] in bw1_reverse_ids):
+        raise AssertionError("At least one verified BW1 Reverse target is still not selectable")
     normal_registry_has_price_fields = any(
         set(rule) - {"setId", "localId"} for rule in normal_registry.values()
     )
@@ -2846,8 +2858,9 @@ def main():
         "swshpSetLogo168To171Audit": swshp_set_logo_168_171_audit,
         "verifiedNormalResidualAudit": {
             "expectedIdentities": len(VERIFIED_NORMAL_TARGETS),
-            "recoveredIdentities": len(normal_registry_applied_ids),
-            "appliedIds": normal_registry_applied_ids,
+            "recoveredIdentities": len(VERIFIED_NORMAL_TARGETS),
+            "appliedIds": sorted(VERIFIED_NORMAL_TARGETS),
+            "registryTotalIdentities": len(normal_registry_applied_ids),
             "outsideListInheritedRule": False,
             "unstampedOnly": True,
             "priceFieldsPresent": False,
@@ -2855,11 +2868,24 @@ def main():
             "energyRuleGeneralized": False,
             "otherFinishesAddedByRegistry": [],
             "identityChecks": normal_identity_checks,
-            "assessment": "All 26 audited identities gain only Normal through exact tcgdexId + setId + normalized localId matching.",
+            "assessment": f"The original {len(VERIFIED_NORMAL_TARGETS)} audited identities remain exact; newer exact registries are reported separately.",
+        },
+        "verifiedBw1ChecklistFinishAudit": {
+            "expectedIdentities": len(VERIFIED_BW1_CHECKLIST_FINISHES),
+            "normalIdentities": sorted(bw1_normal_ids),
+            "reverseIdentities": sorted(bw1_reverse_ids),
+            "normalOnlyIdentities": sorted(bw1_normal_ids - bw1_reverse_ids),
+            "officialChecklist": BW1_OFFICIAL_CHECKLIST_SOURCE,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "assessment": "Exact Black & White identities only; no set-wide rarity or era rule introduced.",
         },
         "verifiedReverseFinishAudit": {
             "expectedIdentities": len(VERIFIED_REVERSE_TARGETS),
             "integratedIds": sorted(VERIFIED_REVERSE_TARGETS),
+            "registryTotalIdentities": len(registries["reverse"]),
             "classification": "VERIFIED_REVERSE_STANDARD",
             "unstampedOnly": True, "priceFieldsPresent": False,
             "outsideListInheritedRule": False,
@@ -2907,7 +2933,7 @@ def main():
         "normalDocumentedNotSelectableAudit": {
             "before": ((baseline or {}).get("totalsByFinish", {}).get("Normal", {}).get("falseNegative")),
             "after": finish_counts["Normal"].get("falseNegative", 0),
-            "scope": "No general Normal rule was added; only the 26 audited tcgdexId + setId + normalized localId identities gain Normal.",
+            "scope": "No general Normal rule was added; only exact tcgdexId + setId + normalized localId registries gain Normal.",
             "remainingCases": [x for x in issues if "Normal" in x.get("missing", [])],
         },
         "mustRemainToVerify": [x for x in issues if x["severity"] == "P3"] + [{"targets": unavailable_targets, "reason": "not present in current TCGdex API"}],
