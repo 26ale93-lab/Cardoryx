@@ -1223,8 +1223,23 @@ def mee_number(card):
 
 def source_semantic_details(card):
     rows = card.get("variants_detailed") or []
-    return {f for row in rows if not (row.get("stamp") or []) and not is_play_row(row)
-            if (f := canonical_row_finish(row, translate_localized=True))}
+    detailed = {f for row in rows if not (row.get("stamp") or []) and not is_play_row(row)
+                if (f := canonical_row_finish(row, translate_localized=True))}
+    if rows:
+        return detailed
+
+    # Mirror production's legacy fallback exactly: coarse variants are evidence
+    # only when variants_detailed is completely absent. Never let coarse flags
+    # override or supplement explicit detailed/stamped rows.
+    coarse = card.get("variants") if isinstance(card.get("variants"), dict) else {}
+    out = set()
+    if coarse.get("normal") is True:
+        out.add("Normal")
+    if coarse.get("holo") is True:
+        out.add("Holo")
+    if coarse.get("reverse") is True:
+        out.add("Reverse Holo")
+    return out
 
 
 def verified_stamped_identity_truth(card, mep_registry=None, mfb_registry=None, worlds_registry=None):
