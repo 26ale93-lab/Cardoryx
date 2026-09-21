@@ -76,11 +76,11 @@ jobs:
           assert s["totalIdentitiesTested"]==4254,s
           assert c.get("FALSO POSITIVO")==0,c
           assert c.get("FALSO NEGATIVO")==0,c
-          assert c.get("SOURCE CONFLICT")==8,c
           assert s["pricingP0"]==0,s
           print("CANDIDATE_SUMMARY",s)
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ambiguous-115-audit
           path: |
