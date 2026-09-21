@@ -2671,7 +2671,7 @@ function applyQuickDefaults(){
   const v=document.getElementById('variant');
   const c=document.getElementById('condition');
   const s=document.getElementById('status');
-  if(v)v.value=document.getElementById('quickVariant')?.value||'Normale';
+  if(v)v.value=canonicalVariant(document.getElementById('quickVariant')?.value||'Normal');
   if(c)c.value=document.getElementById('quickCondition')?.value||'NM';
   if(s)s.value=document.getElementById('quickStatus')?.value||'Disponibile';
   saveQuickPrefs();
@@ -2683,7 +2683,7 @@ function applyQuickDefaultsToConfirm(){
   const v=document.getElementById('variant');
   const c=document.getElementById('condition');
   const s=document.getElementById('status');
-  if(v)v.value=document.getElementById('quickVariant')?.value||'Normale';
+  if(v)v.value=canonicalVariant(document.getElementById('quickVariant')?.value||'Normal');
   if(c)c.value=document.getElementById('quickCondition')?.value||'NM';
   if(s)s.value=document.getElementById('quickStatus')?.value||'Disponibile';
 }
@@ -5100,6 +5100,22 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   return allowed;
 }
 
+function nativeSelectOption(sel,option){
+  if(!sel||!option)return false;
+  const index=[...sel.options].indexOf(option);
+  if(index<0)return false;
+  sel.selectedIndex=index;
+  option.selected=true;
+  sel.value=option.value;
+  return sel.selectedIndex===index && sel.value===option.value;
+}
+function stabilizeScannerSingleFinishSelection(){
+  const sel=document.getElementById('variant');
+  if(!sel || String(sel.value||'').trim())return false;
+  const physical=[...sel.options].filter(o=>!o.disabled && !['Speciale / Altro','Non so'].includes(canonicalVariant(o.value)));
+  if(physical.length!==1)return false;
+  return nativeSelectOption(sel,physical[0]);
+}
 function syncVariantAvailability(card,edit=false){
   const sel=document.getElementById(edit?'editVariant':'variant');
   if(!sel||!card)return [];
@@ -5115,26 +5131,14 @@ function syncVariantAvailability(card,edit=false){
     o.setAttribute('aria-disabled',ok?'false':'true');
   }
   const physical=[...sel.options].filter(o=>!o.disabled && !['Speciale / Altro','Non so'].includes(canonicalVariant(o.value)));
-  const selectNativeOption=option=>{
-    if(!option)return false;
-    const index=[...sel.options].indexOf(option);
-    if(index<0)return false;
-    // iOS Safari can keep the native select visually blank when options were
-    // disabled in the same pass and only .value is assigned. Commit the native
-    // selection explicitly without dispatching synthetic events.
-    sel.selectedIndex=index;
-    option.selected=true;
-    sel.value=option.value;
-    return sel.selectedIndex===index && sel.value===option.value;
-  };
   // Scanner/search only: if the evidence leaves one physical finish, preselect it.
   // Do not dispatch change here: the caller already refreshes dependent UI and
   // synthetic change events can start duplicate pricing work on iOS Safari.
   if(!edit && physical.length===1){
-    selectNativeOption(physical[0]);
+    nativeSelectOption(sel,physical[0]);
   }else if(sel.selectedOptions[0]?.disabled){
     const preferred=physical[0]||[...sel.options].find(o=>canonicalVariant(o.value)==='Non so'&&!o.disabled);
-    selectNativeOption(preferred);
+    nativeSelectOption(sel,preferred);
   }
   return [...allowed];
 }
@@ -8793,6 +8797,10 @@ async function renderScanValue(card){
     metaEl.textContent='Impossibile recuperare Cardmarket. Puoi comunque salvare la carta.';
     document.getElementById('scanMarketStats').classList.add('hidden');
   }finally{
+    // Final UI stabilization: async pricing/Play hydration may finish after the
+    // initial selection pass. Never override a real user choice; only repair a
+    // blank native select when exactly one physical finish remains enabled.
+    stabilizeScannerSingleFinishSelection();
     refreshScanProtectionRecommendation(scanPriceCard||card);
   }
 }
