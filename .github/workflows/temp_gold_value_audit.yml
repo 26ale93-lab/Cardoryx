@@ -1,0 +1,34 @@
+name: TEMP Gold value audit
+on:
+  push:
+    branches:
+      - audit/gold-values-20260921
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe exact Gold pricing
+        shell: python
+        run: |
+          import json, urllib.request
+          def get(url):
+              with urllib.request.urlopen(url, timeout=30) as r:
+                  return json.load(r)
+          sets=get("https://api.tcgdex.net/v2/en/sets")
+          wanted=["151","Prismatic Evolutions","Lost Origin","Brilliant Stars"]
+          mapping={s["name"]:s["id"] for s in sets if s.get("name") in wanted}
+          print("SETS",json.dumps(mapping,sort_keys=True))
+          probes=[("151","205"),("Prismatic Evolutions","179"),("Lost Origin","212"),("Brilliant Stars","184")]
+          for set_name,local in probes:
+              sid=mapping[set_name]
+              sd=get(f"https://api.tcgdex.net/v2/en/sets/{sid}")
+              card_brief=next((c for c in sd.get("cards",[]) if str(c.get("localId"))==local),None)
+              print("BRIEF",set_name,local,json.dumps(card_brief,sort_keys=True))
+              if not card_brief: continue
+              card=get(f"https://api.tcgdex.net/v2/en/cards/{card_brief['id']}")
+              print("CARD",card_brief["id"],json.dumps({
+                  "pricing":card.get("pricing"),
+                  "variants_detailed":card.get("variants_detailed"),
+                  "variants":card.get("variants")
+              },sort_keys=True))
