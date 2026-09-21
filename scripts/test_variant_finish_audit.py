@@ -104,6 +104,26 @@ VERIFIED_BW1_CHECKLIST_FINISHES = {
 }
 BW1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms/pdf/tcg/checklists/BW1_Cardlist_EN.pdf"
 
+VERIFIED_XY1_CHECKLIST_FINISHES = {
+    "xy1-6": {"localId": "6", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-13": {"localId": "13", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-21": {"localId": "21", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-37": {"localId": "37", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-44": {"localId": "44", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-52": {"localId": "52", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-68": {"localId": "68", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-75": {"localId": "75", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-83": {"localId": "83", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-90": {"localId": "90", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-99": {"localId": "99", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-107": {"localId": "107", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-114": {"localId": "114", "finishes": ["Holo", "Reverse Holo"]},
+    "xy1-122": {"localId": "122", "finishes": ["Normal", "Reverse Holo"]},
+    "xy1-138": {"localId": "138", "finishes": ["Normal"]},
+    "xy1-145": {"localId": "145", "finishes": ["Holo"]},
+}
+XY1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/xy1_web_cardlist_en.pdf"
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1278,6 +1298,19 @@ def verified_bw1_checklist_truth(card):
     return set(rule["finishes"])
 
 
+def verified_xy1_checklist_truth(card):
+    """Exact XY identities verified against the official Pokemon checklist."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_XY1_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "xy1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -1851,6 +1884,8 @@ def proposed_standard(card, registries):
                     allowed.add("Holo"); reasons.append("rarity-holo-fallback")
     if verified_finish_matches(registries["normal"], card):
         allowed.add("Normal"); reasons.append("verified-normal-finish-registry")
+    if verified_finish_matches(registries["holo"], card):
+        allowed.add("Holo"); reasons.append("verified-holo-finish-registry")
     if verified_finish_matches(registries["reverse"], card):
         allowed.add("Reverse Holo"); reasons.append("verified-reverse-finish-registry")
     for finish in FINISHES:
@@ -2145,6 +2180,7 @@ def main():
     gold_runtime = run_gold_marketplace_runtime(source)
     registries = {
         "normal": extract_js_object(source, "VERIFIED_NORMAL_FINISHES"),
+        "holo": extract_js_object(source, "VERIFIED_HOLO_FINISHES"),
         "reverse": extract_js_object(source, "VERIFIED_REVERSE_FINISHES"),
         "variant": extract_js_object(source, "VERIFIED_VARIANT_PRICES"),
         "stamp": extract_js_object(source, "VERIFIED_STAMP_PRICES"),
@@ -2163,6 +2199,11 @@ def main():
         for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
         if "Normal" in row["finishes"]
     })
+    expected_normal_registry.update({
+        card_id: {"setId": "xy1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
         raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
@@ -2176,6 +2217,20 @@ def main():
         for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     })
+    expected_reverse_registry.update({
+        card_id: {"setId": "xy1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
+    expected_holo_registry = {
+        card_id: {"setId": "xy1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Holo" in row["finishes"]
+    }
+    if registries["holo"] != expected_holo_registry:
+        raise AssertionError("VERIFIED_HOLO_FINISHES differs from the independently verified exact identities")
+    if "if(stamp==='None' && verifiedHoloFinish(card))allowed.add('Holo');" not in source:
+        raise AssertionError("Verified Holo finish must remain restricted to the unstamped path")
     if registries["reverse"] != expected_reverse_registry:
         raise AssertionError("VERIFIED_REVERSE_FINISHES differs from the independently verified exact identities")
     if "if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');" not in source:
@@ -2407,6 +2462,10 @@ def main():
         if bw1_checklist_truth:
             truth.update(bw1_checklist_truth)
             it_truth.update(bw1_checklist_truth)
+        xy1_checklist_truth = verified_xy1_checklist_truth(en)
+        if xy1_checklist_truth:
+            truth.update(xy1_checklist_truth)
+            it_truth.update(xy1_checklist_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2492,6 +2551,7 @@ def main():
             "cardmarketIdProduct": base_pid,
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
             "documentedFinishes": sorted(truth), "verifiedBw1ChecklistFinishes": sorted(bw1_checklist_truth),
+            "verifiedXy1ChecklistFinishes": sorted(xy1_checklist_truth),
             "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
@@ -2624,7 +2684,19 @@ def main():
         card_id for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     }
-    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids
+    xy1_normal_ids = {
+        card_id for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    }
+    xy1_holo_ids = {
+        card_id for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Holo" in row["finishes"]
+    }
+    xy1_reverse_ids = {
+        card_id for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    }
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | xy1_normal_ids
     if normal_registry_applied_ids != sorted(expected_normal_applied):
         raise AssertionError("Verified Normal registry did not apply to the exact audited identities")
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
@@ -2633,11 +2705,22 @@ def main():
     if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in bw1_reverse_ids):
         raise AssertionError("At least one verified BW1 Reverse target is still not selectable")
+    if any("Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
+           if c["tcgdexId"] in xy1_holo_ids):
+        raise AssertionError("At least one verified XY Holo target is still not selectable")
+    if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
+           if c["tcgdexId"] in xy1_reverse_ids):
+        raise AssertionError("At least one verified XY Reverse target is still not selectable")
     normal_registry_has_price_fields = any(
         set(rule) - {"setId", "localId"} for rule in normal_registry.values()
     )
     if normal_registry_has_price_fields:
         raise AssertionError("Verified Normal finish registry must not contain price fields")
+    holo_registry_has_price_fields = any(
+        set(rule) - {"setId", "localId"} for rule in registries["holo"].values()
+    )
+    if holo_registry_has_price_fields:
+        raise AssertionError("Verified Holo finish registry must not contain price fields")
     reverse_registry_has_price_fields = any(
         set(rule) - {"setId", "localId"} for rule in registries["reverse"].values()
     )
@@ -2881,6 +2964,18 @@ def main():
             "unstampedOnly": True,
             "priceFieldsPresent": False,
             "assessment": "Exact Black & White identities only; no set-wide rarity or era rule introduced.",
+        },
+        "verifiedXy1ChecklistFinishAudit": {
+            "expectedIdentities": len(VERIFIED_XY1_CHECKLIST_FINISHES),
+            "normalIdentities": sorted(xy1_normal_ids),
+            "holoIdentities": sorted(xy1_holo_ids),
+            "reverseIdentities": sorted(xy1_reverse_ids),
+            "officialChecklist": XY1_OFFICIAL_CHECKLIST_SOURCE,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "assessment": "Exact XY identities only; no set-wide rarity or era rule introduced.",
         },
         "verifiedReverseFinishAudit": {
             "expectedIdentities": len(VERIFIED_REVERSE_TARGETS),
