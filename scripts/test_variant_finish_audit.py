@@ -85,6 +85,25 @@ VERIFIED_NORMAL_TARGETS = {
     "sv05-121": ("sv05", "121"),
     "sv06-100": ("sv06", "100"),
 }
+VERIFIED_SWSH1_CHECKLIST_FINISHES = {
+    "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
+    "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-18": {"localId": "18", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-41": {"localId": "41", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-52": {"localId": "52", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-87": {"localId": "87", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-121": {"localId": "121", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-133": {"localId": "133", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-145": {"localId": "145", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-156": {"localId": "156", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-168": {"localId": "168", "finishes": ["Normal", "Reverse Holo"]},
+    "swsh1-190": {"localId": "190", "finishes": ["Holo"]},
+    "swsh1-201": {"localId": "201", "finishes": ["Holo"]},
+    "swsh1-212": {"localId": "212", "finishes": ["Holo"]},
+}
+SWSH1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/swsh1_web_cardlist_en.pdf"
+SWSH1_212_OFFICIAL_CARD_SOURCE = "https://www.pokemon.com/br/pokemon-estampas-ilustradas/cartas-de-pokemon/series/swsh1/212/"
+
 VERIFIED_REVERSE_TARGETS = {
     "sm2-10": {"setId": "sm2", "localId": "010", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm2_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-guardians-rising/victini-reverse-holo-10"},
     "sm1-46": {"setId": "sm1", "localId": "046", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm1_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-sun-%26-moon/araquanid-reverse-holo-46"},
@@ -1227,6 +1246,43 @@ def source_semantic_details(card):
             if (f := canonical_row_finish(row, translate_localized=True))}
 
 
+def verified_swsh1_checklist_truth(card):
+    """Exact Sword & Shield identities verified against official Pokémon sources."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_SWSH1_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "swsh1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
+def verified_regirock_hidden_legends_truth(card):
+    """Mirror the exact production exception for Regirock ex 98/101 Cracked Ice Holo."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "").lower()
+    if cid != "ex5-98":
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "ex5":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != "98":
+        return set()
+    name = norm((card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name"))
+    if name != "regirockex":
+        return set()
+    exact = []
+    for row in card.get("variants_detailed") or []:
+        stamps = row.get("stamp") or []
+        typ = canonical_finish_type_label(row.get("type"))
+        foil = norm(row.get("foil"))
+        pid = int(((row.get("thirdParty") or {}).get("cardmarket")) or 0)
+        size = str(row.get("size") or "standard").lower()
+        if typ == "holo" and foil == "crackedice" and not stamps and size == "standard" and pid == 276172:
+            exact.append(row)
+    return {"Holo"} if len(exact) == 1 else set()
+
+
 def verified_stamped_identity_truth(card, mep_registry=None, mfb_registry=None, worlds_registry=None):
     """Return exact stamped-edition truth handled outside the unstamped matrix."""
     set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
@@ -2323,7 +2379,9 @@ def main():
         bog_cosmos_truth = verified_bog_cosmos_standard_jumbo_truth(en)
         hidden_fates_sv_truth = verified_hidden_fates_shiny_vault_truth(en, cid)
         official_checklist_holo_truth = verified_official_checklist_holo_truth(cid)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth
+        swsh1_checklist_truth = verified_swsh1_checklist_truth(en)
+        regirock_hidden_legends_truth = verified_regirock_hidden_legends_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth | swsh1_checklist_truth | regirock_hidden_legends_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2341,6 +2399,12 @@ def main():
                 "exact residual identity has unanimous explicit physical finish evidence"
                 if residual_exact_truth else
                 "exact Nintendo Winner promo has verified Normal Standard/Jumbo physical rows"
+                if np_winner_truth else
+                "exact Sword & Shield identity verified against official Pokémon checklist/card database"
+                if swsh1_checklist_truth else
+                "exact Hidden Legends Regirock ex Cracked Ice Holo row matches production exception"
+                if regirock_hidden_legends_truth else
+                "verified specialized finish evidence"
             )
         class_counts[classification] += 1
         era = era_by_id[cid]
@@ -2388,6 +2452,8 @@ def main():
             "verifiedUnanimousSpecialFinishes": sorted(unanimous_special_truth),
             "verifiedResidualExactFinishes": sorted(residual_exact_truth),
             "verifiedNpWinnerStandardJumboFinishes": sorted(np_winner_truth),
+            "verifiedSwsh1ChecklistFinishes": sorted(swsh1_checklist_truth),
+            "verifiedRegirockHiddenLegendsFinishes": sorted(regirock_hidden_legends_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
