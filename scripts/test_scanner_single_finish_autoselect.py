@@ -45,8 +45,12 @@ needle_sync="syncVariantAvailability(selectedCard,false);"
 needle_refresh="refreshOfficialPlayAvailability(selectedCard,false);"
 assert needle_sync in choose
 assert needle_refresh in choose
-assert choose.index(needle_sync) < choose.index(needle_refresh)
-assert "await refreshOfficialPlayAvailability(selectedCard,false" not in choose
+# The regular API/search path must sync immediately before its non-blocking
+# refresh. The separate _cardoryxLocal branch intentionally has its own awaited
+# evidence flow and is outside this regression.
+regular_tail=choose[choose.rfind("applyPlayAutoSeries(selectedCard,false);"):]
+assert regular_tail.index(needle_sync) < regular_tail.index(needle_refresh)
+assert "await refreshOfficialPlayAvailability(selectedCard,false" not in regular_tail
 
 js=f"""
 const assert=require('assert');
