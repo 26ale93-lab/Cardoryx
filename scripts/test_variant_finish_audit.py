@@ -240,6 +240,19 @@ VERIFIED_SWSH1_CHECKLIST_FINISHES = {
 SWSH1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/swsh1_web_cardlist_en.pdf"
 SWSH1_212_OFFICIAL_CARD_SOURCE = "https://www.pokemon.com/br/pokemon-estampas-ilustradas/cartas-de-pokemon/series/swsh1/212/"
 
+VERIFIED_MEE30_CELEBRATION_ENERGIES = {
+    "mee-009": {"localId": "009", "name": "Grass Energy"},
+    "mee-010": {"localId": "010", "name": "Fire Energy"},
+    "mee-011": {"localId": "011", "name": "Water Energy"},
+    "mee-012": {"localId": "012", "name": "Lightning Energy"},
+    "mee-013": {"localId": "013", "name": "Psychic Energy"},
+    "mee-014": {"localId": "014", "name": "Fighting Energy"},
+    "mee-015": {"localId": "015", "name": "Darkness Energy"},
+    "mee-016": {"localId": "016", "name": "Metal Energy"},
+}
+MEE30_OFFICIAL_FOIL_SOURCE = "https://www.pokemon.com/uk/news/pokemon-tcg-30th-celebration-product-showcase"
+MEE30_NUMBERING_SOURCE = "https://bulbapedia.bulbagarden.net/wiki/MEE"
+
 VERIFIED_REVERSE_TARGETS = {
     "sm2-10": {"setId": "sm2", "localId": "010", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm2_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-guardians-rising/victini-reverse-holo-10"},
     "sm1-46": {"setId": "sm1", "localId": "046", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm1_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-sun-%26-moon/araquanid-reverse-holo-46"},
@@ -3134,8 +3147,17 @@ def main():
             "beforeAfter": {"before": classification_counts(energy_before) if baseline else None,
                             "after": classification_counts(energy_after)},
             "mee001To008": [c for c in cards_out if c["tcgdexId"].startswith("mee-")],
-            "mee009To016Unavailable": unavailable_targets,
-            "assessment": "MEE001-008 is a deliberate source conflict: TCGdex exposes Reverse while Cardoryx exact edition policy allows Normal; Prize Pack S8/S9 is separately modelled as Normal + Cosmos. MEE009-016 cannot be API-verified in the current TCGdex catalogue.",
+            "mee009To016UpstreamUnavailable": unavailable_targets,
+            "mee009To016ExternallyVerified": {
+                "identities": VERIFIED_MEE30_CELEBRATION_ENERGIES,
+                "finish": "Holo",
+                "stamp": "30° Anniversario",
+                "officialFoilEvidence": MEE30_OFFICIAL_FOIL_SOURCE,
+                "exactNumberingCrossCheck": MEE30_NUMBERING_SOURCE,
+                "priceInferredFromFinishEvidence": False,
+                "upstreamGapOnly": True,
+            },
+            "assessment": "MEE001-008 now align with the exact TCGdex Normal + Reverse rows; Prize Pack S8/S9 remains separately modelled as Normal + Cosmos. MEE009-016 are still absent from the current TCGdex snapshot, but their exact numbering and 30th Celebration foil Basic Energy finish are independently verified. No Cardmarket price is inferred from that finish evidence.",
         },
         "registryAudit": {"sizes": {k: len(v) for k, v in registries.items()}, "issues": registry_issues},
         "mcdonaldsStampAudit": mcdonalds_stamp_audit,
@@ -3410,7 +3432,7 @@ def main():
             "scope": "No general Normal rule was added; only exact tcgdexId + setId + normalized localId registries gain Normal.",
             "remainingCases": [x for x in issues if "Normal" in x.get("missing", [])],
         },
-        "mustRemainToVerify": [x for x in issues if x["severity"] == "P3"] + [{"targets": unavailable_targets, "reason": "not present in current TCGdex API"}],
+        "mustRemainToVerify": [x for x in issues if x["severity"] == "P3"] + ([{"targets": unavailable_targets, "reason": "upstream TCGdex availability only; exact MEE 009-016 identity/foil evidence is externally verified and no price is inferred"}] if unavailable_targets else []),
         "safety": {
             "indexHtmlModified": True, "scannerModified": False, "cardmarketDataModified": False,
             "retailModified": False, "retailPricesModified": False, "workflowAdded": False,
