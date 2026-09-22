@@ -1,0 +1,43 @@
+name: TEMP Current Main Finish Baseline
+
+on:
+  push:
+    branches:
+      - audit/current-main-finish-baseline-20260922
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run full deterministic audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Print baseline
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("artifacts/variant_finish_audit_report.json"))
+          print("BASELINE",json.dumps(r["summary"],sort_keys=True))
+          amb=[x for x in r["issuesByPriority"] if x.get("classification")=="AMBIGUA"]
+          from collections import Counter
+          print("AMBIGUOUS_BY_SET",json.dumps(dict(Counter(x.get("set") for x in amb)),sort_keys=True))
+          print("AMBIGUOUS_IDS",json.dumps([x.get("tcgdexId") for x in amb]))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-main-finish-baseline
+          path: artifacts/variant_finish_audit_report.json
