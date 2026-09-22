@@ -145,6 +145,40 @@ VERIFIED_XY1_CHECKLIST_FINISHES = {
 }
 XY1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/xy1_web_cardlist_en.pdf"
 
+VERIFIED_SM1_CHECKLIST_FINISHES = {
+    "sm1-1": {"localId": "1", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-108": {"localId": "108", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-117": {"localId": "117", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-126": {"localId": "126", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-135": {"localId": "135", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-144": {"localId": "144", "finishes": ["Holo"]},
+    "sm1-26": {"localId": "26", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-44": {"localId": "44", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-53": {"localId": "53", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-62": {"localId": "62", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-71": {"localId": "71", "finishes": ["Holo", "Reverse Holo"]},
+    "sm1-9": {"localId": "9", "finishes": ["Normal", "Reverse Holo"]},
+    "sm1-99": {"localId": "99", "finishes": ["Holo", "Reverse Holo"]},
+}
+SM1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm1_web_cardlist_en.pdf"
+
+VERIFIED_SM12_CHECKLIST_FINISHES = {
+    "sm12-113": {"localId": "113", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-128": {"localId": "128", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-142": {"localId": "142", "finishes": ["Holo", "Reverse Holo"]},
+    "sm12-170": {"localId": "170", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-185": {"localId": "185", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-2": {"localId": "2", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-213": {"localId": "213", "finishes": ["Holo"]},
+    "sm12-228": {"localId": "228", "finishes": ["Holo"]},
+    "sm12-40": {"localId": "40", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-55": {"localId": "55", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-7": {"localId": "7", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-84": {"localId": "84", "finishes": ["Normal", "Reverse Holo"]},
+    "sm12-99": {"localId": "99", "finishes": ["Normal", "Reverse Holo"]},
+}
+SM12_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm12_web_cardlist_en.pdf"
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1346,6 +1380,32 @@ def verified_xy1_checklist_truth(card):
     return set(rule["finishes"])
 
 
+def verified_sm1_checklist_truth(card):
+    """Exact Sun & Moon base-set identities verified against the official Pokemon checklist."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_SM1_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "sm1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
+def verified_sm12_checklist_truth(card):
+    """Exact Cosmic Eclipse identities verified against the official Pokemon checklist."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_SM12_CHECKLIST_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "sm12":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -2244,6 +2304,16 @@ def main():
         for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
         if "Normal" in row["finishes"]
     })
+    expected_normal_registry.update({
+        card_id: {"setId": "sm1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_SM1_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
+    expected_normal_registry.update({
+        card_id: {"setId": "sm12", "localId": row["localId"]}
+        for card_id, row in VERIFIED_SM12_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
         raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
@@ -2256,6 +2326,16 @@ def main():
     expected_holo_registry.update({
         card_id: {"setId": "xy1", "localId": row["localId"]}
         for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Holo" in row["finishes"]
+    })
+    expected_holo_registry.update({
+        card_id: {"setId": "sm1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_SM1_CHECKLIST_FINISHES.items()
+        if "Holo" in row["finishes"]
+    })
+    expected_holo_registry.update({
+        card_id: {"setId": "sm12", "localId": row["localId"]}
+        for card_id, row in VERIFIED_SM12_CHECKLIST_FINISHES.items()
         if "Holo" in row["finishes"]
     })
     if registries["holo"] != expected_holo_registry:
@@ -2280,6 +2360,16 @@ def main():
     expected_reverse_registry.update({
         card_id: {"setId": "xy1", "localId": row["localId"]}
         for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
+    expected_reverse_registry.update({
+        card_id: {"setId": "sm1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_SM1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
+    expected_reverse_registry.update({
+        card_id: {"setId": "sm12", "localId": row["localId"]}
+        for card_id, row in VERIFIED_SM12_CHECKLIST_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     })
     if registries["reverse"] != expected_reverse_registry:
@@ -2521,6 +2611,14 @@ def main():
         if xy1_checklist_truth:
             truth.update(xy1_checklist_truth)
             it_truth.update(xy1_checklist_truth)
+        sm1_checklist_truth = verified_sm1_checklist_truth(en)
+        if sm1_checklist_truth:
+            truth.update(sm1_checklist_truth)
+            it_truth.update(sm1_checklist_truth)
+        sm12_checklist_truth = verified_sm12_checklist_truth(en)
+        if sm12_checklist_truth:
+            truth.update(sm12_checklist_truth)
+            it_truth.update(sm12_checklist_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2762,7 +2860,13 @@ def main():
         card_id for card_id, row in VERIFIED_XY1_CHECKLIST_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     }
-    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids | xy1_normal_ids
+    sm1_normal_ids = {k for k,v in VERIFIED_SM1_CHECKLIST_FINISHES.items() if "Normal" in v["finishes"]}
+    sm1_holo_ids = {k for k,v in VERIFIED_SM1_CHECKLIST_FINISHES.items() if "Holo" in v["finishes"]}
+    sm1_reverse_ids = {k for k,v in VERIFIED_SM1_CHECKLIST_FINISHES.items() if "Reverse Holo" in v["finishes"]}
+    sm12_normal_ids = {k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Normal" in v["finishes"]}
+    sm12_holo_ids = {k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Holo" in v["finishes"]}
+    sm12_reverse_ids = {k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Reverse Holo" in v["finishes"]}
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids | xy1_normal_ids | sm1_normal_ids | sm12_normal_ids
     expected_normal_applied_lower = {x.lower() for x in expected_normal_applied}
     actual_normal_applied_lower = {x.lower() for x in normal_registry_applied_ids}
     if actual_normal_applied_lower != expected_normal_applied_lower:
@@ -2774,11 +2878,11 @@ def main():
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
-    expected_holo_checklist_ids = bw11_holo_ids | xy1_holo_ids
+    expected_holo_checklist_ids = bw11_holo_ids | xy1_holo_ids | sm1_holo_ids | sm12_holo_ids
     if any("Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_holo_checklist_ids):
         raise AssertionError("At least one verified checklist Holo target is still not selectable")
-    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids | xy1_reverse_ids
+    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids | xy1_reverse_ids | sm1_reverse_ids | sm12_reverse_ids
     if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_reverse_checklist_ids):
         raise AssertionError("At least one verified checklist Reverse target is still not selectable")
@@ -3059,6 +3163,32 @@ def main():
             "unstampedOnly": True,
             "priceFieldsPresent": False,
             "assessment": "Exact XY identities only; no set-wide rarity or era rule introduced.",
+        },
+        "verifiedSm1ChecklistFinishAudit": {
+            "expectedIdentities": len(VERIFIED_SM1_CHECKLIST_FINISHES),
+            "normalIdentities": sorted(k for k,v in VERIFIED_SM1_CHECKLIST_FINISHES.items() if "Normal" in v["finishes"]),
+            "holoIdentities": sorted(k for k,v in VERIFIED_SM1_CHECKLIST_FINISHES.items() if "Holo" in v["finishes"]),
+            "reverseIdentities": sorted(k for k,v in VERIFIED_SM1_CHECKLIST_FINISHES.items() if "Reverse Holo" in v["finishes"]),
+            "officialChecklist": SM1_OFFICIAL_CHECKLIST_SOURCE,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "excludedResidualIds": ["sm1-153","sm1-162","sm1-171"],
+            "assessment": "Only exact Sun & Moon identities visibly covered by the standard checklist; secret/extra residuals remain ambiguous.",
+        },
+        "verifiedSm12ChecklistFinishAudit": {
+            "expectedIdentities": len(VERIFIED_SM12_CHECKLIST_FINISHES),
+            "normalIdentities": sorted(k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Normal" in v["finishes"]),
+            "holoIdentities": sorted(k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Holo" in v["finishes"]),
+            "reverseIdentities": sorted(k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Reverse Holo" in v["finishes"]),
+            "officialChecklist": SM12_OFFICIAL_CHECKLIST_SOURCE,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "excludedResidualIds": ["sm12-242","sm12-257","sm12-271"],
+            "assessment": "Only exact Cosmic Eclipse identities visibly covered by the standard checklist; secret/subset residuals remain ambiguous.",
         },
         "verifiedReverseFinishAudit": {
             "expectedIdentities": len(VERIFIED_REVERSE_TARGETS),
