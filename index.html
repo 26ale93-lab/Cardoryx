@@ -5240,12 +5240,9 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
     if(rows.length===1)return new Set(['Holo','Speciale / Altro','Non so']);
   }
 
-  // V2.1.32 — standard Mega Evolution Energies MEE001–008 are the non-stamped
-  // Normal printing. Do not expose a generic Reverse Holo merely because the
-  // card is classified as Common by the provider.
-  if(isMeePrizePackEnergy(card) && stamp==='None'){
-    return new Set(['Normal','Speciale / Altro','Non so']);
-  }
+  // Mega Evolution Energies MEE 001–008 have exact unstamped Normal and
+  // Reverse physical rows in TCGdex. Let the standard detailed-row resolver
+  // expose both finishes; keep Prize Pack and MEE 009–016 edition logic separate.
   // MEE 001–008 Prize Pack Series 8/9: Cardmarket V1/V2 correspond to
   // Standard / Standard Foil. For these Basic Energies the foil printing is Cosmos Holo.
   if(isMeePrizePackEnergy(card) && stamp==='Play! Pokémon' && ['8','9'].includes(series)){
