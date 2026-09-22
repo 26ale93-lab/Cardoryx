@@ -2686,15 +2686,31 @@ def main():
         card_id for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     }
-    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids
+    bw11_normal_ids = {
+        card_id for card_id, row in VERIFIED_BW11_CHECKLIST_FINISHES.items()
+        if "Normal" in row["finishes"]
+    }
+    bw11_holo_ids = {
+        card_id for card_id, row in VERIFIED_BW11_CHECKLIST_FINISHES.items()
+        if "Holo" in row["finishes"]
+    }
+    bw11_reverse_ids = {
+        card_id for card_id, row in VERIFIED_BW11_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    }
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids
     if normal_registry_applied_ids != sorted(expected_normal_applied):
         raise AssertionError("Verified Normal registry did not apply to the exact audited identities")
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
+    if any("Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
+           if c["tcgdexId"] in bw11_holo_ids):
+        raise AssertionError("At least one verified Legendary Treasures Holo target is still not selectable")
+    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids
     if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
-           if c["tcgdexId"] in bw1_reverse_ids):
-        raise AssertionError("At least one verified BW1 Reverse target is still not selectable")
+           if c["tcgdexId"] in expected_reverse_checklist_ids):
+        raise AssertionError("At least one verified checklist Reverse target is still not selectable")
     normal_registry_has_price_fields = any(
         set(rule) - {"setId", "localId"} for rule in normal_registry.values()
     )
