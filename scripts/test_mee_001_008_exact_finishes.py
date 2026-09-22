@@ -47,7 +47,7 @@ def extract_fn(name):
             block=True
             i+=2
             continue
-        if c in ("'", '"'):
+        if c in ("'", '"', "`"):
             quote=c
             i+=1
             continue
