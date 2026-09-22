@@ -561,6 +561,9 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Worlds 2022">Worlds 2022</option>
           <option value="Worlds 2023">Worlds 2023</option>
           <option value="Worlds 2024">Worlds 2024</option>
+          <option value="Worlds 2025">Worlds 2025</option>
+          <option value="Ace Trainer">Ace Trainer</option>
+          <option value="Winner">Winner</option>
           <option value="MFB Poké Ball">MFB Poké Ball</option>
           <option value="Pokémon Center">Pokémon Center</option>
           <option value="Pre-release">Pre-release</option>
@@ -634,6 +637,9 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Worlds 2022">Worlds 2022</option>
           <option value="Worlds 2023">Worlds 2023</option>
           <option value="Worlds 2024">Worlds 2024</option>
+          <option value="Worlds 2025">Worlds 2025</option>
+          <option value="Ace Trainer">Ace Trainer</option>
+          <option value="Winner">Winner</option>
           <option value="MFB Poké Ball">MFB Poké Ball</option>
           <option value="Pokémon Center">Pokémon Center</option>
           <option value="Pre-release">Pre-release</option>
@@ -861,6 +867,9 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Worlds 2022">Worlds 2022</option>
           <option value="Worlds 2023">Worlds 2023</option>
           <option value="Worlds 2024">Worlds 2024</option>
+          <option value="Worlds 2025">Worlds 2025</option>
+          <option value="Ace Trainer">Ace Trainer</option>
+          <option value="Winner">Winner</option>
           <option value="MFB Poké Ball">MFB Poké Ball</option>
               <option value="Pokémon Center">Pokémon Center</option>
               <option value="Pre-release">Pre-release</option>
@@ -4007,6 +4016,9 @@ function canonicalStamp(v){
   if(n.includes('worlds2022'))return 'Worlds 2022';
   if(n.includes('worlds2023'))return 'Worlds 2023';
   if(n.includes('worlds2024'))return 'Worlds 2024';
+  if(n.includes('worlds2025'))return 'Worlds 2025';
+  if(n.includes('ace trainer')||n.includes('acetrainer'))return 'Ace Trainer';
+  if(n==='winner'||n.includes('winner stamp'))return 'Winner';
   if(n.includes('mfb poke ball')||n.includes('my first battle poke ball'))return 'MFB Poké Ball';
   if(n.includes('pokemon center'))return 'Pokémon Center';
   if(n.includes('pre-release')||n.includes('prerelease'))return 'Pre-release';
@@ -4047,6 +4059,9 @@ function stampEvidenceFromTCGdex(card,stamp){
     'Worlds 2022':['worlds2022'],
     'Worlds 2023':['worlds2023'],
     'Worlds 2024':['worlds2024'],
+    'Worlds 2025':['worlds2025'],
+    'Ace Trainer':['acetrainer'],
+    'Winner':['winner'],
     'Pokémon Center':['pokemoncenter'],
     'Pre-release':['prerelease','prereleasepromo'],
     'Staff':['staff'],
@@ -4919,6 +4934,45 @@ function verifiedHoloFinish(card){
 // V2.1.42 — exact non-Play stamped printing whose finish is independently
 // present in the TCGdex physical row. Finish evidence only: no price fallback,
 // no base-card inheritance, and no rule for other identities or stamps.
+const VERIFIED_RESIDUAL_STAMP_FINISHES = {
+  'mep-028|Ace Trainer':{
+    setId:'mep',localId:'028',name:'Celebratory Fanfare',
+    rowStamp:'ace-trainer',type:'holo',foil:'',cardmarketProductId:850977,
+    finishes:['Holo']
+  },
+  'svp-225|Worlds 2025':{
+    setId:'svp',localId:'225',name:'Pikachu',
+    rowStamp:'worlds-2025',type:'normal',foil:'',tcgplayerProductId:648631,
+    finishes:['Normal']
+  },
+  'svp-225|Winner':{
+    setId:'svp',localId:'225',name:'Pikachu',
+    rowStamp:'winner',type:'reverse',foil:'league',tcgplayerProductId:649940,
+    finishes:['Reverse Holo']
+  }
+};
+function verifiedResidualStampFinishes(card,stamp){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const st=canonicalStamp(stamp);
+  const rule=VERIFIED_RESIDUAL_STAMP_FINISHES[`${id}|${st}`];
+  if(!rule || cardSetId(card)!==rule.setId ||
+     exactLocalIdKey(card?.localId||'')!==exactLocalIdKey(rule.localId) ||
+     normText(card?.name||'')!==normText(rule.name))return [];
+  const rows=tcgdexVariantDetails(card).filter(row=>{
+    const stamps=(Array.isArray(row?.stamp)?row.stamp:[]).map(normText);
+    const rowType=canonicalFinishTypeLabel(row?.type);
+    const rowFoil=canonicalFinishFoilLabel(row?.foil);
+    const cmPid=Number(row?.thirdParty?.cardmarket||0);
+    const tcgPid=Number(row?.thirdParty?.tcgplayer||0);
+    return stamps.length===1 && stamps[0]===normText(rule.rowStamp) &&
+      rowType===rule.type && rowFoil===normText(rule.foil||'') &&
+      String(row?.size||'standard').trim().toLowerCase()==='standard' &&
+      (!rule.cardmarketProductId || cmPid===Number(rule.cardmarketProductId)) &&
+      (!rule.tcgplayerProductId || tcgPid===Number(rule.tcgplayerProductId));
+  });
+  return rows.length===1?rule.finishes.map(canonicalVariant):[];
+}
+
 const VERIFIED_SPECIAL_STAMP_FINISHES = {
   'sv05-051':{
     setId:'sv05',localId:'051',name:'Pikachu',stamp:'Pokémon Day',
@@ -5261,6 +5315,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   for(const finish of verifiedSwshp25thStandardFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedSwshpSetLogoFinishes(card,stamp))allowed.add(finish);
   for(const finish of verifiedMepStampFinishes(card,stamp))allowed.add(finish);
+  for(const finish of verifiedResidualStampFinishes(card,stamp))allowed.add(finish);
 
   // A previously resolved exact Play price is valid finish evidence only for
   // the same Series. This preserves Scanner -> Collection -> Edit consistency.
