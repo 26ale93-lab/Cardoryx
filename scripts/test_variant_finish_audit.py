@@ -2023,9 +2023,6 @@ def verified_finish_matches(registry, card):
 
 
 def proposed_standard(card, registries):
-    n = mee_number(card)
-    if n is not None and 1 <= n <= 8:
-        return {"Normal"}, ["mee-001-008-exact-guard"]
     rows = card.get("variants_detailed") or []
     pool = [r for r in rows if not (r.get("stamp") or []) and not is_play_row(r)]
     allowed, reasons = set(), []
@@ -2127,10 +2124,7 @@ def product_id_for_finish(card, finish):
 
 
 def classify(card, truth, proposed, en_truth, locale_conflict):
-    n = mee_number(card)
     missing, extra = sorted(truth - proposed), sorted(proposed - truth)
-    if n is not None and 1 <= n <= 8 and "Reverse Holo" in truth:
-        return "SOURCE CONFLICT", missing, extra, "MEE upstream reverse conflicts with exact Cardoryx edition rule"
     if locale_conflict:
         return "SOURCE CONFLICT", missing, extra, "IT/EN variants_detailed disagree"
     if not truth:
