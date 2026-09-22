@@ -4679,7 +4679,19 @@ const VERIFIED_NORMAL_FINISHES = {
   'bw1-92':{setId:'bw1',localId:'92'},
   'bw1-99':{setId:'bw1',localId:'99'},
   'bw1-105':{setId:'bw1',localId:'105'},
-  'bw1-110':{setId:'bw1',localId:'110'}
+  'bw1-110':{setId:'bw1',localId:'110'},
+  // Legendary Treasures exact checklist identities.
+  'bw11-1':{setId:'bw11',localId:'1'},
+  'bw11-106':{setId:'bw11',localId:'106'},
+  'bw11-113':{setId:'bw11',localId:'113'},
+  'bw11-18':{setId:'bw11',localId:'18'},
+  'bw11-25':{setId:'bw11',localId:'25'},
+  'bw11-4':{setId:'bw11',localId:'4'},
+  'bw11-47':{setId:'bw11',localId:'47'},
+  'bw11-62':{setId:'bw11',localId:'62'},
+  'bw11-7':{setId:'bw11',localId:'7'},
+  'bw11-RC17':{setId:'bw11',localId:'RC17'},
+  'bw11-RC9':{setId:'bw11',localId:'RC9'}
 };
 function verifiedNormalFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
@@ -4737,11 +4749,42 @@ const VERIFIED_REVERSE_FINISHES = {
   'bw1-80':{setId:'bw1',localId:'80'},
   'bw1-87':{setId:'bw1',localId:'87'},
   'bw1-92':{setId:'bw1',localId:'92'},
-  'bw1-99':{setId:'bw1',localId:'99'}
+  'bw1-99':{setId:'bw1',localId:'99'},
+  'bw11-1':{setId:'bw11',localId:'1'},
+  'bw11-106':{setId:'bw11',localId:'106'},
+  'bw11-113':{setId:'bw11',localId:'113'},
+  'bw11-18':{setId:'bw11',localId:'18'},
+  'bw11-25':{setId:'bw11',localId:'25'},
+  'bw11-32':{setId:'bw11',localId:'32'},
+  'bw11-4':{setId:'bw11',localId:'4'},
+  'bw11-47':{setId:'bw11',localId:'47'},
+  'bw11-62':{setId:'bw11',localId:'62'},
+  'bw11-7':{setId:'bw11',localId:'7'},
+  'bw11-84':{setId:'bw11',localId:'84'},
+  'bw11-91':{setId:'bw11',localId:'91'},
+  'bw11-99':{setId:'bw11',localId:'99'}
 };
 function verifiedReverseFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
   const rule=VERIFIED_REVERSE_FINISHES[id];
+  if(!rule)return false;
+  return cardSetId(card)===rule.setId &&
+         exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
+}
+
+// Exact Holo finish evidence for historical identities whose upstream payload
+// omits standard finish rows. Finish-only: no product IDs and no prices.
+const VERIFIED_HOLO_FINISHES = {
+  'bw11-32':{setId:'bw11',localId:'32'},
+  'bw11-54':{setId:'bw11',localId:'54'},
+  'bw11-77':{setId:'bw11',localId:'77'},
+  'bw11-84':{setId:'bw11',localId:'84'},
+  'bw11-91':{setId:'bw11',localId:'91'},
+  'bw11-99':{setId:'bw11',localId:'99'}
+};
+function verifiedHoloFinish(card){
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const rule=VERIFIED_HOLO_FINISHES[id];
   if(!rule)return false;
   return cardSetId(card)===rule.setId &&
          exactLocalIdKey(card?.localId||'')===exactLocalIdKey(rule.localId);
@@ -5103,6 +5146,7 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
 
   // Exact finish-only evidence. Stamped/Play! editions remain on their own path.
   if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');
+  if(stamp==='None' && verifiedHoloFinish(card))allowed.add('Holo');
   if(stamp==='None' && verifiedReverseFinish(card))allowed.add('Reverse Holo');
 
   // Exact verified registries may add a finish for the exact edition.
