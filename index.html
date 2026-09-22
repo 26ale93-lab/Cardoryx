@@ -4741,7 +4741,9 @@ const VERIFIED_NORMAL_FINISHES = {
   'g1-82':{setId:'g1',localId:'82'},
   'g1-rc2':{setId:'g1',localId:'RC2'},
   'g1-rc25':{setId:'g1',localId:'RC25'},
-  'g1-rc9':{setId:'g1',localId:'RC9'}
+  'g1-rc9':{setId:'g1',localId:'RC9'},
+  // Exact extra-numbered historical identity; finish evidence only.
+  'sm1-171':{setId:'sm1',localId:'171'}
 };
 function verifiedNormalFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
@@ -4862,7 +4864,9 @@ const VERIFIED_REVERSE_FINISHES = {
   'g1-64':{setId:'g1',localId:'64'},
   'g1-70':{setId:'g1',localId:'70'},
   'g1-76':{setId:'g1',localId:'76'},
-  'g1-82':{setId:'g1',localId:'82'}
+  'g1-82':{setId:'g1',localId:'82'},
+  // Exact extra-numbered historical identity; finish evidence only.
+  'sm1-171':{setId:'sm1',localId:'171'}
 };
 function verifiedReverseFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
@@ -4896,7 +4900,13 @@ const VERIFIED_HOLO_FINISHES = {
   'g1-28':{setId:'g1',localId:'28'},
   'g1-46':{setId:'g1',localId:'46'},
   'g1-rc13':{setId:'g1',localId:'RC13'},
-  'g1-rc31':{setId:'g1',localId:'RC31'}
+  'g1-rc31':{setId:'g1',localId:'RC31'},
+  // Exact extra-numbered historical identities; finish evidence only.
+  'sm1-153':{setId:'sm1',localId:'153'},
+  'sm1-162':{setId:'sm1',localId:'162'},
+  'sm12-242':{setId:'sm12',localId:'242'},
+  'sm12-257':{setId:'sm12',localId:'257'},
+  'sm12-271':{setId:'sm12',localId:'271'}
 };
 function verifiedHoloFinish(card){
   const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
