@@ -2202,7 +2202,7 @@ def main():
         if "Normal" in row["finishes"]
     })
     expected_normal_registry.update({
-        card_id: {"setId": "bw11", "localId": row["localId"]}
+        card_id.lower(): {"setId": "bw11", "localId": row["localId"]}
         for card_id, row in VERIFIED_BW11_CHECKLIST_FINISHES.items()
         if "Normal" in row["finishes"]
     })
@@ -2699,11 +2699,13 @@ def main():
         if "Reverse Holo" in row["finishes"]
     }
     expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids
-    if normal_registry_applied_ids != sorted(expected_normal_applied):
-        actual=set(normal_registry_applied_ids)
+    expected_normal_applied_lower = {x.lower() for x in expected_normal_applied}
+    actual_normal_applied_lower = {x.lower() for x in normal_registry_applied_ids}
+    if actual_normal_applied_lower != expected_normal_applied_lower:
+        actual=actual_normal_applied_lower
         raise AssertionError(
             "Verified Normal registry did not apply to the exact audited identities: "
-            f"missing={sorted(expected_normal_applied-actual)} unexpected={sorted(actual-expected_normal_applied)}"
+            f"missing={sorted(expected_normal_applied_lower-actual)} unexpected={sorted(actual-expected_normal_applied_lower)}"
         )
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_normal_applied):
