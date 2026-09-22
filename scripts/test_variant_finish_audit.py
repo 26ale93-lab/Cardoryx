@@ -2700,7 +2700,11 @@ def main():
     }
     expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids
     if normal_registry_applied_ids != sorted(expected_normal_applied):
-        raise AssertionError("Verified Normal registry did not apply to the exact audited identities")
+        actual=set(normal_registry_applied_ids)
+        raise AssertionError(
+            "Verified Normal registry did not apply to the exact audited identities: "
+            f"missing={sorted(expected_normal_applied-actual)} unexpected={sorted(actual-expected_normal_applied)}"
+        )
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
