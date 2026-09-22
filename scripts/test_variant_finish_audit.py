@@ -179,6 +179,33 @@ VERIFIED_SM12_CHECKLIST_FINISHES = {
 }
 SM12_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm12_web_cardlist_en.pdf"
 
+VERIFIED_GENERATIONS_MARKETPLACE_FINISHES = {
+    "g1-1": {"localId": "1", "finishes": ["Holo"]},
+    "g1-16": {"localId": "16", "finishes": ["Normal","Reverse Holo"]},
+    "g1-22": {"localId": "22", "finishes": ["Normal","Reverse Holo"]},
+    "g1-28": {"localId": "28", "finishes": ["Holo"]},
+    "g1-33": {"localId": "33", "finishes": ["Normal","Reverse Holo"]},
+    "g1-4": {"localId": "4", "finishes": ["Normal","Reverse Holo"]},
+    "g1-46": {"localId": "46", "finishes": ["Holo"]},
+    "g1-52": {"localId": "52", "finishes": ["Normal","Reverse Holo"]},
+    "g1-59": {"localId": "59", "finishes": ["Normal","Reverse Holo"]},
+    "g1-64": {"localId": "64", "finishes": ["Normal","Reverse Holo"]},
+    "g1-70": {"localId": "70", "finishes": ["Normal","Reverse Holo"]},
+    "g1-76": {"localId": "76", "finishes": ["Normal","Reverse Holo"]},
+    "g1-82": {"localId": "82", "finishes": ["Normal","Reverse Holo"]},
+    "g1-RC13": {"localId": "RC13", "finishes": ["Holo"]},
+    "g1-RC2": {"localId": "RC2", "finishes": ["Normal"]},
+    "g1-RC25": {"localId": "RC25", "finishes": ["Normal"]},
+    "g1-RC31": {"localId": "RC31", "finishes": ["Holo"]},
+    "g1-RC9": {"localId": "RC9", "finishes": ["Normal"]},
+}
+GENERATIONS_FINISH_EVIDENCE = {
+    "tcgplayerSet": "https://www.tcgplayer.com/search/pokemon/generations?productLineName=pokemon&setName=generations",
+    "tcgplayerReverse": "https://www.tcgplayer.com/search/pokemon/generations?Printing=Reverse+Holofoil&productLineName=pokemon&setName=generations",
+    "tcgplayerRadiant": "https://www.tcgplayer.com/categories/trading-and-collectible-card-games/pokemon/price-guides/generations-radiant-collection",
+    "independentReverseCrossCheck": "https://inpoke.com/sets/GEN/reverse-holo",
+}
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1406,6 +1433,19 @@ def verified_sm12_checklist_truth(card):
     return set(rule["finishes"])
 
 
+def verified_generations_marketplace_truth(card):
+    """Exact Generations identities cross-checked against explicit marketplace printings."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != "g1":
+        return set()
+    if str(card.get("localId") or "").lstrip("0").upper() != str(rule["localId"]).lstrip("0").upper():
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -2314,6 +2354,11 @@ def main():
         for card_id, row in VERIFIED_SM12_CHECKLIST_FINISHES.items()
         if "Normal" in row["finishes"]
     })
+    expected_normal_registry.update({
+        card_id.lower(): {"setId": "g1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
         raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
@@ -2336,6 +2381,11 @@ def main():
     expected_holo_registry.update({
         card_id: {"setId": "sm12", "localId": row["localId"]}
         for card_id, row in VERIFIED_SM12_CHECKLIST_FINISHES.items()
+        if "Holo" in row["finishes"]
+    })
+    expected_holo_registry.update({
+        card_id.lower(): {"setId": "g1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items()
         if "Holo" in row["finishes"]
     })
     if registries["holo"] != expected_holo_registry:
@@ -2370,6 +2420,11 @@ def main():
     expected_reverse_registry.update({
         card_id: {"setId": "sm12", "localId": row["localId"]}
         for card_id, row in VERIFIED_SM12_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
+    expected_reverse_registry.update({
+        card_id.lower(): {"setId": "g1", "localId": row["localId"]}
+        for card_id, row in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     })
     if registries["reverse"] != expected_reverse_registry:
@@ -2619,6 +2674,10 @@ def main():
         if sm12_checklist_truth:
             truth.update(sm12_checklist_truth)
             it_truth.update(sm12_checklist_truth)
+        generations_marketplace_truth = verified_generations_marketplace_truth(en)
+        if generations_marketplace_truth:
+            truth.update(generations_marketplace_truth)
+            it_truth.update(generations_marketplace_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2704,6 +2763,7 @@ def main():
             "cardmarketIdProduct": base_pid,
             "tcgplayerPricingKeys": sorted(((en.get("pricing") or {}).get("tcgplayer") or {}).keys()),
             "documentedFinishes": sorted(truth), "verifiedBw1ChecklistFinishes": sorted(bw1_checklist_truth),
+            "verifiedGenerationsMarketplaceFinishes": sorted(generations_marketplace_truth),
             "verifiedStampedFinishes": sorted(stamped_truth),
             "verifiedLegacyChecklistFinishes": sorted(legacy_truth),
             "verifiedCelebrationsStandardFinishes": sorted(celebrations_standard_truth),
@@ -2866,7 +2926,10 @@ def main():
     sm12_normal_ids = {k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Normal" in v["finishes"]}
     sm12_holo_ids = {k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Holo" in v["finishes"]}
     sm12_reverse_ids = {k for k,v in VERIFIED_SM12_CHECKLIST_FINISHES.items() if "Reverse Holo" in v["finishes"]}
-    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids | xy1_normal_ids | sm1_normal_ids | sm12_normal_ids
+    generations_normal_ids = {k for k,v in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items() if "Normal" in v["finishes"]}
+    generations_holo_ids = {k for k,v in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items() if "Holo" in v["finishes"]}
+    generations_reverse_ids = {k for k,v in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items() if "Reverse Holo" in v["finishes"]}
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids | xy1_normal_ids | sm1_normal_ids | sm12_normal_ids | generations_normal_ids
     expected_normal_applied_lower = {x.lower() for x in expected_normal_applied}
     actual_normal_applied_lower = {x.lower() for x in normal_registry_applied_ids}
     if actual_normal_applied_lower != expected_normal_applied_lower:
@@ -2878,11 +2941,11 @@ def main():
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
-    expected_holo_checklist_ids = bw11_holo_ids | xy1_holo_ids | sm1_holo_ids | sm12_holo_ids
+    expected_holo_checklist_ids = bw11_holo_ids | xy1_holo_ids | sm1_holo_ids | sm12_holo_ids | generations_holo_ids
     if any("Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_holo_checklist_ids):
         raise AssertionError("At least one verified checklist Holo target is still not selectable")
-    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids | xy1_reverse_ids | sm1_reverse_ids | sm12_reverse_ids
+    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids | xy1_reverse_ids | sm1_reverse_ids | sm12_reverse_ids | generations_reverse_ids
     if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_reverse_checklist_ids):
         raise AssertionError("At least one verified checklist Reverse target is still not selectable")
@@ -3189,6 +3252,18 @@ def main():
             "priceFieldsPresent": False,
             "excludedResidualIds": ["sm12-242","sm12-257","sm12-271"],
             "assessment": "Only exact Cosmic Eclipse identities visibly covered by the standard checklist; secret/subset residuals remain ambiguous.",
+        },
+        "verifiedGenerationsMarketplaceFinishAudit": {
+            "expectedIdentities": len(VERIFIED_GENERATIONS_MARKETPLACE_FINISHES),
+            "normalIdentities": sorted(generations_normal_ids),
+            "holoIdentities": sorted(generations_holo_ids),
+            "reverseIdentities": sorted(generations_reverse_ids),
+            "evidence": GENERATIONS_FINISH_EVIDENCE,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "assessment": "Exact Generations identities only; marketplace printing evidence is cross-checked and no rarity/set-wide rule is introduced.",
         },
         "verifiedReverseFinishAudit": {
             "expectedIdentities": len(VERIFIED_REVERSE_TARGETS),
