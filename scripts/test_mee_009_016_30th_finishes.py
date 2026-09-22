@@ -68,7 +68,7 @@ js="\n".join(extract_fn(n) for n in names)
 js+=r'''
 function tcgdexExactMfbPokeballRow(){return null}
 function tcgdexExactMcdonaldsStampRow(){return null}
-function tcgdexMcdonalds2021AnniversaryRows(){return []}
+function tcgdexMcdonalds2021AnniversaryRows(){return null}
 function tcgdexExactSwshp25thStandardRow(){return null}
 function verifiedMepStampRule(){return false}
 function tcgdexExactMepStampRow(){return null}
