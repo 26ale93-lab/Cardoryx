@@ -1,0 +1,52 @@
+name: TEMP MEE 001-008 Exact Finish Audit
+
+on:
+  push:
+    branches:
+      - fix/mee-001-008-reverse-finish-20260922
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: MEE 001-008 production regression
+        run: python scripts/test_mee_001_008_exact_finishes.py
+      - name: Scanner single-finish regression
+        run: python scripts/test_scanner_single_finish_autoselect.py
+      - name: Catalog allocation regression
+        run: python scripts/test_catalog_filters.py
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Full deterministic variant finish audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Verify final gates
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("artifacts/variant_finish_audit_report.json"))
+          s=r["summary"]; c=s["classifications"]
+          expected={"CORRETTA":4254,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":0,"SOURCE CONFLICT":0}
+          assert s["totalIdentitiesTested"]==4254,s
+          assert c==expected,c
+          assert s["pricingP0"]==0,s
+          assert s["unavailableExplicitTargets"]==["mee-009","mee-010","mee-011","mee-012","mee-013","mee-014","mee-015","mee-016"],s
+          print("GATES_OK",s)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mee-001-008-exact-finish-audit
+          path: artifacts/variant_finish_audit_report.json
+          if-no-files-found: error
