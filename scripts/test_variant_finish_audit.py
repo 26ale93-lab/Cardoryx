@@ -571,6 +571,7 @@ function verifiedMcdonalds2021AnniversaryFinishes(){return [];}
 function verifiedSwshp25thStandardFinishes(){return [];}
 function verifiedSwshpSetLogoFinishes(){return [];}
 function verifiedMepStampFinishes(){return [];}
+function verifiedResidualStampFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
 function verifiedHoloFinish(){return false;}
 function verifiedReverseFinish(){return false;}
@@ -1516,6 +1517,38 @@ def verified_stamped_identity_truth(card, mep_registry=None, mfb_registry=None, 
     set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
     rows = card.get("variants_detailed") or []
 
+    card_id = str(card.get("id") or card.get("tcgdexId") or "")
+    if card_id == "mep-028":
+        exact = [
+            row for row in rows
+            if [norm(x) for x in (row.get("stamp") or [])] == ["acetrainer"]
+            and canonical_finish_type_label(row.get("type")) == "holo"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() == "standard"
+            and int(((row.get("thirdParty") or {}).get("cardmarket")) or 0) == 850977
+            and int(((row.get("thirdParty") or {}).get("tcgplayer")) or 0) == 681244
+        ]
+        return {"Holo"} if len(rows) == 1 and len(exact) == 1 else set()
+
+    if card_id == "svp-225":
+        normal = [
+            row for row in rows
+            if [norm(x) for x in (row.get("stamp") or [])] == ["worlds2025"]
+            and canonical_finish_type_label(row.get("type")) == "normal"
+            and not row.get("foil")
+            and str(row.get("size") or "standard").lower() == "standard"
+            and int(((row.get("thirdParty") or {}).get("tcgplayer")) or 0) == 648631
+        ]
+        winner = [
+            row for row in rows
+            if [norm(x) for x in (row.get("stamp") or [])] == ["winner"]
+            and canonical_finish_type_label(row.get("type")) == "reverse"
+            and norm(row.get("foil")) == "league"
+            and str(row.get("size") or "standard").lower() == "standard"
+            and int(((row.get("thirdParty") or {}).get("tcgplayer")) or 0) == 649940
+        ]
+        return {"Normal", "Reverse Holo"} if len(rows) == 2 and len(normal) == 1 and len(winner) == 1 else set()
+
     if set_id in {"2012bw", "2014xy"}:
         exact = []
         for row in rows:
@@ -2332,6 +2365,7 @@ def main():
         "VERIFIED_REVERSE_CARDMARKET_CONFLICTS", "knownReverseCardmarketProductConflict",
         "VERIFIED_NORMAL_FINISHES", "verifiedNormalFinish",
         "VERIFIED_REVERSE_FINISHES", "verifiedReverseFinish",
+        "VERIFIED_RESIDUAL_STAMP_FINISHES", "verifiedResidualStampFinishes",
         "VERIFIED_PLAY_SERIES_FINISHES", "verifiedPlaySeriesFinishes",
         "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow", "tcgdexMarketplaceVariant",
         "migrateFinishStamp",
