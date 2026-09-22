@@ -206,6 +206,21 @@ GENERATIONS_FINISH_EVIDENCE = {
     "independentReverseCrossCheck": "https://inpoke.com/sets/GEN/reverse-holo",
 }
 
+VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES = {
+    "sm1-153": {"setId": "sm1", "localId": "153", "finishes": ["Holo"],
+                "evidence": "https://pokedreams.com/tcg/cards/sm1-153"},
+    "sm1-162": {"setId": "sm1", "localId": "162", "finishes": ["Holo"],
+                "evidence": "https://www.mydextcg.com/cards/sm1-162"},
+    "sm1-171": {"setId": "sm1", "localId": "171", "finishes": ["Normal", "Reverse Holo"],
+                "evidence": "https://www.pokescreener.com/set/sm1/card/171?source=set_detail"},
+    "sm12-242": {"setId": "sm12", "localId": "242", "finishes": ["Holo"],
+                 "evidence": "https://evoterminal.com/card/201353"},
+    "sm12-257": {"setId": "sm12", "localId": "257", "finishes": ["Holo"],
+                 "evidence": "https://pokedreams.com/tcg/cards/sm12-257"},
+    "sm12-271": {"setId": "sm12", "localId": "271", "finishes": ["Holo"],
+                 "evidence": "https://pokedreams.com/tcg/cards/sm12-271"},
+}
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1446,6 +1461,19 @@ def verified_generations_marketplace_truth(card):
     return set(rule["finishes"])
 
 
+def verified_extra_numbered_marketplace_truth(card):
+    """Exact historical extra-numbered identities with explicit printing evidence."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != rule["setId"]:
+        return set()
+    if str(card.get("localId") or "").lstrip("0").upper() != str(rule["localId"]).lstrip("0").upper():
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -2359,6 +2387,11 @@ def main():
         for card_id, row in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items()
         if "Normal" in row["finishes"]
     })
+    expected_normal_registry.update({
+        card_id.lower(): {"setId": row["setId"], "localId": row["localId"]}
+        for card_id, row in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
         raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
@@ -2386,6 +2419,11 @@ def main():
     expected_holo_registry.update({
         card_id.lower(): {"setId": "g1", "localId": row["localId"]}
         for card_id, row in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items()
+        if "Holo" in row["finishes"]
+    })
+    expected_holo_registry.update({
+        card_id.lower(): {"setId": row["setId"], "localId": row["localId"]}
+        for card_id, row in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items()
         if "Holo" in row["finishes"]
     })
     if registries["holo"] != expected_holo_registry:
@@ -2425,6 +2463,11 @@ def main():
     expected_reverse_registry.update({
         card_id.lower(): {"setId": "g1", "localId": row["localId"]}
         for card_id, row in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
+    expected_reverse_registry.update({
+        card_id.lower(): {"setId": row["setId"], "localId": row["localId"]}
+        for card_id, row in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     })
     if registries["reverse"] != expected_reverse_registry:
@@ -2678,6 +2721,10 @@ def main():
         if generations_marketplace_truth:
             truth.update(generations_marketplace_truth)
             it_truth.update(generations_marketplace_truth)
+        extra_numbered_marketplace_truth = verified_extra_numbered_marketplace_truth(en)
+        if extra_numbered_marketplace_truth:
+            truth.update(extra_numbered_marketplace_truth)
+            it_truth.update(extra_numbered_marketplace_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2929,7 +2976,10 @@ def main():
     generations_normal_ids = {k for k,v in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items() if "Normal" in v["finishes"]}
     generations_holo_ids = {k for k,v in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items() if "Holo" in v["finishes"]}
     generations_reverse_ids = {k for k,v in VERIFIED_GENERATIONS_MARKETPLACE_FINISHES.items() if "Reverse Holo" in v["finishes"]}
-    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids | xy1_normal_ids | sm1_normal_ids | sm12_normal_ids | generations_normal_ids
+    extra_normal_ids = {k for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items() if "Normal" in v["finishes"]}
+    extra_holo_ids = {k for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items() if "Holo" in v["finishes"]}
+    extra_reverse_ids = {k for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items() if "Reverse Holo" in v["finishes"]}
+    expected_normal_applied = set(VERIFIED_NORMAL_TARGETS) | bw1_normal_ids | bw11_normal_ids | xy1_normal_ids | sm1_normal_ids | sm12_normal_ids | generations_normal_ids | extra_normal_ids
     expected_normal_applied_lower = {x.lower() for x in expected_normal_applied}
     actual_normal_applied_lower = {x.lower() for x in normal_registry_applied_ids}
     if actual_normal_applied_lower != expected_normal_applied_lower:
@@ -2941,11 +2991,11 @@ def main():
     if any("Normal" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_normal_applied):
         raise AssertionError("At least one verified Normal target is still not selectable")
-    expected_holo_checklist_ids = bw11_holo_ids | xy1_holo_ids | sm1_holo_ids | sm12_holo_ids | generations_holo_ids
+    expected_holo_checklist_ids = bw11_holo_ids | xy1_holo_ids | sm1_holo_ids | sm12_holo_ids | generations_holo_ids | extra_holo_ids
     if any("Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_holo_checklist_ids):
         raise AssertionError("At least one verified checklist Holo target is still not selectable")
-    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids | xy1_reverse_ids | sm1_reverse_ids | sm12_reverse_ids | generations_reverse_ids
+    expected_reverse_checklist_ids = bw1_reverse_ids | bw11_reverse_ids | xy1_reverse_ids | sm1_reverse_ids | sm12_reverse_ids | generations_reverse_ids | extra_reverse_ids
     if any("Reverse Holo" not in c["cardoryxProposedFinishes"] for c in cards_out
            if c["tcgdexId"] in expected_reverse_checklist_ids):
         raise AssertionError("At least one verified checklist Reverse target is still not selectable")
@@ -3252,6 +3302,19 @@ def main():
             "priceFieldsPresent": False,
             "excludedResidualIds": ["sm12-242","sm12-257","sm12-271"],
             "assessment": "Only exact Cosmic Eclipse identities visibly covered by the standard checklist; secret/subset residuals remain ambiguous.",
+        },
+        "verifiedExtraNumberedMarketplaceFinishAudit": {
+            "expectedIdentities": len(VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES),
+            "normalIdentities": sorted(k for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items() if "Normal" in v["finishes"]),
+            "holoIdentities": sorted(k for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items() if "Holo" in v["finishes"]),
+            "reverseIdentities": sorted(k for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items() if "Reverse Holo" in v["finishes"]),
+            "evidence": {k:v["evidence"] for k,v in VERIFIED_EXTRA_NUMBERED_MARKETPLACE_FINISHES.items()},
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "unstampedOnly": True,
+            "priceFieldsPresent": False,
+            "excludedStampedResidualIds": ["mep-028","svp-225"],
+            "assessment": "Six exact extra-numbered historical identities only; no rarity or set-wide rule introduced.",
         },
         "verifiedGenerationsMarketplaceFinishAudit": {
             "expectedIdentities": len(VERIFIED_GENERATIONS_MARKETPLACE_FINISHES),
