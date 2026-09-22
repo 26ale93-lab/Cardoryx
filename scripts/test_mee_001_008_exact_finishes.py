@@ -10,7 +10,9 @@ SOURCE=(ROOT/"index.html").read_text(encoding="utf-8")
 def extract_fn(name):
     marker=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",SOURCE)
     assert marker,name
-    brace=SOURCE.find("{",marker.end())
+    header=re.search(r"\)\s*\{",SOURCE[marker.start():])
+    assert header,name
+    brace=marker.start()+header.end()-1
     depth=0
     quote=None
     esc=False
