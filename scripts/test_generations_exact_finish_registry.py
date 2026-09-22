@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import json
 import subprocess
+import sys
 from pathlib import Path
-from scripts.test_variant_finish_audit import VERIFIED_GENERATIONS_MARKETPLACE_FINISHES
 
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+from scripts.test_variant_finish_audit import VERIFIED_GENERATIONS_MARKETPLACE_FINISHES
 source=(ROOT/"index.html").read_text(encoding="utf-8")
 
 def extract_function(name):
