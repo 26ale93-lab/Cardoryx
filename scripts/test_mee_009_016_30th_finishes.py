@@ -124,7 +124,7 @@ const document={
 };
 const probe={id:'mee-009',tcgdexId:'mee-009',localId:'009',name:'Grass Energy',set:{id:'mee',name:'Mega Evolution Energy'}};
 const available=syncStampAvailability(probe,false,false);
-if(stamp.value!=='30° Anniversario')throw new Error('30th stamp not auto-selected');
+if(stamp.value!=='30° Anniversario')throw new Error('30th stamp not auto-selected value='+stamp.value+' options='+JSON.stringify(stampOptions));
 if(playSeries.value!=='')throw new Error('Play series not cleared');
 if(JSON.stringify(available)!==JSON.stringify(['30° Anniversario']))throw new Error('stamp availability '+JSON.stringify(available));
 
