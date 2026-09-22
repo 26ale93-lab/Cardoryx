@@ -104,6 +104,74 @@ VERIFIED_BW1_CHECKLIST_FINISHES = {
 }
 BW1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms/pdf/tcg/checklists/BW1_Cardlist_EN.pdf"
 
+VERIFIED_CHECKLIST_BATCH2_FINISHES = {
+    "bw11-1": {"setId": "bw11", "localId": "1", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-106": {"setId": "bw11", "localId": "106", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-113": {"setId": "bw11", "localId": "113", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-18": {"setId": "bw11", "localId": "18", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-25": {"setId": "bw11", "localId": "25", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-32": {"setId": "bw11", "localId": "32", "finishes": ["Holo","Reverse Holo"]},
+    "bw11-4": {"setId": "bw11", "localId": "4", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-47": {"setId": "bw11", "localId": "47", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-54": {"setId": "bw11", "localId": "54", "finishes": ["Holo"]},
+    "bw11-62": {"setId": "bw11", "localId": "62", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-7": {"setId": "bw11", "localId": "7", "finishes": ["Normal","Reverse Holo"]},
+    "bw11-77": {"setId": "bw11", "localId": "77", "finishes": ["Holo"]},
+    "bw11-84": {"setId": "bw11", "localId": "84", "finishes": ["Holo","Reverse Holo"]},
+    "bw11-91": {"setId": "bw11", "localId": "91", "finishes": ["Holo","Reverse Holo"]},
+    "bw11-99": {"setId": "bw11", "localId": "99", "finishes": ["Holo","Reverse Holo"]},
+    "bw11-RC17": {"setId": "bw11", "localId": "RC17", "finishes": ["Normal"]},
+    "bw11-RC9": {"setId": "bw11", "localId": "RC9", "finishes": ["Normal"]},
+    "xy1-107": {"setId": "xy1", "localId": "107", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-114": {"setId": "xy1", "localId": "114", "finishes": ["Holo","Reverse Holo"]},
+    "xy1-122": {"setId": "xy1", "localId": "122", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-13": {"setId": "xy1", "localId": "13", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-138": {"setId": "xy1", "localId": "138", "finishes": ["Normal"]},
+    "xy1-145": {"setId": "xy1", "localId": "145", "finishes": ["Holo"]},
+    "xy1-21": {"setId": "xy1", "localId": "21", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-37": {"setId": "xy1", "localId": "37", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-44": {"setId": "xy1", "localId": "44", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-52": {"setId": "xy1", "localId": "52", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-6": {"setId": "xy1", "localId": "6", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-68": {"setId": "xy1", "localId": "68", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-75": {"setId": "xy1", "localId": "75", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-83": {"setId": "xy1", "localId": "83", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-90": {"setId": "xy1", "localId": "90", "finishes": ["Normal","Reverse Holo"]},
+    "xy1-99": {"setId": "xy1", "localId": "99", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-1": {"setId": "sm1", "localId": "1", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-108": {"setId": "sm1", "localId": "108", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-117": {"setId": "sm1", "localId": "117", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-126": {"setId": "sm1", "localId": "126", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-135": {"setId": "sm1", "localId": "135", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-144": {"setId": "sm1", "localId": "144", "finishes": ["Holo"]},
+    "sm1-26": {"setId": "sm1", "localId": "26", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-44": {"setId": "sm1", "localId": "44", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-53": {"setId": "sm1", "localId": "53", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-62": {"setId": "sm1", "localId": "62", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-71": {"setId": "sm1", "localId": "71", "finishes": ["Holo","Reverse Holo"]},
+    "sm1-9": {"setId": "sm1", "localId": "9", "finishes": ["Normal","Reverse Holo"]},
+    "sm1-99": {"setId": "sm1", "localId": "99", "finishes": ["Holo","Reverse Holo"]},
+    "sm12-113": {"setId": "sm12", "localId": "113", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-128": {"setId": "sm12", "localId": "128", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-142": {"setId": "sm12", "localId": "142", "finishes": ["Holo","Reverse Holo"]},
+    "sm12-170": {"setId": "sm12", "localId": "170", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-185": {"setId": "sm12", "localId": "185", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-2": {"setId": "sm12", "localId": "2", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-213": {"setId": "sm12", "localId": "213", "finishes": ["Holo"]},
+    "sm12-228": {"setId": "sm12", "localId": "228", "finishes": ["Holo"]},
+    "sm12-40": {"setId": "sm12", "localId": "40", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-55": {"setId": "sm12", "localId": "55", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-7": {"setId": "sm12", "localId": "7", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-84": {"setId": "sm12", "localId": "84", "finishes": ["Normal","Reverse Holo"]},
+    "sm12-99": {"setId": "sm12", "localId": "99", "finishes": ["Normal","Reverse Holo"]},
+}
+CHECKLIST_BATCH2_OFFICIAL_SOURCES = {
+    "bw11": "https://assets.pokemon.com/assets/cms/pdf/tcg/checklists/BW11_CardList_EN.pdf",
+    "xy1": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/xy1_web_cardlist_en.pdf",
+    "sm1": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm1_web_cardlist_en.pdf",
+    "sm12": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm12_web_cardlist_en.pdf",
+}
+
 VERIFIED_SWSH1_CHECKLIST_FINISHES = {
     "swsh1-1": {"localId": "1", "finishes": ["Holo"]},
     "swsh1-3": {"localId": "3", "finishes": ["Normal", "Reverse Holo"]},
@@ -1278,6 +1346,19 @@ def verified_bw1_checklist_truth(card):
     return set(rule["finishes"])
 
 
+def verified_checklist_batch2_truth(card):
+    """Exact identities transcribed from official Pokemon checklist finish boxes."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "")
+    rule = VERIFIED_CHECKLIST_BATCH2_FINISHES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").lower() != rule["setId"]:
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    return set(rule["finishes"])
+
+
 def verified_swsh1_checklist_truth(card):
     """Exact Sword & Shield identities verified against official Pokémon sources."""
     cid = str(card.get("id") or card.get("tcgdexId") or "")
@@ -2163,6 +2244,11 @@ def main():
         for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
         if "Normal" in row["finishes"]
     })
+    expected_normal_registry.update({
+        card_id: {"setId": row["setId"], "localId": row["localId"]}
+        for card_id, row in VERIFIED_CHECKLIST_BATCH2_FINISHES.items()
+        if "Normal" in row["finishes"]
+    })
     if normal_registry != expected_normal_registry:
         raise AssertionError("VERIFIED_NORMAL_FINISHES differs from the exact audited identity set")
     if "if(stamp==='None' && verifiedNormalFinish(card))allowed.add('Normal');" not in source:
@@ -2174,6 +2260,11 @@ def main():
     expected_reverse_registry.update({
         card_id: {"setId": "bw1", "localId": row["localId"]}
         for card_id, row in VERIFIED_BW1_CHECKLIST_FINISHES.items()
+        if "Reverse Holo" in row["finishes"]
+    })
+    expected_reverse_registry.update({
+        card_id: {"setId": row["setId"], "localId": row["localId"]}
+        for card_id, row in VERIFIED_CHECKLIST_BATCH2_FINISHES.items()
         if "Reverse Holo" in row["finishes"]
     })
     if registries["reverse"] != expected_reverse_registry:
@@ -2407,6 +2498,10 @@ def main():
         if bw1_checklist_truth:
             truth.update(bw1_checklist_truth)
             it_truth.update(bw1_checklist_truth)
+        batch2_checklist_truth = verified_checklist_batch2_truth(en)
+        if batch2_checklist_truth:
+            truth.update(batch2_checklist_truth)
+            it_truth.update(batch2_checklist_truth)
         if verified_finish_matches(registries["reverse"], en):
             truth.add("Reverse Holo")
             it_truth.add("Reverse Holo")
@@ -2869,6 +2964,17 @@ def main():
             "otherFinishesAddedByRegistry": [],
             "identityChecks": normal_identity_checks,
             "assessment": f"The original {len(VERIFIED_NORMAL_TARGETS)} audited identities remain exact; newer exact registries are reported separately.",
+        },
+        "verifiedChecklistBatch2FinishAudit": {
+            "expectedIdentities": len(VERIFIED_CHECKLIST_BATCH2_FINISHES),
+            "normalIdentities": sorted(k for k,v in VERIFIED_CHECKLIST_BATCH2_FINISHES.items() if "Normal" in v["finishes"]),
+            "reverseIdentities": sorted(k for k,v in VERIFIED_CHECKLIST_BATCH2_FINISHES.items() if "Reverse Holo" in v["finishes"]),
+            "holoIdentities": sorted(k for k,v in VERIFIED_CHECKLIST_BATCH2_FINISHES.items() if "Holo" in v["finishes"]),
+            "officialChecklists": CHECKLIST_BATCH2_OFFICIAL_SOURCES,
+            "productionRegistryExact": True,
+            "outsideListInheritedRule": False,
+            "priceFieldsPresent": False,
+            "assessment": "Exact checklist identities only; no set-wide rarity or era rule introduced.",
         },
         "verifiedBw1ChecklistFinishAudit": {
             "expectedIdentities": len(VERIFIED_BW1_CHECKLIST_FINISHES),
