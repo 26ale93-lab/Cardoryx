@@ -476,6 +476,7 @@ function verifiedSwshp25thStandardFinishes(){return [];}
 function verifiedSwshpSetLogoFinishes(){return [];}
 function verifiedMepStampFinishes(){return [];}
 function verifiedNormalFinish(){return false;}
+function verifiedHoloFinish(){return false;}
 function verifiedReverseFinish(){return false;}
 function verifiedVariantPrice(){return null;}
 function verifiedStampPrice(){return null;}
