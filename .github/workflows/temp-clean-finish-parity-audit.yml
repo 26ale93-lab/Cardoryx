@@ -1,0 +1,43 @@
+name: TEMP Clean Finish Parity Audit
+
+on:
+  push:
+    branches:
+      - audit/finish-parity-clean-20260922
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run deterministic finish audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Print exact baseline
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("artifacts/variant_finish_audit_report.json"))
+          print("SUMMARY",json.dumps(r["summary"],sort_keys=True))
+          amb=[x for x in r["issuesByPriority"] if x.get("classification")=="AMBIGUA"]
+          print("AMBIG_COUNT",len(amb))
+          print("AMBIG_IDS",json.dumps([x["tcgdexId"] for x in amb]))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clean-finish-parity-audit
+          path: artifacts/variant_finish_audit_report.json
+          if-no-files-found: error
