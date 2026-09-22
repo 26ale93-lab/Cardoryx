@@ -1,0 +1,51 @@
+name: TEMP Residual Stamped Finish Audit
+
+on:
+  push:
+    branches:
+      - fix/residual-stamped-finishes-20260922
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Residual stamped registry binding
+        run: python scripts/test_residual_stamped_finish_registry.py
+      - name: Scanner single-finish regression
+        run: python scripts/test_scanner_single_finish_autoselect.py
+      - name: Catalog allocation regression
+        run: python scripts/test_catalog_filters.py
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Full deterministic variant finish audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/variant_finish_audit_report.json --workers 28
+      - name: Verify final gates
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("artifacts/variant_finish_audit_report.json"))
+          s=r["summary"]; c=s["classifications"]
+          expected={"CORRETTA":4246,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":0,"SOURCE CONFLICT":8}
+          assert s["totalIdentitiesTested"]==4254,s
+          assert c==expected,c
+          assert s["pricingP0"]==0,s
+          print("GATES_OK",s)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: residual-stamped-finish-audit
+          path: artifacts/variant_finish_audit_report.json
+          if-no-files-found: error
