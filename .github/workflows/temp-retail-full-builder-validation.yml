@@ -1,0 +1,60 @@
+name: TEMP Retail Full Builder Validation
+
+on:
+  push:
+    branches:
+      - feature/retail-independent-stores-20260923
+    paths:
+      - .github/workflows/temp-retail-full-builder-validation.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Preserve protected hashes
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.before
+      - name: Build retail index in checkout only
+        run: python scripts/build_retail_index.py
+      - name: Validate generated retail index
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("data/retail_prices.json")
+          d=json.loads(p.read_text(encoding="utf-8"))
+          assert d["schema"] == 2
+          assert d["rules"]["cardmarketExcluded"] is True
+          assert d["rules"]["minimumIndependentStoresForStats"] == 1
+          assert d["rules"]["referenceModel"] == "each-verified-store-is-an-independent-reference"
+          cards=list(d["cards"].values())
+          one=sum(1 for c in cards if c.get("stats",{}).get("stores")==1)
+          two=sum(1 for c in cards if c.get("stats",{}).get("stores")==2)
+          threeplus=sum(1 for c in cards if c.get("stats",{}).get("stores",0)>=3)
+          print(json.dumps({
+            "cards":len(cards),
+            "offers":d["stats"]["offers"],
+            "cardsWithRetailReference":d["stats"]["cardsWithRetailReference"],
+            "oneStoreCards":one,
+            "twoStoreCards":two,
+            "threePlusStoreCards":threeplus,
+            "collapsedSources":d["rules"]["sourceCollapseGuard"].get("collapsedSources",[]),
+            "sources":[{"source":s.get("source"),"ok":s.get("ok"),"accepted":s.get("accepted"),"error":s.get("error")} for s in d.get("sources",[])]
+          },ensure_ascii=False,indent=2))
+          PY
+      - name: Verify Cardmarket untouched
+        run: |
+          sha256sum -c /tmp/cardmarket.before
+          test -z "$(git diff --name-only -- data/cardmarket_play_index.json)"
+      - name: Show checkout-only changed files
+        run: git diff --name-only
