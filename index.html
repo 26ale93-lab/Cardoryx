@@ -9835,6 +9835,7 @@ function renderCardoryxAdvice(c){
 let CARDORYX_RETAIL_INDEX=null;
 let CARDORYX_RETAIL_LOOKUP=new Map();
 let CARDORYX_RETAIL_LOAD_STATE='idle';
+let CARDORYX_RETAIL_LOAD_PROMISE=null;
 
 const VERIFIED_RETAIL_REFERENCES = {
   'ascesa eroica|032|Poké Ball Reverse Holo': {
@@ -9909,25 +9910,33 @@ function buildRetailLookup(data){
   }
   return next;
 }
-async function loadRetailIndex(){
-  if(CARDORYX_RETAIL_LOAD_STATE==='loading'||CARDORYX_RETAIL_LOAD_STATE==='ready')return;
+function loadRetailIndex(){
+  if(CARDORYX_RETAIL_LOAD_STATE==='ready')return Promise.resolve(true);
+  if(CARDORYX_RETAIL_LOAD_PROMISE)return CARDORYX_RETAIL_LOAD_PROMISE;
   CARDORYX_RETAIL_LOAD_STATE='loading';
-  try{
-    const response=await fetch('./data/retail_prices.json',{cache:'no-store'});
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    const data=await response.json();
-    if(!data||!data.rules||data.rules.cardmarketExcluded!==true||!data.cards)throw new Error('Indice retail non valido');
-    const lookup=buildRetailLookup(data);
-    if(!lookup.size)throw new Error('Indice retail senza riferimenti utilizzabili');
-    CARDORYX_RETAIL_INDEX=data;
-    CARDORYX_RETAIL_LOOKUP=lookup;
-    CARDORYX_RETAIL_LOAD_STATE='ready';
-  }catch(e){
-    console.warn('Retail index non disponibile:',e);
-    CARDORYX_RETAIL_INDEX=null;
-    CARDORYX_RETAIL_LOOKUP=new Map();
-    CARDORYX_RETAIL_LOAD_STATE='failed';
-  }
+  CARDORYX_RETAIL_LOAD_PROMISE=(async()=>{
+    try{
+      const response=await fetch('./data/retail_prices.json',{cache:'no-store'});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      const data=await response.json();
+      if(!data||!data.rules||data.rules.cardmarketExcluded!==true||!data.cards)throw new Error('Indice retail non valido');
+      const lookup=buildRetailLookup(data);
+      if(!lookup.size)throw new Error('Indice retail senza riferimenti utilizzabili');
+      CARDORYX_RETAIL_INDEX=data;
+      CARDORYX_RETAIL_LOOKUP=lookup;
+      CARDORYX_RETAIL_LOAD_STATE='ready';
+      return true;
+    }catch(e){
+      console.warn('Retail index non disponibile:',e);
+      CARDORYX_RETAIL_INDEX=null;
+      CARDORYX_RETAIL_LOOKUP=new Map();
+      CARDORYX_RETAIL_LOAD_STATE='failed';
+      return false;
+    }finally{
+      CARDORYX_RETAIL_LOAD_PROMISE=null;
+    }
+  })();
+  return CARDORYX_RETAIL_LOAD_PROMISE;
 }
 function retailReferenceForCard(c){
   if(!c)return null;
@@ -10003,7 +10012,8 @@ function renderRetailReference(c){
   return `<div class="detail-section detail-retail"><h4>Retail italiano</h4>${aggregate}<div class="small">${esc(r.language)} · ${esc(r.condition)}${r.verified?' · ultimo controllo '+esc(r.verified):''}</div><div class="small" style="margin-top:7px">Ogni negozio è un riferimento indipendente. Questi prezzi non determinano il valore Cardoryx e non modificano Cardmarket.</div>${offers?`<div style="margin-top:8px">${offers}</div>`:''}</div>`;
 }
 
-function openCardDetail(key){
+async function openCardDetail(key){
+  await loadRetailIndex();
   const c=findRecordByKey(key);
   if(!c)return;
   detailKey=recordKey(c);
@@ -11073,7 +11083,6 @@ document.getElementById('variant')?.addEventListener('change',()=>{if(scanPriceC
 document.getElementById('scanAskingPrice')?.addEventListener('input',()=>{if(document.getElementById('scanAskingPrice')?.value)evaluateScanPurchase()});
 
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
-loadRetailIndex();
 renderAll();renderSettings();
 storageInitializationPromise=initializeCardoryxStorage();
 
