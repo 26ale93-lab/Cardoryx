@@ -1,0 +1,49 @@
+name: TEMP Retail Finish Baseline
+
+on:
+  push:
+    branches:
+      - feature/retail-independent-stores-20260923
+    paths:
+      - index.html
+      - scripts/test_variant_finish_audit.py
+      - .github/workflows/temp-retail-finish-baseline.yml
+
+permissions:
+  contents: read
+
+jobs:
+  finish-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run full deterministic finish audit
+        run: |
+          python scripts/test_variant_finish_audit.py --output /tmp/variant_finish_audit_report.json
+      - name: Verify clean finish baseline
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path("/tmp/variant_finish_audit_report.json").read_text(encoding="utf-8"))
+          summary=report["summary"]
+          expected={
+              "CORRETTA":4450,
+              "FALSO POSITIVO":0,
+              "FALSO NEGATIVO":0,
+              "AMBIGUA":0,
+              "SOURCE CONFLICT":0,
+          }
+          assert summary.get("totalIdentitiesTested")==4450, summary
+          assert summary.get("classifications")==expected, summary
+          assert summary.get("pricingP0")==0, summary
+          assert summary.get("playVariantRowsSeen")==261, summary
+          assert summary.get("unavailableExplicitTargets")==[], summary
+          print("PASS finish baseline", json.dumps(summary, ensure_ascii=False))
+          PY
