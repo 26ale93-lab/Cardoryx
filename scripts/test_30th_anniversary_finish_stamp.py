@@ -51,6 +51,7 @@ function canonicalStamp(v){return String(v||'');}
 function canonicalVariant(v){return String(v||'Normal');}
 function normalizedPlaySeries(){return '';}
 function isMee30CelebrationEnergy(){return false;}
+function isVerifiedMcdonalds2021AnniversarySet(){return false;}
 function tcgdexExactMfbPokeballRow(){return null;}
 function tcgdexExactMcdonaldsStampRow(){return null;}
 function tcgdexMcdonalds2021AnniversaryRows(){return null;}
