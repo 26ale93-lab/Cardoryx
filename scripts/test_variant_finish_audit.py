@@ -241,17 +241,20 @@ SWSH1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/tr
 SWSH1_212_OFFICIAL_CARD_SOURCE = "https://www.pokemon.com/br/pokemon-estampas-ilustradas/cartas-de-pokemon/series/swsh1/212/"
 
 VERIFIED_MEE30_CELEBRATION_ENERGIES = {
-    "mee-009": {"localId": "009", "name": "Grass Energy"},
-    "mee-010": {"localId": "010", "name": "Fire Energy"},
-    "mee-011": {"localId": "011", "name": "Water Energy"},
-    "mee-012": {"localId": "012", "name": "Lightning Energy"},
-    "mee-013": {"localId": "013", "name": "Psychic Energy"},
-    "mee-014": {"localId": "014", "name": "Fighting Energy"},
-    "mee-015": {"localId": "015", "name": "Darkness Energy"},
-    "mee-016": {"localId": "016", "name": "Metal Energy"},
+    "mee-009": {"localId": "009", "name": "Basic Grass Energy"},
+    "mee-010": {"localId": "010", "name": "Basic Fire Energy"},
+    "mee-011": {"localId": "011", "name": "Basic Water Energy"},
+    "mee-012": {"localId": "012", "name": "Basic Lightning Energy"},
+    "mee-013": {"localId": "013", "name": "Basic Psychic Energy"},
+    "mee-014": {"localId": "014", "name": "Basic Fighting Energy"},
+    "mee-015": {"localId": "015", "name": "Basic Darkness Energy"},
+    "mee-016": {"localId": "016", "name": "Basic Metal Energy"},
 }
 MEE30_OFFICIAL_FOIL_SOURCE = "https://www.pokemon.com/uk/news/pokemon-tcg-30th-celebration-product-showcase"
 MEE30_NUMBERING_SOURCE = "https://bulbapedia.bulbagarden.net/wiki/MEE"
+THIRTIETH_MAIN_OFFICIAL_FOIL_SOURCE = "https://www.pokemon.com/uk/news/pokemon-tcg-30th-celebration-product-showcase"
+THIRTIETH_CLASSIC_OFFICIAL_SET_SOURCE = "https://www.pokemon.com/us/pokemon-tcg/pokemon-cards"
+THIRTIETH_CLASSIC_FOIL_CROSSCHECK = "https://bulbapedia.bulbagarden.net/wiki/Classic_Collection_(TCG)"
 
 VERIFIED_REVERSE_TARGETS = {
     "sm2-10": {"setId": "sm2", "localId": "010", "officialChecklist": "https://assets.pokemon.com/assets/cms2/pdf/trading-card-game/checklist/sm2_web_cardlist_en.pdf", "independentCatalog": "https://www.pricecharting.com/game/pokemon-guardians-rising/victini-reverse-holo-10"},
@@ -1486,6 +1489,38 @@ def verified_extra_numbered_marketplace_truth(card):
     if str(card.get("localId") or "").lstrip("0").upper() != str(rule["localId"]).lstrip("0").upper():
         return set()
     return set(rule["finishes"])
+
+
+def verified_30th_anniversary_truth(card):
+    """Mirror the exact production foil-only path for the two 30th Anniversary set ids."""
+    set_id = str((card.get("set") or {}).get("id") or "").strip().lower()
+    cid = str(card.get("id") or card.get("tcgdexId") or "").strip().lower()
+    local_id = str(card.get("localId") or "").strip()
+    if set_id == "30th":
+        if not cid.startswith("30th-") or not local_id:
+            return set()
+        return {"Holo"}
+    if set_id == "30th-c":
+        if not cid.startswith("30th-c-") or not local_id:
+            return set()
+        return {"Holo"}
+    return set()
+
+
+def verified_mee30_anniversary_truth(card):
+    """Exact MEE 009-016 Basic Energy identities verified as 30th Celebration foil."""
+    cid = str(card.get("id") or card.get("tcgdexId") or "").strip().lower()
+    rule = VERIFIED_MEE30_CELEBRATION_ENERGIES.get(cid)
+    if not rule:
+        return set()
+    if str((card.get("set") or {}).get("id") or "").strip().lower() != "mee":
+        return set()
+    if str(card.get("localId") or "").lstrip("0") != str(rule["localId"]).lstrip("0"):
+        return set()
+    name = (card.get("name") or {}).get("en") if isinstance(card.get("name"), dict) else card.get("name")
+    if norm(name) != norm(rule["name"]):
+        return set()
+    return {"Holo"}
 
 
 def verified_swsh1_checklist_truth(card):
@@ -2786,7 +2821,9 @@ def main():
         official_checklist_holo_truth = verified_official_checklist_holo_truth(cid)
         swsh1_checklist_truth = verified_swsh1_checklist_truth(en)
         regirock_hidden_legends_truth = verified_regirock_hidden_legends_truth(en)
-        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth | swsh1_checklist_truth | regirock_hidden_legends_truth
+        thirtieth_anniversary_truth = verified_30th_anniversary_truth(en)
+        mee30_anniversary_truth = verified_mee30_anniversary_truth(en)
+        specialized_truth = stamped_truth | legacy_truth | celebrations_standard_truth | celebrations_classic_truth | unanimous_special_truth | residual_exact_truth | np_winner_truth | bog_cosmos_truth | hidden_fates_sv_truth | official_checklist_holo_truth | swsh1_checklist_truth | regirock_hidden_legends_truth | thirtieth_anniversary_truth | mee30_anniversary_truth
         if classification == "AMBIGUA" and specialized_truth:
             classification = "CORRETTA"
             missing, extra = [], []
@@ -2809,6 +2846,10 @@ def main():
                 if swsh1_checklist_truth else
                 "exact Hidden Legends Regirock ex Cracked Ice Holo row matches production exception"
                 if regirock_hidden_legends_truth else
+                "exact 30th Anniversary set path uses the verified foil-only anniversary edition"
+                if thirtieth_anniversary_truth else
+                "exact MEE 009-016 identity uses verified 30th Celebration foil Basic Energy path"
+                if mee30_anniversary_truth else
                 "verified specialized finish evidence"
             )
         class_counts[classification] += 1
@@ -2861,6 +2902,8 @@ def main():
             "verifiedNpWinnerStandardJumboFinishes": sorted(np_winner_truth),
             "verifiedSwsh1ChecklistFinishes": sorted(swsh1_checklist_truth),
             "verifiedRegirockHiddenLegendsFinishes": sorted(regirock_hidden_legends_truth),
+            "verified30thAnniversaryFinishes": sorted(thirtieth_anniversary_truth),
+            "verifiedMee30AnniversaryFinishes": sorted(mee30_anniversary_truth),
             "cardoryxProposedFinishes": sorted(proposed),
             "unmodelledVariantRows": [r for r in en.get("variants_detailed") or []
                                       if not is_play_row(r) and not r.get("stamp") and canonical_row_finish(r) is None],
@@ -3141,6 +3184,18 @@ def main():
             "counts": play_counts_after,
             "beforeAfter": {"before": (baseline or {}).get("playPrizePackAudit", {}).get("counts"),
                             "after": play_counts_after},
+        },
+        "thirtiethAnniversaryFinishAudit": {
+            "mainSetId": "30th",
+            "classicSetId": "30th-c",
+            "finish": "Holo",
+            "stamp": "30° Anniversario",
+            "mainSetOfficialFoilEvidence": THIRTIETH_MAIN_OFFICIAL_FOIL_SOURCE,
+            "classicCollectionOfficialSetEvidence": THIRTIETH_CLASSIC_OFFICIAL_SET_SOURCE,
+            "classicCollectionFoilCrossCheck": THIRTIETH_CLASSIC_FOIL_CROSSCHECK,
+            "productionPathAlreadyExists": True,
+            "priceInferredFromFinishEvidence": False,
+            "scope": "only exact set ids 30th and 30th-c; no rarity-wide or era-wide rule",
         },
         "energyAudit": {
             "tested": sum(1 for c in cards_out if c.get("category") == "Energy" or c.get("era") == "Energy"),
