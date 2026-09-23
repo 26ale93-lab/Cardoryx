@@ -9829,9 +9829,9 @@ function renderCardoryxAdvice(c){
   return `<div class="cardoryx-advice detail-protection"><div class="cardoryx-advice-head"><b>Protezione</b><span class="advice-priority">${priority}</span></div>${rows.map(x=>`<div class="advice-row"><strong>${x[0]}</strong>${esc(x[1])}</div>`).join('')}</div>`;
 }
 
-// V1.1.2 — verified Italian retail observations shown only in Details.
-// Retail observations stay separate from Cardmarket and never affect collection value.
-// Each observation records the exact finish/language/condition/date used for the reference.
+// Retail references stay separate from Cardmarket and never affect collection value.
+// Production data is loaded from data/retail_prices.json. Every strictly matched
+// store offer is shown independently; aggregate statistics are descriptive only.
 const VERIFIED_RETAIL_REFERENCES = {
   'ascesa eroica|032|Poké Ball Reverse Holo': {
     language:'IT', condition:'NM/Mint', verified:'29/08/2026',
@@ -9850,7 +9850,88 @@ const VERIFIED_RETAIL_REFERENCES = {
     ]
   }
 };
-function retailReferenceForCard(c){
+
+const retailIndexState={status:'idle',generatedAt:'',lookup:new Map(),error:null,promise:null};
+
+function retailNumberKey(value){
+  const raw=String(value||'').toUpperCase().replace(/\s+/g,'').split('/')[0];
+  const m=raw.match(/^([A-Z]*)(\d+)$/);
+  return m?`${m[1]}${String(Number(m[2]))}`:raw.replace(/^0+(?=\d)/,'');
+}
+
+function retailIdentityKey(setName,number,variant){
+  return `${normText(setName||'')}|${retailNumberKey(number)}|${canonicalVariant(variant||'Normal')}`;
+}
+
+function retailReferenceFromRow(row,generatedAt=''){
+  const byStore=new Map();
+  for(const offer of (row?.offers||[])){
+    const price=Number(offer?.price);
+    const store=String(offer?.store||'').trim();
+    if(!store||!Number.isFinite(price)||price<=0)continue;
+    const key=normText(store);
+    if(byStore.has(key))continue;
+    byStore.set(key,{
+      name:store,
+      price,
+      condition:String(offer?.condition||row?.condition||'NM/MINT'),
+      verified:String(offer?.checkedAt||row?.updatedAt||generatedAt||''),
+      url:String(offer?.url||'')
+    });
+  }
+  const observations=[...byStore.values()];
+  if(!observations.length)return null;
+  const prices=observations.map(x=>x.price).sort((a,b)=>a-b);
+  const mid=Math.floor(prices.length/2);
+  const typical=prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2;
+  const verified=observations.map(x=>x.verified).filter(Boolean).sort().at(-1)||generatedAt||'';
+  return {
+    language:String(row?.language||'IT'),
+    condition:String(row?.condition||'NM/MINT'),
+    verified,
+    observations,
+    min:prices[0],
+    max:prices[prices.length-1],
+    typical,
+    count:prices.length
+  };
+}
+
+async function ensureRetailIndexLoaded(){
+  if(retailIndexState.status==='ready'||retailIndexState.status==='failed')return retailIndexState;
+  if(retailIndexState.promise)return retailIndexState.promise;
+  retailIndexState.status='loading';
+  retailIndexState.promise=(async()=>{
+    try{
+      const response=await fetch('./data/retail_prices.json',{cache:'no-store'});
+      if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      const payload=await response.json();
+      if(payload?.rules?.cardmarketExcluded!==true)throw new Error('Indice retail non separato da Cardmarket');
+      const rows=Array.isArray(payload?.cards)?payload.cards:Object.values(payload?.cards||{});
+      const lookup=new Map();
+      for(const row of rows){
+        if(normText(row?.language||'')!=='it')continue;
+        const key=retailIdentityKey(row?.set,row?.number,row?.variant);
+        if(!key||key.startsWith('||'))continue;
+        const list=lookup.get(key)||[];
+        list.push(row);
+        lookup.set(key,list);
+      }
+      retailIndexState.generatedAt=String(payload?.generatedAt||'');
+      retailIndexState.lookup=lookup;
+      retailIndexState.status='ready';
+      retailIndexState.error=null;
+    }catch(error){
+      retailIndexState.status='failed';
+      retailIndexState.error=String(error?.message||error||'Errore retail');
+      console.warn('Retail index non disponibile:',error);
+    }
+    return retailIndexState;
+  })();
+  return retailIndexState.promise;
+}
+
+function legacyRetailReferenceForCard(c){
   if(!c)return null;
   const setName=normText(c?.set?.name||c?.set||'');
   const num=(String(c?.localId||'').replace(/^0+/,'')||String(c?.localId||''));
@@ -9868,6 +9949,26 @@ function retailReferenceForCard(c){
   }
   return null;
 }
+
+function retailReferenceForCard(c){
+  if(!c)return null;
+  if(retailIndexState.status==='ready'){
+    const setName=c?.set?.name||c?.set||'';
+    const key=retailIdentityKey(setName,c?.localId||'',c?.variant||'Normal');
+    const candidates=retailIndexState.lookup.get(key)||[];
+    let row=null;
+    if(candidates.length===1)row=candidates[0];
+    else if(candidates.length>1){
+      const name=normText(c?.name||'');
+      const exact=candidates.filter(x=>normText(x?.name||'')===name);
+      if(exact.length===1)row=exact[0];
+    }
+    const dynamic=retailReferenceFromRow(row,retailIndexState.generatedAt);
+    if(dynamic)return dynamic;
+  }
+  return legacyRetailReferenceForCard(c);
+}
+
 function renderCardmarketReference(c){
   const state=cardValuationState(c),info=state.info||{};
   if(state.value==null){
@@ -9880,18 +9981,22 @@ function renderCardmarketReference(c){
 }
 function renderRetailReference(c){
   const r=retailReferenceForCard(c);
-  if(!r)return '<div class="detail-section detail-retail"><h4>Retail italiano</h4><div class="small">Riferimento retail non disponibile.</div></div>';
+  if(!r)return '<div class="detail-section detail-retail"><h4>Negozi</h4><div class="small">Nessun riferimento negozio disponibile per questa identità.</div></div>';
   const offers=(r.observations||[]).map(s=>{
     const label=`${esc(s.name)} · ${euro(s.price)}${s.condition?' · '+esc(s.condition):''}`;
     return s.url?`<a class="mee-source-link" href="${esc(s.url)}" target="_blank" rel="noopener">${label} ↗</a>`:`<span class="small">${label}</span>`;
   }).join('<br>');
-  return `<div class="detail-section detail-retail"><h4>Retail italiano</h4><div class="detail-retail-value">${euro(r.min)} – ${euro(r.max)}</div><div style="font-size:16px;font-weight:750;margin-bottom:4px">Prezzo tipico: ${euro(r.typical)}</div><div class="small">${r.count} offerte verificate · ${esc(r.language)} · ${esc(r.condition)} · ultimo controllo ${esc(r.verified)}</div><div class="small" style="margin-top:7px">Prezzi osservati per la stessa variante presso negozi italiani. Sono separati dal valore Cardmarket, non modificano il valore della collezione e possono cambiare nel tempo.</div>${offers?`<div style="margin-top:8px">${offers}</div>`:''}</div>`;
+  const headline=r.count===1?euro(r.min):`${euro(r.min)} – ${euro(r.max)}`;
+  const aggregate=r.count>1?`<div style="font-size:16px;font-weight:750;margin-bottom:4px">Mediana: ${euro(r.typical)}</div>`:'';
+  const checked=r.verified?` · ultimo controllo ${esc(r.verified)}`:'';
+  return `<div class="detail-section detail-retail"><h4>Negozi</h4><div class="detail-retail-value">${headline}</div>${aggregate}<div class="small">${r.count} ${r.count===1?'offerta verificata':'offerte verificate'} · ${esc(r.language)} · ${esc(r.condition)}${checked}</div><div class="small" style="margin-top:7px">Ogni negozio è un riferimento indipendente. Questi prezzi richiesti non sono il valore Cardmarket e non modificano il valore della collezione.</div>${offers?`<div style="margin-top:8px">${offers}</div>`:''}</div>`;
 }
 
-function openCardDetail(key){
+async function openCardDetail(key){
   const c=findRecordByKey(key);
   if(!c)return;
   detailKey=recordKey(c);
+  await ensureRetailIndexLoaded();
   document.getElementById('detailTitle').textContent=c.name||'Carta';
   const img=c.image?`${c.image}/high.webp`:'';
   const content=document.getElementById('detailContent');
