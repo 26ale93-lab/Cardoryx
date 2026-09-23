@@ -9874,6 +9874,26 @@ function normalizeRetailCondition(value){
   if(x==='nm'||x==='near mint'||x==='mint'||x==='nm mint')return 'NM/MINT';
   return String(value||'').trim();
 }
+function mergeRetailRows(a,b){
+  const rows=[a,b];
+  const byStore=new Map();
+  for(const row of rows){
+    for(const offer of row?.offers||[]){
+      const store=normText(offer?.store||'');
+      const price=Number(offer?.price);
+      if(!store||!Number.isFinite(price)||price<=0)continue;
+      if(!byStore.has(store)){byStore.set(store,{offer,prices:new Set([price])});continue}
+      byStore.get(store).prices.add(price);
+    }
+  }
+  const offers=[];
+  for(const value of byStore.values()){
+    // Same store with conflicting prices for the same physical identity is
+    // ambiguous: discard that store instead of choosing a price.
+    if(value.prices.size===1)offers.push(value.offer);
+  }
+  return {...a,offers,updatedAt:[a?.updatedAt,b?.updatedAt].filter(Boolean).sort().pop()||a?.updatedAt||b?.updatedAt||null};
+}
 function buildRetailLookup(data){
   const next=new Map();
   const cards=data?.cards&&typeof data.cards==='object'?Object.values(data.cards):[];
@@ -9882,11 +9902,11 @@ function buildRetailLookup(data){
     if(normText(row.language||'')!=='it')continue;
     const key=retailLookupKey(row.set,row.number,row.variant,row.name);
     if(!key)continue;
-    // Fail closed on duplicate physical identities in the generated index.
-    if(next.has(key)){next.set(key,null);continue}
-    next.set(key,row);
+    // Numeric formatting such as 60/145 vs 060/145 is the same collector
+    // identity. Merge only stores that remain individually unambiguous.
+    if(next.has(key))next.set(key,mergeRetailRows(next.get(key),row));
+    else next.set(key,row);
   }
-  for(const [key,value] of [...next.entries()])if(value===null)next.delete(key);
   return next;
 }
 async function loadRetailIndex(){
