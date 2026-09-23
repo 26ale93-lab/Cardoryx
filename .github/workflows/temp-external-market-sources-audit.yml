@@ -1,0 +1,39 @@
+name: TEMP External Market Sources Audit
+
+on:
+  push:
+    branches:
+      - audit/external-market-sources-20260923
+    paths:
+      - scripts/test_external_market_sources_audit.py
+      - .github/workflows/temp-external-market-sources-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PRICECHARTING_TOKEN: ${{ secrets.PRICECHARTING_TOKEN }}
+      COLLECTR_API_KEY: ${{ secrets.COLLECTR_API_KEY }}
+      EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+      EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run read-only external market audit
+        run: python scripts/test_external_market_sources_audit.py
+      - name: Verify production files untouched
+        run: |
+          test -z "$(git diff --name-only -- data/retail_prices.json data/cardmarket_play_index.json index.html)"
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-market-sources-audit-report
+          path: external_market_sources_audit_report.json
