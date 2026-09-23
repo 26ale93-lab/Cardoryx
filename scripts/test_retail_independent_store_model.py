@@ -103,8 +103,8 @@ html = INDEX.read_text(encoding="utf-8")
 required_ui_markers = (
     "async function loadRetailIndex()",
     "fetch('./data/retail_prices.json',{cache:'no-store'})",
-    "function buildRetailLookup(data)",
-    "function mergeRetailRows(a,b)",
+    "function buildRetailLookup(",
+    "function retailReferenceForCard(",
     "Ogni negozio è un riferimento indipendente.",
     "r.count===1",
     "function openCardDetail(key)",
