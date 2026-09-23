@@ -1,0 +1,30 @@
+name: TEMP Retail Detail Load Test
+
+on:
+  push:
+    branches:
+      - fix/retail-detail-load-20260923
+    paths:
+      - index.html
+      - scripts/test_retail_independent_store_model.py
+      - scripts/test_retail_ui_independent_stores.py
+      - .github/workflows/temp-retail-detail-load-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test retail independent-store model
+        run: python scripts/test_retail_independent_store_model.py
+      - name: Test retail UI data path
+        run: python scripts/test_retail_ui_independent_stores.py
