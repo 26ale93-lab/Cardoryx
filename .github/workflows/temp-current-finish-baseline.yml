@@ -1,0 +1,50 @@
+name: TEMP Current Finish Baseline
+
+on:
+  push:
+    branches:
+      - audit/current-finish-baseline-20260923
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+      - name: Run deterministic variant finish audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output artifacts/current_finish_baseline.json --workers 28
+      - name: Summarize residual issues
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          r=json.load(open("artifacts/current_finish_baseline.json"))
+          s=r["summary"]; issues=r.get("issuesByPriority") or []
+          amb=[x for x in issues if x.get("classification")=="AMBIGUA"]
+          conf=[x for x in issues if x.get("classification")=="SOURCE CONFLICT"]
+          byset=Counter((x.get("set") or x.get("setName") or x.get("setId") or "(missing)") for x in amb)
+          print("SUMMARY",json.dumps(s,sort_keys=True))
+          print("AMBIG_COUNT",len(amb))
+          print("AMBIG_BY_SET",json.dumps(dict(byset),ensure_ascii=False,sort_keys=True))
+          print("AMBIG_ROWS",json.dumps(amb,ensure_ascii=False))
+          print("SOURCE_CONFLICT_COUNT",len(conf))
+          print("SOURCE_CONFLICT_ROWS",json.dumps(conf,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-finish-baseline
+          path: artifacts/current_finish_baseline.json
+          if-no-files-found: error
