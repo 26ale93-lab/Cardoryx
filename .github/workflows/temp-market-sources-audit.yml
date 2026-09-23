@@ -1,0 +1,66 @@
+name: TEMP Market Sources Audit
+
+on:
+  push:
+    branches:
+      - audit/market-sources-post153-20260923
+    paths:
+      - scripts/test_market_reference_sources.py
+      - .github/workflows/temp-market-sources-audit.yml
+      - index.html
+      - scripts/test_variant_finish_audit.py
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Cardoryx
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit external market-reference capabilities
+        run: python scripts/test_market_reference_sources.py
+
+      - name: Checkout TCGdex cards database read-only
+        uses: actions/checkout@v4
+        with:
+          repository: tcgdex/cards-database
+          path: tcgdex-cards-database
+          fetch-depth: 1
+
+      - name: Full deterministic finish audit
+        run: python scripts/test_variant_finish_audit.py --tcgdex-db tcgdex-cards-database --output /tmp/variant_finish_audit_report.json --workers 28
+
+      - name: Verify finish baseline
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/variant_finish_audit_report.json").read_text(encoding="utf-8"))
+          s=r["summary"]
+          expected={"CORRETTA":4450,"FALSO POSITIVO":0,"FALSO NEGATIVO":0,"AMBIGUA":0,"SOURCE CONFLICT":0}
+          assert s["totalIdentitiesTested"]==4450,s
+          assert s["classifications"]==expected,s
+          assert s["pricingP0"]==0,s
+          assert s["playVariantRowsSeen"]==261,s
+          assert s["unavailableExplicitTargets"]==[],s
+          print("GATES_OK",s)
+          PY
+
+      - name: Upload market-source audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-reference-sources-audit
+          path: artifacts/market_reference_sources_audit.json
+          if-no-files-found: error
