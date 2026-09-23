@@ -101,13 +101,14 @@ assert distribution.get(2, 0) > 0, distribution
 
 html = INDEX.read_text(encoding="utf-8")
 required_ui_markers = (
-    "async function ensureRetailIndexLoaded()",
+    "async function loadRetailIndex()",
     "fetch('./data/retail_prices.json',{cache:'no-store'})",
-    "function retailReferenceFromRow(",
+    "function buildRetailLookup(data)",
+    "function mergeRetailRows(a,b)",
     "Ogni negozio è un riferimento indipendente.",
-    "r.count===1?euro(r.min)",
-    "async function openCardDetail(key)",
-    "await ensureRetailIndexLoaded();",
+    "r.count===1",
+    "function openCardDetail(key)",
+    "loadRetailIndex();",
 )
 for marker in required_ui_markers:
     assert marker in html, f"UI marker missing: {marker}"
