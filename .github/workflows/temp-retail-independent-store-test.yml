@@ -7,6 +7,9 @@ on:
     paths:
       - scripts/build_retail_index.py
       - scripts/test_retail_independent_store_model.py
+      - scripts/test_retail_ui_independent_stores.py
+      - index.html
+      - data/retail_prices.json
       - .github/workflows/temp-retail-independent-store-test.yml
 
 permissions:
@@ -27,5 +30,8 @@ jobs:
         run: |
           python -m py_compile scripts/build_retail_index.py
           python -m py_compile scripts/test_retail_independent_store_model.py
+          python -m py_compile scripts/test_retail_ui_independent_stores.py
       - name: Test independent retail model
         run: python scripts/test_retail_independent_store_model.py
+      - name: Test retail UI data path
+        run: python scripts/test_retail_ui_independent_stores.py
