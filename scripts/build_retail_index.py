@@ -6937,6 +6937,15 @@ def collect_lppcollecting(cards):
                         "url": url,
                     })
 
+        # Fail closed at source level. A successful HTTP response containing
+        # no recognizable rows is not treated as a healthy zero-inventory
+        # result: it commonly means a challenge/captcha or changed markup.
+        if stats["setPagesOk"] > 0 and stats["rowsParsed"] == 0:
+            raise RuntimeError(
+                "LPP: pagine raggiunte ma nessuna riga carta riconoscibile; "
+                "sorgente esclusa dall'indice corrente"
+            )
+
         for key, candidates in pending_candidates.items():
 
             stats["duplicateCandidate"] += max(
@@ -7868,11 +7877,15 @@ def validate_source_collapse(
                 f"{source} ({previous_accepted} -> 0)"
             )
 
+    result["collapsedSources"] = collapsed
+    result["blocking"] = False
+
     if collapsed:
-        raise RuntimeError(
-            "Protezione anti-crollo fonti: "
+        print(
+            "ATTENZIONE: fonti retail temporaneamente non disponibili: "
             + ", ".join(collapsed)
-            + ". Il file retail precedente resta invariato."
+            + ". Le altre fonti valide restano aggiornabili.",
+            flush=True,
         )
 
     return result
@@ -7962,6 +7975,9 @@ def main():
 
             "failClosed":
                 True,
+
+            "sourceFailurePolicy":
+                "exclude-failed-source-continue-valid-independent-sources",
 
             "crossSourceMatching":
                 "independent-store-observations",
