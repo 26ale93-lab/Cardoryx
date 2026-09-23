@@ -1,0 +1,31 @@
+name: TEMP Retail Independent Store Test
+
+on:
+  push:
+    branches:
+      - feature/retail-independent-stores-20260923
+    paths:
+      - scripts/build_retail_index.py
+      - scripts/test_retail_independent_store_model.py
+      - .github/workflows/temp-retail-independent-store-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify syntax
+        run: |
+          python -m py_compile scripts/build_retail_index.py
+          python -m py_compile scripts/test_retail_independent_store_model.py
+      - name: Test independent retail model
+        run: python scripts/test_retail_independent_store_model.py
