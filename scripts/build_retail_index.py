@@ -33,15 +33,16 @@ from pathlib import Path
 # - condizione NM/Mint
 # - solo offerte acquistabili
 # - fail closed
-# - statistiche affidabili solo con >= 3 negozi indipendenti
+# - ogni negozio verificato e un riferimento retail indipendente
+# - min/max/mediana sono descrittivi e disponibili da 1+ offerte valide
 #
 # ============================================================
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
-MIN_OFFERS_FOR_STATS = 3
-MIN_STORES_FOR_STATS = 3
+MIN_OFFERS_FOR_STATS = 1
+MIN_STORES_FOR_STATS = 1
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -850,98 +851,47 @@ def add_offer(
 def calculate_stats(offers):
 
     valid_offers = [
-
         offer
-
         for offer in offers
-
-        if valid_price(
-            offer.get("price")
-        )
+        if valid_price(offer.get("price"))
+        and offer.get("store")
     ]
 
     prices = [
-
         offer["price"]
-
         for offer in valid_offers
     ]
 
     stores = {
-
-        norm(
-            offer.get("store")
-        )
-
+        norm(offer.get("store"))
         for offer in valid_offers
-
         if offer.get("store")
     }
 
-    reliable = (
+    has_reference = bool(prices and stores)
 
-        len(prices)
-        >= MIN_OFFERS_FOR_STATS
-
-        and
-
-        len(stores)
-        >= MIN_STORES_FOR_STATS
-    )
-
-    if not reliable:
-
+    if not has_reference:
         return {
-
-            "reliable":
-                False,
-
-            "count":
-                len(prices),
-
-            "stores":
-                len(stores),
-
-            "min":
-                None,
-
-            "max":
-                None,
-
-            "median":
-                None,
+            "reliable": False,
+            "hasReference": False,
+            "count": 0,
+            "stores": 0,
+            "min": None,
+            "max": None,
+            "median": None,
         }
 
     return {
-
-        "reliable":
-            True,
-
-        "count":
-            len(prices),
-
-        "stores":
-            len(stores),
-
-        "min":
-            round(
-                min(prices),
-                2,
-            ),
-
-        "max":
-            round(
-                max(prices),
-                2,
-            ),
-
-        "median":
-            round(
-                statistics.median(
-                    prices
-                ),
-                2,
-            ),
+        # Backwards-compatible field: a strictly matched offer from even one
+        # independent store is now a valid retail reference. It is not a
+        # Cardoryx valuation and never affects collection value.
+        "reliable": True,
+        "hasReference": True,
+        "count": len(prices),
+        "stores": len(stores),
+        "min": round(min(prices), 2),
+        "max": round(max(prices), 2),
+        "median": round(statistics.median(prices), 2),
     }
 
 
@@ -8014,7 +7964,13 @@ def main():
                 True,
 
             "crossSourceMatching":
-                "independent-any-3-stores",
+                "independent-store-observations",
+
+            "referenceModel":
+                "each-verified-store-is-an-independent-reference",
+
+            "aggregateStatsAreDescriptive":
+                True,
 
             "sourceCollapseGuard":
                 source_collapse_guard,
@@ -8027,6 +7983,9 @@ def main():
 
             "cards":
                 len(cards),
+
+            "cardsWithRetailReference":
+                reliable_cards,
 
             "reliableCards":
                 reliable_cards,
