@@ -68,6 +68,21 @@ assert module.MIN_OFFERS_FOR_STATS == 1
 assert module.MIN_STORES_FOR_STATS == 1
 assert module.SCHEMA_VERSION == 2
 
+# A single unavailable store must no longer block valid independent stores.
+previous = {
+    "sources": [
+        {"source": "LPP Collecting", "accepted": 957},
+        {"source": "Warcard", "accepted": 986},
+    ]
+}
+current = [
+    {"source": "LPP Collecting", "accepted": 0, "ok": False},
+    {"source": "Warcard", "accepted": 900, "ok": True},
+]
+guard = module.validate_source_collapse(previous, current)
+assert guard.get("blocking") is False, guard
+assert guard.get("collapsedSources") == ["LPP Collecting (957 -> 0)"], guard
+
 # Existing production index proves that 1-store and 2-store observations are
 # material, so the UI must not hide them.
 data = json.loads(RETAIL.read_text(encoding="utf-8"))
@@ -99,7 +114,10 @@ for marker in required_ui_markers:
 
 # Cardmarket stays explicitly separated in both data and code.
 assert data.get("rules", {}).get("cardmarketExcluded") is True
-assert '"cardmarketExcluded":\n                True' in BUILDER.read_text(encoding="utf-8")
+builder_text = BUILDER.read_text(encoding="utf-8")
+assert '"cardmarketExcluded":\n                True' in builder_text
+assert '"sourceFailurePolicy":' in builder_text
+assert "pagine raggiunte ma nessuna riga carta riconoscibile" in builder_text
 assert "renderCardmarketReference(c)" in html
 
 print("Retail store-count distribution:", distribution)
