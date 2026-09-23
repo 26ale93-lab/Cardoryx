@@ -23,6 +23,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Verify retail regression tests
+        run: |
+          python -m py_compile scripts/build_retail_index.py
+          python -m py_compile scripts/test_retail_independent_store_model.py
+          python -m py_compile scripts/test_retail_ui_independent_stores.py
+          python scripts/test_retail_independent_store_model.py
+          python scripts/test_retail_ui_independent_stores.py
+
       - name: Run full deterministic finish audit
         run: |
           python scripts/test_variant_finish_audit.py --output /tmp/variant_finish_audit_report.json
