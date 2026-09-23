@@ -33,10 +33,12 @@ print("DISCOVERY",json.dumps({
     "markers":markers(discovery),
     "setCount":len(options),
     "firstSets":options[:8],
+    "shortBody": re.sub(r"\\s+"," ",discovery).strip()[:1500] if len(discovery) < 2000 else None,
 },ensure_ascii=False,sort_keys=True))
 
 if not options:
-    raise SystemExit("No LPP set options found")
+    print("FINDING","DISCOVERY_PAGE_NO_LONGER_EXPOSES_SERVER_RENDERED_SET_SELECTOR")
+    raise SystemExit(0)
 
 samples=[]
 for set_id,set_name in options[:6]:
