@@ -241,14 +241,14 @@ SWSH1_OFFICIAL_CHECKLIST_SOURCE = "https://assets.pokemon.com/assets/cms2/pdf/tr
 SWSH1_212_OFFICIAL_CARD_SOURCE = "https://www.pokemon.com/br/pokemon-estampas-ilustradas/cartas-de-pokemon/series/swsh1/212/"
 
 VERIFIED_MEE30_CELEBRATION_ENERGIES = {
-    "mee-009": {"localId": "009", "name": "Grass Energy"},
-    "mee-010": {"localId": "010", "name": "Fire Energy"},
-    "mee-011": {"localId": "011", "name": "Water Energy"},
-    "mee-012": {"localId": "012", "name": "Lightning Energy"},
-    "mee-013": {"localId": "013", "name": "Psychic Energy"},
-    "mee-014": {"localId": "014", "name": "Fighting Energy"},
-    "mee-015": {"localId": "015", "name": "Darkness Energy"},
-    "mee-016": {"localId": "016", "name": "Metal Energy"},
+    "mee-009": {"localId": "009", "name": "Basic Grass Energy"},
+    "mee-010": {"localId": "010", "name": "Basic Fire Energy"},
+    "mee-011": {"localId": "011", "name": "Basic Water Energy"},
+    "mee-012": {"localId": "012", "name": "Basic Lightning Energy"},
+    "mee-013": {"localId": "013", "name": "Basic Psychic Energy"},
+    "mee-014": {"localId": "014", "name": "Basic Fighting Energy"},
+    "mee-015": {"localId": "015", "name": "Basic Darkness Energy"},
+    "mee-016": {"localId": "016", "name": "Basic Metal Energy"},
 }
 MEE30_OFFICIAL_FOIL_SOURCE = "https://www.pokemon.com/uk/news/pokemon-tcg-30th-celebration-product-showcase"
 MEE30_NUMBERING_SOURCE = "https://bulbapedia.bulbagarden.net/wiki/MEE"
