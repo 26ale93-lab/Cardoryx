@@ -4569,6 +4569,13 @@ function isPatternReverseVariant(v){
   const x=canonicalVariant(v);
   return x==='Energy Reverse Holo'||isBallReverseVariant(x);
 }
+function isAscendedNamedPatternReverseVariant(v){
+  const x=canonicalVariant(v);
+  return [
+    'Energy Reverse Holo','Friend Ball Reverse Holo','Love Ball Reverse Holo',
+    'Quick Ball Reverse Holo','Dusk Ball Reverse Holo','Team Rocket Reverse Holo'
+  ].includes(x);
+}
 function variantBadgeHTML(v){
   const x=canonicalVariant(v);
   if(x==='Poké Ball Reverse Holo')return '<span class="variant-badge variant-pokeball">🔴 Poké Ball Reverse Holo</span>';
@@ -4660,7 +4667,7 @@ function tcgdexMarketplaceVariant(card,variant){
 }
 function tcgdexExactPatternCardmarketPrice(card,variant){
   const target=canonicalVariant(variant||'Normal');
-  if(!isPatternReverseVariant(target))return null;
+  if(!isAscendedNamedPatternReverseVariant(target))return null;
   const row=tcgdexMarketplaceVariant(card,target);
   if(!row)return null;
   const pricing=row?.pricing?.cardmarket;
