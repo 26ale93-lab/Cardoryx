@@ -1,0 +1,18 @@
+name: TEMP Ascended Heroes Finish Diagnostic
+on:
+  push:
+    branches: [fix/ascended-heroes-parallels-20260925]
+    paths:
+      - scripts/test_ascended_heroes_finish_diagnostic.py
+      - .github/workflows/temp-ascended-heroes-finish-diagnostic.yml
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python scripts/test_ascended_heroes_finish_diagnostic.py
