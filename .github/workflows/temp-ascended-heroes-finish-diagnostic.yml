@@ -5,6 +5,7 @@ on:
     paths:
       - index.html
       - scripts/test_ascended_heroes_finish_diagnostic.py
+      - scripts/test_variant_finish_audit.py
       - .github/workflows/temp-ascended-heroes-finish-diagnostic.yml
 permissions:
   contents: read
@@ -32,29 +33,26 @@ jobs:
         run: |
           set +e
           python scripts/test_variant_finish_audit.py > /tmp/branch-audit.log 2>&1
-          branch_rc=$?
+          BRANCH_RC=$?
           git worktree add --detach /tmp/cardoryx-main origin/main
           (
             cd /tmp/cardoryx-main
             python scripts/test_variant_finish_audit.py > /tmp/main-audit.log 2>&1
           )
-          main_rc=$?
+          MAIN_RC=$?
           set -e
-          echo "BRANCH_RC=$branch_rc"
-          tail -n 12 /tmp/branch-audit.log
-          echo "MAIN_RC=$main_rc"
-          tail -n 12 /tmp/main-audit.log
-          if [ "$branch_rc" -eq 0 ] && [ "$main_rc" -eq 0 ]; then
-            exit 0
+          echo "branch_rc=$BRANCH_RC main_rc=$MAIN_RC"
+          if [ "$BRANCH_RC" -eq 0 ]; then
+            echo "Branch full audit passed."
+          elif [ "$MAIN_RC" -ne 0 ] && grep -q "Verified Normal target missing from the audited dataset: me04-013" /tmp/branch-audit.log && grep -q "Verified Normal target missing from the audited dataset: me04-013" /tmp/main-audit.log; then
+            echo "Full audit baseline parity confirmed: branch and current main are both blocked by missing upstream me04-013."
+          else
+            echo "Branch full audit:"
+            tail -80 /tmp/branch-audit.log
+            echo "Current main full audit:"
+            tail -80 /tmp/main-audit.log
+            exit 1
           fi
-          if [ "$branch_rc" -ne 0 ] && [ "$main_rc" -ne 0 ] &&
-             grep -q "Verified Normal target missing from the audited dataset: me04-013" /tmp/branch-audit.log &&
-             grep -q "Verified Normal target missing from the audited dataset: me04-013" /tmp/main-audit.log; then
-            echo "External/live dataset parity confirmed: both current main and branch stop on me04-013."
-            exit 0
-          fi
-          echo "Branch/main full-audit behavior differs."
-          exit 1
       - name: Verify valuation data untouched
         run: |
           test -z "$(git diff --name-only origin/main...HEAD -- data/cardmarket_play_index.json data/retail_prices.json)"
