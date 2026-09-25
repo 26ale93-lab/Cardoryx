@@ -94,7 +94,8 @@ addDetailedFinishes(allowed,rows,{{base:true,special:true}});
 const got=[...allowed].sort();
 const expected=['Energy Reverse Holo','Friend Ball Reverse Holo','Normal'].sort();
 if(JSON.stringify(got)!==JSON.stringify(expected)){{
-  console.error(JSON.stringify({{got,expected}}));
+  const mapped=rows.map(x=>({{type:x.type,foil:x.foil,canonicalType:canonicalFinishTypeLabel(x.type),canonicalFoil:canonicalFinishFoilLabel(x.foil)}}));
+  console.error(JSON.stringify({{got,expected,mapped}}));
   process.exit(1);
 }}
 console.log(JSON.stringify({{runtimeAllowed:got}}));
