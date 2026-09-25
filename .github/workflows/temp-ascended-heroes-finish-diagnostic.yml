@@ -3,6 +3,7 @@ on:
   push:
     branches: [fix/ascended-heroes-parallels-20260925]
     paths:
+      - index.html
       - scripts/test_ascended_heroes_finish_diagnostic.py
       - .github/workflows/temp-ascended-heroes-finish-diagnostic.yml
 permissions:
@@ -10,9 +11,18 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: python scripts/test_ascended_heroes_finish_diagnostic.py
+      - name: Ascended Heroes live taxonomy gate
+        run: python scripts/test_ascended_heroes_finish_diagnostic.py
+      - name: Scanner single-finish regression
+        run: python scripts/test_scanner_single_finish_autoselect.py
+      - name: Poké Ball/Master Ball regression
+        run: python scripts/test_frillish_masterball_cardmarket_price.py
+      - name: Mega Evolution energy finish regression
+        run: |
+          python scripts/test_mee_001_008_exact_finishes.py
+          python scripts/test_mee_009_016_30th_finishes.py
