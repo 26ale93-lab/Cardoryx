@@ -1,4 +1,5 @@
 name: TEMP Ascended Heroes Finish Diagnostic
+# latest validation trigger
 on:
   push:
     branches: [fix/ascended-heroes-parallels-20260925]
