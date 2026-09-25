@@ -70,6 +70,65 @@ assert "function tcgdexExactPatternCardmarketPrice" in INDEX
 assert "rowPid!==pricingPid" in INDEX
 assert "isPatternReverseVariant(target)" in INDEX
 
+# Execute the actual production finish resolver on Noibat's live detailed rows.
+import re, subprocess, tempfile
+
+def extract_function(name):
+    marker=f"function {name}("
+    start=INDEX.find(marker)
+    assert start>=0, f"Production function missing: {name}"
+    brace=INDEX.find("{",start)
+    depth=0
+    quote=None
+    esc=False
+    for i in range(brace,len(INDEX)):
+        ch=INDEX[i]
+        if quote:
+            if esc:
+                esc=False
+            elif ch=="\\":
+                esc=True
+            elif ch==quote:
+                quote=None
+            continue
+        if ch in ("'", '"', "`"):
+            quote=ch
+            continue
+        if ch=="{": depth+=1
+        elif ch=="}":
+            depth-=1
+            if depth==0:
+                return INDEX[start:i+1]
+    raise AssertionError(f"Unclosed production function: {name}")
+
+runtime_funcs="\n".join(extract_function(n) for n in [
+    "canonicalFinishTypeLabel",
+    "canonicalFinishFoilLabel",
+    "canonicalFinishSubtypeLabel",
+    "isPeelableDittoVariantRow",
+    "addDetailedFinishes",
+])
+runtime_js=r"""
+function normText(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+""" + runtime_funcs + "\n" + f"""
+const rows={json.dumps(rows)};
+const allowed=new Set();
+addDetailedFinishes(allowed,rows,{{base:true,special:true}});
+const got=[...allowed].sort();
+const expected=['Energy Reverse Holo','Friend Ball Reverse Holo','Normal'].sort();
+if(JSON.stringify(got)!==JSON.stringify(expected)){{
+  console.error(JSON.stringify({{got,expected}}));
+  process.exit(1);
+}}
+console.log(JSON.stringify({{runtimeAllowed:got}}));
+"""
+with tempfile.NamedTemporaryFile("w",suffix=".js",delete=False,encoding="utf-8") as tmp:
+    tmp.write(runtime_js)
+    runtime_path=tmp.name
+result=subprocess.run(["node",runtime_path],text=True,capture_output=True)
+assert result.returncode==0, result.stderr or result.stdout
+runtime_result=json.loads(result.stdout.strip())
+
 print(json.dumps({
     "set":{"id":set_data.get("id"),"name":set_data.get("name"),"cards":len(cards)},
     "foilCounts":dict(sorted(counts.items())),
@@ -81,6 +140,7 @@ print(json.dumps({
         "expectedSelectable":["Normal","Energy Reverse Holo","Friend Ball Reverse Holo"]
     },
     "unknownPatternFoils":unknown,
+    "runtimeAllowed":runtime_result["runtimeAllowed"],
     "errors":len(errors),
     "result":"PASS"
 },ensure_ascii=False,indent=2))
