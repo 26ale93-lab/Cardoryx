@@ -68,7 +68,7 @@ for foil,expected_pid in [("energy",870379),("friendball",870380)]:
 
 assert "function tcgdexExactPatternCardmarketPrice" in INDEX
 assert "rowPid!==pricingPid" in INDEX
-assert "isPatternReverseVariant(target)" in INDEX
+assert "isAscendedNamedPatternReverseVariant(target)" in INDEX
 
 # Execute the actual production finish resolver on Noibat's live detailed rows.
 import re, subprocess, tempfile
