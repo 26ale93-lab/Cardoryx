@@ -79,15 +79,14 @@ def slice_between(start_marker,end_marker):
     return INDEX[a:b]
 
 runtime_funcs="\n".join([
+    slice_between("function normText(", "function similarity("),
     slice_between("function canonicalFinishTypeLabel(", "function canonicalFinishFoilLabel("),
     slice_between("function canonicalFinishFoilLabel(", "function canonicalFinishSubtypeLabel("),
     slice_between("function canonicalFinishSubtypeLabel(", "function isPeelableDittoVariantRow("),
     slice_between("function isPeelableDittoVariantRow(", "function isManualVariantChoice("),
     slice_between("function addDetailedFinishes(", "function addModernStandardStructure("),
 ])
-runtime_js=r"""
-function normText(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
-""" + runtime_funcs + "\n" + f"""
+runtime_js=runtime_funcs + "\n" + f"""
 const rows={json.dumps(rows)};
 const allowed=new Set();
 addDetailedFinishes(allowed,rows,{{base:true,special:true}});
