@@ -548,6 +548,7 @@ def run_ditto_production_runtime(source):
     names = (
         "normText", "canonicalStamp", "canonicalVariant", "canonicalFinishTypeLabel",
         "canonicalFinishFoilLabel", "canonicalFinishSubtypeLabel", "isPeelableDittoVariantRow",
+        "isBallReverseVariant", "isPatternReverseVariant", "isAscendedNamedPatternReverseVariant",
         "is30thCelebrationSet",
         "tcgdexVariantDetails", "tcgdexMarketplaceVariant", "addDetailedFinishes",
         "documentedVariantsForCard", "migrateFinishStamp", "cardmarketValueForVariant",
