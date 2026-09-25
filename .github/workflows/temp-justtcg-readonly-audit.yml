@@ -1,0 +1,60 @@
+name: TEMP JustTCG Read-Only Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/justtcg-readonly-20260925
+    paths:
+      - scripts/test_justtcg_readonly_audit.py
+      - .github/workflows/temp-justtcg-readonly-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify protected valuation files before
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.before
+          sha256sum data/retail_prices.json > /tmp/retail.before
+
+      - name: Require JustTCG API key
+        env:
+          JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
+        run: |
+          if [ -z "$JUSTTCG_API_KEY" ]; then
+            echo "::error::Missing repository secret JUSTTCG_API_KEY"
+            exit 2
+          fi
+
+      - name: Run JustTCG read-only audit
+        env:
+          JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
+        run: |
+          python scripts/test_justtcg_readonly_audit.py | tee /tmp/justtcg_audit_report.json
+
+      - name: Verify protected valuation files unchanged
+        if: always()
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.after
+          sha256sum data/retail_prices.json > /tmp/retail.after
+          cmp /tmp/cardmarket.before /tmp/cardmarket.after
+          cmp /tmp/retail.before /tmp/retail.after
+
+      - name: Upload audit report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: justtcg-readonly-audit-report
+          path: /tmp/justtcg_audit_report.json
+          retention-days: 7
