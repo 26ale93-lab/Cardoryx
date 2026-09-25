@@ -4658,6 +4658,19 @@ function tcgdexMarketplaceVariant(card,variant){
   if(target==='Ditto Peelable')return withCM||null;
   return withCM||matches[0]||null;
 }
+function tcgdexExactPatternCardmarketPrice(card,variant){
+  const target=canonicalVariant(variant||'Normal');
+  if(!isPatternReverseVariant(target))return null;
+  const row=tcgdexMarketplaceVariant(card,target);
+  if(!row)return null;
+  const pricing=row?.pricing?.cardmarket;
+  const rowPid=Number(row?.thirdParty?.cardmarket||0);
+  const pricingPid=Number(pricing?.idProduct||pricing?.id_product||0);
+  if(!(rowPid>0) || rowPid!==pricingPid || !pricing)return null;
+  const usable=['trend','avg7','avg30','avg','low'].some(k=>Number(pricing?.[k]||0)>0);
+  if(!usable)return null;
+  return {pricing,productId:rowPid,finish:target,source:`Cardmarket · variante fisica esatta ${target}`};
+}
 function applyDetectedVariant(card){
   const sel=document.getElementById('variant'); if(!sel)return;
   const rec=recommendedVariantFromTCGdex(card);
@@ -8655,6 +8668,12 @@ function verifiedExactPrimarySpecialCardmarketVariant(card,variant){
 }
 
 function cardmarketValueForCardVariant(card,variant){
+  const exactPattern=tcgdexExactPatternCardmarketPrice(card,variant);
+  if(exactPattern){
+    const p=exactPattern.pricing||{};
+    const value=['trend','avg7','avg30','avg','low'].map(k=>Number(p[k]||0)).find(x=>Number.isFinite(x)&&x>0)||0;
+    return {value,kind:'exact-pattern-cardmarket',exact:true,productId:exactPattern.productId,source:exactPattern.source};
+  }
   const exactPrimary=verifiedExactPrimarySpecialCardmarketVariant(card,variant);
   if(exactPrimary?.handled){
     if(!exactPrimary.matched)return {value:0,kind:exactPrimary.kind||'needs-exact-variant'};
@@ -8765,6 +8784,11 @@ function cardmarketValueForCardVariant(card,variant){
   return cardmarketValueForVariant(cm,v);
 }
 function cardmarketStatsForCardVariant(card,variant){
+  const exactPattern=tcgdexExactPatternCardmarketPrice(card,variant);
+  if(exactPattern){
+    const p=exactPattern.pricing||{};
+    return {low:p.low??null,trend:p.trend??null,avg7:p.avg7??null,avg30:p.avg30??null};
+  }
   const exactPrimary=verifiedExactPrimarySpecialCardmarketVariant(card,variant);
   if(exactPrimary?.handled){
     if(!exactPrimary.matched)return {low:null,trend:null,avg7:null,avg30:null};
@@ -9083,10 +9107,8 @@ async function renderScanValue(card){
       metaEl.textContent='Nessun prezzo Cardmarket disponibile per questa carta';
     }else if(['Play! Pokémon Prize Pack','Play! Pokémon Stamp','Pokémon Day Stamp'].includes(canonicalVariant(selVariant))){
       metaEl.textContent='Cardmarket · serve il prezzo della ristampa/stamp specifica';
-    }else if(isBallReverseVariant(selVariant)){
-      metaEl.textContent=info.value
-        ? 'Cardmarket · solo riferimento generico: prezzo specifico Poké Ball/Master Ball non ancora verificato'
-        : 'Cardmarket · prezzo specifico della variante non disponibile';
+    }else if(isPatternReverseVariant(selVariant) && !info.exact){
+      metaEl.textContent='Cardmarket · prezzo specifico della variante pattern non disponibile';
     }else if(info.exact&&info.productId){
       metaEl.textContent=`${info.source||'Cardmarket'} · prodotto ${info.productId}${info.verified?` · ${info.verified}`:''}`;
     }else{
