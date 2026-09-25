@@ -548,6 +548,12 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Gold">Gold</option>
 <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
 <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+<option value="Energy Reverse Holo">⚡ Energy Reverse Holo</option>
+<option value="Friend Ball Reverse Holo">🟢 Friend Ball Reverse Holo</option>
+<option value="Love Ball Reverse Holo">🩷 Love Ball Reverse Holo</option>
+<option value="Quick Ball Reverse Holo">🔵 Quick Ball Reverse Holo</option>
+<option value="Dusk Ball Reverse Holo">🌑 Dusk Ball Reverse Holo</option>
+<option value="Team Rocket Reverse Holo">🚀 Team Rocket Reverse Holo</option>
 <option value="Speciale / Altro">Speciale / Altro</option>
 <option value="Non so">Non so</option>
 </select>
@@ -853,6 +859,12 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
           <option value="Gold">Gold</option>
               <option value="Poké Ball Reverse Holo">🔴 Poké Ball Reverse Holo</option>
               <option value="Master Ball Reverse Holo">🟣 Master Ball Reverse Holo</option>
+              <option value="Energy Reverse Holo">⚡ Energy Reverse Holo</option>
+              <option value="Friend Ball Reverse Holo">🟢 Friend Ball Reverse Holo</option>
+              <option value="Love Ball Reverse Holo">🩷 Love Ball Reverse Holo</option>
+              <option value="Quick Ball Reverse Holo">🔵 Quick Ball Reverse Holo</option>
+              <option value="Dusk Ball Reverse Holo">🌑 Dusk Ball Reverse Holo</option>
+              <option value="Team Rocket Reverse Holo">🚀 Team Rocket Reverse Holo</option>
               <option value="Speciale / Altro">Speciale / Altro</option>
               <option value="Non so">Non so</option>
             </select>
@@ -1831,7 +1843,7 @@ function deleteCurrentDeck(){dismantleCurrentDeck()}
 function renderHomeDashboard(){
   const total=db.reduce((a,c)=>a+(Number(c.qty)||1),0);
   const sets=new Set(db.map(c=>String(c.set||'').trim()).filter(Boolean)).size;
-  const holo=db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo','Speciale / Altro'].includes(canonicalVariant(c.variant||'Normal'))).reduce((a,c)=>a+(Number(c.qty)||1),0);
+  const holo=db.filter(c=>['Holo','Reverse Holo','Cosmos Holo','Poké Ball Reverse Holo','Master Ball Reverse Holo','Energy Reverse Holo','Friend Ball Reverse Holo','Love Ball Reverse Holo','Quick Ball Reverse Holo','Dusk Ball Reverse Holo','Team Rocket Reverse Holo','Speciale / Altro'].includes(canonicalVariant(c.variant||'Normal'))).reduce((a,c)=>a+(Number(c.qty)||1),0);
   const prot=db.filter(c=>(c.status||'Disponibile')==='Protetta').reduce((a,c)=>a+(Number(c.qty)||1),0);
   const value=collectionMarketValue();
 
@@ -4493,6 +4505,12 @@ function canonicalVariant(v){
   const n=normText(v||'');
   if(['peelableditto','dittopeelable','dittorimovibile','ditto rimovibile'].includes(n))return 'Ditto Peelable';
   if(n.includes('master ball')||n.includes('masterball'))return 'Master Ball Reverse Holo';
+  if(n.includes('friend ball')||n.includes('friendball'))return 'Friend Ball Reverse Holo';
+  if(n.includes('love ball')||n.includes('loveball'))return 'Love Ball Reverse Holo';
+  if(n.includes('quick ball')||n.includes('quickball'))return 'Quick Ball Reverse Holo';
+  if(n.includes('dusk ball')||n.includes('duskball'))return 'Dusk Ball Reverse Holo';
+  if(n.includes('team rocket')||n.includes('teamrocket'))return 'Team Rocket Reverse Holo';
+  if((n.includes('energy')||n.includes('energia'))&&n.includes('reverse'))return 'Energy Reverse Holo';
   if(n.includes('poke ball')||n.includes('pokeball'))return 'Poké Ball Reverse Holo';
   if(n==='cosmo'||n.includes('cosmos'))return 'Cosmos Holo';
   if(n==='gold'||n==='oro')return 'Gold';
@@ -4516,6 +4534,12 @@ function canonicalFinishFoilLabel(v){
   if(n==='cosmo'||n==='cosmos')return 'cosmos';
   if(n==='pokeball'||n==='poke ball')return 'pokeball';
   if(n==='masterball'||n==='master ball')return 'masterball';
+  if(n==='friendball'||n==='friend ball')return 'friendball';
+  if(n==='loveball'||n==='love ball')return 'loveball';
+  if(n==='quickball'||n==='quick ball')return 'quickball';
+  if(n==='duskball'||n==='dusk ball')return 'duskball';
+  if(n==='teamrocket'||n==='team rocket'||n==='team-rocket')return 'team-rocket';
+  if(n==='energy'||n==='energia')return 'energy';
   if(n==='gold'||n==='oro')return 'gold';
   return n;
 }
@@ -4534,12 +4558,27 @@ function isManualVariantChoice(v){
 }
 function isBallReverseVariant(v){
   const x=canonicalVariant(v);
-  return x==='Poké Ball Reverse Holo'||x==='Master Ball Reverse Holo';
+  return [
+    'Poké Ball Reverse Holo','Master Ball Reverse Holo',
+    'Friend Ball Reverse Holo','Love Ball Reverse Holo',
+    'Quick Ball Reverse Holo','Dusk Ball Reverse Holo',
+    'Team Rocket Reverse Holo'
+  ].includes(x);
+}
+function isPatternReverseVariant(v){
+  const x=canonicalVariant(v);
+  return x==='Energy Reverse Holo'||isBallReverseVariant(x);
 }
 function variantBadgeHTML(v){
   const x=canonicalVariant(v);
   if(x==='Poké Ball Reverse Holo')return '<span class="variant-badge variant-pokeball">🔴 Poké Ball Reverse Holo</span>';
   if(x==='Master Ball Reverse Holo')return '<span class="variant-badge variant-masterball">🟣 Master Ball Reverse Holo</span>';
+  if(x==='Energy Reverse Holo')return '<span class="variant-badge variant-reverse">⚡ Energy Reverse Holo</span>';
+  if(x==='Friend Ball Reverse Holo')return '<span class="variant-badge variant-reverse">🟢 Friend Ball Reverse Holo</span>';
+  if(x==='Love Ball Reverse Holo')return '<span class="variant-badge variant-reverse">🩷 Love Ball Reverse Holo</span>';
+  if(x==='Quick Ball Reverse Holo')return '<span class="variant-badge variant-reverse">🔵 Quick Ball Reverse Holo</span>';
+  if(x==='Dusk Ball Reverse Holo')return '<span class="variant-badge variant-reverse">🌑 Dusk Ball Reverse Holo</span>';
+  if(x==='Team Rocket Reverse Holo')return '<span class="variant-badge variant-reverse">🚀 Team Rocket Reverse Holo</span>';
   if(x==='Ditto Peelable')return '<span class="variant-badge variant-reverse">Ditto rimovibile</span>';
   if(x==='Reverse Holo')return '<span class="variant-badge variant-reverse">Reverse Holo</span>';
   if(x==='Cosmos Holo')return '<span class="variant-badge variant-holo">Cosmos Holo</span>';
@@ -4553,10 +4592,20 @@ function variantBadgeHTML(v){
 }
 function detailedBallVariant(card,v){
   const x=canonicalVariant(v);
-  const foil=x==='Poké Ball Reverse Holo'?'pokeball':x==='Master Ball Reverse Holo'?'masterball':'';
+  const foilByVariant={
+    'Poké Ball Reverse Holo':'pokeball',
+    'Master Ball Reverse Holo':'masterball',
+    'Friend Ball Reverse Holo':'friendball',
+    'Love Ball Reverse Holo':'loveball',
+    'Quick Ball Reverse Holo':'quickball',
+    'Dusk Ball Reverse Holo':'duskball',
+    'Team Rocket Reverse Holo':'team-rocket',
+    'Energy Reverse Holo':'energy'
+  };
+  const foil=foilByVariant[x]||'';
   if(!foil)return null;
   const list=Array.isArray(card?.variants_detailed)?card.variants_detailed:[];
-  return list.find(a=>a?.type==='reverse'&&a?.foil===foil)||null;
+  return list.find(a=>canonicalFinishTypeLabel(a?.type)==='reverse'&&canonicalFinishFoilLabel(a?.foil)===foil)||null;
 }
 function tcgdexVariantDetails(card){
   if(Array.isArray(card?.variants_detailed))return card.variants_detailed;
@@ -4592,8 +4641,14 @@ function tcgdexMarketplaceVariant(card,variant){
   let matches=[];
   if(target==='Play! Pokémon Prize Pack'||target==='Play! Pokémon Stamp') matches=pool.filter(x=>hasStamp(x,'player-rewards-program')||x?.foil==='player-reward'||x?.foil==='league');
   else if(target==='Pokémon Day Stamp') matches=pool.filter(x=>hasStamp(x,'pokemon-day'));
-  else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='pokeball');
-  else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>x?.type==='reverse'&&x?.foil==='masterball');
+  else if(target==='Poké Ball Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='pokeball');
+  else if(target==='Master Ball Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='masterball');
+  else if(target==='Energy Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='energy');
+  else if(target==='Friend Ball Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='friendball');
+  else if(target==='Love Ball Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='loveball');
+  else if(target==='Quick Ball Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='quickball');
+  else if(target==='Dusk Ball Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='duskball');
+  else if(target==='Team Rocket Reverse Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='reverse'&&canonicalFinishFoilLabel(x?.foil)==='team-rocket');
   else if(target==='Gold') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&canonicalFinishFoilLabel(x?.foil)==='gold'&&String(x?.size||'standard').trim().toLowerCase()==='standard'&&!x?.stamp?.length);
   else if(target==='Holo') matches=pool.filter(x=>canonicalFinishTypeLabel(x?.type)==='holo'&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
   else if(target==='Ditto Peelable') matches=pool.filter(x=>isPeelableDittoVariantRow(x)&&!canonicalFinishFoilLabel(x?.foil)&&!x?.stamp?.length);
@@ -5136,6 +5191,12 @@ function addDetailedFinishes(allowed,rows,{base=true,special=true}={}){
       if(foil==='gold')allowed.add('Gold');
       if(type==='reverse'&&foil==='pokeball')allowed.add('Poké Ball Reverse Holo');
       if(type==='reverse'&&foil==='masterball')allowed.add('Master Ball Reverse Holo');
+      if(type==='reverse'&&foil==='energy')allowed.add('Energy Reverse Holo');
+      if(type==='reverse'&&foil==='friendball')allowed.add('Friend Ball Reverse Holo');
+      if(type==='reverse'&&foil==='loveball')allowed.add('Love Ball Reverse Holo');
+      if(type==='reverse'&&foil==='quickball')allowed.add('Quick Ball Reverse Holo');
+      if(type==='reverse'&&foil==='duskball')allowed.add('Dusk Ball Reverse Holo');
+      if(type==='reverse'&&foil==='team-rocket')allowed.add('Team Rocket Reverse Holo');
     }
   }
 }
@@ -6982,13 +7043,13 @@ function cardmarketValueForVariant(cm,variant){
     return {value:0,kind:'needs-exact-variant'};
   }
 
-  if(v==='Reverse Holo'||v==='Poké Ball Reverse Holo'||v==='Master Ball Reverse Holo'){
+  if(v==='Reverse Holo'||isPatternReverseVariant(v)){
     // V1.9.3 — varianti speciali: non mostrare mai il prezzo della carta normale
     // o di una Holo generica come se fosse il prezzo della variante selezionata.
     const rev=n('trend-reverse-holo')||n('avg7-reverse-holo')||n('avg30-reverse-holo')||
               n('avg-reverse-holo')||n('low-reverse-holo');
     if(v==='Reverse Holo' && rev)return {value:rev,kind:'reverse'};
-    // Poké Ball / Master Ball richiedono sempre un'associazione esatta della variante.
+    // Pattern Reverse require an exact physical variant; never reuse a generic reverse price.
     return {value:0,kind:'needs-exact-variant'};
   }
 
