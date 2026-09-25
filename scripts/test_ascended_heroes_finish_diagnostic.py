@@ -71,45 +71,22 @@ assert "rowPid!==pricingPid" in INDEX
 assert "isAscendedNamedPatternReverseVariant(target)" in INDEX
 
 # Execute the actual production finish resolver on Noibat's live detailed rows.
-import re, subprocess, tempfile
+import subprocess, tempfile
 
-def extract_function(name):
-    marker=f"function {name}("
-    start=INDEX.find(marker)
-    assert start>=0, f"Production function missing: {name}"
-    brace=INDEX.find("{",start)
-    depth=0
-    quote=None
-    esc=False
-    for i in range(brace,len(INDEX)):
-        ch=INDEX[i]
-        if quote:
-            if esc:
-                esc=False
-            elif ch=="\\":
-                esc=True
-            elif ch==quote:
-                quote=None
-            continue
-        if ch in ("'", '"', "`"):
-            quote=ch
-            continue
-        if ch=="{": depth+=1
-        elif ch=="}":
-            depth-=1
-            if depth==0:
-                return INDEX[start:i+1]
-    raise AssertionError(f"Unclosed production function: {name}")
+def slice_between(start_marker,end_marker):
+    a=INDEX.index(start_marker)
+    b=INDEX.index(end_marker,a)
+    return INDEX[a:b]
 
-runtime_funcs=";\n".join(extract_function(n) for n in [
-    "canonicalFinishTypeLabel",
-    "canonicalFinishFoilLabel",
-    "canonicalFinishSubtypeLabel",
-    "isPeelableDittoVariantRow",
-    "addDetailedFinishes",
+runtime_funcs="\n".join([
+    slice_between("function canonicalFinishTypeLabel(", "function canonicalFinishFoilLabel("),
+    slice_between("function canonicalFinishFoilLabel(", "function canonicalFinishSubtypeLabel("),
+    slice_between("function canonicalFinishSubtypeLabel(", "function isPeelableDittoVariantRow("),
+    slice_between("function isPeelableDittoVariantRow(", "function isManualVariantChoice("),
+    slice_between("function addDetailedFinishes(", "function addModernStandardStructure("),
 ])
 runtime_js=r"""
-function normText(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+function normText(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
 """ + runtime_funcs + "\n" + f"""
 const rows={json.dumps(rows)};
 const allowed=new Set();
