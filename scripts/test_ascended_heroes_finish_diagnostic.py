@@ -101,7 +101,7 @@ def extract_function(name):
                 return INDEX[start:i+1]
     raise AssertionError(f"Unclosed production function: {name}")
 
-runtime_funcs="\n".join(extract_function(n) for n in [
+runtime_funcs=";\n".join(extract_function(n) for n in [
     "canonicalFinishTypeLabel",
     "canonicalFinishFoilLabel",
     "canonicalFinishSubtypeLabel",
