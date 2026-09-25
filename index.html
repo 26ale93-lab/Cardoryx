@@ -7063,7 +7063,7 @@ function cardmarketValueForVariant(cm,variant){
     return {value:0,kind:'needs-exact-variant'};
   }
 
-  if(v==='Reverse Holo'||isPatternReverseVariant(v)){
+  if(v==='Reverse Holo'||(typeof isPatternReverseVariant==='function'&&isPatternReverseVariant(v))){
     // V1.9.3 — varianti speciali: non mostrare mai il prezzo della carta normale
     // o di una Holo generica come se fosse il prezzo della variante selezionata.
     const rev=n('trend-reverse-holo')||n('avg7-reverse-holo')||n('avg30-reverse-holo')||
