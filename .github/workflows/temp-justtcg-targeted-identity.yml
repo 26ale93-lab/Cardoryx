@@ -1,0 +1,39 @@
+name: TEMP JustTCG Targeted Identity Diagnostic
+
+on:
+  push:
+    branches:
+      - audit/justtcg-readonly-20260925
+    paths:
+      - scripts/test_justtcg_identity_diagnostic.py
+      - .github/workflows/temp-justtcg-targeted-identity.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify protected data before
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.before
+          sha256sum data/retail_prices.json > /tmp/retail.before
+      - name: Target 156/217
+        env:
+          JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
+        run: |
+          set -o pipefail
+          python scripts/test_justtcg_identity_diagnostic.py | tee /tmp/justtcg_identity.json
+      - name: Verify protected data unchanged
+        if: always()
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.after
+          sha256sum data/retail_prices.json > /tmp/retail.after
+          cmp /tmp/cardmarket.before /tmp/cardmarket.after
+          cmp /tmp/retail.before /tmp/retail.after
