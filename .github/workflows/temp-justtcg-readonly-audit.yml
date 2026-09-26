@@ -41,6 +41,7 @@ jobs:
         env:
           JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
         run: |
+          set -o pipefail
           python scripts/test_justtcg_readonly_audit.py | tee /tmp/justtcg_audit_report.json
 
       - name: Verify protected valuation files unchanged
