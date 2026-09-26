@@ -1,0 +1,58 @@
+name: TEMP External Market Sources Compare
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/external-market-sources-compare-20260926
+    paths:
+      - scripts/test_external_market_sources_compare.py
+      - .github/workflows/temp-external-market-sources-compare.yml
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify protected valuation files before
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.before
+          sha256sum data/retail_prices.json > /tmp/retail.before
+      - name: Require source API keys
+        env:
+          JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
+          PKMNPRICES_API_KEY: ${{ secrets.PKMNPRICES_API_KEY }}
+          POKEMONPRICETRACKER_API_KEY: ${{ secrets.POKEMONPRICETRACKER_API_KEY }}
+        run: |
+          test -n "$JUSTTCG_API_KEY"
+          test -n "$PKMNPRICES_API_KEY"
+          test -n "$POKEMONPRICETRACKER_API_KEY"
+      - name: Run source comparison
+        env:
+          JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
+          PKMNPRICES_API_KEY: ${{ secrets.PKMNPRICES_API_KEY }}
+          POKEMONPRICETRACKER_API_KEY: ${{ secrets.POKEMONPRICETRACKER_API_KEY }}
+        run: |
+          set -o pipefail
+          python scripts/test_external_market_sources_compare.py | tee /tmp/external_market_sources_compare.json
+      - name: Verify protected valuation files unchanged
+        if: always()
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.after
+          sha256sum data/retail_prices.json > /tmp/retail.after
+          cmp /tmp/cardmarket.before /tmp/cardmarket.after
+          cmp /tmp/retail.before /tmp/retail.after
+      - name: Upload report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-market-sources-compare
+          path: /tmp/external_market_sources_compare.json
+          retention-days: 7
