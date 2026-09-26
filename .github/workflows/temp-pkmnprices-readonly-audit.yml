@@ -55,3 +55,5 @@ jobs:
           name: pkmnprices-readonly-audit
           path: /tmp/pkmnprices_audit.json
           retention-days: 7
+
+# rerun after exact set-name resolver fix
