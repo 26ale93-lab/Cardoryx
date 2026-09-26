@@ -1,0 +1,204 @@
+name: TEMP SWSH Set Logo Staff Audit
+
+on:
+  push:
+    branches:
+      - audit/swshp-set-logo-staff-20260920
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout latest TCGdex cards database
+        run: git clone --depth 1 https://github.com/tcgdex/cards-database.git ../tcgdex-cards-database
+
+      - name: Audit Set Logo plus Staff source collisions
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json,urllib.request
+          from collections import Counter
+          from pathlib import Path
+
+          spec=importlib.util.spec_from_file_location("finish_audit","scripts/test_variant_finish_audit.py")
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          cards,errors,sha=mod.load_official_database(Path("../tcgdex-cards-database"))
+
+          targets=[]
+          for card in cards:
+              if ((card.get("set") or {}).get("id")!="swshp"):
+                  continue
+              rows=card.get("variants_detailed") or []
+              set_logo=[]
+              staff=[]
+              for r in rows:
+                  stamps=[str(x).lower().replace("-","").replace("_","") for x in (r.get("stamp") or [])]
+                  if "setlogo" in stamps:
+                      if "staff" in stamps: staff.append(r)
+                      else: set_logo.append(r)
+              if len(set_logo)==1 and len(staff)==1:
+                  targets.append((card,set_logo[0],staff[0]))
+
+          assert len(targets)==44,len(targets)
+
+          def load(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-SWSH-SetLogoStaff-Audit/1.0"})
+              with urllib.request.urlopen(req,timeout=300) as r:
+                  return json.load(r)
+
+          prod_raw=load("https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json")
+          products=prod_raw if isinstance(prod_raw,list) else prod_raw.get("products",[])
+          by_pid={int(x["idProduct"]):x for x in products if x.get("idProduct")}
+          by_exp_meta={}
+          for x in products:
+              exp=x.get("idExpansion");meta=x.get("idMetacard")
+              if exp is not None and meta is not None:
+                  by_exp_meta.setdefault((exp,meta),[]).append(x)
+
+          out=[]
+          for card,base,staff in targets:
+              base_pid=int((base.get("thirdParty") or {}).get("cardmarket") or 0)
+              staff_pid=int((staff.get("thirdParty") or {}).get("cardmarket") or 0)
+              cat=by_pid.get(base_pid) or {}
+              candidates=sorted(by_exp_meta.get((cat.get("idExpansion"),cat.get("idMetacard")),[]),key=lambda x:int(x["idProduct"]))
+              out.append({
+                  "tcgdexId":card["id"],
+                  "localId":card.get("localId"),
+                  "name":(card.get("name") or {}).get("en") if isinstance(card.get("name"),dict) else card.get("name"),
+                  "baseProductId":base_pid,
+                  "staffProductId":staff_pid,
+                  "sourceSharesProduct":base_pid==staff_pid,
+                  "catalogExpansion":cat.get("idExpansion"),
+                  "catalogMetacard":cat.get("idMetacard"),
+                  "catalogCandidates":[
+                      {"idProduct":x.get("idProduct"),"name":x.get("name"),"dateAdded":x.get("dateAdded")}
+                      for x in candidates
+                  ],
+              })
+
+          summary={
+              "tcgdexSha":sha,
+              "cards":len(out),
+              "sourceSharedProductCount":sum(x["sourceSharesProduct"] for x in out),
+              "sourceDistinctProductCount":sum(not x["sourceSharesProduct"] for x in out),
+              "candidateCountHistogram":dict(Counter(len(x["catalogCandidates"]) for x in out)),
+              "rows":out,
+          }
+          Path("temp_swshp_set_logo_staff_audit.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              "cards":summary["cards"],
+              "sourceSharedProductCount":summary["sourceSharedProductCount"],
+              "sourceDistinctProductCount":summary["sourceDistinctProductCount"],
+              "candidateCountHistogram":summary["candidateCountHistogram"],
+              "sample":out[:12],
+          },ensure_ascii=False))
+          PY
+
+      - name: Live verify all 44 Set Logo rows
+        run: |
+          python3 - <<'PY'
+          import concurrent.futures,json,time,urllib.request
+          from pathlib import Path
+
+          audit=json.loads(Path("temp_swshp_set_logo_staff_audit.json").read_text())
+
+          def fetch(item):
+              cid=item["tcgdexId"]
+              data=None
+              err=None
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(
+                          f"https://api.tcgdex.net/v2/en/cards/{cid}",
+                          headers={"User-Agent":"Cardoryx-SWSH-SetLogoStaff-Live/1.0"},
+                      )
+                      with urllib.request.urlopen(req,timeout=60) as r:
+                          data=json.load(r)
+                      break
+                  except Exception as exc:
+                      err=repr(exc);time.sleep(1+attempt)
+              if not data:
+                  return {"id":cid,"ok":False,"reason":"api_unavailable","error":err}
+
+              set_rows=[]
+              staff_rows=[]
+              for row in data.get("variants_detailed") or []:
+                  stamps=[str(x).lower().replace("-","").replace("_","") for x in (row.get("stamp") or [])]
+                  if "setlogo" not in stamps:
+                      continue
+                  if "staff" in stamps:
+                      staff_rows.append(row)
+                  else:
+                      set_rows.append(row)
+
+              if len(set_rows)!=1 or len(staff_rows)!=1:
+                  return {"id":cid,"ok":False,"reason":"row_count","set":len(set_rows),"staff":len(staff_rows)}
+
+              row=set_rows[0]
+              staff=staff_rows[0]
+              expected=int(item["baseProductId"])
+              pid=int((row.get("thirdParty") or {}).get("cardmarket") or 0)
+              cm=(row.get("pricing") or {}).get("cardmarket") or {}
+              ppid=int(cm.get("idProduct") or cm.get("id_product") or 0)
+              staff_pid=int((staff.get("thirdParty") or {}).get("cardmarket") or 0)
+              staff_cm=(staff.get("pricing") or {}).get("cardmarket") or {}
+              staff_ppid=int(staff_cm.get("idProduct") or staff_cm.get("id_product") or 0)
+              usable=any(isinstance(cm.get(k),(int,float)) and cm.get(k)>0 for k in ("trend","avg7","avg30","avg","low"))
+              top=(data.get("pricing") or {}).get("cardmarket") or {}
+              top_pid=int(top.get("idProduct") or top.get("id_product") or 0)
+              ok=(
+                  str(row.get("type") or "").lower()=="holo" and
+                  str(row.get("size") or "standard").lower()!="jumbo" and
+                  pid==expected and ppid==expected and usable and
+                  staff_pid==0 and staff_ppid==0
+              )
+              return {
+                  "id":cid,"ok":ok,"expectedProductId":expected,
+                  "rowProductId":pid,"pricingProductId":ppid,
+                  "topLevelProductId":top_pid,"topLevelMatches":top_pid==expected,
+                  "usablePrice":usable,
+                  "staffProductId":staff_pid,"staffPricingProductId":staff_ppid,
+              }
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=12) as ex:
+              results=list(ex.map(fetch,audit["rows"]))
+
+          failures=[x for x in results if not x.get("ok")]
+          out={
+              "checked":len(results),
+              "usableSetLogoPrices":sum(1 for x in results if x.get("usablePrice")),
+              "topLevelMatches":sum(1 for x in results if x.get("topLevelMatches")),
+              "staffWithoutProduct":sum(1 for x in results if x.get("staffProductId")==0 and x.get("staffPricingProductId")==0),
+              "failures":failures,
+              "rows":results,
+          }
+          Path("temp_swshp_set_logo_staff_live.json").write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({
+              "checked":out["checked"],
+              "usableSetLogoPrices":out["usableSetLogoPrices"],
+              "topLevelMatches":out["topLevelMatches"],
+              "staffWithoutProduct":out["staffWithoutProduct"],
+              "failures":failures,
+          },ensure_ascii=False))
+          assert len(results)==44 and not failures,out
+          assert out["usableSetLogoPrices"]==44,out
+          assert out["staffWithoutProduct"]==44,out
+          PY
+
+      - name: Record audit
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp_swshp_set_logo_staff_audit.json
+          git commit -m "TEMP record SWSH set-logo Staff audit"
+          git push
