@@ -124,6 +124,7 @@ def main():
     cards = []
     request_metadata = []
     offset = 0
+    expected_total = None
 
     # 3) Read-only paginated set scan.
     for page in range(MAX_CARD_PAGES):
