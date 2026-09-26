@@ -29,7 +29,7 @@ GAME = "pokemon"
 SET_QUERY = "Ascended Heroes"
 EXPECTED_SET_NAME_TOKENS = {"ascended", "heroes"}
 LIMIT = 20
-MAX_CARD_PAGES = 20  # 400 cards max; safely covers the current set.
+MAX_CARD_PAGES = 50  # 1,000 cards max; stays within the free daily quota for this isolated audit.
 REQUEST_SLEEP_SECONDS = 6.2  # free tier: <=10 requests/minute.
 
 
@@ -142,11 +142,35 @@ def main():
         data = body.get("data") or []
         meta = body.get("meta") or {}
         metadata = body.get("_metadata") or {}
+        total = meta.get("total")
+        if not isinstance(total, int) or total < 1:
+            fail("Pagination metadata has no valid total", details={"meta": meta})
+        if expected_total is None:
+            expected_total = total
+            if expected_total > MAX_CARD_PAGES * LIMIT:
+                fail(
+                    "Set exceeds audit safety budget",
+                    details={"total": expected_total, "maxCards": MAX_CARD_PAGES * LIMIT, "set": set_id},
+                )
+        elif total != expected_total:
+            fail("Pagination total changed during audit", details={"expected": expected_total, "actual": total})
+
+        wrong_set = [
+            {"id": c.get("id"), "set": c.get("set"), "set_name": c.get("set_name")}
+            for c in data
+            if str(c.get("set") or "") != str(set_id)
+        ]
+        if wrong_set:
+            fail("Set filter returned cards from another set", details={"expectedSet": set_id, "cards": wrong_set[:10]})
+
         request_metadata.append(
             {
                 "page": page + 1,
                 "count": len(data),
-                "remaining": metadata.get("apiRequestsRemaining"),
+                "total": total,
+                "offset": meta.get("offset"),
+                "remainingMonthly": metadata.get("apiRequestsRemaining"),
+                "remainingDaily": metadata.get("apiDailyRequestsRemaining"),
                 "plan": metadata.get("apiPlan"),
             }
         )
@@ -163,6 +187,8 @@ def main():
 
     if not cards:
         fail("Resolved set returned zero cards", details=target_set)
+    if expected_total is None or len(cards) != expected_total:
+        fail("Pagination did not return the advertised total", details={"expected": expected_total, "actual": len(cards)})
 
     unique_ids = [str(c.get("id") or "") for c in cards]
     if any(not x for x in unique_ids) or len(unique_ids) != len(set(unique_ids)):
@@ -266,6 +292,7 @@ def main():
         },
         "requests": {
             "count": 2 + len(request_metadata),  # games + sets + card pages
+            "advertisedTotalCards": expected_total,
             "cardPages": request_metadata,
         },
         "coverage": {
