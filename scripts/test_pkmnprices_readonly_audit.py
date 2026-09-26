@@ -245,6 +245,7 @@ def main():
                 "tcgdex_cardmarket":(row.get("thirdParty") or {}).get("cardmarket"),
             },
             "nearMintExactFinishMatches":matches,
+            "candidateDetails":probe_details if expected=="Cosmos Holo" else None,
             "status":"EXACT_ONE" if len(matches)==1 else ("MISSING" if not matches else "AMBIGUOUS"),
         }
 
