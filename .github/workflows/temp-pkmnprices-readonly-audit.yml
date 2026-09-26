@@ -1,0 +1,57 @@
+name: TEMP PkmnPrices Read-Only Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/pkmnprices-readonly-20260926
+    paths:
+      - scripts/test_pkmnprices_readonly_audit.py
+      - .github/workflows/temp-pkmnprices-readonly-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify protected valuation files before
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.before
+          sha256sum data/retail_prices.json > /tmp/retail.before
+
+      - name: Require PkmnPrices API key
+        env:
+          PKMNPRICES_API_KEY: ${{ secrets.PKMNPRICES_API_KEY }}
+        run: |
+          test -n "$PKMNPRICES_API_KEY"
+
+      - name: Run PkmnPrices read-only audit
+        env:
+          PKMNPRICES_API_KEY: ${{ secrets.PKMNPRICES_API_KEY }}
+        run: |
+          set -o pipefail
+          python scripts/test_pkmnprices_readonly_audit.py | tee /tmp/pkmnprices_audit.json
+
+      - name: Verify protected valuation files unchanged
+        if: always()
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.after
+          sha256sum data/retail_prices.json > /tmp/retail.after
+          cmp /tmp/cardmarket.before /tmp/cardmarket.after
+          cmp /tmp/retail.before /tmp/retail.after
+
+      - name: Upload audit report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkmnprices-readonly-audit
+          path: /tmp/pkmnprices_audit.json
+          retention-days: 7
