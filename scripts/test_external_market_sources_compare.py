@@ -35,27 +35,31 @@ def fail(msg, details=None):
     print(json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True))
     raise SystemExit(1)
 
-def req_json(url,headers):
+def req_json(url,headers,allow_429=False):
     req=urllib.request.Request(url,headers=headers,method="GET")
     try:
         with urllib.request.urlopen(req,timeout=30) as r:
-            return json.loads(r.read().decode("utf-8")), dict(r.headers)
+            return json.loads(r.read().decode("utf-8")), dict(r.headers), r.status
     except urllib.error.HTTPError as exc:
         raw=exc.read().decode("utf-8",errors="replace")
         try: body=json.loads(raw)
         except Exception: body={"raw":raw[:1000]}
+        if allow_429 and exc.code==429:
+            return body, dict(exc.headers), exc.code
         fail("HTTP error",{"url":url.split("?")[0],"status":exc.code,"response":body})
 
-def get(base,path,params,headers):
-    return req_json(base+path+"?"+urllib.parse.urlencode(params,doseq=True),headers)
+def get(base,path,params,headers,allow_429=False):
+    return req_json(base+path+"?"+urllib.parse.urlencode(params,doseq=True),headers,allow_429=allow_429)
 
 def norm_tcg(v):
     return str(v or "").strip()
 
 def just_fetch(key, probe):
-    body,hdr=get(JUST,"/cards",{
+    body,hdr,status=get(JUST,"/cards",{
         "game":"pokemon","set":JUST_SET,"number":probe["number"],"limit":20,"include_null_prices":"true"
-    },{"x-api-key":key,"accept":"application/json","user-agent":"Cardoryx-Source-Compare/1.0"})
+    },{"x-api-key":key,"accept":"application/json","user-agent":"Cardoryx-Source-Compare/1.0"},allow_429=True)
+    if status==429:
+        return {"status":"QUOTA_BLOCKED","response":body}
     rows=body.get("data") or []
     hits=[r for r in rows if norm_tcg(r.get("tcgplayerId"))==probe["tcg"]]
     if len(hits)>1:
@@ -72,7 +76,7 @@ def just_fetch(key, probe):
     }
 
 def pkmn_fetch(key, probe):
-    body,_=get(PKMN,"/cards",{
+    body,_,_=get(PKMN,"/cards",{
         "set_id":str(PKMN_SET_ID),"number":probe["number"],"total_set_number":"217","language":"English","per_page":100
     },{"X-API-Key":key,"Accept":"application/json","User-Agent":"Cardoryx-Source-Compare/1.0"})
     rows=body.get("data") or []
@@ -85,7 +89,7 @@ def pkmn_fetch(key, probe):
     cid=r.get("id")
     if cid is None:
         return {"status":"MISSING_DETAIL_ID","count":1}
-    detail,_=get(PKMN,f"/cards/{cid}",{"currency":"usd"},{"X-API-Key":key,"Accept":"application/json","User-Agent":"Cardoryx-Source-Compare/1.0"})
+    detail,_,_=get(PKMN,f"/cards/{cid}",{"currency":"usd"},{"X-API-Key":key,"Accept":"application/json","User-Agent":"Cardoryx-Source-Compare/1.0"})
     prices=detail.get("prices") or []
     nm=[p for p in prices if str(p.get("condition") or "").lower()=="near mint" and isinstance(p.get("market_price"),(int,float))]
     return {
@@ -95,7 +99,7 @@ def pkmn_fetch(key, probe):
     }
 
 def ppt_fetch(key, probe):
-    body,hdr=get(PPT,"/cards",{
+    body,hdr,_=get(PPT,"/cards",{
         "tcgPlayerId":probe["tcg"],"language":"english","limit":1
     },{"Authorization":f"Bearer {key}","Accept":"application/json","User-Agent":"Cardoryx-Source-Compare/1.0"})
     data=body.get("data")
@@ -140,9 +144,18 @@ def main():
     if missing: fail("Missing source secrets",missing)
 
     rows=[]
+    just_blocked=False
+    just_block_detail=None
     for i,p in enumerate(PROBES):
-        j=just_fetch(jk,p)
-        time.sleep(6.2)
+        if just_blocked:
+            j={"status":"QUOTA_BLOCKED","response":just_block_detail}
+        else:
+            j=just_fetch(jk,p)
+            if j.get("status")=="QUOTA_BLOCKED":
+                just_blocked=True
+                just_block_detail=j.get("response")
+            else:
+                time.sleep(6.2)
         pkrow=pkmn_fetch(pk,p)
         ptrow=ppt_fetch(pt,p)
         rows.append({"finish":p["finish"],"number":p["number"],"tcgPlayerId":p["tcg"],"justtcg":j,"pkmnprices":pkrow,"pokemonPriceTracker":ptrow})
@@ -155,6 +168,11 @@ def main():
             "justtcg":summarize(rows,"justtcg"),
             "pkmnprices":summarize(rows,"pkmnprices"),
             "pokemonPriceTracker":summarize(rows,"pokemonPriceTracker"),
+        },
+        "sourceAvailability":{
+            "justtcg":"QUOTA_BLOCKED" if just_blocked else "AVAILABLE",
+            "pkmnprices":"AVAILABLE",
+            "pokemonPriceTracker":"AVAILABLE",
         },
         "rows":rows,
         "notes":{
