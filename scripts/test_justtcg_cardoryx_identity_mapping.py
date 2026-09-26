@@ -309,7 +309,8 @@ def main():
     unknown_tcgdex = Counter()
     expected_rows = 0
     for cid, card in detailed.items():
-        number = canonical_number(card.get("localId"))
+        local_id = str(card.get("localId") or "").strip()
+        number = canonical_number(f"{local_id}/217")
         for row in card.get("variants_detailed") or []:
             finish = tcgdex_finish(row)
             if finish.startswith("UNKNOWN_"):
