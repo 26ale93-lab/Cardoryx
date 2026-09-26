@@ -71,8 +71,10 @@ def main():
 
     sets=get("/sets",key,{"name":SET_NAME,"language":"English","per_page":20})
     rows=sets.get("data") or []
-    exact=[x for x in rows if str(x.get("name") or "").strip().lower()==SET_NAME.lower()
-           and str(x.get("language") or "").strip().lower()=="english"]
+    allowed_names={SET_NAME.lower(), ("ME: " + SET_NAME).lower()}
+    exact=[x for x in rows
+           if str(x.get("language") or "").strip().lower()=="english"
+           and str(x.get("name") or "").strip().lower() in allowed_names]
     if len(exact)!=1:
         fail("Ascended Heroes English set did not resolve uniquely",{"matches":exact,"returned":rows})
     target=exact[0]
