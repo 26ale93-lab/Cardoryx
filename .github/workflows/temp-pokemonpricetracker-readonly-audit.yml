@@ -1,0 +1,57 @@
+name: TEMP PokemonPriceTracker Read-Only Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/pokemonpricetracker-readonly-20260926
+    paths:
+      - scripts/test_pokemonpricetracker_readonly_audit.py
+      - .github/workflows/temp-pokemonpricetracker-readonly-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify protected valuation files before
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.before
+          sha256sum data/retail_prices.json > /tmp/retail.before
+
+      - name: Require PokemonPriceTracker API key
+        env:
+          POKEMONPRICETRACKER_API_KEY: ${{ secrets.POKEMONPRICETRACKER_API_KEY }}
+        run: |
+          test -n "$POKEMONPRICETRACKER_API_KEY"
+
+      - name: Run PokemonPriceTracker read-only audit
+        env:
+          POKEMONPRICETRACKER_API_KEY: ${{ secrets.POKEMONPRICETRACKER_API_KEY }}
+        run: |
+          set -o pipefail
+          python scripts/test_pokemonpricetracker_readonly_audit.py | tee /tmp/pokemonpricetracker_audit.json
+
+      - name: Verify protected valuation files unchanged
+        if: always()
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cardmarket.after
+          sha256sum data/retail_prices.json > /tmp/retail.after
+          cmp /tmp/cardmarket.before /tmp/cardmarket.after
+          cmp /tmp/retail.before /tmp/retail.after
+
+      - name: Upload audit report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokemonpricetracker-readonly-audit
+          path: /tmp/pokemonpricetracker_audit.json
+          retention-days: 7
