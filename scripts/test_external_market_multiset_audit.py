@@ -53,6 +53,8 @@ LEGACY_VERIFIED={
 }
 WANTED_FINISHES=["Normal","Holo","Reverse Holo"]
 JUST_SLEEP=6.2
+PKMN_SLEEP=3.2
+PKMN_RETRY_WAIT=65
 
 def fail(message, details=None):
     out={"result":"FAIL_CLOSED","message":message}
@@ -82,6 +84,23 @@ def get(base,path,params=None,headers=None,allow_429=False):
     qs=urllib.parse.urlencode(params or {},doseq=True)
     url=base+path+(("?"+qs) if qs else "")
     return request_json(url,headers=headers,allow_429=allow_429)
+
+def pkmn_get(key,path,params=None):
+    headers={
+        "X-API-Key":key,
+        "Accept":"application/json",
+        "User-Agent":"Cardoryx-External-Market-Multiset-Audit/1.0",
+    }
+    body,_,status=get(PKMN,path,params,headers,allow_429=True)
+    if status==429:
+        code=((body.get("error") or {}).get("code") if isinstance(body,dict) else None)
+        if code=="rate_limit_exceeded":
+            time.sleep(PKMN_RETRY_WAIT)
+            body,_,status=get(PKMN,path,params,headers,allow_429=True)
+        if status==429:
+            fail("PkmnPrices rate limit remained blocked after one controlled retry",body)
+    time.sleep(PKMN_SLEEP)
+    return body
 
 def norm(value):
     return re.sub(r"[^a-z0-9]+","",str(value or "").lower())
@@ -247,9 +266,7 @@ def resolve_just_set(key,set_name):
     return {"status":"EXACT_ONE","id":hit.get("id"),"name":hit.get("name")}
 
 def resolve_pkmn_set(key,set_name):
-    body,_,_=get(PKMN,"/sets",{"name":set_name,"language":"English","per_page":50},{
-        "X-API-Key":key,"Accept":"application/json","User-Agent":"Cardoryx-External-Market-Multiset-Audit/1.0"
-    })
+    body=pkmn_get(key,"/sets",{"name":set_name,"language":"English","per_page":50})
     rows=body.get("data") or []
     hit=unique_set_candidate(rows,set_name)
     if not hit:
@@ -297,11 +314,9 @@ def just_probe(key,set_resolved,probe):
 def pkmn_probe(key,set_resolved,probe):
     if set_resolved.get("status")!="EXACT_ONE":
         return {"status":"SET_UNRESOLVED"}
-    body,_,_=get(PKMN,"/cards",{
+    body=pkmn_get(key,"/cards",{
         "set_id":str(set_resolved["id"]),"number":probe["number"],
         "language":"English","per_page":100
-    },{
-        "X-API-Key":key,"Accept":"application/json","User-Agent":"Cardoryx-External-Market-Multiset-Audit/1.0"
     })
     rows=body.get("data") or []
     hits=[r for r in rows if str(r.get("tcg_player_id") or "")==probe["tcgPlayerId"]]
@@ -310,7 +325,7 @@ def pkmn_probe(key,set_resolved,probe):
     cid=hits[0].get("id")
     if cid is None:
         return {"status":"IDENTITY_ONLY","reason":"missing detail id"}
-    detail,_,_=get(PKMN,f"/cards/{cid}",{"currency":"usd"},{"X-API-Key":key,"Accept":"application/json","User-Agent":"Cardoryx-External-Market-Multiset-Audit/1.0"})
+    detail=pkmn_get(key,f"/cards/{cid}",{"currency":"usd"})
     prices=[]
     for p in (detail.get("prices") or []):
         if str(p.get("variant") or "")!=probe["expectedPrinting"]:
