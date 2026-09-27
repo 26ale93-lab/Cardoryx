@@ -421,6 +421,7 @@ def main():
     just_sets={}
     pkmn_sets={}
     just_quota_blocked=False
+    pkmn_skip=os.environ.get("PKMNPRICES_SKIP_ON_QUOTA","").strip()=="1"
     for sid,name in unique_sets:
         provider_name=SOURCE_SET_ALIASES.get(sid,name)
         if just_quota_blocked:
@@ -432,8 +433,11 @@ def main():
                 just_quota_blocked=True
             else:
                 time.sleep(JUST_SLEEP)
-        pkmn_sets[name]=resolve_pkmn_set(pk,provider_name)
-        pkmn_sets[name]["providerQuery"]=provider_name
+        if pkmn_skip:
+            pkmn_sets[name]={"status":"QUOTA_BLOCKED","providerQuery":provider_name}
+        else:
+            pkmn_sets[name]=resolve_pkmn_set(pk,provider_name)
+            pkmn_sets[name]["providerQuery"]=provider_name
 
     rows=[]
     ppt_quota_blocked=False
@@ -447,7 +451,8 @@ def main():
                 time.sleep(JUST_SLEEP)
             else:
                 just_quota_blocked=True
-        pr=pkmn_probe(pk,pkmn_sets.get(probe["tcgdexSetName"],{"status":"UNRESOLVED"}),probe)
+        pset=pkmn_sets.get(probe["tcgdexSetName"],{"status":"UNRESOLVED"})
+        pr={"status":"QUOTA_BLOCKED"} if pset.get("status")=="QUOTA_BLOCKED" else pkmn_probe(pk,pset,probe)
         if ppt_quota_blocked:
             pp={"status":"QUOTA_BLOCKED"}
         else:
