@@ -346,11 +346,13 @@ def pkmn_probe(key,set_resolved,probe):
     }
 
 def ppt_probe(key,probe):
-    body,_,_=get(PPT,"/cards",{
+    body,_,status=get(PPT,"/cards",{
         "tcgPlayerId":probe["tcgPlayerId"],"language":"english","limit":1
     },{
         "Authorization":f"Bearer {key}","Accept":"application/json","User-Agent":"Cardoryx-External-Market-Multiset-Audit/1.0"
-    })
+    },allow_429=True)
+    if status==429:
+        return {"status":"QUOTA_BLOCKED","response":body}
     data=body.get("data")
     if isinstance(data,list):
         if len(data)!=1:
@@ -434,6 +436,7 @@ def main():
         pkmn_sets[name]["providerQuery"]=provider_name
 
     rows=[]
+    ppt_quota_blocked=False
     for probe in probes:
         jset=just_sets.get(probe["tcgdexSetName"],{"status":"UNRESOLVED"})
         if just_quota_blocked and jset.get("status")=="QUOTA_BLOCKED":
@@ -445,7 +448,12 @@ def main():
             else:
                 just_quota_blocked=True
         pr=pkmn_probe(pk,pkmn_sets.get(probe["tcgdexSetName"],{"status":"UNRESOLVED"}),probe)
-        pp=ppt_probe(pt,probe)
+        if ppt_quota_blocked:
+            pp={"status":"QUOTA_BLOCKED"}
+        else:
+            pp=ppt_probe(pt,probe)
+            if pp.get("status")=="QUOTA_BLOCKED":
+                ppt_quota_blocked=True
         rows.append({
             "set":probe["tcgdexSetName"],
             "tcgdexSetId":probe["tcgdexSetId"],
