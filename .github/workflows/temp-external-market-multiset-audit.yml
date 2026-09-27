@@ -32,6 +32,7 @@ jobs:
           JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
           PKMNPRICES_API_KEY: ${{ secrets.PKMNPRICES_API_KEY }}
           POKEMONPRICETRACKER_API_KEY: ${{ secrets.POKEMONPRICETRACKER_API_KEY }}
+          PKMNPRICES_SKIP_ON_QUOTA: "1"
         run: |
           test -n "$JUSTTCG_API_KEY"
           test -n "$PKMNPRICES_API_KEY"
