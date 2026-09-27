@@ -52,7 +52,8 @@ LEGACY_VERIFIED={
     },
 }
 WANTED_FINISHES=["Normal","Holo","Reverse Holo"]
-JUST_SLEEP=6.2
+JUST_SLEEP=7.2
+JUST_RETRY_WAIT=65
 PKMN_SLEEP=3.2
 PKMN_RETRY_WAIT=65
 
@@ -84,6 +85,18 @@ def get(base,path,params=None,headers=None,allow_429=False):
     qs=urllib.parse.urlencode(params or {},doseq=True)
     url=base+path+(("?"+qs) if qs else "")
     return request_json(url,headers=headers,allow_429=allow_429)
+
+def just_get(key,path,params=None):
+    headers={
+        "x-api-key":key,
+        "accept":"application/json",
+        "user-agent":"Cardoryx-External-Market-Multiset-Audit/1.0",
+    }
+    body,hdr,status=get(JUST,path,params,headers,allow_429=True)
+    if status==429 and isinstance(body,dict) and body.get("code")=="RATE_LIMIT_EXCEEDED":
+        time.sleep(JUST_RETRY_WAIT)
+        body,hdr,status=get(JUST,path,params,headers,allow_429=True)
+    return body,hdr,status
 
 def pkmn_get(key,path,params=None):
     headers={
