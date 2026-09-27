@@ -32,6 +32,13 @@ TARGET_SET_IDS=["me02.5","sv08","swsh11","sm12","xy1"]
 # Older TCGdex records do not always expose variants_detailed. These fallback
 # representatives come from Cardoryx's already-verified production checklists.
 # They are deliberately narrow: exact card + exact documented finish only.
+SOURCE_SET_ALIASES={
+    # Confirmed exact provider naming differences from the first multi-set run.
+    # Keep these exceptions scoped to the demonstrated set IDs.
+    "sm12":"SM - Cosmic Eclipse",
+    "xy1":"XY Base Set",
+}
+
 LEGACY_VERIFIED={
     "sm12":{
         "Normal":("sm12-113","Normal"),
@@ -385,24 +392,31 @@ def main():
 
     tcg_sets,probes=resolve_tcgdex_probes()
 
-    unique_names=[]
+    unique_sets=[]
+    seen=set()
     for p in probes:
-        if p["tcgdexSetName"] not in unique_names:
-            unique_names.append(p["tcgdexSetName"])
+        sid=p["tcgdexSetId"]
+        if sid in seen:
+            continue
+        seen.add(sid)
+        unique_sets.append((sid,p["tcgdexSetName"]))
 
     just_sets={}
     pkmn_sets={}
     just_quota_blocked=False
-    for name in unique_names:
+    for sid,name in unique_sets:
+        provider_name=SOURCE_SET_ALIASES.get(sid,name)
         if just_quota_blocked:
-            just_sets[name]={"status":"QUOTA_BLOCKED"}
+            just_sets[name]={"status":"QUOTA_BLOCKED","providerQuery":provider_name}
         else:
-            just_sets[name]=resolve_just_set(jk,name)
+            just_sets[name]=resolve_just_set(jk,provider_name)
+            just_sets[name]["providerQuery"]=provider_name
             if just_sets[name].get("status")=="QUOTA_BLOCKED":
                 just_quota_blocked=True
             else:
                 time.sleep(JUST_SLEEP)
-        pkmn_sets[name]=resolve_pkmn_set(pk,name)
+        pkmn_sets[name]=resolve_pkmn_set(pk,provider_name)
+        pkmn_sets[name]["providerQuery"]=provider_name
 
     rows=[]
     for probe in probes:
