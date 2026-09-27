@@ -254,9 +254,12 @@ def unique_set_candidate(rows,target_name):
     return vals[0] if len(vals)==1 else None
 
 def resolve_just_set(key,set_name):
-    body,_,status=get(JUST,"/sets",{"game":"pokemon","q":set_name},{
-        "x-api-key":key,"accept":"application/json","user-agent":"Cardoryx-External-Market-Multiset-Audit/1.0"
-    },allow_429=True)
+    params={"game":"pokemon","q":set_name}
+    headers={"x-api-key":key,"accept":"application/json","user-agent":"Cardoryx-External-Market-Multiset-Audit/1.0"}
+    body,_,status=get(JUST,"/sets",params,headers,allow_429=True)
+    if status==429 and isinstance(body,dict) and body.get("code")=="RATE_LIMIT_EXCEEDED":
+        time.sleep(65)
+        body,_,status=get(JUST,"/sets",params,headers,allow_429=True)
     if status==429:
         return {"status":"QUOTA_BLOCKED","response":body}
     rows=body.get("data") or []
@@ -288,12 +291,15 @@ def has_expected_printing_just(card, expected):
 def just_probe(key,set_resolved,probe):
     if set_resolved.get("status")!="EXACT_ONE":
         return {"status":"SET_UNRESOLVED"}
-    body,_,status=get(JUST,"/cards",{
+    params={
         "game":"pokemon","set":set_resolved["id"],"number":probe["number"],
         "limit":20,"include_null_prices":"true"
-    },{
-        "x-api-key":key,"accept":"application/json","user-agent":"Cardoryx-External-Market-Multiset-Audit/1.0"
-    },allow_429=True)
+    }
+    headers={"x-api-key":key,"accept":"application/json","user-agent":"Cardoryx-External-Market-Multiset-Audit/1.0"}
+    body,_,status=get(JUST,"/cards",params,headers,allow_429=True)
+    if status==429 and isinstance(body,dict) and body.get("code")=="RATE_LIMIT_EXCEEDED":
+        time.sleep(65)
+        body,_,status=get(JUST,"/cards",params,headers,allow_429=True)
     if status==429:
         return {"status":"QUOTA_BLOCKED","response":body}
     rows=body.get("data") or []
@@ -441,6 +447,7 @@ def main():
 
     rows=[]
     ppt_quota_blocked=False
+    ppt_skip=os.environ.get("POKEMONPRICETRACKER_SKIP_ON_QUOTA","").strip()=="1"
     for probe in probes:
         jset=just_sets.get(probe["tcgdexSetName"],{"status":"UNRESOLVED"})
         if just_quota_blocked and jset.get("status")=="QUOTA_BLOCKED":
@@ -453,7 +460,7 @@ def main():
                 just_quota_blocked=True
         pset=pkmn_sets.get(probe["tcgdexSetName"],{"status":"UNRESOLVED"})
         pr={"status":"QUOTA_BLOCKED"} if pset.get("status")=="QUOTA_BLOCKED" else pkmn_probe(pk,pset,probe)
-        if ppt_quota_blocked:
+        if ppt_skip or ppt_quota_blocked:
             pp={"status":"QUOTA_BLOCKED"}
         else:
             pp=ppt_probe(pt,probe)
