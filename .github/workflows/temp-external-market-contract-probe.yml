@@ -1,0 +1,41 @@
+name: TEMP External Market Contract Probe
+
+on:
+  push:
+    branches:
+      - audit/external-market-multiset-20260927
+    paths:
+      - scripts/test_external_market_multiset_audit.py
+      - .github/workflows/temp-external-market-contract-probe.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify protected files before
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cm.before
+          sha256sum data/retail_prices.json > /tmp/rt.before
+      - name: Run contract probe
+        env:
+          JUSTTCG_API_KEY: ${{ secrets.JUSTTCG_API_KEY }}
+          PKMNPRICES_API_KEY: ${{ secrets.PKMNPRICES_API_KEY }}
+          POKEMONPRICETRACKER_API_KEY: ${{ secrets.POKEMONPRICETRACKER_API_KEY }}
+        run: |
+          set -o pipefail
+          python scripts/test_external_market_multiset_audit.py | tee /tmp/report.json
+      - name: Verify protected files unchanged
+        if: always()
+        run: |
+          sha256sum data/cardmarket_play_index.json > /tmp/cm.after
+          sha256sum data/retail_prices.json > /tmp/rt.after
+          cmp /tmp/cm.before /tmp/cm.after
+          cmp /tmp/rt.before /tmp/rt.after
