@@ -27,7 +27,23 @@ PKMN="https://api.pkmnprices.com/v1"
 PPT="https://www.pokemonpricetracker.com/api/v2"
 
 # Five eras/sets, including the current stress-case set.
-TARGET_SET_IDS=["me02.5","sv08","swsh11","sm12","xy12"]
+TARGET_SET_IDS=["me02.5","sv08","swsh11","sm12","xy1"]
+
+# Older TCGdex records do not always expose variants_detailed. These fallback
+# representatives come from Cardoryx's already-verified production checklists.
+# They are deliberately narrow: exact card + exact documented finish only.
+LEGACY_VERIFIED={
+    "sm12":{
+        "Normal":("sm12-113","Normal"),
+        "Holo":("sm12-142","Holo"),
+        "Reverse Holo":("sm12-128","Reverse Holo"),
+    },
+    "xy1":{
+        "Normal":("xy1-107","Normal"),
+        "Holo":("xy1-114","Holo"),
+        "Reverse Holo":("xy1-122","Reverse Holo"),
+    },
+}
 WANTED_FINISHES=["Normal","Holo","Reverse Holo"]
 JUST_SLEEP=6.2
 
@@ -123,6 +139,8 @@ def resolve_tcgdex_probes():
 
         chosen={}
         used_tcg=set()
+
+        # Preferred path: exact variant-level identity from TCGdex.
         for finish in WANTED_FINISHES:
             for card in details.values():
                 for vr in (card.get("variants_detailed") or []):
@@ -144,11 +162,37 @@ def resolve_tcgdex_probes():
                         "expectedPrinting":expected_printing(finish),
                         "tcgPlayerId":tcg,
                         "rarity":card.get("rarity"),
+                        "identityEvidence":"TCGDEX_VARIANT_DETAILED",
                     }
                     used_tcg.add(tcg)
                     break
                 if finish in chosen:
                     break
+
+        # Narrow fallback for older sets: use only representatives already
+        # verified by Cardoryx production audit/checklists. TCGPlayer identity
+        # comes from the exact TCGdex card, while physical finish comes from the
+        # verified Cardoryx registry.
+        for finish,(card_id,verified_finish) in LEGACY_VERIFIED.get(sid,{}).items():
+            if finish in chosen:
+                continue
+            card=details.get(card_id) or tcgdex_get(f"/cards/{card_id}")
+            tcg=str((card.get("thirdParty") or {}).get("tcgplayer") or "").strip()
+            local=str(card.get("localId") or "").strip()
+            if not tcg or not local or verified_finish!=finish:
+                continue
+            chosen[finish]={
+                "tcgdexSetId":sid,
+                "tcgdexSetName":set_name,
+                "tcgdexCardId":card.get("id"),
+                "name":card.get("name"),
+                "number":local,
+                "finish":finish,
+                "expectedPrinting":expected_printing(finish),
+                "tcgPlayerId":tcg,
+                "rarity":card.get("rarity"),
+                "identityEvidence":"CARDORYX_VERIFIED_CHECKLIST+TCGDEX_CARD_ID",
+            }
 
         missing=[x for x in WANTED_FINISHES if x not in chosen]
         set_reports.append({
