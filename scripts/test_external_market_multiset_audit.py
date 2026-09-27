@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only multi-set comparison of external Pokémon market sources.
+"""Read-only multi-set comparison of external Pokémon market sources.\n\n# RERUN_MARKER_20260927
 
 Goal:
 - compare JustTCG, PkmnPrices and PokemonPriceTracker on the same TCGdex-backed
