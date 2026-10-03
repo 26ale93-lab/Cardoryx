@@ -1,0 +1,790 @@
+{
+  "tcgdexSha": "46e7d514d534d38257914a5ffee54c17849f72c3",
+  "cards": 44,
+  "sourceSharedProductCount": 0,
+  "sourceDistinctProductCount": 44,
+  "candidateCountHistogram": {
+    "1": 38,
+    "2": 6
+  },
+  "rows": [
+    {
+      "tcgdexId": "swshp-SWSH006",
+      "localId": "SWSH006",
+      "name": "Rillaboom",
+      "baseProductId": 437154,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 289436,
+      "catalogCandidates": [
+        {
+          "idProduct": 437154,
+          "name": "Rillaboom [Voltage Beat | Hammer In]",
+          "dateAdded": "2020-01-24 14:38:17"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH007",
+      "localId": "SWSH007",
+      "name": "Frosmoth",
+      "baseProductId": 437159,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 294474,
+      "catalogCandidates": [
+        {
+          "idProduct": 437159,
+          "name": "Frosmoth [Ice Dance | Aurora Beam]",
+          "dateAdded": "2020-01-24 14:38:42"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH008",
+      "localId": "SWSH008",
+      "name": "Galarian Perrserker",
+      "baseProductId": 437164,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 294769,
+      "catalogCandidates": [
+        {
+          "idProduct": 437164,
+          "name": "Galarian Perrserker [Steely Spirit | Metal Claw]",
+          "dateAdded": "2020-01-24 14:39:04"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH009",
+      "localId": "SWSH009",
+      "name": "Cinccino",
+      "baseProductId": 437169,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 294849,
+      "catalogCandidates": [
+        {
+          "idProduct": 437169,
+          "name": "Cinccino [Make Do | Energy Assist]",
+          "dateAdded": "2020-01-24 14:39:22"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH022",
+      "localId": "SWSH022",
+      "name": "Flapple",
+      "baseProductId": 453448,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 301388,
+      "catalogCandidates": [
+        {
+          "idProduct": 453448,
+          "name": "Flapple [Apple Drop | Acid Spray]",
+          "dateAdded": "2020-04-07 15:32:41"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH023",
+      "localId": "SWSH023",
+      "name": "Luxray",
+      "baseProductId": 453453,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 301393,
+      "catalogCandidates": [
+        {
+          "idProduct": 453453,
+          "name": "Luxray [Raid | Head Bolt]",
+          "dateAdded": "2020-04-07 15:33:04"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH024",
+      "localId": "SWSH024",
+      "name": "Coalossal",
+      "baseProductId": 453458,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 303138,
+      "catalogCandidates": [
+        {
+          "idProduct": 453458,
+          "name": "Coalossal [Tar Generator | Flaming Avalanche]",
+          "dateAdded": "2020-04-07 15:34:12"
+        },
+        {
+          "idProduct": 505890,
+          "name": "Coalossal [Tar Generator | Flaming Avalanche]",
+          "dateAdded": "2020-10-06 15:50:27"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH025",
+      "localId": "SWSH025",
+      "name": "Garbodor",
+      "baseProductId": 453463,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 301403,
+      "catalogCandidates": [
+        {
+          "idProduct": 453463,
+          "name": "Garbodor [Poisonous Puddle | Sludge Bomb]",
+          "dateAdded": "2020-04-07 15:34:36"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH035",
+      "localId": "SWSH035",
+      "name": "Decidueye",
+      "baseProductId": 487069,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 310794,
+      "catalogCandidates": [
+        {
+          "idProduct": 487069,
+          "name": "Decidueye [Deep Forest Camo | Splitting Arrow]",
+          "dateAdded": "2020-08-05 14:18:32"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH036",
+      "localId": "SWSH036",
+      "name": "Arctozolt",
+      "baseProductId": 487074,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 310924,
+      "catalogCandidates": [
+        {
+          "idProduct": 487074,
+          "name": "Arctozolt [Biting Whirlpool | Electro Ball]",
+          "dateAdded": "2020-08-05 14:19:09"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH037",
+      "localId": "SWSH037",
+      "name": "Hydreigon",
+      "baseProductId": 487079,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 311549,
+      "catalogCandidates": [
+        {
+          "idProduct": 487079,
+          "name": "Hydreigon [Dark Squall | Pitch-Black Fangs]",
+          "dateAdded": "2020-08-05 14:20:14"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH038",
+      "localId": "SWSH038",
+      "name": "Kangaskhan",
+      "baseProductId": 487084,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 311109,
+      "catalogCandidates": [
+        {
+          "idProduct": 487084,
+          "name": "Kangaskhan [Rally Back | Hammer In]",
+          "dateAdded": "2020-08-05 14:21:23"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH066",
+      "localId": "SWSH066",
+      "name": "Charizard",
+      "baseProductId": 516329,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 317570,
+      "catalogCandidates": [
+        {
+          "idProduct": 516329,
+          "name": "Charizard [Battle Sense | Royal Blaze]",
+          "dateAdded": "2020-11-16 15:07:53"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH067",
+      "localId": "SWSH067",
+      "name": "Donphan",
+      "baseProductId": 516334,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 317790,
+      "catalogCandidates": [
+        {
+          "idProduct": 516334,
+          "name": "Donphan [Earthquake | Heavy Impact]",
+          "dateAdded": "2020-11-16 15:08:28"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH068",
+      "localId": "SWSH068",
+      "name": "Snorlax",
+      "baseProductId": 516339,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 342002,
+      "catalogCandidates": [
+        {
+          "idProduct": 516339,
+          "name": "Snorlax [Gormandize | Body Slam]",
+          "dateAdded": "2020-11-16 15:08:58"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH069",
+      "localId": "SWSH069",
+      "name": "Lugia",
+      "baseProductId": 516344,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 310679,
+      "catalogCandidates": [
+        {
+          "idProduct": 516344,
+          "name": "Lugia [Gust | Wind Pressure]",
+          "dateAdded": "2020-11-16 15:09:32"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH088",
+      "localId": "SWSH088",
+      "name": "Cherrim",
+      "baseProductId": 546936,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 236465,
+      "catalogCandidates": [
+        {
+          "idProduct": 546936,
+          "name": "Cherrim [Spring Bloom | Seed Bomb]",
+          "dateAdded": "2021-03-03 16:47:31"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH089",
+      "localId": "SWSH089",
+      "name": "Octillery",
+      "baseProductId": 546941,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 327345,
+      "catalogCandidates": [
+        {
+          "idProduct": 546941,
+          "name": "Octillery [Rapid Strike Search | Waterfall]",
+          "dateAdded": "2021-03-03 16:48:06"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH090",
+      "localId": "SWSH090",
+      "name": "Houndoom",
+      "baseProductId": 546961,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 327380,
+      "catalogCandidates": [
+        {
+          "idProduct": 546961,
+          "name": "Houndoom [Single Strike Roar | Darkness Fang]",
+          "dateAdded": "2021-03-03 16:50:54"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH091",
+      "localId": "SWSH091",
+      "name": "Bronzong",
+      "baseProductId": 546966,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 330807,
+      "catalogCandidates": [
+        {
+          "idProduct": 546966,
+          "name": "Bronzong [Metal Transfer | Zen Headbutt]",
+          "dateAdded": "2021-03-03 16:54:56"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH112",
+      "localId": "SWSH112",
+      "name": "Cinderace",
+      "baseProductId": 566760,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 339317,
+      "catalogCandidates": [
+        {
+          "idProduct": 566760,
+          "name": "Cinderace [Crisis Power | Fireball Shot]",
+          "dateAdded": "2021-05-31 16:51:15"
+        },
+        {
+          "idProduct": 682975,
+          "name": "Cinderace [Crisis Power | Fireball Shot]",
+          "dateAdded": "2022-11-03 23:52:17"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH113",
+      "localId": "SWSH113",
+      "name": "Inteleon",
+      "baseProductId": 566761,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 341484,
+      "catalogCandidates": [
+        {
+          "idProduct": 566761,
+          "name": "Inteleon [Quick Shooting | Waterfall]",
+          "dateAdded": "2021-05-31 16:51:47"
+        },
+        {
+          "idProduct": 682976,
+          "name": "Inteleon [Quick Shooting | Waterfall]",
+          "dateAdded": "2022-11-03 23:53:11"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH114",
+      "localId": "SWSH114",
+      "name": "Cresselia",
+      "baseProductId": 566762,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 339491,
+      "catalogCandidates": [
+        {
+          "idProduct": 566762,
+          "name": "Cresselia [Crescent Glow | Photon Laser]",
+          "dateAdded": "2021-05-31 16:52:03"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH115",
+      "localId": "SWSH115",
+      "name": "Passimian",
+      "baseProductId": 566763,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 336261,
+      "catalogCandidates": [
+        {
+          "idProduct": 566763,
+          "name": "Passimian [Throwing Coach | Fling]",
+          "dateAdded": "2021-05-31 16:52:31"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH122",
+      "localId": "SWSH122",
+      "name": "Flaaffy",
+      "baseProductId": 573857,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 343975,
+      "catalogCandidates": [
+        {
+          "idProduct": 573857,
+          "name": "Flaaffy [Dynamotor | Electro Ball]",
+          "dateAdded": "2021-08-10 11:16:46"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH123",
+      "localId": "SWSH123",
+      "name": "Galarian Articuno",
+      "baseProductId": 573858,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 343900,
+      "catalogCandidates": [
+        {
+          "idProduct": 573858,
+          "name": "Galarian Articuno [Cruel Charge | Psylaser]",
+          "dateAdded": "2021-08-10 11:23:11"
+        },
+        {
+          "idProduct": 692425,
+          "name": "Galarian Articuno [Cruel Charge | Psylaser]",
+          "dateAdded": "2023-01-18 11:06:42"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH124",
+      "localId": "SWSH124",
+      "name": "Galarian Zapdos",
+      "baseProductId": 573859,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 343907,
+      "catalogCandidates": [
+        {
+          "idProduct": 573859,
+          "name": "Galarian Zapdos [Strong Legs Charge | Zapper Kick]",
+          "dateAdded": "2021-08-10 11:23:54"
+        },
+        {
+          "idProduct": 692426,
+          "name": "Galarian Zapdos [Strong Legs Charge | Zapper Kick]",
+          "dateAdded": "2023-01-18 11:08:01"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH125",
+      "localId": "SWSH125",
+      "name": "Galarian Moltres",
+      "baseProductId": 573860,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 343914,
+      "catalogCandidates": [
+        {
+          "idProduct": 573860,
+          "name": "Galarian Moltres [Malevolent Charge | Fiery Wrath]",
+          "dateAdded": "2021-08-10 11:27:42"
+        },
+        {
+          "idProduct": 692427,
+          "name": "Galarian Moltres [Malevolent Charge | Fiery Wrath]",
+          "dateAdded": "2023-01-18 11:08:38"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH185",
+      "localId": "SWSH185",
+      "name": "Moltres",
+      "baseProductId": 606599,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 401430,
+      "catalogCandidates": [
+        {
+          "idProduct": 606599,
+          "name": "Moltres [Inferno Wings]",
+          "dateAdded": "2022-01-21 15:54:47"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH186",
+      "localId": "SWSH186",
+      "name": "Lucario",
+      "baseProductId": 606600,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 401464,
+      "catalogCandidates": [
+        {
+          "idProduct": 606600,
+          "name": "Lucario [Roaring Resolve | Aura Sphere Volley]",
+          "dateAdded": "2022-01-21 15:55:34"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH187",
+      "localId": "SWSH187",
+      "name": "Liepard",
+      "baseProductId": 606601,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 348171,
+      "catalogCandidates": [
+        {
+          "idProduct": 606601,
+          "name": "Liepard [Trade | Slash]",
+          "dateAdded": "2022-01-21 15:56:11"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH188",
+      "localId": "SWSH188",
+      "name": "Bibarel",
+      "baseProductId": 606602,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 401488,
+      "catalogCandidates": [
+        {
+          "idProduct": 606602,
+          "name": "Bibarel [Industrious Incisors | Tail Smash]",
+          "dateAdded": "2022-01-21 15:56:26"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH205",
+      "localId": "SWSH205",
+      "name": "Hisuian Basculegion",
+      "baseProductId": 611336,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 402470,
+      "catalogCandidates": [
+        {
+          "idProduct": 611336,
+          "name": "Hisuian Basculegion [Grudge Dive | Jet Headbutt]",
+          "dateAdded": "2022-03-09 12:10:38"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH206",
+      "localId": "SWSH206",
+      "name": "Wyrdeer",
+      "baseProductId": 611337,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 402507,
+      "catalogCandidates": [
+        {
+          "idProduct": 611337,
+          "name": "Wyrdeer [Hurried Gait | Extrasensory]",
+          "dateAdded": "2022-03-09 12:11:17"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH207",
+      "localId": "SWSH207",
+      "name": "Hisuian Samurott",
+      "baseProductId": 611338,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 403279,
+      "catalogCandidates": [
+        {
+          "idProduct": 611338,
+          "name": "Hisuian Samurott [Wily Stance | Dark Mastery]",
+          "dateAdded": "2022-03-09 12:12:24"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH208",
+      "localId": "SWSH208",
+      "name": "Magnezone",
+      "baseProductId": 611339,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 403280,
+      "catalogCandidates": [
+        {
+          "idProduct": 611339,
+          "name": "Magnezone [Giga Magnet | Power Beam]",
+          "dateAdded": "2022-03-09 12:14:20"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH240",
+      "localId": "SWSH240",
+      "name": "Finneon",
+      "baseProductId": 665983,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 409705,
+      "catalogCandidates": [
+        {
+          "idProduct": 665983,
+          "name": "Finneon [Oceanic Accompaniment | Water Gun]",
+          "dateAdded": "2022-06-27 11:43:20"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH241",
+      "localId": "SWSH241",
+      "name": "Gengar",
+      "baseProductId": 665984,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 407801,
+      "catalogCandidates": [
+        {
+          "idProduct": 665984,
+          "name": "Gengar [Netherworld Gate | Screaming Circle]",
+          "dateAdded": "2022-06-27 11:44:58"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH242",
+      "localId": "SWSH242",
+      "name": "Comfey",
+      "baseProductId": 665985,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 409706,
+      "catalogCandidates": [
+        {
+          "idProduct": 665985,
+          "name": "Comfey [Flower Selecting | Spinning Attack]",
+          "dateAdded": "2022-06-27 11:46:12"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH243",
+      "localId": "SWSH243",
+      "name": "Machamp",
+      "baseProductId": 665986,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 407814,
+      "catalogCandidates": [
+        {
+          "idProduct": 665986,
+          "name": "Machamp [Crisis Muscles | Strong-Arm Lariat]",
+          "dateAdded": "2022-06-27 11:54:12"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH269",
+      "localId": "SWSH269",
+      "name": "Sunflora",
+      "baseProductId": 681798,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 409874,
+      "catalogCandidates": [
+        {
+          "idProduct": 681798,
+          "name": "Sunflora [Bright Beam]",
+          "dateAdded": "2022-10-28 17:46:59"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH270",
+      "localId": "SWSH270",
+      "name": "Rapidash",
+      "baseProductId": 681799,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 413049,
+      "catalogCandidates": [
+        {
+          "idProduct": 681799,
+          "name": "Rapidash [Heat Boost | Fire Mane]",
+          "dateAdded": "2022-10-28 17:47:36"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH271",
+      "localId": "SWSH271",
+      "name": "Kirlia",
+      "baseProductId": 681800,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 411500,
+      "catalogCandidates": [
+        {
+          "idProduct": 681800,
+          "name": "Kirlia [Refinement | Slap]",
+          "dateAdded": "2022-10-28 17:48:10"
+        }
+      ]
+    },
+    {
+      "tcgdexId": "swshp-SWSH272",
+      "localId": "SWSH272",
+      "name": "Archeops",
+      "baseProductId": 681801,
+      "staffProductId": 0,
+      "sourceSharesProduct": false,
+      "catalogExpansion": 2916,
+      "catalogMetacard": 412438,
+      "catalogCandidates": [
+        {
+          "idProduct": 681801,
+          "name": "Archeops [Primal Turbo | Speed Wing]",
+          "dateAdded": "2022-10-28 17:48:42"
+        }
+      ]
+    }
+  ]
+}
