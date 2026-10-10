@@ -243,9 +243,21 @@ def main():
 
     if args.collection_export:
         exported = json.loads(args.collection_export.read_text(encoding="utf-8"))
-        if exported.get("schema") != "cardoryx-sanitized-price-audit-v1":
+        if exported.get("schema") == "cardoryx-sanitized-price-audit-v1":
+            records = exported.get("records")
+            exported_at = exported.get("exportedAt")
+            collection_summary = exported.get("collection")
+        elif isinstance(exported.get("r"), list):
+            keys = (
+                "id","name","set","number","variant","condition","qty",
+                "productId","valueField","storedUnitValue","storedUpdated",
+                "source","exactVariant"
+            )
+            records = [dict(zip(keys, row)) for row in exported["r"] if isinstance(row, list)]
+            exported_at = exported.get("e")
+            collection_summary = exported.get("c")
+        else:
             raise SystemExit("Unsupported collection audit schema")
-        records = exported.get("records")
         if not isinstance(records, list):
             raise SystemExit("Collection audit records missing")
 
@@ -327,8 +339,8 @@ def main():
         collection_scan = {
             "available": True,
             "providedFile": str(args.collection_export),
-            "exportedAt": exported.get("exportedAt"),
-            "collectionSummary": exported.get("collection"),
+            "exportedAt": exported_at,
+            "collectionSummary": collection_summary,
             "recordsScanned": len(records),
             "recordsResolvedToProductAndSlot": len(changed)+len(same)+len(missing_product)+len(missing_price),
             "storedValueDiffersFromCurrentDownload": len(changed),
