@@ -241,15 +241,109 @@ def main():
         "staleCandidates": None,
     }
 
-    # Deliberately fail closed on collection-wide counting: repo data does not
-    # represent the user's live IndexedDB collection. A real export is required.
     if args.collection_export:
+        exported = json.loads(args.collection_export.read_text(encoding="utf-8"))
+        if exported.get("schema") != "cardoryx-sanitized-price-audit-v1":
+            raise SystemExit("Unsupported collection audit schema")
+        records = exported.get("records")
+        if not isinstance(records, list):
+            raise SystemExit("Collection audit records missing")
+
+        changed = []
+        same = []
+        missing_product = []
+        missing_price = []
+        unresolved = []
+        slot_candidates = []
+
+        for rec in records:
+            pid = rec.get("productId")
+            field = rec.get("valueField")
+            stored = rec.get("storedUnitValue")
+            if not pid or not field:
+                unresolved.append(rec)
+                continue
+            try:
+                pid = int(pid)
+            except (TypeError, ValueError):
+                unresolved.append(rec)
+                continue
+
+            current = prices.get(pid)
+            if current is None:
+                missing_product.append(rec)
+                continue
+
+            current_value = current.get(field)
+            if not isinstance(current_value, (int, float)):
+                missing_price.append({**rec, "currentGuide": compact_price(current)})
+                continue
+
+            row = {
+                "id": rec.get("id"),
+                "name": rec.get("name"),
+                "set": rec.get("set"),
+                "number": rec.get("number"),
+                "variant": rec.get("variant"),
+                "condition": rec.get("condition"),
+                "qty": rec.get("qty"),
+                "productId": pid,
+                "valueField": field,
+                "storedUnitValue": stored,
+                "currentGuideValue": current_value,
+                "delta": delta(stored, current_value),
+                "storedUpdated": rec.get("storedUpdated"),
+                "source": rec.get("source"),
+                "exactVariant": bool(rec.get("exactVariant")),
+            }
+            if isinstance(stored, (int, float)) and abs(stored-current_value) > 1e-9:
+                changed.append(row)
+            else:
+                same.append(row)
+
+            # Diagnostic only: special physical finishes using the generic
+            # 'trend' slot are candidates for a wrong price-slot selection when
+            # the same exact product exposes a materially different holo slot.
+            variant = str(rec.get("variant") or "").lower()
+            special = any(token in variant for token in (
+                "master ball", "poké ball", "poke ball", "reverse holo", "cosmos"
+            ))
+            alt_field = "trend-holo" if field == "trend" else "trend"
+            alt_value = current.get(alt_field)
+            if special and rec.get("exactVariant") and isinstance(alt_value, (int,float)) and alt_value > 0:
+                if abs(alt_value-current_value) > 1e-9:
+                    slot_candidates.append({
+                        **row,
+                        "alternateField": alt_field,
+                        "alternateGuideValue": alt_value,
+                    })
+
+        changed.sort(key=lambda x: abs(x.get("delta") or 0), reverse=True)
+        slot_candidates.sort(
+            key=lambda x: abs((x.get("currentGuideValue") or 0)-(x.get("alternateGuideValue") or 0)),
+            reverse=True,
+        )
+
         collection_scan = {
-            "available": False,
-            "reason": "COLLECTION_EXPORT_SCHEMA_NOT_YET_VERIFIED",
-            "recordsScanned": 0,
-            "staleCandidates": None,
+            "available": True,
             "providedFile": str(args.collection_export),
+            "exportedAt": exported.get("exportedAt"),
+            "collectionSummary": exported.get("collection"),
+            "recordsScanned": len(records),
+            "recordsResolvedToProductAndSlot": len(changed)+len(same)+len(missing_product)+len(missing_price),
+            "storedValueDiffersFromCurrentDownload": len(changed),
+            "storedValueMatchesCurrentDownload": len(same),
+            "productMissingFromCurrentGuide": len(missing_product),
+            "priceSlotMissingFromCurrentGuide": len(missing_price),
+            "unresolvedTargetProductOrSlot": len(unresolved),
+            "specialExactPriceSlotCandidates": len(slot_candidates),
+            "topChanged": changed[:100],
+            "specialExactPriceSlotCandidateRows": slot_candidates[:100],
+            "importantLimitation": (
+                "This scan detects Cardoryx-vs-downloadable-Price-Guide differences. "
+                "It cannot count Cardmarket-download-vs-live-page freshness divergence "
+                "without a verified live-page value for each product."
+            ),
         }
 
     protected_after = {
