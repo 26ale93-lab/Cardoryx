@@ -139,12 +139,26 @@ def classify_case(case, product, live_price):
         for k in ("avg7",)
     )
 
+    manual = case.get("manualCardmarketCheck") or {}
+    manual_trend = manual.get("trend")
+    live_trend = live_price.get("trend")
+    manual_differs_from_download = (
+        isinstance(manual_trend, (int, float))
+        and isinstance(live_trend, (int, float))
+        and abs(manual_trend - live_trend) > 1e-9
+    )
+
+    # If Cardoryx matches the downloadable Cardmarket Price Guide but the
+    # manually verified live Cardmarket page differs, classify this as a source
+    # freshness divergence. Do not blame the mapping or estimate a replacement.
+    if not trend_changed and not averages_changed and manual_differs_from_download:
+        return "CARDMARKET_DOWNLOAD_STALE_VS_LIVE_PAGE"
     # Correct-low / changed-trend is evidence consistent with a stale or partial
-    # refresh. It is NOT proof of a wrong product mapping.
+    # Cardoryx refresh. It is NOT proof of a wrong product mapping.
     if same_low and (trend_changed or averages_changed):
-        return "STALE_OR_PARTIAL_REFRESH_EVIDENCE"
+        return "CARDORYX_STALE_OR_PARTIAL_REFRESH_EVIDENCE"
     if trend_changed or averages_changed:
-        return "PRICE_SNAPSHOT_CHANGED"
+        return "CARDORYX_PRICE_SNAPSHOT_CHANGED"
     return "CURRENT_VALUES_MATCH_STORED_SNAPSHOT"
 
 
@@ -213,6 +227,9 @@ def main():
             "storedMinusCurrentTrend": trend_delta,
             "storedTrendOverCurrentPercent": trend_percent,
             "classification": classification,
+            "sourceFreshnessDivergence": (
+                classification == "CARDMARKET_DOWNLOAD_STALE_VS_LIVE_PAGE"
+            ),
             "mappingErrorAutomaticallyAssumed": False,
             "separateFromKnownV1V2MappingBugs": True,
         })
