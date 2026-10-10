@@ -243,7 +243,59 @@ def main():
 
     if args.collection_export:
         exported = json.loads(args.collection_export.read_text(encoding="utf-8"))
-        if exported.get("schema") == "cardoryx-sanitized-price-audit-v1":
+        if exported.get("format") == "cardoryx-full-backup" and isinstance(exported.get("cards"), list):
+            records = []
+            for card in exported.get("cards") or []:
+                backup = card.get("backupValue") or {}
+                variant = str(card.get("variant") or "")
+                exact = bool(backup.get("exactVariant"))
+                product_id = None
+                value_field = None
+
+                # For exact Ball variants, resolve the physical row directly
+                # from variants_detailed. This is diagnostic-only.
+                if exact and ("Ball Reverse Holo" in variant):
+                    target_foil = "Master Ball" if "Master Ball" in variant else "Poké Ball"
+                    matches = []
+                    for row in card.get("variants_detailed") or []:
+                        typ = str(row.get("type") or "").lower()
+                        foil = str(row.get("foil") or "")
+                        cm = ((row.get("pricing") or {}).get("cardmarket") or {})
+                        if "reverse" in typ and target_foil.lower().replace("é","e") in foil.lower().replace("é","e") and cm.get("idProduct"):
+                            matches.append(cm)
+                    if matches:
+                        matches.sort(key=lambda x: str(x.get("updated") or ""))
+                        product_id = matches[-1].get("idProduct")
+                        value_field = "trend"
+                        if matches[-1].get("trend") in (None, 0) and isinstance(matches[-1].get("low"), (int, float)):
+                            value_field = "low"
+
+                # Ordinary records use their stored Cardmarket product and the
+                # production value slot implied by the selected finish.
+                if product_id is None:
+                    cm = ((card.get("pricing") or {}).get("cardmarket") or {})
+                    product_id = cm.get("idProduct")
+                    low_variant = variant.lower()
+                    value_field = "trend-holo" if ("holo" in low_variant or "reverse" in low_variant) else "trend"
+
+                records.append({
+                    "id": card.get("tcgdexId") or card.get("id"),
+                    "name": card.get("name"),
+                    "set": card.get("set"),
+                    "number": card.get("localId"),
+                    "variant": variant,
+                    "condition": card.get("condition"),
+                    "qty": card.get("qty"),
+                    "productId": product_id,
+                    "valueField": value_field,
+                    "storedUnitValue": backup.get("unitValue"),
+                    "storedUpdated": backup.get("updated"),
+                    "source": backup.get("source"),
+                    "exactVariant": exact,
+                })
+            exported_at = exported.get("exportedAt")
+            collection_summary = exported.get("collection")
+        elif exported.get("schema") == "cardoryx-sanitized-price-audit-v1":
             records = exported.get("records")
             exported_at = exported.get("exportedAt")
             collection_summary = exported.get("collection")
