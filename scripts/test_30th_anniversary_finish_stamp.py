@@ -420,7 +420,11 @@ def run_price_audit(report_path):
     mee_all = set_card_ids('mee')
     mee_ids = []
     for card_id in mee_all:
-        m = re.search(r'(\\d+)
+        m = re.search(r'(\\d+)$', card_id)
+        if m and 9 <= int(m.group(1)) <= 16:
+            mee_ids.append(card_id)
+    target_ids = sorted(set(set_ids['30th'] + set_ids['30th-c'] + mee_ids))
+
     cards = {}
     errors = {}
     def load(card_id):
