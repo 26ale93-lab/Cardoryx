@@ -1,0 +1,28 @@
+name: Temporary 30th Cardmarket recheck
+
+on:
+  push:
+    branches:
+      - audit/30th-cardmarket-recheck-20261011
+    paths:
+      - .github/workflows/tmp-30th-cardmarket-recheck.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run 30th Anniversary price audit
+        run: python scripts/test_30th_anniversary_finish_stamp.py --price-audit --report artifacts/30th_cardmarket_price_audit_report.json
+      - name: Upload diagnostic report
+        uses: actions/upload-artifact@v4
+        with:
+          name: 30th-cardmarket-price-audit-recheck
+          path: artifacts/30th_cardmarket_price_audit_report.json
