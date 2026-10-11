@@ -267,26 +267,108 @@ def price_classification(price):
     return 'NO_USABLE_PRICE'
 
 
-def audit_intrinsic_30th(card, products, prices):
+def norm_name(value):
+    value = str(value or '').split(' [', 1)[0]
+    return normalize_token(value)
+
+
+def norm_number(value):
+    return normalize_token(value).lstrip('0') or '0'
+
+
+def number_matches(product_number, local_id):
+    pn = norm_number(product_number)
+    ln = norm_number(local_id)
+    return pn == ln or (ln.isdigit() and pn.endswith(ln))
+
+
+def discover_30th_catalogue(cards_by_set, products):
+    by_name = {}
+    for product in products.values():
+        by_name.setdefault(norm_name(product.get('name')), []).append(product)
+
+    expansion_counts = Counter()
+    exact_candidates = {}
+    for card in cards_by_set.get('30th', []):
+        candidates = [
+            p for p in by_name.get(norm_name(card_name(card)), [])
+            if number_matches(p.get('number'), card.get('localId'))
+        ]
+        exact_candidates[card.get('id')] = candidates
+        for p in candidates:
+            if p.get('idExpansion') is not None:
+                expansion_counts[int(p['idExpansion'])] += 1
+
+    dominant_expansion = expansion_counts.most_common(1)[0][0] if expansion_counts else None
+    dominant_matches = expansion_counts.get(dominant_expansion, 0) if dominant_expansion else 0
+    return {
+        'byName': by_name,
+        'exactCandidates': exact_candidates,
+        'dominantExpansionId': dominant_expansion,
+        'dominantExpansionMatches': dominant_matches,
+        'expansionCountsTop10': expansion_counts.most_common(10),
+    }
+
+
+def audit_intrinsic_30th(card, products, prices, discovery):
+    set_id = ((card.get('set') or {}).get('id') if isinstance(card.get('set'), dict) else None)
     pid = cm_product_id(card)
+    evidence = 'tcgdex-top-level'
+    candidates = []
+
+    if not pid:
+        dominant = discovery.get('dominantExpansionId')
+        by_name = discovery.get('byName') or {}
+        if set_id == '30th':
+            candidates = [
+                p for p in discovery.get('exactCandidates', {}).get(card.get('id'), [])
+                if dominant is not None and int(p.get('idExpansion') or -1) == int(dominant)
+            ]
+        elif set_id == '30th-c':
+            candidates = [
+                p for p in by_name.get(norm_name(card_name(card)), [])
+                if dominant is not None and int(p.get('idExpansion') or -1) == int(dominant)
+            ]
+        if len(candidates) == 1:
+            pid = int(candidates[0]['idProduct'])
+            evidence = 'official-cardmarket-catalogue-candidate'
+        else:
+            evidence = 'unresolved'
+
     product = products.get(pid) if pid else None
     price = prices.get(pid) if pid else None
     if not pid:
-        classification = 'NO_CARDMARKET_PRODUCT'
+        classification = 'CATALOGUE_MAPPING_AMBIGUOUS_OR_MISSING'
     elif not product:
         classification = 'PRODUCT_NOT_IN_CARDMARKET_CATALOGUE'
     else:
-        classification = price_classification(price)
+        base = price_classification(price)
+        classification = base if evidence == 'tcgdex-top-level' else f'CATALOGUE_CANDIDATE_{base}'
+
+    candidate_preview = [
+        {
+            'idProduct': p.get('idProduct'),
+            'idExpansion': p.get('idExpansion'),
+            'idMetacard': p.get('idMetacard'),
+            'name': p.get('name'),
+            'number': p.get('number'),
+        }
+        for p in candidates[:8]
+    ]
     return {
         'scope': 'intrinsic_30th_set',
         'tcgdexId': card.get('id'),
         'name': card_name(card),
-        'setId': ((card.get('set') or {}).get('id') if isinstance(card.get('set'), dict) else None),
+        'setId': set_id,
         'localId': card.get('localId'),
         'cardmarketProductId': pid,
+        'mappingEvidence': evidence,
         'cardmarketProductName': (product or {}).get('name'),
         'cardmarketProductNumber': (product or {}).get('number'),
+        'cardmarketExpansionId': (product or {}).get('idExpansion'),
         'classification': classification,
+        'candidateCount': len(candidates),
+        'candidatePreview': candidate_preview,
         'priceGuide': price_payload(price),
     }
 
@@ -335,7 +417,121 @@ def run_price_audit(report_path):
     prices = {int(x['idProduct']): x for x in rows(prices_root, ('priceGuides', 'priceGuide')) if x.get('idProduct')}
 
     set_ids = {'30th': set_card_ids('30th'), '30th-c': set_card_ids('30th-c')}
-    target_ids = sorted(set(set_ids['30th'] + set_ids['30th-c'] + [f'mee-{n:03d}' for n in range(9, 17)]))
+    mee_all = set_card_ids('mee')
+    mee_ids = []
+    for card_id in mee_all:
+        m = re.search(r'(\\d+)
+    cards = {}
+    errors = {}
+    def load(card_id):
+        return card_id, fetch_json(f'{TCGDEX_API}/cards/{card_id}')
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as pool:
+        futures = {pool.submit(load, card_id): card_id for card_id in target_ids}
+        for future in concurrent.futures.as_completed(futures):
+            card_id = futures[future]
+            try:
+                cid, card = future.result()
+                cards[cid] = card
+            except Exception as exc:
+                errors[card_id] = f'{type(exc).__name__}: {exc}'
+
+    cards_by_set = {
+        set_id: [cards[cid] for cid in set_ids[set_id] if cid in cards]
+        for set_id in ('30th', '30th-c')
+    }
+    discovery = discover_30th_catalogue(cards_by_set, products)
+
+    results = []
+    for set_id in ('30th', '30th-c'):
+        for card in cards_by_set[set_id]:
+            results.append(audit_intrinsic_30th(card, products, prices, discovery))
+    for card_id in mee_ids:
+        card = cards.get(card_id)
+        if card:
+            results.append(audit_mee_30th(card, products, prices))
+
+    counts = Counter(x['classification'] for x in results)
+    scope_counts = {}
+    for scope in ('intrinsic_30th_set', 'mee_009_016_30th_stamp'):
+        scope_counts[scope] = dict(Counter(x['classification'] for x in results if x['scope'] == scope))
+
+    gengar = next((x for x in results if x.get('tcgdexId') == '30th-090'), None)
+    report = {
+        'generatedAt': datetime.now(timezone.utc).isoformat(),
+        'mode': 'READ_ONLY_DIAGNOSTIC',
+        'sources': {
+            'tcgdexApi': TCGDEX_API,
+            'cardmarketProductCatalogue': {'file': products_path.name, 'sha256': sha256(products_path)},
+            'cardmarketPriceGuide': {'file': prices_path.name, 'sha256': sha256(prices_path)},
+        },
+        'safety': {
+            'productionFilesWritten': False,
+            'cardmarketIndexWritten': False,
+            'retailPricesWritten': False,
+            'priceEstimationOrSubstitution': False,
+            'policy': 'No generic/base price is reused for a 30th Anniversary printing. Missing exact evidence remains unavailable.',
+        },
+        'coverage': {
+            'set30thExpected': len(set_ids['30th']),
+            'set30thClassicExpected': len(set_ids['30th-c']),
+            'meeExpected': len(mee_ids),
+            'targetIds': len(target_ids),
+            'cardsFetched': len(cards),
+            'fetchErrors': errors,
+            'rowsAudited': len(results),
+        },
+        'catalogueDiscovery': {
+            'dominantExpansionId': discovery.get('dominantExpansionId'),
+            'dominantExpansionMatches': discovery.get('dominantExpansionMatches'),
+            'expansionCountsTop10': discovery.get('expansionCountsTop10'),
+            'note': 'Audit-only inference from exact Cardmarket catalogue name + printed-number matches across TCGdex 30th main-set identities. Not a production mapping rule.',
+        },
+        'classificationTotals': dict(counts),
+        'classificationByScope': scope_counts,
+        'gengar30th090': gengar,
+        'results': sorted(results, key=lambda x: (x['scope'], str(x.get('tcgdexId') or ''))),
+        'interpretation': {
+            'STANDARD_TREND_AVAILABLE': 'Exact product has a non-zero standard trend in the official downloadable Cardmarket Price Guide; candidate for a future exact resolver after production-field semantics are verified.',
+            'HOLO_TREND_AVAILABLE_REVIEW_REQUIRED': 'Only the holo trend slot is populated; do not integrate without proving that slot matches the live dedicated product page.',
+            'BOTH_TREND_SLOTS_PRESENT_REVIEW_REQUIRED': 'Both trend families are populated; manual/official semantic verification required.',
+            'LOW_ONLY_NO_TREND': 'Exact product has offers/minimum data but no trend; Cardoryx must not invent a market value from the minimum.',
+            'NO_USABLE_PRICE': 'Exact product exists but the downloadable guide has no usable market fields.',
+            'NO_UNIQUE_EXACT_30TH_STAMP_PRODUCT_EVIDENCE': 'The 30th stamp inside MEE is not proven by one unique physical row; fail closed.',
+        },
+    }
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    return report
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--price-audit', action='store_true', help='Run read-only live 30th Anniversary Cardmarket coverage audit.')
+    parser.add_argument('--report', default='artifacts/30th_cardmarket_price_audit_report.json')
+    args = parser.parse_args()
+
+    regression = run_production_regression()
+    output = {'status': 'PASS', 'regression': regression}
+    if args.price_audit:
+        report = run_price_audit(ROOT / args.report)
+        output['priceAuditSummary'] = {
+            'coverage': report['coverage'],
+            'classificationTotals': report['classificationTotals'],
+            'classificationByScope': report['classificationByScope'],
+            'catalogueDiscovery': report['catalogueDiscovery'],
+            'gengar30th090': report['gengar30th090'],
+            'report': args.report,
+        }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+
+
+if __name__ == '__main__':
+    main()
+, card_id)
+        if m and 9 <= int(m.group(1)) <= 16:
+            mee_ids.append(card_id)
+    target_ids = sorted(set(set_ids['30th'] + set_ids['30th-c'] + mee_ids))
 
     cards = {}
     errors = {}
