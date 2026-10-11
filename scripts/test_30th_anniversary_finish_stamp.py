@@ -416,6 +416,28 @@ def run_price_audit(report_path):
     products = {int(x['idProduct']): x for x in rows(products_root, ('products',)) if x.get('idProduct')}
     prices = {int(x['idProduct']): x for x in rows(prices_root, ('priceGuides', 'priceGuide')) if x.get('idProduct')}
 
+    catalogue_gengar = [
+        {
+            'idProduct': p.get('idProduct'),
+            'idExpansion': p.get('idExpansion'),
+            'idMetacard': p.get('idMetacard'),
+            'name': p.get('name'),
+            'number': p.get('number'),
+        }
+        for p in products.values()
+        if norm_name(p.get('name')) == norm_name('Gengar ex')
+    ]
+    catalogue_30c = [
+        {
+            'idProduct': p.get('idProduct'),
+            'idExpansion': p.get('idExpansion'),
+            'name': p.get('name'),
+            'number': p.get('number'),
+        }
+        for p in products.values()
+        if '30c' in normalize_token(p.get('number'))
+    ]
+
     set_ids = {'30th': set_card_ids('30th'), '30th-c': set_card_ids('30th-c')}
     mee_all = set_card_ids('mee')
     mee_ids = []
@@ -484,6 +506,15 @@ def run_price_audit(report_path):
             'fetchErrors': errors,
             'rowsAudited': len(results),
         },
+        'catalogueProbe': {
+            'productRowsTotal': len(products),
+            'priceGuideRowsTotal': len(prices),
+            'gengarExExactNameRows': catalogue_gengar[:25],
+            'numbersContaining30CCount': len(catalogue_30c),
+            'numbersContaining30CSample': catalogue_30c[:25],
+            'meeSetIdsCount': len(mee_all),
+            'meeSetIdsSample': mee_all[:25],
+        },
         'catalogueDiscovery': {
             'dominantExpansionId': discovery.get('dominantExpansionId'),
             'dominantExpansionMatches': discovery.get('dominantExpansionMatches'),
@@ -523,6 +554,7 @@ def main():
             'coverage': report['coverage'],
             'classificationTotals': report['classificationTotals'],
             'classificationByScope': report['classificationByScope'],
+            'catalogueProbe': report['catalogueProbe'],
             'catalogueDiscovery': report['catalogueDiscovery'],
             'gengar30th090': report['gengar30th090'],
             'report': args.report,
