@@ -1,20 +1,47 @@
 #!/usr/bin/env python3
 """Regression: exact Aromatisse 039/131 Master Ball Cardmarket price slot only."""
+import re
 import subprocess
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 INDEX=ROOT/'index.html'
 
-def slice_between(src,start_marker,end_marker):
-    a=src.index(start_marker)
-    b=src.index(end_marker,a)
-    return src[a:b]
+def extract_function(src,name):
+    marker=re.search(rf"\bfunction\s+{re.escape(name)}\s*\(",src)
+    if not marker:
+        raise AssertionError(f"missing function {name}")
+    brace=src.find("{",marker.end())
+    depth=0
+    quote=None
+    esc=False
+    for i in range(brace,len(src)):
+        ch=src[i]
+        if quote:
+            if esc:
+                esc=False
+            elif ch=="\\":
+                esc=True
+            elif ch==quote:
+                quote=None
+            continue
+        if ch in "'\"\`":
+            quote=ch
+        elif ch=="{":
+            depth+=1
+        elif ch=="}":
+            depth-=1
+            if depth==0:
+                return src[marker.start():i+1]
+    raise AssertionError(f"unterminated function {name}")
 
 def main():
     src=INDEX.read_text(encoding='utf-8')
-    block=slice_between(src,'const VERIFIED_EXACT_BALL_VARIANT_PRICES','function verifiedExactBallVariantPrice')
-    fn=slice_between(src,'function verifiedExactBallVariantPrice','// CARDORYX GENERATED EXACT BALL VARIANT PRICES — END')
+    m=re.search(r'("sv08\.5-039\|Master Ball Reverse Holo"\s*:\s*\{[^\n]+\})',src)
+    if not m:
+        raise AssertionError("Aromatisse exact Ball registry row missing")
+    registry="const VERIFIED_EXACT_BALL_VARIANT_PRICES={"+m.group(1)+"};"
+    fn=extract_function(src,"verifiedExactBallVariantPrice")
     harness=r'''
 function normText(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
 function canonicalVariant(v){
@@ -45,7 +72,8 @@ assert(!verifiedExactBallVariantPrice({...card,localId:'040'},'Master Ball Rever
 assert(!verifiedExactBallVariantPrice({...card,set:{id:'sv08.5x',name:'Other'}},'Master Ball Reverse Holo'),'wrong set inherited exact price');
 console.log(JSON.stringify({test:'PASS',id:'sv08.5-039',variant:'Master Ball Reverse Holo',productId:r.productId,trend:r.trend,avg7:r.avg7}));
 '''
-    result=subprocess.run(['node','-e',block+'\n'+fn+'\n'+harness],text=True,capture_output=True)
+    code=registry+'\n'+fn+'\n'+harness
+    result=subprocess.run(['node','-'],input=code,text=True,capture_output=True)
     if result.returncode:
         raise AssertionError(result.stderr.strip())
     print(result.stdout.strip())
