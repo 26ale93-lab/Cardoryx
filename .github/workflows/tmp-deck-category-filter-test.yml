@@ -1,0 +1,28 @@
+name: Temporary deck category filter test
+
+on:
+  push:
+    branches:
+      - feature/deck-category-filter
+    paths:
+      - index.html
+      - scripts/test_deck_category_filter.py
+      - .github/workflows/tmp-deck-category-filter-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run deck category filter regression
+        run: python scripts/test_deck_category_filter.py
