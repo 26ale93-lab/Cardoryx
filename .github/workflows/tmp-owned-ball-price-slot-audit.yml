@@ -1,0 +1,65 @@
+name: Temporary owned Ball price-slot audit
+
+on:
+  push:
+    branches:
+      - audit/owned-ball-price-slots-20261012
+    paths:
+      - .github/workflows/tmp-owned-ball-price-slot-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit owned Ball variants against current Cardmarket Price Guide
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          targets = [
+            {"id":"sv08.5-057","name":"Okidogi","variant":"Master Ball Reverse Holo","productId":806489,"stored":6.61},
+            {"id":"me02.5-032","name":"Darumaka di N","variant":"Poké Ball Reverse Holo","productId":870188,"stored":0.11},
+            {"id":"sv08.5-120","name":"Vitalità della Professoressa Olim","variant":"Poké Ball Reverse Holo","productId":806590,"stored":0.56},
+            {"id":"sv08.5-107","name":"Guida dell'Esploratore","variant":"Poké Ball Reverse Holo","productId":806570,"stored":0.99},
+            {"id":"sv08.5-103","name":"Rubra","variant":"Poké Ball Reverse Holo","productId":806562,"stored":0.58},
+            {"id":"sv08.5-127","name":"Bastone Rotoselfie","variant":"Poké Ball Reverse Holo","productId":806604,"stored":0.59},
+            {"id":"sv08.5-020","name":"Goldeen","variant":"Poké Ball Reverse Holo","productId":806436,"stored":0.74},
+            {"id":"sv10.5w-044","name":"Frillish","variant":"Master Ball Reverse Holo","productId":836574,"stored":3.00},
+            {"id":"me02.5-002","name":"Gloom di Erika","variant":"Poké Ball Reverse Holo","productId":870138,"stored":0.13},
+            {"id":"sv08.5-001","name":"Exeggcute","variant":"Poké Ball Reverse Holo","productId":806408,"stored":0.25},
+            {"id":"sv08.5-050","name":"Riolu","variant":"Poké Ball Reverse Holo","productId":806478,"stored":0.91},
+            {"id":"sv08.5-029","name":"Jolteon","variant":"Poké Ball Reverse Holo","productId":806446,"stored":2.39},
+            {"id":"sv08.5-062","name":"Houndour","variant":"Poké Ball Reverse Holo","productId":806494,"stored":0.25},
+            {"id":"sv08.5-068","name":"Heatran","variant":"Poké Ball Reverse Holo","productId":806504,"stored":0.30},
+            {"id":"sv08.5-039","name":"Aromatisse","variant":"Master Ball Reverse Holo","productId":806459,"stored":13.99},
+            {"id":"sv08.5-038","name":"Spritzee","variant":"Poké Ball Reverse Holo","productId":806456,"stored":0.05},
+          ]
+          url="https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json"
+          req=urllib.request.Request(url,headers={"User-Agent":"Cardoryx-Owned-Ball-Audit/1.0"})
+          with urllib.request.urlopen(req,timeout=300) as r:
+              root=json.load(r)
+          rows=root.get("priceGuides") or root.get("priceGuide") or root
+          prices={int(x["idProduct"]):x for x in rows if x.get("idProduct") is not None}
+          out=[]
+          for t in targets:
+              p=prices.get(t["productId"],{})
+              row={**t}
+              for k in ("low","trend","avg1","avg7","avg30","low-holo","trend-holo","avg1-holo","avg7-holo","avg30-holo"):
+                  row[k]=p.get(k)
+              std=row.get("trend")
+              holo=row.get("trend-holo")
+              if isinstance(std,(int,float)) and isinstance(holo,(int,float)):
+                  row["slotDelta"]=round(holo-std,4)
+              else:
+                  row["slotDelta"]=None
+              out.append(row)
+          print(json.dumps({"result":"PASS_READ_ONLY","count":len(out),"rows":out},ensure_ascii=False,indent=2))
+          PY
