@@ -25,7 +25,7 @@ def fn(name):
     raise AssertionError(name)
 
 names=['physicalCardIdentityKey','collectionIdentityKey','recordKey','legacyDeckRecordKey','deckRecordKey','findCardForDeckEntry','migrateLegacyDeckEntryKeys','deckEntryQty','allocatedInOtherDecks','availableForDeck']
-code='\\n'.join(fn(n) for n in names)
+code='\n'.join(fn(n) for n in names)
 code+=r'''
 function normText(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'')}
 function canonicalVariant(v){return String(v||'Normal')}
