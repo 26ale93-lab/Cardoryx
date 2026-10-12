@@ -29,6 +29,26 @@ RETAIL = ROOT / "data" / "retail_prices.json"
 OUT = ROOT / "artifacts" / "cardmarket_stale_price_audit_report.json"
 CM_BASE = "https://downloads.s3.cardmarket.com/productCatalog"
 
+
+OWNED_BALL_TARGETS = {
+    ("sv08.5-057", "Master Ball Reverse Holo"),
+    ("me02.5-032", "Poké Ball Reverse Holo"),
+    ("sv08.5-120", "Poké Ball Reverse Holo"),
+    ("sv08.5-107", "Poké Ball Reverse Holo"),
+    ("sv08.5-103", "Poké Ball Reverse Holo"),
+    ("sv08.5-127", "Poké Ball Reverse Holo"),
+    ("sv08.5-020", "Poké Ball Reverse Holo"),
+    ("sv10.5w-044", "Master Ball Reverse Holo"),
+    ("me02.5-002", "Poké Ball Reverse Holo"),
+    ("sv08.5-001", "Poké Ball Reverse Holo"),
+    ("sv08.5-050", "Poké Ball Reverse Holo"),
+    ("sv08.5-029", "Poké Ball Reverse Holo"),
+    ("sv08.5-062", "Poké Ball Reverse Holo"),
+    ("sv08.5-068", "Poké Ball Reverse Holo"),
+    ("sv08.5-039", "Master Ball Reverse Holo"),
+    ("sv08.5-038", "Poké Ball Reverse Holo"),
+}
+
 CONFIRMED_STALE_CASES = {
     "aromatisse-prismatic-evolutions-039-master-ball": {
         "name": "Aromatisse",
@@ -281,8 +301,22 @@ def audit_all_ball_registry(products, prices):
         key=lambda x: abs(x.get("trendDeltaStandardVsHolo") or 0),
         reverse=True,
     )
+    owned_rows = [
+        row for row in audited
+        if (
+            str(row.get("registryKey") or "").split("|", 1)[0],
+            row.get("finish"),
+        ) in OWNED_BALL_TARGETS
+    ]
+    owned_counts = {}
+    for row in owned_rows:
+        owned_counts[row["classification"]] = owned_counts.get(row["classification"], 0) + 1
+
     return {
         "rowsAudited": len(audited),
+        "ownedRowsAudited": len(owned_rows),
+        "ownedClassificationTotals": owned_counts,
+        "ownedRows": owned_rows,
         "classificationTotals": counts,
         "suspects": suspects,
         "allRows": audited,
