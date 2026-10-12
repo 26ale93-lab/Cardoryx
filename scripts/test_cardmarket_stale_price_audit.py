@@ -152,9 +152,25 @@ def classify_case(case, product, live_price):
         and abs(manual_trend - live_trend) > 1e-9
     )
 
+    # Exact special-finish confirmation: if Cardoryx stored the standard slot,
+    # while the manually verified live page matches the same product's official
+    # holo slot exactly, this is a price-slot selection bug rather than stale
+    # Cardmarket data. Keep this narrow: all three values must be numeric.
+    holo_trend = live_price.get("trend-holo")
+    if (
+        isinstance(old.get("trend"), (int, float))
+        and isinstance(live_trend, (int, float))
+        and isinstance(holo_trend, (int, float))
+        and isinstance(manual_trend, (int, float))
+        and abs(old["trend"] - live_trend) < 1e-9
+        and abs(manual_trend - holo_trend) < 1e-9
+        and abs(live_trend - holo_trend) > 1e-9
+    ):
+        return "CARDORYX_PRICE_SLOT_MISMATCH_CONFIRMED"
+
     # If Cardoryx matches the downloadable Cardmarket Price Guide but the
-    # manually verified live Cardmarket page differs, classify this as a source
-    # freshness divergence. Do not blame the mapping or estimate a replacement.
+    # manually verified live Cardmarket page differs from every verified slot,
+    # classify this as a source freshness divergence.
     if not trend_changed and not averages_changed and manual_differs_from_download:
         return "CARDMARKET_DOWNLOAD_STALE_VS_LIVE_PAGE"
     # Correct-low / changed-trend is evidence consistent with a stale or partial
@@ -245,6 +261,9 @@ def main():
             "classification": classification,
             "sourceFreshnessDivergence": (
                 classification == "CARDMARKET_DOWNLOAD_STALE_VS_LIVE_PAGE"
+            ),
+            "priceSlotMismatchConfirmed": (
+                classification == "CARDORYX_PRICE_SLOT_MISMATCH_CONFIRMED"
             ),
             "mappingErrorAutomaticallyAssumed": False,
             "separateFromKnownV1V2MappingBugs": True,
