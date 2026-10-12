@@ -6,9 +6,10 @@ ROOT=Path(__file__).resolve().parents[1]
 SRC=(ROOT/'index.html').read_text(encoding='utf-8')
 
 def fn(name):
-    m=re.search(rf"\\bfunction\\s+{re.escape(name)}\\s*\\(",SRC)
-    if not m: raise AssertionError(f"missing {name}")
-    b=SRC.find('{',m.end()); depth=0; quote=None; esc=False
+    marker="function "+name+"("
+    start=SRC.find(marker)
+    if start<0: raise AssertionError(f"missing {name}")
+    b=SRC.find('{',start+len(marker)); depth=0; quote=None; esc=False
     for i in range(b,len(SRC)):
         ch=SRC[i]
         if quote:
