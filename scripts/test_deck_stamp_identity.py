@@ -21,7 +21,7 @@ def fn(name):
         elif ch=='{': depth+=1
         elif ch=='}':
             depth-=1
-            if depth==0: return SRC[m.start():i+1]
+            if depth==0: return SRC[start:i+1]
     raise AssertionError(name)
 
 names=['physicalCardIdentityKey','collectionIdentityKey','recordKey','legacyDeckRecordKey','deckRecordKey','findCardForDeckEntry','migrateLegacyDeckEntryKeys','deckEntryQty','allocatedInOtherDecks','availableForDeck']
