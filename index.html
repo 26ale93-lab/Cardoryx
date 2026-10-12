@@ -1606,13 +1606,50 @@ async function createDeck(){
 }
 function deckById(id){return decks.find(d=>d.id===id)}
 function currentDeck(){return deckById(currentDeckId)}
-function deckRecordKey(c){
+function legacyDeckRecordKey(c){
   if(typeof recordKey==='function')return recordKey(c);
-  return [c.id||`${c.name}-${c.localId}`,c.variant||'Normale',c.condition||'NM'].join('|||');
+  return [c.id||`${c.name}-${c.localId}`,c.variant||'Normale',c.status||'Disponibile',c.condition||'NM'].join('|||');
+}
+function deckRecordKey(c){
+  if(typeof collectionIdentityKey==='function')return collectionIdentityKey(c);
+  return [
+    c.id||`${c.name||''}-${c.localId||''}`,
+    c.variant||'Normale',
+    c.stamp||'None',
+    c.playSeries||'',
+    c.language||'Italiano',
+    c.condition||'NM'
+  ].join('|||');
 }
 function findCardForDeckEntry(e){
-  return db.find(c=>deckRecordKey(c)===e.cardKey) ||
-         db.find(c=>(c.id||'')===e.cardId && (c.variant||'Normale')===(e.variant||'Normale'));
+  const exact=db.find(c=>deckRecordKey(c)===e.cardKey);
+  if(exact)return exact;
+  // Backward compatibility for decks saved before stamp/playSeries became part
+  // of the deck identity. Preserve the old resolver order, then migrate the
+  // entry in memory to the exact physical identity.
+  const legacy=db.find(c=>legacyDeckRecordKey(c)===e.cardKey);
+  if(legacy)return legacy;
+  return db.find(c=>(c.id||'')===e.cardId &&
+                    (c.variant||'Normale')===(e.variant||'Normale') &&
+                    (!e.stamp||canonicalStamp(c?.stamp||'None')===canonicalStamp(e.stamp)) &&
+                    (!e.playSeries||normalizedPlaySeries(c?.playSeries||'')===normalizedPlaySeries(e.playSeries)));
+}
+function migrateLegacyDeckEntryKeys(){
+  let changed=false;
+  (decks||[]).forEach(d=>(d.entries||[]).forEach(e=>{
+    if(db.some(c=>deckRecordKey(c)===e.cardKey))return;
+    const c=findCardForDeckEntry(e);
+    if(!c)return;
+    const oldKey=e.cardKey,newKey=deckRecordKey(c);
+    if(oldKey===newKey)return;
+    e.cardKey=newKey;
+    e.cardId=c.id||'';
+    e.variant=c.variant||'Normale';
+    e.stamp=canonicalStamp(c?.stamp||'None');
+    e.playSeries=normalizedPlaySeries(c?.playSeries||'');
+    changed=true;
+  }));
+  return changed;
 }
 function deckEntryQty(d,key){
   return Number(d?.entries?.find(e=>e.cardKey===key)?.qty||0);
@@ -1671,6 +1708,7 @@ function validateDeck(d){
   return {valid,issues,total,counts};
 }
 function renderDecks(){
+  migrateLegacyDeckEntryKeys();
   renderLegacyDeckMigration();
   const list=ui('deckList');
   if(!list)return;
@@ -1756,6 +1794,7 @@ async function changeDeckQty(cardKey,delta){
   renderDeckBuilder();
 }
 function renderDeckBuilder(){
+  migrateLegacyDeckEntryKeys();
   const d=currentDeck();if(!d)return;
   const val=validateDeck(d),total=val.total,pct=Math.min(100,total/60*100);
   ui('deckBuilderName').textContent=`${d.name} · ${deckTypeLabel(d)}`;
