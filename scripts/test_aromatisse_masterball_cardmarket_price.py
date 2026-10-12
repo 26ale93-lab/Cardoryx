@@ -25,7 +25,7 @@ def extract_function(src,name):
             elif ch==quote:
                 quote=None
             continue
-        if ch in "'\"\`":
+        if ch in "'\"`":
             quote=ch
         elif ch=="{":
             depth+=1
