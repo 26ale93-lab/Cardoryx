@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import tempfile
 import urllib.request
 from datetime import datetime, timezone
@@ -182,6 +183,116 @@ def classify_case(case, product, live_price):
     return "CURRENT_VALUES_MATCH_STORED_SNAPSHOT"
 
 
+
+def parse_exact_ball_registry(index_source: str):
+    start = index_source.find("const VERIFIED_EXACT_BALL_VARIANT_PRICES={")
+    end = index_source.find("// CARDORYX GENERATED EXACT BALL VARIANT PRICES — END", start)
+    if start < 0 or end < 0:
+        return []
+    block = index_source[start:end]
+    rows = []
+    pat = re.compile(
+        r'"(?P<key>[^"]+\|(?:Poké Ball|Master Ball) Reverse Holo)"\s*:\s*'
+        r'\{(?P<body>[^\n]+)\}'
+    )
+    num_pat = re.compile(r'(?P<k>productId|low|trend|avg1|avg7|avg30|avg):(?P<v>null|-?\d+(?:\.\d+)?)')
+    str_pat = re.compile(r'(?P<k>setId|localId|finish|verified):"(?P<v>[^"]*)"')
+    for m in pat.finditer(block):
+        row = {"registryKey": m.group("key")}
+        body = m.group("body")
+        for sm in str_pat.finditer(body):
+            row[sm.group("k")] = sm.group("v")
+        for nm in num_pat.finditer(body):
+            v = nm.group("v")
+            row[nm.group("k")] = None if v == "null" else float(v)
+            if nm.group("k") == "productId" and row[nm.group("k")] is not None:
+                row[nm.group("k")] = int(row[nm.group("k")])
+        rows.append(row)
+    return rows
+
+
+def audit_all_ball_registry(products, prices):
+    source = (ROOT / "index.html").read_text(encoding="utf-8")
+    rows = parse_exact_ball_registry(source)
+    audited = []
+    for row in rows:
+        pid = row.get("productId")
+        price = prices.get(pid) if pid else None
+        if not price:
+            audited.append({**row, "classification": "PRICE_GUIDE_PRODUCT_NOT_FOUND"})
+            continue
+
+        reg_trend = row.get("trend")
+        standard = price.get("trend")
+        holo = price.get("trend-holo")
+        reg_low = row.get("low")
+        standard_low = price.get("low")
+        holo_low = price.get("low-holo")
+
+        def eq(a, b):
+            return isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(a-b) < 1e-9
+
+        classification = "REVIEW"
+        if eq(reg_trend, holo) and (not eq(reg_trend, standard) or standard != holo):
+            classification = "REGISTRY_MATCHES_HOLO_SLOT"
+        elif eq(reg_trend, standard) and isinstance(holo, (int, float)) and holo > 0 and not eq(standard, holo):
+            classification = "REGISTRY_MATCHES_STANDARD_BUT_HOLO_DIFFERS"
+        elif eq(reg_trend, standard) and (not isinstance(holo, (int, float)) or holo <= 0 or eq(standard, holo)):
+            classification = "REGISTRY_STANDARD_NO_CONFLICT"
+        elif reg_trend in (None, 0) and isinstance(holo, (int, float)) and holo > 0:
+            classification = "REGISTRY_MISSING_TREND_HOLO_AVAILABLE"
+
+        audited.append({
+            **row,
+            "official": {
+                "trend": standard,
+                "trend-holo": holo,
+                "low": standard_low,
+                "low-holo": holo_low,
+                "avg1": price.get("avg1"),
+                "avg1-holo": price.get("avg1-holo"),
+                "avg7": price.get("avg7"),
+                "avg7-holo": price.get("avg7-holo"),
+                "avg30": price.get("avg30"),
+                "avg30-holo": price.get("avg30-holo"),
+            },
+            "classification": classification,
+            "trendDeltaStandardVsHolo": (
+                round(standard-holo, 4)
+                if isinstance(standard, (int, float)) and isinstance(holo, (int, float))
+                else None
+            ),
+            "lowRegistryMatchesStandard": eq(reg_low, standard_low),
+            "lowRegistryMatchesHolo": eq(reg_low, holo_low),
+        })
+
+    counts = {}
+    for row in audited:
+        counts[row["classification"]] = counts.get(row["classification"], 0) + 1
+    suspects = [
+        row for row in audited
+        if row["classification"] in {
+            "REGISTRY_MATCHES_STANDARD_BUT_HOLO_DIFFERS",
+            "REGISTRY_MISSING_TREND_HOLO_AVAILABLE",
+            "REVIEW",
+        }
+    ]
+    suspects.sort(
+        key=lambda x: abs(x.get("trendDeltaStandardVsHolo") or 0),
+        reverse=True,
+    )
+    return {
+        "rowsAudited": len(audited),
+        "classificationTotals": counts,
+        "suspects": suspects,
+        "allRows": audited,
+        "note": (
+            "Diagnostic only. A standard-vs-holo difference is a candidate, not automatic proof. "
+            "Aromatisse was promoted to confirmed only because the manually verified live Cardmarket "
+            "page exactly matched trend-holo."
+        ),
+    }
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--products", type=Path)
@@ -268,6 +379,8 @@ def main():
             "mappingErrorAutomaticallyAssumed": False,
             "separateFromKnownV1V2MappingBugs": True,
         })
+
+    ball_registry_audit = audit_all_ball_registry(products, prices)
 
     collection_scan = {
         "available": False,
@@ -457,6 +570,7 @@ def main():
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "scope": "Cardmarket stale/partial-refresh diagnostics; separate from mapping/version errors",
         "cases": cases,
+        "allExactBallRegistryAudit": ball_registry_audit,
         "collectionWideStaleScan": collection_scan,
         "rules": {
             "doNotEstimatePrices": True,
