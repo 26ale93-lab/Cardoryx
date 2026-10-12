@@ -256,7 +256,7 @@
 .deck-valid{padding:10px 12px;border-radius:14px;font-size:12px;margin-top:10px}
 .deck-valid.ok{background:#ecfdf3;color:#166534}.deck-valid.warn{background:#fff7ed;color:#9a3412}.deck-valid.bad{background:#fef2f2;color:#b42318}
 .deck-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.deck-stat{border:1px solid #e4e7ec;border-radius:14px;background:#fff;padding:10px;text-align:center}.deck-stat strong{display:block;font-size:18px}.deck-stat span{font-size:9px;color:#667085;font-weight:850}
+.deck-stat{border:1px solid #e4e7ec;border-radius:14px;background:#fff;padding:10px;text-align:center;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}.deck-stat strong{display:block;font-size:18px}.deck-stat span{font-size:9px;color:#667085;font-weight:850}.deck-stat.active{border-color:#4f46e5;background:#eef2ff;box-shadow:0 0 0 2px rgba(79,70,229,.10)}.deck-stat:focus-visible{outline:3px solid rgba(79,70,229,.25);outline-offset:2px}
 .deck-entry{display:grid;grid-template-columns:55px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #eaecf0}
 .deck-entry:last-child{border-bottom:0}.deck-entry img{width:55px;height:77px;object-fit:contain;border-radius:7px;background:#f2f4f7}.deck-entry b{font-size:13px}.deck-entry .small{font-size:10px}
 .deck-qty{display:flex;align-items:center;gap:5px}.deck-qty button{width:32px;height:32px;border:0;border-radius:9px;background:#f2f4f7;font-size:18px;font-weight:900}.deck-qty strong{min-width:24px;text-align:center}
@@ -768,10 +768,10 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
       <div id="deckValidation"></div>
     </div>
 
-    <div class="deck-stats-grid">
-      <div class="deck-stat"><strong id="deckPokemonCount">0</strong><span>POKÉMON</span></div>
-      <div class="deck-stat"><strong id="deckTrainerCount">0</strong><span>ALLENATORI</span></div>
-      <div class="deck-stat"><strong id="deckEnergyCount">0</strong><span>ENERGIE</span></div>
+    <div class="deck-stats-grid" aria-label="Filtra carte nel mazzo">
+      <div id="deckPokemonStat" class="deck-stat" role="button" tabindex="0" aria-pressed="false" onclick="setDeckEntriesFilter('pokemon')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setDeckEntriesFilter('pokemon')}"><strong id="deckPokemonCount">0</strong><span>POKÉMON</span></div>
+      <div id="deckTrainerStat" class="deck-stat" role="button" tabindex="0" aria-pressed="false" onclick="setDeckEntriesFilter('trainer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setDeckEntriesFilter('trainer')}"><strong id="deckTrainerCount">0</strong><span>ALLENATORI</span></div>
+      <div id="deckEnergyStat" class="deck-stat" role="button" tabindex="0" aria-pressed="false" onclick="setDeckEntriesFilter('energy')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setDeckEntriesFilter('energy')}"><strong id="deckEnergyCount">0</strong><span>ENERGIE</span></div>
     </div>
 
     <div class="card">
@@ -1520,6 +1520,7 @@ let decks=(()=>{try{const x=JSON.parse(localStorage.getItem(DECK_KEY)||'[]');ret
 decks=decks.map(d=>({...d,type:d?.type==='sale'?'sale':'game',entries:Array.isArray(d?.entries)?d.entries:[]}));
 persistedDecksJson=JSON.stringify(decks);
 let currentDeckId=null;
+let deckEntriesFilter='';
 function deckType(d){return d?.type==='sale'?'sale':'game'}
 function deckTypeLabel(d){return deckType(d)==='sale'?'🏷️ Vendita':'🎮 Gioco'}
 
@@ -1693,6 +1694,7 @@ function renderDecks(){
 }
 function openDeck(id){
   currentDeckId=id;
+  deckEntriesFilter='';
   ui('deckListScreen')?.classList.add('hidden');
   ui('deckBuilderScreen')?.classList.remove('hidden');
   renderDeckBuilder();
@@ -1700,10 +1702,33 @@ function openDeck(id){
 }
 function closeDeckBuilder(){
   currentDeckId=null;
+  deckEntriesFilter='';
   ui('deckBuilderScreen')?.classList.add('hidden');
   ui('deckListScreen')?.classList.remove('hidden');
   renderDecks();
   window.scrollTo(0,0);
+}
+function deckEntryGroup(c){
+  if(c?.category==='Pokémon')return 'pokemon';
+  if(c?.category==='Allenatore')return 'trainer';
+  if(c?.category==='Energia')return 'energy';
+  return '';
+}
+function updateDeckEntryFilterUi(){
+  const ids={pokemon:'deckPokemonStat',trainer:'deckTrainerStat',energy:'deckEnergyStat'};
+  Object.entries(ids).forEach(([group,id])=>{
+    const el=ui(id);if(!el)return;
+    const active=deckEntriesFilter===group;
+    el.classList.toggle('active',active);
+    el.setAttribute('aria-pressed',active?'true':'false');
+  });
+}
+function setDeckEntriesFilter(group){
+  const allowed=['pokemon','trainer','energy'];
+  const next=allowed.includes(group)?group:'';
+  deckEntriesFilter=deckEntriesFilter===next?'':next;
+  renderDeckBuilder();
+  ui('deckEntries')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function changeDeckQty(cardKey,delta){
   const d=currentDeck(),c=db.find(x=>deckRecordKey(x)===decodeURIComponent(cardKey));
@@ -1747,8 +1772,17 @@ function renderDeckBuilder(){
   const soldBtn=ui('deckSoldBtn');if(soldBtn)soldBtn.style.display=deckType(d)==='sale'?'block':'none';
   const disBtn=ui('deckDismantleBtn');if(disBtn)disBtn.textContent=deckType(d)==='sale'?'↩️ Sfai (non venduto)':'↩️ Sfai mazzo';
 
+  updateDeckEntryFilterUi();
   const entries=ui('deckEntries');
-  entries.innerHTML=d.entries.length?d.entries.map(e=>{
+  const visibleEntries=(d.entries||[]).filter(e=>{
+    if(!deckEntriesFilter)return true;
+    const c=findCardForDeckEntry(e);
+    return c&&deckEntryGroup(c)===deckEntriesFilter;
+  });
+  const emptyMessage=d.entries.length
+    ? '<div class="small">Nessuna carta di questa categoria nel mazzo.</div>'
+    : '<div class="small">Il mazzo è vuoto.</div>';
+  entries.innerHTML=visibleEntries.length?visibleEntries.map(e=>{
     const c=findCardForDeckEntry(e);if(!c)return '';
     const key=encodeURIComponent(e.cardKey),img=cardImageSrc(c,'low');
     return `<div class="deck-entry">
@@ -1756,7 +1790,7 @@ function renderDeckBuilder(){
       <div><b>${esc(c.name)}</b><div class="small">${esc(c.set||'')} · ${esc(c.variant||'')}</div></div>
       <div class="deck-qty"><button onclick="changeDeckQty('${key}',-1)">−</button><strong>${e.qty}</strong><button onclick="changeDeckQty('${key}',1)">+</button></div>
     </div>`;
-  }).join(''):'<div class="small">Il mazzo è vuoto.</div>';
+  }).join(''):emptyMessage;
 
   const filter=ui('deckCategoryFilter'),cur=filter?.value||'';
   if(filter){
