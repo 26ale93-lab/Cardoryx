@@ -195,8 +195,8 @@ def parse_exact_ball_registry(index_source: str):
         r'"(?P<key>[^"]+\|(?:Poké Ball|Master Ball) Reverse Holo)"\s*:\s*'
         r'\{(?P<body>[^\n]+)\}'
     )
-    num_pat = re.compile(r'(?P<k>productId|low|trend|avg1|avg7|avg30|avg):(?P<v>null|-?\d+(?:\.\d+)?)')
-    str_pat = re.compile(r'(?P<k>setId|localId|finish|verified):"(?P<v>[^"]*)"')
+    num_pat = re.compile(r'"(?P<k>productId|low|trend|avg1|avg7|avg30|avg)"\s*:\s*(?P<v>null|-?\d+(?:\.\d+)?)')
+    str_pat = re.compile(r'"(?P<k>setId|localId|finish|verified)"\s*:\s*"(?P<v>[^"]*)"')
     for m in pat.finditer(block):
         row = {"registryKey": m.group("key")}
         body = m.group("body")
