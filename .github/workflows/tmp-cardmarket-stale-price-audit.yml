@@ -1,0 +1,29 @@
+name: Temporary Cardmarket stale price audit
+
+on:
+  push:
+    branches:
+      - audit/cardmarket-stale-price-20261012
+    paths:
+      - scripts/test_cardmarket_stale_price_audit.py
+      - .github/workflows/tmp-cardmarket-stale-price-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run stale-price audit
+        run: python scripts/test_cardmarket_stale_price_audit.py
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardmarket-stale-price-audit
+          path: artifacts/cardmarket_stale_price_audit_report.json
