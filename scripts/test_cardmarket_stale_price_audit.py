@@ -30,6 +30,26 @@ OUT = ROOT / "artifacts" / "cardmarket_stale_price_audit_report.json"
 CM_BASE = "https://downloads.s3.cardmarket.com/productCatalog"
 
 
+
+OWNED_BALL_DETAILS = [
+    {"id":"sv08.5-057","name":"Okidogi","finish":"Master Ball Reverse Holo","productId":806489,"storedUnitValue":6.61},
+    {"id":"me02.5-032","name":"Darumaka di N","finish":"Poké Ball Reverse Holo","productId":870188,"storedUnitValue":0.11},
+    {"id":"sv08.5-120","name":"Vitalità della Professoressa Olim","finish":"Poké Ball Reverse Holo","productId":806590,"storedUnitValue":0.56},
+    {"id":"sv08.5-107","name":"Guida dell'Esploratore","finish":"Poké Ball Reverse Holo","productId":806570,"storedUnitValue":0.99},
+    {"id":"sv08.5-103","name":"Rubra","finish":"Poké Ball Reverse Holo","productId":806562,"storedUnitValue":0.58},
+    {"id":"sv08.5-127","name":"Bastone Rotoselfie","finish":"Poké Ball Reverse Holo","productId":806604,"storedUnitValue":0.59},
+    {"id":"sv08.5-020","name":"Goldeen","finish":"Poké Ball Reverse Holo","productId":806436,"storedUnitValue":0.74},
+    {"id":"sv10.5w-044","name":"Frillish","finish":"Master Ball Reverse Holo","productId":836574,"storedUnitValue":3.00},
+    {"id":"me02.5-002","name":"Gloom di Erika","finish":"Poké Ball Reverse Holo","productId":870138,"storedUnitValue":0.13},
+    {"id":"sv08.5-001","name":"Exeggcute","finish":"Poké Ball Reverse Holo","productId":806408,"storedUnitValue":0.25},
+    {"id":"sv08.5-050","name":"Riolu","finish":"Poké Ball Reverse Holo","productId":806478,"storedUnitValue":0.91},
+    {"id":"sv08.5-029","name":"Jolteon","finish":"Poké Ball Reverse Holo","productId":806446,"storedUnitValue":2.39},
+    {"id":"sv08.5-062","name":"Houndour","finish":"Poké Ball Reverse Holo","productId":806494,"storedUnitValue":0.25},
+    {"id":"sv08.5-068","name":"Heatran","finish":"Poké Ball Reverse Holo","productId":806504,"storedUnitValue":0.30},
+    {"id":"sv08.5-039","name":"Aromatisse","finish":"Master Ball Reverse Holo","productId":806459,"storedUnitValue":13.99},
+    {"id":"sv08.5-038","name":"Spritzee","finish":"Poké Ball Reverse Holo","productId":806456,"storedUnitValue":0.05},
+]
+
 OWNED_BALL_TARGETS = {
     ("sv08.5-057", "Master Ball Reverse Holo"),
     ("me02.5-032", "Poké Ball Reverse Holo"),
@@ -327,6 +347,50 @@ def audit_all_ball_registry(products, prices):
         ),
     }
 
+
+def audit_owned_ball_details(prices):
+    out = []
+    for target in OWNED_BALL_DETAILS:
+        price = prices.get(int(target["productId"]))
+        if not price:
+            out.append({**target, "classification":"PRICE_GUIDE_PRODUCT_NOT_FOUND"})
+            continue
+        standard = price.get("trend")
+        holo = price.get("trend-holo")
+        stored = target.get("storedUnitValue")
+        def eq(a,b):
+            return isinstance(a,(int,float)) and isinstance(b,(int,float)) and abs(a-b) < 1e-9
+        if eq(stored,holo) and not eq(stored,standard):
+            classification="STORED_MATCHES_HOLO_SLOT"
+        elif eq(stored,standard) and isinstance(holo,(int,float)) and holo>0 and not eq(standard,holo):
+            classification="STORED_MATCHES_STANDARD_HOLO_DIFFERS"
+        elif eq(stored,standard) and (not isinstance(holo,(int,float)) or holo<=0 or eq(standard,holo)):
+            classification="STORED_STANDARD_NO_CONFLICT"
+        elif stored in (None,0) and isinstance(holo,(int,float)) and holo>0:
+            classification="STORED_MISSING_HOLO_AVAILABLE"
+        else:
+            classification="STORED_MATCHES_NEITHER_CURRENT_SLOT"
+        out.append({
+            **target,
+            "official":{
+                "low":price.get("low"),
+                "low-holo":price.get("low-holo"),
+                "trend":standard,
+                "trend-holo":holo,
+                "avg1":price.get("avg1"),
+                "avg1-holo":price.get("avg1-holo"),
+                "avg7":price.get("avg7"),
+                "avg7-holo":price.get("avg7-holo"),
+                "avg30":price.get("avg30"),
+                "avg30-holo":price.get("avg30-holo"),
+            },
+            "classification":classification
+        })
+    counts={}
+    for row in out:
+        counts[row["classification"]]=counts.get(row["classification"],0)+1
+    return {"rows":len(out),"classificationTotals":counts,"details":out}
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--products", type=Path)
@@ -415,6 +479,7 @@ def main():
         })
 
     ball_registry_audit = audit_all_ball_registry(products, prices)
+    owned_ball_detail_audit = audit_owned_ball_details(prices)
 
     collection_scan = {
         "available": False,
@@ -604,6 +669,7 @@ def main():
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "scope": "Cardmarket stale/partial-refresh diagnostics; separate from mapping/version errors",
         "cases": cases,
+        "ownedBallDetailAudit": owned_ball_detail_audit,
         "allExactBallRegistryAudit": ball_registry_audit,
         "collectionWideStaleScan": collection_scan,
         "rules": {
