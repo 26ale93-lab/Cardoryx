@@ -94,7 +94,11 @@ def compact_price(row):
         return None
     return {
         key: row.get(key)
-        for key in ("idProduct", "low", "trend", "avg", "avg1", "avg7", "avg30")
+        for key in (
+            "idProduct",
+            "low", "trend", "avg", "avg1", "avg7", "avg30",
+            "low-holo", "trend-holo", "avg-holo", "avg1-holo", "avg7-holo", "avg30-holo",
+        )
         if key in row
     }
 
@@ -210,6 +214,15 @@ def main():
         if isinstance(trend_delta, (int, float)) and isinstance(live_trend, (int, float)) and live_trend:
             trend_percent = round((trend_delta / live_trend) * 100, 2)
 
+        manual = case.get("manualCardmarketCheck") or {}
+        manual_trend = manual.get("trend")
+        slot_distance = {}
+        for slot in ("trend", "trend-holo"):
+            value = (live or {}).get(slot)
+            if isinstance(value, (int, float)) and isinstance(manual_trend, (int, float)):
+                slot_distance[slot] = round(abs(value - manual_trend), 4)
+        closest_slot = min(slot_distance, key=slot_distance.get) if slot_distance else None
+
         cases.append({
             "case": key,
             "expectedIdentity": {
@@ -224,6 +237,9 @@ def main():
             "cardoryxSnapshot": stored,
             "manualCardmarketCheck": case["manualCardmarketCheck"],
             "officialCurrentPriceGuide": live_compact,
+            "manualTrendDistanceByOfficialSlot": slot_distance,
+            "closestOfficialSlotToManualLiveTrend": closest_slot,
+            "closestOfficialSlotDistance": slot_distance.get(closest_slot) if closest_slot else None,
             "storedMinusCurrentTrend": trend_delta,
             "storedTrendOverCurrentPercent": trend_percent,
             "classification": classification,
