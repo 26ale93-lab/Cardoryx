@@ -794,6 +794,7 @@ input,select,textarea{background:var(--cx-panel2);color:var(--cx-text);border-co
     </div>
 
     <div class="grid">
+      <button class="btn alt" type="button" onclick="downloadCurrentDeckPDF()">📄 Scarica mazzo PDF</button>
       <button class="btn alt" type="button" onclick="renameCurrentDeck()">✏️ Rinomina</button>
       <button id="deckSoldBtn" class="btn" type="button" onclick="sellCurrentDeck()" style="display:none">✅ Venduto</button>
       <button id="deckDismantleBtn" class="btn red" type="button" onclick="dismantleCurrentDeck()">↩️ Sfai mazzo</button>
@@ -1767,6 +1768,88 @@ function setDeckEntriesFilter(group){
   deckEntriesFilter=deckEntriesFilter===next?'':next;
   renderDeckBuilder();
   ui('deckEntries')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// Read-only PDF export: one row per stored deck entry / physical identity.
+function deckPdfSnapshot(d){
+  if(!d || !Array.isArray(d.entries))throw new Error('Mazzo non disponibile');
+  const groups={pokemon:[],trainer:[],energy:[]};
+  const seen=new Set();
+  let total=0;
+  for(const entry of d.entries){
+    const qty=Number(entry.qty);
+    if(!Number.isSafeInteger(qty)||qty<=0||typeof entry.cardKey!=='string'||seen.has(entry.cardKey)){
+      throw new Error('Entry mazzo non valida o duplicata');
+    }
+    seen.add(entry.cardKey);
+    // Do not use the permissive legacy fallback here: it can hide ambiguity.
+    const matches=db.filter(c=>deckRecordKey(c)===entry.cardKey);
+    if(matches.length!==1)throw new Error('Identità carta non risolta in modo univoco');
+    const card=matches[0], group=deckEntryGroup(card);
+    if(!groups[group])throw new Error('Categoria carta non riconosciuta');
+    if(!String(card.name||'').trim())throw new Error('Nome carta mancante');
+    groups[group].push({qty,card,key:entry.cardKey});
+    total+=qty;
+  }
+  if(total!==deckTotal(d))throw new Error('Totale mazzo incoerente');
+  return {name:String(d.name||'Mazzo'),groups,total,
+    counts:{pokemon:groups.pokemon.reduce((n,x)=>n+x.qty,0),
+      trainer:groups.trainer.reduce((n,x)=>n+x.qty,0),
+      energy:groups.energy.reduce((n,x)=>n+x.qty,0)}};
+}
+async function downloadCurrentDeckPDF(){
+  const d=currentDeck();
+  if(!d){alert('Mazzo non disponibile.');return}
+  let snapshot;
+  try{snapshot=deckPdfSnapshot(d)}
+  catch(e){console.error('Cardoryx deck PDF identity check:',e);alert('Esportazione bloccata: una o più carte del mazzo hanno un’identità non verificabile. Nessun dato è stato modificato.');return}
+  if(!snapshot.total){alert('Il mazzo è vuoto.');return}
+  const btn=document.activeElement, oldText=btn?.textContent;
+  try{
+    if(btn?.tagName==='BUTTON'){btn.disabled=true;btn.textContent='⏳ Creo PDF...'}
+    await ensurePdfLibraries();
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
+    const margin=14, pageWidth=doc.internal.pageSize.getWidth();
+    const drawHeader=()=>{
+      doc.setFont('helvetica','bold');doc.setFontSize(17);
+      doc.text('CARDORYX',margin,17);
+      doc.setFontSize(13);doc.text(pdfSafe(snapshot.name),margin,26,{maxWidth:pageWidth-2*margin});
+      doc.setFont('helvetica','normal');doc.setFontSize(9);
+      doc.text(pdfSafe('Totale: '+snapshot.total+'  |  Pokémon: '+snapshot.counts.pokemon+'  |  Allenatori: '+snapshot.counts.trainer+'  |  Energie: '+snapshot.counts.energy),margin,34);
+      doc.setDrawColor(190);doc.line(margin,38,pageWidth-margin,38);
+    };
+    drawHeader();
+    let y=44;
+    for(const [group,label] of [['pokemon','POKÉMON'],['trainer','ALLENATORI'],['energy','ENERGIE']]){
+      const items=snapshot.groups[group];
+      if(!items.length)continue;
+      if(y>263){doc.addPage();drawHeader();y=44}
+      const heading=label+' ('+snapshot.counts[group]+')';
+      doc.setFont('helvetica','bold');doc.setFontSize(11);
+      doc.text(pdfSafe(heading),margin,y);
+      const rows=items.map(({qty,card})=>{
+        const n=String(card.localId||'').trim();
+        const denominator=csvSetTotal(card);
+        const number=n?(n+(denominator?'/'+denominator:'')):'Non disponibile';
+        const edition=printVariant(card);
+        const extras=[edition,card.language?String(card.language):'',card.condition?String(card.condition):'',card.status?String(card.status):''].filter(Boolean);
+        return [String(qty)+'x',pdfSafe(card.name),pdfSafe(card.set||'Non disponibile'),pdfSafe(number),pdfSafe(extras.join(' · '))];
+      });
+      doc.autoTable({
+        startY:y+3,margin:{left:margin,right:margin,top:43,bottom:14},
+        head:[['Qtà','Carta','Set','Numero','Finitura / Edizione / Dettagli']],
+        body:rows,theme:'grid',
+        styles:{font:'helvetica',fontSize:8,cellPadding:2,overflow:'linebreak',valign:'middle'},
+        headStyles:{fillColor:[232,236,243],textColor:[20,28,44],fontStyle:'bold'},
+        columnStyles:{0:{cellWidth:12},1:{cellWidth:43},2:{cellWidth:43},3:{cellWidth:24},4:{cellWidth:'auto'}},
+        didDrawPage:()=>{if(doc.internal.getCurrentPageInfo().pageNumber>1)drawHeader()}
+      });
+      y=(doc.lastAutoTable?.finalY||y+3)+11;
+    }
+    const filename='Cardoryx-Mazzo-'+snapshot.name.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,55)+'-'+new Date().toISOString().slice(0,10)+'.pdf';
+    doc.save(filename);
+  }catch(e){console.error('Cardoryx deck PDF:',e);alert('Impossibile generare il PDF. Controlla la connessione e riprova.')}
+  finally{if(btn?.tagName==='BUTTON'){btn.disabled=false;btn.textContent=oldText||'📄 Scarica mazzo PDF'}}
 }
 async function changeDeckQty(cardKey,delta){
   const d=currentDeck(),c=db.find(x=>deckRecordKey(x)===decodeURIComponent(cardKey));
