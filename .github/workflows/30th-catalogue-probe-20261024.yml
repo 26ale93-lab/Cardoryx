@@ -35,6 +35,13 @@ jobs:
           for name in sentinel_attacks:
               matches=[p for p in products if p.get('name')==name]
               print('EXACT_ATTACK_SENTINEL',name,'TOTAL',len(matches),'BY_EXPANSION',json.dumps(collections.Counter(p.get('idExpansion') for p in matches).most_common(20)),'IDS',json.dumps([{'idProduct':p.get('idProduct'),'idExpansion':p.get('idExpansion'),'idMetacard':p.get('idMetacard')} for p in matches[:20]]))
+          target_exp={6601,6602,6603,6604}
+          subset=[p for p in products if p.get('idExpansion') in target_exp]
+          print('EXACT_SET_PRODUCT_ROWS',len(subset))
+          print('EXACT_SET_UNIQUE_PRODUCT_IDS',len({p['idProduct'] for p in subset}))
+          print('EXACT_SET_UNIQUE_METACARD_IDS',len({p['idMetacard'] for p in subset}))
+          print('GENGAR_NEIGHBORS_6601',json.dumps([p for p in products if p.get('idExpansion')==6601 and 907690<=p.get('idProduct',0)<=907705],ensure_ascii=False))
+          print('GENGAR_EX_6601_ALL',json.dumps([p for p in products if p.get('idExpansion')==6601 and p.get('name')=='Gengar ex [Fainting Spell | Chaotic Pain]'],ensure_ascii=False))
           print('EXPANSION_6767_COUNT',len([p for p in products if p.get('idExpansion')==6767]))
           print('EXPANSION_6767_SAMPLE',json.dumps([p for p in products if p.get('idExpansion')==6767][:80],ensure_ascii=False))
           print('GENGAR_30TH_ATTACK_MATCHES',json.dumps([p for p in products if 'gengar' in str(p.get('name','')).lower() and ('chaotic pain' in str(p.get('name','')).lower() or 'fainting spell' in str(p.get('name','')).lower())],ensure_ascii=False))
