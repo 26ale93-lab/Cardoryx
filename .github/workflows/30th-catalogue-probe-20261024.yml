@@ -25,6 +25,10 @@ jobs:
           print('SOURCE',url)
           print('SOURCE_LAST_MODIFIED',last_modified)
           print('TOTAL_PRODUCTS',len(products))
+          print('FIRST_PRODUCTS',json.dumps(products[:8],ensure_ascii=False))
+          print('NUMBER_FIELD_SAMPLES',json.dumps([p.get('number') for p in products[:25]],ensure_ascii=False))
+          print('GENGAR_EX_NAME_MATCHES',json.dumps([p for p in products if 'gengar' in str(p.get('name','')).lower()][:40],ensure_ascii=False))
+          print('30TH_NAME_MATCHES',json.dumps([p for p in products if '30th' in str(p.get('name','')).lower() or '30c' in str(p.get('name','')).lower()][:15],ensure_ascii=False))
           def norm(x):return re.sub(r'[^a-z0-9]+','',str(x or '').lower())
           def num(x):
               s=str(x or '').strip().upper()
