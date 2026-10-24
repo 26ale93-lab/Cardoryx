@@ -28,6 +28,13 @@ jobs:
           print('FIRST_PRODUCTS',json.dumps(products[:8],ensure_ascii=False))
           print('NUMBER_FIELD_SAMPLES',json.dumps([p.get('number') for p in products[:25]],ensure_ascii=False))
           print('GENGAR_EX_NAME_MATCHES',json.dumps([p for p in products if 'gengar' in str(p.get('name','')).lower()][:40],ensure_ascii=False))
+          for exp in (6601,6602,6603,6604,6628,6767):
+              exp_rows=[p for p in products if p.get('idExpansion')==exp]
+              print('EXPANSION_DETAIL',exp,'COUNT',len(exp_rows),'UNIQUE_METACARDS',len(set(p.get('idMetacard') for p in exp_rows)),'FIRST_12',json.dumps(exp_rows[:12],ensure_ascii=False))
+          sentinel_attacks=['Exeggcute [Hypnosis]','Alolan Exeggutor [Scale Up | Mega Drain]','Volbeat [Luring Glow | Bug Buzz]','Illumise [Supereffective Pheromones | Ram]','Gengar ex [Fainting Spell | Chaotic Pain]']
+          for name in sentinel_attacks:
+              matches=[p for p in products if p.get('name')==name]
+              print('EXACT_ATTACK_SENTINEL',name,'TOTAL',len(matches),'BY_EXPANSION',json.dumps(collections.Counter(p.get('idExpansion') for p in matches).most_common(20)),'IDS',json.dumps([{'idProduct':p.get('idProduct'),'idExpansion':p.get('idExpansion'),'idMetacard':p.get('idMetacard')} for p in matches[:20]]))
           print('EXPANSION_6767_COUNT',len([p for p in products if p.get('idExpansion')==6767]))
           print('EXPANSION_6767_SAMPLE',json.dumps([p for p in products if p.get('idExpansion')==6767][:80],ensure_ascii=False))
           print('GENGAR_30TH_ATTACK_MATCHES',json.dumps([p for p in products if 'gengar' in str(p.get('name','')).lower() and ('chaotic pain' in str(p.get('name','')).lower() or 'fainting spell' in str(p.get('name','')).lower())],ensure_ascii=False))
