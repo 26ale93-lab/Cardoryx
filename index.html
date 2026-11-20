@@ -10365,6 +10365,24 @@ function verifiedStandardEnergyPrice(c,variant){
   return VERIFIED_STANDARD_ENERGY_PRICES[`${x.set}|${x.num}|Normal`]||null;
 }
 
+// Exact 30th Celebration products are foil-only. Their ordinary Cardmarket
+// price-guide slot is the foil card itself, not a separate Normal printing.
+// Never apply this rule to Play!, unrelated sets, MEE energies, or unknown finishes.
+function verified30thAnniversaryCardmarketPrice(card,variant,stamp){
+  if(canonicalStamp(stamp)!=='30° Anniversario'||canonicalVariant(variant)!=='Holo'||!is30thCelebrationSet(card))return null;
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const match=id.match(/^(30th-c|30th)-(.+)$/);
+  const setId=String(card?.set?.id||card?._cardoryxSetId||card?.setId||'').trim().toLowerCase();
+  if(!match||match[1]!==setId||!sameExactLocalId(match[2],card?.localId))return null;
+  const cm=resolvedCardmarketPricingForCard(card);
+  const productId=Number(cm?.idProduct);
+  if(!Number.isSafeInteger(productId)||productId<=0)return null;
+  const keys=['trend-holo','avg7-holo','avg30-holo','avg-holo','trend','avg7','avg30','avg','low'];
+  const value=keys.map(k=>Number(cm[k])).find(n=>Number.isFinite(n)&&n>0);
+  if(value==null)return null;
+  return {value,exact:true,productId,source:'Cardmarket · 30° Anniversario · prodotto TCGdex esatto',updated:card?.priceUpdatedAt||'',kind:'30th-exact-foil'};
+}
+
 function cardPriceInfo(c){
   const variant=canonicalVariant(c?.variant||'Normal'),stamp=canonicalStamp(c?.stamp||'None'),series=normalizedPlaySeries(c?.playSeries||'');
   if(stamp==='Play! Pokémon'){
@@ -10381,6 +10399,10 @@ function cardPriceInfo(c){
     const stamped=verifiedStampPrice(c,variant,stamp);
     if(stamped){const value=Number(stamped.trend||stamped.avg7||stamped.avg30||stamped.low||0);return {value:value>0?value:null,exact:true,source:stamped.source||'Cardmarket',updated:stamped.verified||'',stamp,series}}
     return {value:null,exact:false,source:'Cardmarket · Play! Pokémon',updated:c?.priceUpdatedAt||'',kind:'play-series-missing',seriesCandidates:playAutoSeries(c),stamp,series};
+  }
+  if(stamp==='30° Anniversario'){
+    const anniversary=verified30thAnniversaryCardmarketPrice(c,variant,stamp);
+    if(anniversary)return {...anniversary,stamp,series};
   }
   if(stamp!=='None'){const stamped=verifiedStampPrice(c,variant,stamp);if(stamped){const value=Number(stamped.trend||stamped.avg7||stamped.avg30||stamped.low||0);return {value:value>0?value:null,exact:true,source:stamped.source||'Cardmarket',updated:stamped.verified||'',stamp,series}}return {value:null,exact:false,source:`Cardmarket · ${stamp}`,updated:c?.priceUpdatedAt||'',kind:'stamp-unverified',stamp,series}}
   const exact=verifiedVariantPrice(c,variant);
