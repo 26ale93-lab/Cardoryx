@@ -1,0 +1,27 @@
+name: Temporary Cardmarket 30th read-only diagnostic
+on:
+  push:
+    branches:
+      - fix/cardmarket-30th-anniversary-stamp
+    paths:
+      - scripts/diagnose_30th_cardmarket.py
+      - .github/workflows/diagnose-30th-cardmarket.yml
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check real TCGdex price identities
+        run: python scripts/diagnose_30th_cardmarket.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cardmarket-30th-diagnostic
+          path: cardmarket_30th_diagnostic.json
+          if-no-files-found: warn
