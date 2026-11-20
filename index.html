@@ -10479,9 +10479,19 @@ async function refreshPriceForRecord(c){
   if(String(c?.id||'').startsWith('mee-local-'))return false;
   const id=await resolveTcgdexIdForRecord(c);if(!id)return false;
   const full=await fetchFullCardForPrice(id);
-  if(!full?.pricing?.cardmarket){c.pricing=null;c.priceUpdatedAt='';return false}
+  // Foil-only 30th sets: an out-of-date TCGdex server can return null
+  // prices. Keep the last verified product price instead of erasing it.
+  // This does not create a price and does not affect any other set.
+  const preserved30th=canonicalStamp(c?.stamp||'None')==='30° Anniversario' && is30thCelebrationSet(c);
+  if(!full?.pricing?.cardmarket){
+    if(!preserved30th){c.pricing=null;c.priceUpdatedAt='';}
+    return false;
+  }
   const resolved=resolvedCardmarketPricingForCard(full);
-  if(!resolved){c.pricing=null;c.priceUpdatedAt='';return false}
+  if(!resolved){
+    if(!preserved30th){c.pricing=null;c.priceUpdatedAt='';}
+    return false;
+  }
   c.pricing={...full.pricing,cardmarket:{...resolved}};
   c.priceUpdatedAt=resolved._cardoryxVerified||resolved.updated||new Date().toISOString();c.tcgdexId=full.id;c.id=full.id;return true;
 }
