@@ -32,8 +32,9 @@ def main():
     for p in products:
         if not isinstance(p,dict):continue
         name=str(key(p,"name","Name") or "")
-        if not re.search(r"\\beevee\\b",name,re.I):continue
-        if not re.search(r"(?:x?30c|30th|celebration)",name,re.I):continue
+        if not re.search(r"\beevee\b",name,re.I):continue
+        pid=key(p,"idProduct","id_product","productId")
+        if not isinstance(pid,int) or pid<900000:continue
         candidates.append({"productId":key(p,"idProduct","id_product","productId"),
                            "name":name,
                            "expansionId":key(p,"idExpansion","id_expansion","expansionId"),
