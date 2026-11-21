@@ -6,6 +6,7 @@ on:
     paths:
       - scripts/diagnose_30th_cardmarket.py
       - .github/workflows/diagnose-30th-cardmarket.yml
+      - scripts/test_30th_cardmarket_pricing.cjs
   workflow_dispatch:
 jobs:
   probe:
@@ -19,6 +20,8 @@ jobs:
           python-version: '3.12'
       - name: Check real TCGdex price identities
         run: python scripts/diagnose_30th_cardmarket.py
+      - name: Test real prices against production Cardoryx functions
+        run: node scripts/test_30th_cardmarket_pricing.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
