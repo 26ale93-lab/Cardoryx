@@ -1,0 +1,27 @@
+name: Temporary Eevee 116 Cardmarket official catalogue audit
+on:
+  push:
+    branches:
+      - audit/eevee-116-cosmos-cardmarket
+    paths:
+      - scripts/audit_eevee_116_cardmarket.py
+      - .github/workflows/audit-eevee-116-cardmarket.yml
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect official Cardmarket product list and price guide
+        run: python scripts/audit_eevee_116_cardmarket.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eevee-116-cardmarket-audit
+          path: eevee_116_cardmarket_audit.json
+          if-no-files-found: warn
