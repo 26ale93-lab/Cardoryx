@@ -4489,6 +4489,17 @@ function is30thCelebrationSet(card){
 // V2.1.29 — startup-safe identity guard for MEE 009–016.
 // IMPORTANT: this helper intentionally does not call codedEnergyInfo() or any
 // constants declared later in the script, so it is safe even during startup.
+// Physical Cosmos Holo promo from the 30th Celebration Two Pack Blister /
+// Knock Out Collection. This is the exact Eevee 116/128 only.
+// No Cardmarket price is inferred for this separate physical finish.
+function is30thEevee116CosmosEligible(card){
+  if(!card)return false;
+  const setId=String(card?.set?.id||card?._cardoryxSetId||card?.setId||'').trim().toLowerCase();
+  const id=String(card?.tcgdexId||card?.id||'').trim().toLowerCase();
+  const local=String(card?.localId||'').trim().replace(/^0+/,'');
+  return setId==='30th' && id==='30th-116' && local==='116' && normText(card?.name||'')==='eevee';
+}
+
 function isMee30CelebrationEnergy(card){
   if(!card)return false;
   const id=String(card.id||'').toUpperCase();
@@ -4592,7 +4603,9 @@ function migrateFinishStamp(c){
   // Correct older Cardoryx records that were stored before this exact set rule existed.
   if(is30thCelebrationSet(c)){
     c.stamp='30° Anniversario';
-    c.variant='Holo';
+    // Keep the documented Eevee 116/128 Cosmos promo in its own identity.
+    c.variant=is30thEevee116CosmosEligible(c) && canonicalVariant(c.variant||'')==='Cosmos Holo'
+      ? 'Cosmos Holo' : 'Holo';
     return c;
   }
   if(isVerifiedMcdonalds2021AnniversarySet(c)){
@@ -5451,7 +5464,9 @@ function documentedVariantsForCard(card,stampOverride=null,seriesOverride=null){
   // omits per-card finish rows, so the official set rule is the authoritative evidence.
   // No Cardmarket price is inferred from this finish rule.
   if(is30thCelebrationSet(card) && stamp==='30° Anniversario'){
-    return new Set(['Holo','Speciale / Altro','Non so']);
+    return new Set(is30thEevee116CosmosEligible(card)
+      ? ['Holo','Cosmos Holo','Speciale / Altro','Non so']
+      : ['Holo','Speciale / Altro','Non so']);
   }
   // V2.1.31 — 30th Celebration Basic Energies MEE 009–016 are foil-only.
   // Pokémon explicitly states every 30th Celebration card is foil, including
