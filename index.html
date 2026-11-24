@@ -6397,7 +6397,19 @@ function tcgdexExactSwshpSetLogoPrice(card,variant,stamp){
     source:`TCGdex · Cardmarket · SWSH Promo Set Stamp · prodotto esatto ${rule.productId}`};
 }
 
-function verifiedStampPrice(card,variant,stamp){
+// Exact official Cardmarket Additionals product for Eevee x30C 116 Cosmos Holo.
+// Snapshot from Cardmarket Pokemon price guide (2026-11-21); never substitute
+// the base 30C 116 Holo product or infer a price for any other card/finish.
+function verified30thEevee116CosmosCardmarketPrice(card,variant,stamp){
+  if(canonicalStamp(stamp)!=='30° Anniversario'||canonicalVariant(variant)!=='Cosmos Holo')return null;
+  if(!is30thEevee116CosmosEligible(card))return null;
+  return {productId:909374,trend:0.22,avg7:0.23,avg30:0.24,low:0.02,
+    verified:'2026-11-21',source:'Cardmarket · 30th Celebration: Additionals · Eevee x30C 116 · prodotto 909374 · prezzo guida 21/11/2026'};
+}
+
+function verifiedStampPrice(card,variant,stamp){ 
+  const cosmos30th=verified30thEevee116CosmosCardmarketPrice(card,variant,stamp);
+  if(cosmos30th)return cosmos30th;
   const exact=verifiedExactSpecialStampPrice(card,variant,stamp);
   if(exact)return exact;
   const beldumGym=tcgdexExactEx5BeldumGymChallengePrice(card,variant,stamp);
